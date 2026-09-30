@@ -91,6 +91,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - **Buffs a aliados (incluido uno mismo): siempre se aplican (100%).**
 - **Siempre se aplican (100%):** curaciones directas, **escudos**, limpiezas y buffs.
   - Escudo y Curación son conceptos **separados**, con etiquetas distintas.
+  - Los **escudos no tienen duración ni tope**: se acumulan y duran hasta que los rompen.
 - **Limpiar** (debuffs de aliados): nunca falla.
 - **Disipar** (buffs de enemigos): una tirada `Puntería − Resistencia` **por cada buff**.
 - Si se quitan menos de los que hay, se eligen **al azar**.
@@ -180,6 +181,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 
 - La casilla de líder es la **primera de izquierda a derecha** y hay **un líder por equipo**.
 - Solo funciona si el personaje de esa casilla tiene habilidad de líder. Termina si el líder muere.
+- Las habilidades de líder que afectan a "los aliados" **incluyen al propio líder** (p. ej. Gakido protege también a Madara).
 - **Piezas de líder disponibles:**
   - `reduccion { categoria, pct }`: reduce el daño recibido por los aliados.
   - `alAplicar { efecto, stat, valor }`: cada vez que su equipo **acierta** ese debuff en un enemigo, un aliado al azar (puede ser el líder) gana un bono **permanente e invisible** a esa estadística. No es un buff y no se puede disipar.
