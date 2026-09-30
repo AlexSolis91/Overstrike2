@@ -62,13 +62,13 @@ function slots(a1, e1, c1, a2 = { locked: true }, e2 = { locked: true }, c2 = { 
 
 // target: enemy | ally | allEnemies | allAllies   ·   style: melee | ranged | support
 const ALLIES = [
-  { name: 'Kael', role: 'Espadachín ígneo', emoji: '⚔️', color: '#ff7a3d',
+  { name: 'Ren', role: 'Monarca de las Sombras', emoji: '🌑', color: '#8b5cf6',
     base: { hp: 1300, spd: 112, dmg: 190, critRate: .20, critDmg: .50, armor: .18, acc: .95, res: .20, block: .04, dot: .10, pen: .25 },
     slots: slots('frostmourne', 'yelmo', 'anilloCobre'),
     moves: [
-      { name: 'Corte Veloz', target: 'enemy', style: 'melee', mult: 1.0, color: 0xffd0a0, desc: 'Causa 100% de Daño a un enemigo.' },
-      { name: 'Tajo Ígneo', target: 'enemy', style: 'melee', mult: .9, burn: .10, burnDur: 2, color: 0xff7a2a, desc: 'Causa 90% de Daño y aplica Quemadura 10% (2 rondas).' },
-      { name: 'Llamarada', target: 'allEnemies', style: 'ranged', mult: .5, burn: .06, burnDur: 2, color: 0xff5a1a, desc: 'Causa 50% de Daño a todos los enemigos y aplica Quemadura 6%.' },
+      { name: 'Daga Sombría', target: 'enemy', style: 'melee', mult: 1.0, color: 0xc4b5fd, desc: 'Causa 100% de Daño a un enemigo.' },
+      { name: 'Alzarse: Caballero', target: 'self', style: 'support', summon: 'knight', color: 0x8b5cf6, desc: 'Invoca al Caballero Sombrío (3 rondas). Cada turno de Ren golpea al enemigo con menos HP con 60% del Daño de Ren. Reemplaza a otra invocación activa.' },
+      { name: 'Alzarse: Bestia', target: 'self', style: 'support', summon: 'beast', color: 0xef4444, desc: 'Invoca a la Bestia Carmesí (2 rondas). Cada turno de Ren golpea 2 veces (35%) a un enemigo al azar y aplica Sangrado. Reemplaza a otra invocación activa.' },
     ] },
   { name: 'Nyra', role: 'Alquimista', emoji: '🐍', color: '#7ee36b',
     base: { hp: 1150, spd: 120, dmg: 170, critRate: .12, critDmg: .50, armor: .10, acc: 1.3, res: .25, block: .03, dot: .25, pen: .40 },
@@ -121,13 +121,13 @@ const ENEMIES = [
       { name: 'Infierno', target: 'allEnemies', style: 'ranged', mult: .45, burn: .07, burnDur: 2, color: 0xff4400, desc: 'Causa 45% de Daño a todos y aplica Quemadura 7%.' },
       { name: 'Disipar Magia', target: 'enemy', style: 'ranged', mult: .5, dispel: true, color: 0xb57bff, desc: 'Causa 50% de Daño y disipa los buffs del objetivo.' },
     ] },
-  { name: 'Grom', role: 'Berserker', emoji: '🪓', color: '#c08457',
-    base: { hp: 1800, spd: 90, dmg: 210, critRate: .18, critDmg: .70, armor: .35, acc: .80, res: .30, block: .10, dot: 0, pen: .20 },
+  { name: 'Ysera', role: 'Madre de Dragones', emoji: '👑', color: '#f97316',
+    base: { hp: 1500, spd: 102, dmg: 190, critRate: .15, critDmg: .60, armor: .25, acc: 1.1, res: .30, block: .06, dot: .20, pen: .25 },
     slots: slots('obsidiana', 'pechera', 'anilloCobre'),
     moves: [
-      { name: 'Hachazo', target: 'enemy', style: 'melee', mult: 1.3, color: 0xffc9a0, desc: 'Causa 130% de Daño a un enemigo.' },
-      { name: 'Grito de Guerra', target: 'allAllies', style: 'support', buff: { value: .20, dur: 2 }, color: 0xffd36b, desc: 'Otorga +20% de Daño a todos los aliados (2 rondas).' },
-      { name: 'Terremoto', target: 'allEnemies', style: 'ranged', mult: .55, color: 0xc08457, desc: 'Causa 55% de Daño a todos los enemigos.' },
+      { name: 'Látigo de Brasas', target: 'enemy', style: 'melee', mult: 1.0, color: 0xffb070, desc: 'Causa 100% de Daño a un enemigo.' },
+      { name: 'Llamar Dragón', target: 'self', style: 'support', summon: 'dragon', color: 0xf97316, desc: 'Invoca un Dragón (3 rondas, máximo 3). Cada turno de Ysera, cada Dragón escupe fuego a un enemigo al azar: 30% del Daño + Quemadura 5%.' },
+      { name: 'Dracarys', target: 'allEnemies', style: 'support', unleash: 'dragon', color: 0xff4400, desc: 'Todos sus Dragones atacan a todos los enemigos (40% del Daño cada uno) y después se retiran.' },
     ] },
   { name: 'Sable', role: 'Asesino', emoji: '🌙', color: '#a78bfa',
     base: { hp: 1100, spd: 125, dmg: 200, critRate: .45, critDmg: .90, armor: .10, acc: 1.0, res: .20, block: .08, dot: .20, pen: .50 },
@@ -155,6 +155,15 @@ const EFFECTS = {
   hemo:   { name: 'Hemorragia', icon: '🩸', color: 0x9b0020, kind: 'debuff', tags: ['DoT', 'Sangrado'] },
   bomb:   { name: 'Bomba',      icon: '💣', color: 0xffb03b, kind: 'debuff', tags: ['DoT', 'Explosivo'] },
   dmgUp:  { name: 'Furia',      icon: '⚔️', color: 0x4ade80, kind: 'buff',   tags: ['Estadística'] },
+  summon: { name: 'Invocación', icon: '✦',  color: 0xffd36b, kind: 'buff',   tags: ['Invocación'] },
+};
+
+// Invocaciones: son un buff del invocador (no ocupan espacio en el campo, no se les puede atacar, se pueden Disipar
+// y desaparecen si muere el invocador). Su daño sale de las estadísticas del invocador.
+const SUMMONS = {
+  knight: { name: 'Caballero Sombrío', emoji: '🥷', color: 0x8b5cf6, mult: .60, hits: 1, pick: 'lowest', dur: 3, max: 1 },
+  beast:  { name: 'Bestia Carmesí',    emoji: '🦂', color: 0xef4444, mult: .35, hits: 2, bleed: true, pick: 'random', dur: 2, max: 1 },
+  dragon: { name: 'Dragón',            emoji: '🐉', color: 0xf97316, mult: .30, burn: .05, pick: 'random', dur: 3, max: 3 },
 };
 
 const SLOT_COSTS = ['100,000', '500,000', '1,000,000'];

@@ -239,6 +239,8 @@ function stats(ch) {
 }
 const maxHp = ch => stats(ch).hp;
 const get = (ch, id) => ch.statuses.find(s => s.id === id);
+const summonsOf = ch => ch.statuses.filter(s => s.id === 'summon');
+const cssHex = n => '#' + n.toString(16).padStart(6, '0');
 const all = id => (ch) => ch.statuses.filter(s => s.id === id);
 const alive = side => chars.filter(c => c.side === side && !c.dead);
 const foesOf = ch => alive(ch.side === 'ally' ? 'enemy' : 'ally');
@@ -339,6 +341,8 @@ class Card {
     this.flash = new PIXI.Graphics().roundRect(-CW / 2, -CH / 2, CW, CH, 12).fill(0xffffff);
     this.flash.alpha = 0; this.flash.blendMode = 'add'; body.addChild(this.flash);
     this.cracks = new PIXI.Graphics(); body.addChild(this.cracks);
+    // medallones de invocación: pegados a la esquina de la carta, sin ocupar espacio en el campo
+    this.summonRow = new PIXI.Container(); this.summonRow.position.set(-CW / 2 + 4, -CH / 2 + 8); body.addChild(this.summonRow);
 
     this.statusRow = new PIXI.Container(); this.statusRow.y = CH / 2 + 17; c.addChild(this.statusRow);
     this.marker = txt('▼', { size: 22, fill: '#ffd36b', stroke: 4 }); this.marker.y = -CH / 2 - 20; this.marker.alpha = 0; c.addChild(this.marker);
@@ -406,6 +410,22 @@ class Card {
       this.shieldBadge.text = `🛡 ${Math.round(ch.shield)}`;
     } else this.shieldBadge.text = '';
     this.buildStatus();
+    this.buildSummons();
+  }
+  buildSummons() {
+    for (const c of this.summonRow.removeChildren()) c.destroy({ children: true });
+    summonsOf(this.ch).forEach((s, i) => {
+      const def = SUMMONS[s.key];
+      const m = new PIXI.Container(); m.y = i * 38;
+      const glow = new PIXI.Sprite(dotTex); glow.anchor.set(.5); glow.tint = def.color; glow.blendMode = 'add'; glow.scale.set(.95); glow.alpha = .7;
+      m.addChild(glow); m.glow = glow;
+      const g = new PIXI.Graphics().circle(0, 0, 16).fill({ color: 0x0b0f18, alpha: .95 }).stroke({ width: 2, color: def.color });
+      const a0 = -Math.PI / 2, a1 = a0 + Math.PI * 2 * Math.max(0, Math.min(1, s.dur / def.dur));
+      g.moveTo(Math.cos(a0) * 20, Math.sin(a0) * 20).arc(0, 0, 20, a0, a1).stroke({ width: 3, color: 0xffd36b });
+      m.addChild(g);
+      m.addChild(txt(def.emoji, { size: 17, stroke: 0, font: EMOJI_FONT }));
+      this.summonRow.addChild(m);
+    });
   }
   buildStatus() {
     for (const c of this.statusRow.removeChildren()) c.destroy({ children: true });
@@ -445,6 +465,7 @@ class Card {
     this.marker.alpha = cur ? 1 : 0;
     this.marker.y = -CH / 2 - 22 + Math.sin(T * 5) * 4;
     if (ch.shield >= 1) this.shieldFx.alpha = .75 + .25 * Math.sin(T * 3);
+    this.summonRow.children.forEach((m, i) => { if (m.glow) m.glow.alpha = .5 + .3 * Math.sin(T * 4 + i); });
 
     // ambientación de DoTs activos
     const { x, y } = this.c;
@@ -710,6 +731,108 @@ function roundBanner(text) {
   gsap.to(t, { alpha: 0, duration: .35, delay: .9, onComplete: () => t.destroy() });
 }
 
+// ---------- invocaciones ----------
+function medPos(ch, i) {
+  return { x: ch.card.c.x - CW / 2 + 4, y: ch.card.c.y - CH / 2 + 8 + i * 38 };
+}
+function summonSprite(def, x, y, size) {
+  const cont = new PIXI.Container(); cont.position.set(x, y);
+  const glow = new PIXI.Sprite(dotTex); glow.anchor.set(.5); glow.tint = def.color; glow.blendMode = 'add';
+  glow.scale.set(size / 30); glow.alpha = .8;
+  cont.addChild(glow, txt(def.emoji, { size, stroke: 0, font: EMOJI_FONT }));
+  fxLayer.addChild(cont);
+  return cont;
+}
+async function fxSummon(a, def, idx) {
+  const { x, y } = a.card.c;
+  ringWave(x, y, def.color, { scale: 5, width: 6, dur: .6 });
+  burst(x, y, { n: 30, colors: [def.color, 0xffffff], speed: 8, size: .3 });
+  shakeScene(6);
+  const cont = summonSprite(def, x, y, 96);
+  cont.scale.set(.1); cont.alpha = 0;
+  const dir = a.side === 'ally' ? -1 : 1;
+  floatText(x, y + dir * 150, def.name.toUpperCase(), { color: cssHex(def.color), size: 24, rise: 20, hold: .9 });
+  gsap.to(cont, { alpha: 1, y: y + dir * 50, duration: .5, ease: 'power2.out' });
+  await gsap.to(cont.scale, { x: 1.2, y: 1.2, duration: .5, ease: 'back.out(2)' });
+  await wait(450);
+  a.card.refresh();
+  const p = medPos(a, idx);
+  const m = a.card.summonRow.children[idx];
+  if (m) m.alpha = 0;
+  gsap.to(cont, { x: p.x, y: p.y, duration: .4, ease: 'power2.in' });
+  await gsap.to(cont.scale, { x: .18, y: .18, duration: .4, ease: 'power2.in' });
+  cont.destroy({ children: true });
+  if (m) { m.alpha = 1; gsap.fromTo(m.scale, { x: 0, y: 0 }, { x: 1, y: 1, duration: .35, ease: 'back.out(3)' }); }
+  burst(p.x, p.y, { n: 14, colors: [def.color, 0xffffff], speed: 4, size: .2 });
+}
+async function applySummon(a, key) {
+  const def = SUMMONS[key];
+  const same = summonsOf(a).filter(s => s.key === key);
+  if (def.max === 1) {
+    // regla general: 1 invocación activa por invocador (la nueva reemplaza a la anterior)
+    for (const s of summonsOf(a)) log(`${SUMMONS[s.key].name} se retira`);
+    a.statuses = a.statuses.filter(s => s.id !== 'summon');
+    a.card.refresh();
+  } else if (same.length >= def.max) {
+    const oldest = same.reduce((x, y) => x.dur < y.dur ? x : y);
+    oldest.dur = def.dur;
+    log(`${def.name}: máximo ${def.max}, se renueva uno`, 'fx');
+    a.card.refresh();
+    return;
+  }
+  a.statuses.push({ id: 'summon', kind: 'buff', key, dur: def.dur, fresh: true });
+  log(`${a.name} invoca: ${def.name}`, 'fx');
+  await fxSummon(a, def, summonsOf(a).length - 1);
+}
+async function summonStrike(a, s, idx, t, mult) {
+  const def = SUMMONS[s.key];
+  const p = medPos(a, Math.max(0, idx));
+  const cont = summonSprite(def, p.x, p.y, 64);
+  cont.scale.set(.25);
+  await gsap.to(cont.scale, { x: 1, y: 1, duration: .22, ease: 'back.out(2)' });
+  const below = t.side === 'enemy' ? 1 : -1;       // se coloca del lado del centro del campo
+  const tx = t.card.c.x, ty = t.card.c.y + below * 80;
+  await gsap.to(cont, { x: tx, y: ty, duration: .28, ease: 'power2.in', onUpdate: () => spawn({ x: cont.x, y: cont.y, color: def.color, size: rand(.25, .4), life: 18 }) });
+  if (s.key === 'dragon') {
+    for (let i = 0; i < 26; i++) setTimeout(() => spawn({ x: tx + rand(-14, 14), y: ty - below * 20, vx: rand(-1.5, 1.5), vy: -below * rand(4, 8), color: pick([0xff7a2a, 0xffd36b, 0xff3d00]), size: rand(.3, .5), life: 26, drag: .97, grow: .6 }), i * 9);
+    await wait(120);
+  }
+  await resolveOnTarget(a, t, { name: def.name, source: def.name, mult, hits: def.hits || 1, color: def.color, bleed: def.bleed, burn: def.burn, burnDur: 2 });
+  await gsap.to(cont, { x: p.x, y: p.y, alpha: 0, duration: .3, ease: 'power2.out' });
+  cont.destroy({ children: true });
+}
+// las invocaciones actúan solas justo después del turno de su invocador (desde el turno siguiente a ser invocadas)
+async function summonsAct(a) {
+  const list = summonsOf(a);
+  for (let i = 0; i < list.length; i++) {
+    const s = list[i];
+    if (s.fresh) { s.fresh = false; continue; }
+    if (a.dead || state.over) return;
+    const foes = foesOf(a);
+    if (!foes.length) return;
+    const def = SUMMONS[s.key];
+    const t = def.pick === 'lowest' ? foes.reduce((x, y) => x.hp / maxHp(x) < y.hp / maxHp(y) ? x : y) : pick(foes);
+    log(`${def.name} ataca a ${t.name}`, 'fx');
+    await summonStrike(a, s, summonsOf(a).indexOf(s), t, def.mult);
+  }
+}
+async function unleashSummons(a, m) {
+  const list = summonsOf(a).filter(s => s.key === m.unleash);
+  castPose(a, m.color);
+  if (!list.length) { floatText(a.card.c.x, a.card.c.y, 'Sin invocaciones', { color: '#b9c2d3', size: 16, font: 'Inter' }); return; }
+  roundBanner(m.name.toUpperCase());
+  await wait(700);
+  for (const s of list) {
+    const foes = foesOf(a);
+    if (!foes.length) break;
+    const idx = summonsOf(a).indexOf(s);
+    await Promise.all(foes.map((t, k) => wait(k * 70).then(() => summonStrike(a, s, idx, t, .4))));
+  }
+  a.statuses = a.statuses.filter(s => !list.includes(s));
+  log(`Las invocaciones de ${a.name} se retiran`, 'fx');
+  a.card.refresh();
+}
+
 // ============================================================
 //  COMBATE
 // ============================================================
@@ -801,6 +924,7 @@ async function explodeBomb(t, bomb, splashOnly = false) {
 }
 async function kill(t) {
   const bombs = all('bomb')(t);
+  if (summonsOf(t).length) log(`Las invocaciones de ${t.name} desaparecen`);
   t.dead = true; t.hp = 0; t.shield = 0; t.statuses = [];
   log(`☠️ ${t.name} ha sido derrotado`, 'sys');
   await fxDeath(t);
@@ -817,6 +941,7 @@ function validTarget(a, m, t) {
 function resolveTargets(a, m, t) {
   if (m.target === 'allEnemies') return foesOf(a);
   if (m.target === 'allAllies') return friendsOf(a);
+  if (m.target === 'self') return [a];
   return [t];
 }
 
@@ -841,7 +966,7 @@ async function resolveOnTarget(a, t, m) {
       if (t.shield > 0) { shDmg = Math.min(t.shield, toSh); t.shield -= shDmg; toHp += toSh - shDmg; } else toHp += toSh;
       t.hp -= toHp;
       fxHit(t, toHp, shDmg, crit, m.color);
-      log(`${a.name} → ${t.name}: -${Math.round(toHp)}${shDmg >= 1 ? ` (🛡 -${Math.round(shDmg)})` : ''}${crit ? ' ¡Crítico!' : ''}`, 'dmg');
+      log(`${m.source || a.name} → ${t.name}: -${Math.round(toHp)}${shDmg >= 1 ? ` (🛡 -${Math.round(shDmg)})` : ''}${crit ? ' ¡Crítico!' : ''}`, 'dmg');
       await wait(hits > 1 ? 240 : 160);
       if (t.hp <= 0) { await kill(t); break; }
       const bl = get(t, 'bleed');
@@ -908,6 +1033,9 @@ async function performMove(a, m, target) {
   const hm = get(a, 'hemo');
   if (hm) { await dotHit(a, hm.value, 'hemo'); if (a.dead) return; }
 
+  if (m.summon) { castPose(a, m.color); await wait(150); await applySummon(a, m.summon); return; }
+  if (m.unleash) { await unleashSummons(a, m); return; }
+
   const targets = resolveTargets(a, m, target);
   if (m.style === 'melee') {
     await lungeTo(a, targets[0]);
@@ -951,6 +1079,12 @@ async function endRound() {
       if (s.dur !== undefined) s.dur--;
       if (s.id === 'bomb') { s.counter--; if (s.counter <= 0) exploding.push([c, s]); }
     }
+    summonsOf(c).forEach((s, i) => {
+      if (s.dur > 0) return;
+      const p = medPos(c, i);
+      burst(p.x, p.y, { n: 16, colors: [SUMMONS[s.key].color, 0x9aa3b2], speed: 4, size: .25 });
+      log(`${SUMMONS[s.key].name} de ${c.name} se desvanece`);
+    });
     c.statuses = c.statuses.filter(s => (s.dur === undefined || s.dur > 0) && !(s.id === 'bomb' && s.counter <= 0));
     c.card.refresh();
   }
@@ -1009,6 +1143,7 @@ async function execute(a, m, target) {
   setHint(''); updateToolbar(); renderPanel();
   log(`${a.name} usa ${m.name}`, 'sys');
   await performMove(a, m, target);
+  if (!a.dead && !state.over && foesOf(a).length) await summonsAct(a);
   state.acted.add(a); state.actedOrder.push(a);
   refreshAll();
   await wait(350);
@@ -1019,6 +1154,12 @@ function aiChoose(a) {
   const opts = [];
   for (const m of a.moves) {
     let t = null;
+    if (m.summon && summonsOf(a).filter(s => s.key === m.summon).length >= SUMMONS[m.summon].max) continue;
+    if (m.unleash) {
+      const n = summonsOf(a).filter(s => s.key === m.unleash).length;
+      if (n < 2) continue;
+      if (n >= 3) opts.push({ move: m, target: null }, { move: m, target: null });
+    }
     if (m.target === 'enemy') {
       if (m.detonate) { const w = foes.filter(f => get(f, 'bomb')); if (!w.length) continue; t = pick(w); }
       else if (m.dispel) { const w = foes.filter(f => f.statuses.some(s => s.kind === 'buff')); if (!w.length) continue; t = pick(w); }
@@ -1069,6 +1210,11 @@ function describeStatus(ch) {
   const hm = get(ch, 'hemo'); if (hm) out.push(row('hemo', 'Hemorragia', `${pct(hm.value)} por golpe y por movimiento · +1 por golpe`));
   all('bomb')(ch).forEach(x => out.push(row('bomb', 'Bomba', `Explota en ${x.counter} ronda(s) · ${pct(x.value)} HP máx. + 25% a sus aliados`)));
   const up = get(ch, 'dmgUp'); if (up) out.push(row('dmgUp', 'Furia', `+${Math.round(up.value * 100)}% Daño · ${up.dur} ronda(s)`));
+  summonsOf(ch).forEach(s => {
+    const d = SUMMONS[s.key];
+    const what = `${d.hits > 1 ? d.hits + ' golpes de ' : ''}${Math.round(d.mult * 100)}% del Daño de ${ch.name}${d.bleed ? ' + Sangrado' : ''}${d.burn ? ` + Quemadura ${Math.round(d.burn * 100)}%` : ''}`;
+    out.push(`<div class="eff buff"><span class="ei">${d.emoji}</span><div><b>${d.name}</b><small>${what} · ${s.dur} ronda(s)${s.fresh ? ' · actúa desde su próximo turno' : ''}</small></div><div class="tags"><span class="tag">Invocación</span></div></div>`);
+  });
   return out.length ? `<div class="effects">${out.join('')}</div>` : '<div class="none">Sin buffs ni debuffs</div>';
 }
 function renderPanel() {
@@ -1099,7 +1245,7 @@ function renderPanel() {
     return `<div class="slot empty"><div class="slot-label">${sl.label}</div><div class="slot-name">Vacío</div><div class="slot-sub">${sl.bow ? 'Desbloqueado por el Arco' : 'Disponible'}</div></div>`;
   }).join('');
 
-  const tlabel = { enemy: 'Un enemigo', ally: 'Un aliado', allEnemies: 'Todos los enemigos', allAllies: 'Todos los aliados' };
+  const tlabel = { enemy: 'Un enemigo', ally: 'Un aliado', allEnemies: 'Todos los enemigos', allAllies: 'Todos los aliados', self: 'Invocación' };
   const movesHtml = ch.moves.map((m, i) => `<div class="move ${myTurn && !ch.dead ? 'can' : ''} ${myTurn && state.move === m ? 'sel' : ''}" data-move="${i}">
       <div class="mv-top"><span class="mv-name">${m.name}</span><span class="mv-tag">${tlabel[m.target]}</span></div>
       <div class="mv-desc">${m.desc}</div></div>`).join('');
@@ -1186,7 +1332,7 @@ function chooseMove(m) {
   if (state.phase !== 'choose-move' && state.phase !== 'choose-target') return;
   if (state.busy) return;
   const a = state.current;
-  if (m.target === 'allEnemies' || m.target === 'allAllies') { execute(a, m, null); return; }
+  if (m.target === 'allEnemies' || m.target === 'allAllies' || m.target === 'self') { execute(a, m, null); return; }
   state.move = m; state.phase = 'choose-target';
   setHint(`${m.name}: elige ${m.target === 'ally' ? 'un aliado' : 'un enemigo'} · Esc para cancelar`);
   renderPanel();
