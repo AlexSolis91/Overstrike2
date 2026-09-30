@@ -278,15 +278,20 @@ function cardTexture(ch) {
     const ar = g.createRadialGradient(w / 2, 58, 6, w / 2, 58, 95);
     ar.addColorStop(0, ch.color); ar.addColorStop(.55, shade(ch.color, -.6)); ar.addColorStop(1, '#07090f');
     g.fillStyle = ar; g.fillRect(9, 9, w - 18, 112);
-    g.globalAlpha = .1; g.fillStyle = '#fff';
-    for (let i = 0; i < 14; i++) {
-      g.save(); g.translate(w / 2, 62); g.rotate(i * Math.PI / 7);
-      g.beginPath(); g.moveTo(0, 0); g.lineTo(-7, -130); g.lineTo(7, -130); g.closePath(); g.fill();
-      g.restore();
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    const img = IMG[ch.image];
+    if (img) drawCover(g, img, 9, 9, w - 18, 112, .5, .3);
+    else {
+      g.globalAlpha = .1; g.fillStyle = '#fff';
+      for (let i = 0; i < 14; i++) {
+        g.save(); g.translate(w / 2, 62); g.rotate(i * Math.PI / 7);
+        g.beginPath(); g.moveTo(0, 0); g.lineTo(-7, -130); g.lineTo(7, -130); g.closePath(); g.fill();
+        g.restore();
+      }
+      g.globalAlpha = 1;
+      g.font = `58px ${EMOJI_FONT}`;
+      g.shadowColor = 'rgba(0,0,0,.65)'; g.shadowBlur = 14; g.fillText(ch.emoji, w / 2, 64); g.shadowBlur = 0;
     }
-    g.globalAlpha = 1;
-    g.font = `58px ${EMOJI_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.shadowColor = 'rgba(0,0,0,.65)'; g.shadowBlur = 14; g.fillText(ch.emoji, w / 2, 64); g.shadowBlur = 0;
     const vg = g.createLinearGradient(0, 80, 0, 121);
     vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.7)');
     g.fillStyle = vg; g.fillRect(9, 80, w - 18, 41);
@@ -298,11 +303,12 @@ function cardTexture(ch) {
     rb.addColorStop(0, 'rgba(10,12,20,0)'); rb.addColorStop(.15, 'rgba(10,12,20,.96)');
     rb.addColorStop(.85, 'rgba(10,12,20,.96)'); rb.addColorStop(1, 'rgba(10,12,20,0)');
     g.fillStyle = rb; g.fillRect(4, 110, w - 8, 24);
+    g.textAlign = 'center'; g.textBaseline = 'middle';   // (el restore() de arriba lo reinicia)
     g.strokeStyle = ally ? 'rgba(243,213,138,.6)' : 'rgba(255,138,138,.6)'; g.lineWidth = 1;
     g.beginPath(); g.moveTo(16, 110.5); g.lineTo(w - 16, 110.5); g.moveTo(16, 133.5); g.lineTo(w - 16, 133.5); g.stroke();
     g.fillStyle = '#fff';
     let fs = 14;
-    do { g.font = `700 ${fs}px Cinzel`; } while (g.measureText(ch.name.toUpperCase()).width > w - 34 && --fs > 8);
+    do { g.font = `700 ${fs}px Cinzel`; } while (g.measureText(ch.name.toUpperCase()).width > w - 52 && --fs > 8);
     g.fillText(ch.name.toUpperCase(), w / 2, 123);
     g.fillStyle = '#8e98ad'; g.font = '600 8px Inter'; g.fillText(ch.role.toUpperCase(), w / 2, 143);
 
@@ -423,7 +429,14 @@ class Card {
       const a0 = -Math.PI / 2, a1 = a0 + Math.PI * 2 * Math.max(0, Math.min(1, s.dur / def.dur));
       g.moveTo(Math.cos(a0) * 20, Math.sin(a0) * 20).arc(0, 0, 20, a0, a1).stroke({ width: 3, color: 0xffd36b });
       m.addChild(g);
-      m.addChild(txt(def.emoji, { size: 17, stroke: 0, font: EMOJI_FONT }));
+      const tex = SUMMON_TEX[s.key];
+      if (tex) {
+        const sp = new PIXI.Sprite(tex);
+        sp.anchor.set(.5, .36); sp.scale.set(56 / tex.width);   // acercamiento al torso/cabeza
+        const mk = new PIXI.Graphics().circle(0, 0, 14.5).fill(0xffffff);
+        sp.mask = mk;
+        m.addChild(mk, sp);
+      } else m.addChild(txt(def.emoji, { size: 17, stroke: 0, font: EMOJI_FONT }));
       this.summonRow.addChild(m);
     });
   }
@@ -489,6 +502,69 @@ function statusGroups(ch) {
   const up = get(ch, 'dmgUp'); if (up) out.push({ icon: '⚔️', ring: 0x4ade80, n: up.dur });
   return out;
 }
+
+// ============================================================
+//  IMÁGENES: todas se descargan ANTES del combate (con reintentos); si alguna falla se usa el emoji
+// ============================================================
+const IMG = {};           // ruta -> HTMLImageElement | null
+const SUMMON_TEX = {};    // clave de invocación -> PIXI.Texture
+function loadImage(src, tries = 3) {
+  return new Promise(resolve => {
+    let n = 0;
+    const attempt = () => {
+      const im = new Image();
+      let done = false;
+      const finish = ok => {
+        if (done) return; done = true; clearTimeout(timer);
+        if (ok) resolve(im);
+        else if (++n < tries) setTimeout(attempt, 400 * n);
+        else resolve(null);
+      };
+      const timer = setTimeout(() => finish(false), 8000);
+      im.onload = () => finish(true);
+      im.onerror = () => finish(false);
+      im.src = n ? `${src}?reintento=${n}` : src;
+    };
+    attempt();
+  });
+}
+// Abierto con doble clic (file://) el navegador bloquea usar imágenes locales en el juego: se detecta y se usa emoji.
+function usable(img) {
+  if (!img) return false;
+  try {
+    const g = document.createElement('canvas').getContext('2d');
+    g.drawImage(img, 0, 0, 1, 1); g.getImageData(0, 0, 1, 1);
+    return true;
+  } catch (e) { return false; }
+}
+async function preloadImages() {
+  const srcs = [...new Set([...ALLIES, ...ENEMIES, ...Object.values(SUMMONS)].map(d => d.image).filter(Boolean))];
+  const bar = $('#loading-bar'), label = $('#loading-text');
+  let done = 0;
+  await Promise.all(srcs.map(async src => {
+    const im = await loadImage(src);
+    IMG[src] = usable(im) ? im : null;
+    done++;
+    if (bar) bar.style.width = `${done / srcs.length * 100}%`;
+    if (label) label.textContent = `Cargando imágenes ${done}/${srcs.length}`;
+  }));
+  const fallidas = srcs.filter(s => !IMG[s]);
+  if (fallidas.length) console.warn('Imágenes no disponibles (se usa emoji). Si abriste index.html con doble clic, usa el servidor local:', fallidas);
+  for (const [key, def] of Object.entries(SUMMONS)) {
+    const im = IMG[def.image];
+    if (im) SUMMON_TEX[key] = canvasTex(im.naturalWidth, im.naturalHeight, g => g.drawImage(im, 0, 0), 1);
+  }
+  const ld = $('#loading');
+  if (ld) { ld.classList.add('fade'); setTimeout(() => ld.remove(), 500); }
+}
+function drawCover(g, img, x, y, w, h, cx = .5, cy = .3) {
+  const s = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+  const sw = w / s, sh = h / s;
+  g.drawImage(img, (img.naturalWidth - sw) * cx, (img.naturalHeight - sh) * cy, sw, sh, x, y, w, h);
+}
+const imgHtml = (src, alt = '') => IMG[src] ? `<img src="${src}" alt="${alt}">` : '';
+
+await preloadImages();
 
 const cards = [];
 const colX = i => W / 2 + (i - 2) * 178;
@@ -739,7 +815,13 @@ function summonSprite(def, x, y, size) {
   const cont = new PIXI.Container(); cont.position.set(x, y);
   const glow = new PIXI.Sprite(dotTex); glow.anchor.set(.5); glow.tint = def.color; glow.blendMode = 'add';
   glow.scale.set(size / 30); glow.alpha = .8;
-  cont.addChild(glow, txt(def.emoji, { size, stroke: 0, font: EMOJI_FONT }));
+  const key = Object.keys(SUMMONS).find(k => SUMMONS[k] === def);
+  const tex = SUMMON_TEX[key];
+  if (tex) {
+    const sp = new PIXI.Sprite(tex); sp.anchor.set(.5);
+    sp.scale.set(size * 2.3 / tex.width);
+    cont.addChild(glow, sp);
+  } else cont.addChild(glow, txt(def.emoji, { size, stroke: 0, font: EMOJI_FONT }));
   fxLayer.addChild(cont);
   return cont;
 }
@@ -1187,7 +1269,7 @@ function log(html, cls = '') {
 function refreshAll() { cards.forEach(c => c.refresh()); renderPanel(); renderOrder(); }
 
 function renderOrder() {
-  const chip = (c, cls) => `<div class="chip ${c.side} ${cls} ${c.dead ? 'dead' : ''}" title="${c.name} · Vel ${Math.round(stats(c).spd)}"><span>${c.emoji}</span><small>${Math.round(stats(c).spd)}</small></div>`;
+  const chip = (c, cls) => `<div class="chip ${c.side} ${cls} ${c.dead ? 'dead' : ''}" title="${c.name} · Vel ${Math.round(stats(c).spd)}"><span>${imgHtml(c.image, c.name) || c.emoji}</span><small>${Math.round(stats(c).spd)}</small></div>`;
   let html = state.actedOrder.map(c => chip(c, 'done')).join('');
   if (state.current) html += chip(state.current, 'now');
   html += remainingSorted().map(c => chip(c, '')).join('');
@@ -1213,7 +1295,7 @@ function describeStatus(ch) {
   summonsOf(ch).forEach(s => {
     const d = SUMMONS[s.key];
     const what = `${d.hits > 1 ? d.hits + ' golpes de ' : ''}${Math.round(d.mult * 100)}% del Daño de ${ch.name}${d.bleed ? ' + Sangrado' : ''}${d.burn ? ` + Quemadura ${Math.round(d.burn * 100)}%` : ''}`;
-    out.push(`<div class="eff buff"><span class="ei">${d.emoji}</span><div><b>${d.name}</b><small>${what} · ${s.dur} ronda(s)${s.fresh ? ' · actúa desde su próximo turno' : ''}</small></div><div class="tags"><span class="tag">Invocación</span></div></div>`);
+    out.push(`<div class="eff buff"><span class="ei">${imgHtml(d.image, d.name) || d.emoji}</span><div><b>${d.name}</b><small>${what} · ${s.dur} ronda(s)${s.fresh ? ' · actúa desde su próximo turno' : ''}</small></div><div class="tags"><span class="tag">Invocación</span></div></div>`);
   });
   return out.length ? `<div class="effects">${out.join('')}</div>` : '<div class="none">Sin buffs ni debuffs</div>';
 }
@@ -1252,7 +1334,7 @@ function renderPanel() {
 
   root.innerHTML = `
     <div class="p-head ${ch.side}">
-      <div class="p-portrait" style="--c:${ch.color}">${ch.emoji}</div>
+      <div class="p-portrait" style="--c:${ch.color}">${imgHtml(ch.image, ch.name) || ch.emoji}</div>
       <div><div class="p-name">${ch.name}</div><div class="p-role">${ch.role}</div>
         <span class="p-side ${ch.side}">${ch.side === 'ally' ? 'Tu equipo' : 'Rival'}</span></div>
       ${ch.dead ? '<div class="p-dead">Derrotado</div>' : ''}

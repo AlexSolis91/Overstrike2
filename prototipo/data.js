@@ -62,13 +62,13 @@ function slots(a1, e1, c1, a2 = { locked: true }, e2 = { locked: true }, c2 = { 
 
 // target: enemy | ally | allEnemies | allAllies   ·   style: melee | ranged | support
 const ALLIES = [
-  { name: 'Ren', role: 'Monarca de las Sombras', emoji: '🌑', color: '#8b5cf6',
+  { name: 'Sun Jin Woo', role: 'Monarca de las Sombras', emoji: '🌑', color: '#8b5cf6', image: 'assets/personajes/sun-jin-woo.webp',
     base: { hp: 1300, spd: 112, dmg: 190, critRate: .20, critDmg: .50, armor: .18, acc: .95, res: .20, block: .04, dot: .10, pen: .25 },
     slots: slots('frostmourne', 'yelmo', 'anilloCobre'),
     moves: [
       { name: 'Daga Sombría', target: 'enemy', style: 'melee', mult: 1.0, color: 0xc4b5fd, desc: 'Causa 100% de Daño a un enemigo.' },
-      { name: 'Alzarse: Caballero', target: 'self', style: 'support', summon: 'knight', color: 0x8b5cf6, desc: 'Invoca al Caballero Sombrío (3 rondas). Cada turno de Ren golpea al enemigo con menos HP con 60% del Daño de Ren. Reemplaza a otra invocación activa.' },
-      { name: 'Alzarse: Bestia', target: 'self', style: 'support', summon: 'beast', color: 0xef4444, desc: 'Invoca a la Bestia Carmesí (2 rondas). Cada turno de Ren golpea 2 veces (35%) a un enemigo al azar y aplica Sangrado. Reemplaza a otra invocación activa.' },
+      { name: 'Alzarse: Igris', target: 'self', style: 'support', summon: 'knight', color: 0x8b5cf6, desc: 'Invoca a Igris (3 rondas). Cada turno de Sun Jin Woo golpea al enemigo con menos HP con 60% de su Daño. Reemplaza a otra invocación activa.' },
+      { name: 'Alzarse: Bestia', target: 'self', style: 'support', summon: 'beast', color: 0xef4444, desc: 'Invoca a la Bestia Carmesí (2 rondas). Cada turno de Sun Jin Woo golpea 2 veces (35%) a un enemigo al azar y aplica Sangrado. Reemplaza a otra invocación activa.' },
     ] },
   { name: 'Nyra', role: 'Alquimista', emoji: '🐍', color: '#7ee36b',
     base: { hp: 1150, spd: 120, dmg: 170, critRate: .12, critDmg: .50, armor: .10, acc: 1.3, res: .25, block: .03, dot: .25, pen: .40 },
@@ -158,10 +158,11 @@ const EFFECTS = {
   summon: { name: 'Invocación', icon: '✦',  color: 0xffd36b, kind: 'buff',   tags: ['Invocación'] },
 };
 
+// image: ruta opcional a la imagen optimizada (herramientas/optimizar_imagenes.py). Si falta o no carga, se usa el emoji.
 // Invocaciones: son un buff del invocador (no ocupan espacio en el campo, no se les puede atacar, se pueden Disipar
 // y desaparecen si muere el invocador). Su daño sale de las estadísticas del invocador.
 const SUMMONS = {
-  knight: { name: 'Caballero Sombrío', emoji: '🥷', color: 0x8b5cf6, mult: .60, hits: 1, pick: 'lowest', dur: 3, max: 1 },
+  knight: { name: 'Igris', emoji: '🥷', color: 0x8b5cf6, image: 'assets/invocaciones/igris.webp', mult: .60, hits: 1, pick: 'lowest', dur: 3, max: 1 },
   beast:  { name: 'Bestia Carmesí',    emoji: '🦂', color: 0xef4444, mult: .35, hits: 2, bleed: true, pick: 'random', dur: 2, max: 1 },
   dragon: { name: 'Dragón',            emoji: '🐉', color: 0xf97316, mult: .30, burn: .05, pick: 'random', dur: 3, max: 3 },
 };
