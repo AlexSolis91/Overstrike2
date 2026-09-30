@@ -6,14 +6,20 @@ const { PIXI, gsap } = window;
 
 function textura(p) {
   return canvasTex(CW, CH, (g, w, h) => {
-    const aliado = p.lado === 'jugador';
+    const aliado = p.lado === 'jugador', lider = p.esLider;
     const f = g.createLinearGradient(0, 0, w, h);
-    if (aliado) { f.addColorStop(0, '#f3d58a'); f.addColorStop(.5, '#9c7a35'); f.addColorStop(1, '#5e4515'); }
+    if (lider) [[0, '#fff6d0'], [.18, '#f7c948'], [.4, '#8a5a0c'], [.6, '#f7c948'], [.82, '#b7821f'], [1, '#fff0b3']].forEach(([o, c]) => f.addColorStop(o, c));
+    else if (aliado) { f.addColorStop(0, '#f3d58a'); f.addColorStop(.5, '#9c7a35'); f.addColorStop(1, '#5e4515'); }
     else { f.addColorStop(0, '#ff9a9a'); f.addColorStop(.5, '#9b2f3d'); f.addColorStop(1, '#4a121b'); }
     rr(g, 0, 0, w, h, 12); g.fillStyle = f; g.fill();
+    const b = lider ? 5 : 3;
+    if (lider) {                                  // bisel: brillo exterior y sombra interior
+      rr(g, 1, 1, w - 2, h - 2, 11.5); g.strokeStyle = 'rgba(255,251,230,.95)'; g.lineWidth = 1; g.stroke();
+      rr(g, b - 1, b - 1, w - 2 * b + 2, h - 2 * b + 2, 9.5); g.strokeStyle = 'rgba(70,45,5,.95)'; g.lineWidth = 1.2; g.stroke();
+    }
     const bgc = g.createLinearGradient(0, 0, 0, h);
-    bgc.addColorStop(0, '#1c2233'); bgc.addColorStop(1, '#0b0e16');
-    rr(g, 3, 3, w - 6, h - 6, 10); g.fillStyle = bgc; g.fill();
+    bgc.addColorStop(0, lider ? '#231d14' : '#1c2233'); bgc.addColorStop(1, '#0b0e16');
+    rr(g, b, b, w - 2 * b, h - 2 * b, 9); g.fillStyle = bgc; g.fill();
 
     g.save(); rr(g, 9, 9, w - 18, 112, 8); g.clip();
     const ar = g.createRadialGradient(w / 2, 58, 6, w / 2, 58, 95);
@@ -42,7 +48,7 @@ function textura(p) {
     rb.addColorStop(.85, 'rgba(10,12,20,.96)'); rb.addColorStop(1, 'rgba(10,12,20,0)');
     g.fillStyle = rb; g.fillRect(4, 110, w - 8, 24);
     g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.strokeStyle = aliado ? 'rgba(243,213,138,.6)' : 'rgba(255,138,138,.6)'; g.lineWidth = 1;
+    g.strokeStyle = lider ? 'rgba(255,215,110,.95)' : aliado ? 'rgba(243,213,138,.6)' : 'rgba(255,138,138,.6)'; g.lineWidth = 1;
     g.beginPath(); g.moveTo(16, 110.5); g.lineTo(w - 16, 110.5); g.moveTo(16, 133.5); g.lineTo(w - 16, 133.5); g.stroke();
     g.fillStyle = '#fff';
     let fs = 14;
@@ -54,7 +60,35 @@ function textura(p) {
     g.font = `10px ${EMOJI_FONT}`; g.fillText('⚔️', 23, 161.5); g.fillText('⚡', w - 59, 161.5);
     rr(g, 12, 178, w - 24, 14, 5); g.fillStyle = '#05070b'; g.fill();
     g.strokeStyle = 'rgba(255,255,255,.14)'; g.stroke();
+    if (lider) ornamentosLider(g, w, h);
   });
+}
+
+// Filigrana dorada en las cuatro esquinas + gema en la parte superior (solo la carta de líder)
+function ornamentosLider(g, w, h) {
+  const oro = g.createLinearGradient(0, 0, w, h);
+  oro.addColorStop(0, '#fff3c4'); oro.addColorStop(.5, '#e0a82e'); oro.addColorStop(1, '#fff0b3');
+  const esquina = (x, y, sx, sy) => {
+    g.save(); g.translate(x, y); g.scale(sx, sy);
+    g.strokeStyle = oro; g.lineWidth = 2; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(3, 24); g.lineTo(3, 9); g.quadraticCurveTo(3, 3, 9, 3); g.lineTo(24, 3); g.stroke();
+    g.lineWidth = 1.2;
+    g.beginPath(); g.moveTo(8, 18); g.quadraticCurveTo(8, 8, 18, 8); g.stroke();
+    g.beginPath(); g.arc(24, 3, 1.8, 0, Math.PI * 2); g.arc(3, 24, 1.8, 0, Math.PI * 2); g.fillStyle = '#fff3c4'; g.fill();
+    g.beginPath(); g.moveTo(6.5, 1.5); g.lineTo(11.5, 6.5); g.lineTo(6.5, 11.5); g.lineTo(1.5, 6.5); g.closePath();
+    g.fillStyle = '#e11d48'; g.fill(); g.strokeStyle = '#fff3c4'; g.lineWidth = 1; g.stroke();
+    g.restore();
+  };
+  esquina(2, 2, 1, 1); esquina(w - 2, 2, -1, 1); esquina(2, h - 2, 1, -1); esquina(w - 2, h - 2, -1, -1);
+  // gema central superior con alas de filigrana
+  const cx = w / 2;
+  g.strokeStyle = oro; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(cx - 26, 3); g.quadraticCurveTo(cx - 12, 3, cx - 8, 8); g.moveTo(cx + 26, 3); g.quadraticCurveTo(cx + 12, 3, cx + 8, 8); g.stroke();
+  g.beginPath(); g.moveTo(cx, 0.5); g.lineTo(cx + 8, 8); g.lineTo(cx, 15.5); g.lineTo(cx - 8, 8); g.closePath();
+  const gema = g.createLinearGradient(cx - 8, 0, cx + 8, 16);
+  gema.addColorStop(0, '#ffe4e6'); gema.addColorStop(.35, '#f43f5e'); gema.addColorStop(1, '#881337');
+  g.fillStyle = gema; g.fill(); g.strokeStyle = '#fff3c4'; g.lineWidth = 1.3; g.stroke();
+  g.beginPath(); g.moveTo(cx - 2.5, 5); g.lineTo(cx, 3); g.lineTo(cx + 1, 6); g.fillStyle = 'rgba(255,255,255,.8)'; g.fill();
 }
 
 export class Carta {
@@ -81,10 +115,11 @@ export class Carta {
     this.cracks = new PIXI.Graphics(); body.addChild(this.cracks);
     this.summonRow = new PIXI.Container(); this.summonRow.position.set(-CW / 2 + 4, -CH / 2 + 8); body.addChild(this.summonRow);
 
-    if (p.esLider) {                                                   // casilla de líder
-      this.corona = txt('👑', { size: 22, stroke: 0, font: EMOJI_FONT });
-      this.corona.position.set(-CW / 2 + 2, -CH / 2 - 8); this.corona.rotation = -.35;
-      c.addChild(this.corona);
+    if (p.esLider) {                                                   // casilla de líder: resplandor dorado
+      this.liderGlow = new PIXI.Graphics().roundRect(-CW / 2 - 3, -CH / 2 - 3, CW + 6, CH + 6, 14).stroke({ width: 7, color: 0xf7c948, alpha: .35 });
+      this.liderGlow.filters = [new PIXI.BlurFilter({ strength: 6 })];
+      c.addChildAt(this.liderGlow, c.getChildIndex(this.shadow) + 1);
+      this.liderT = 0;
     }
     this.statusRow = new PIXI.Container(); this.statusRow.y = CH / 2 + 17; c.addChild(this.statusRow);
     this.marker = txt('▼', { size: 22, fill: '#ffd36b', stroke: 4 }); this.marker.y = -CH / 2 - 20; this.marker.alpha = 0; c.addChild(this.marker);
@@ -132,7 +167,7 @@ export class Carta {
       this.shieldBadge.text = `🛡 ${Math.round(v.escudo)}`;
     } else this.shieldBadge.text = '';
     this.estados(); this.invocaciones();
-    if (this.corona) this.corona.alpha = v.muerto ? .25 : 1;
+    if (this.liderGlow) this.liderGlow.alpha = v.muerto ? 0 : 1;
   }
 
   dibujarHp() {
@@ -211,6 +246,17 @@ export class Carta {
     this.summonRow.children.forEach((m, i) => { if (m.glow) m.glow.alpha = .5 + .3 * Math.sin(T * 4 + i); });
 
     const { x, y } = this.c;
+    if (this.liderGlow) {                          // líder: resplandor que respira + dos destellos que recorren el marco
+      this.liderGlow.alpha = .7 + .3 * Math.sin(T * 1.6);
+      const per = 2 * (CW + CH);
+      this.liderT = (this.liderT + dt * 2.4) % per;
+      for (const d of [this.liderT, (this.liderT + per / 2) % per]) {
+        const [px, py] = d < CW ? [-CW / 2 + d, -CH / 2] : d < CW + CH ? [CW / 2, -CH / 2 + d - CW]
+          : d < 2 * CW + CH ? [CW / 2 - (d - CW - CH), CH / 2] : [-CW / 2, CH / 2 - (d - 2 * CW - CH)];
+        const k = this.body.scale.x;
+        spawn({ x: x + px * k, y: y + this.body.y + py * k, color: pick([0xfff3c4, 0xf7c948, 0xffffff]), size: rand(.14, .24), life: 24, drag: .9, grow: -.6 });
+      }
+    }
     const tiene = id => v.estados.some(e => e.id === id);
     if (tiene('burn') && Math.random() < .35 * dt)
       spawn({ x: x + rand(-60, 60), y: y + rand(30, 95), vy: rand(-1.4, -2.8), vx: rand(-.3, .3), color: pick([0xff7a2a, 0xffb347, 0xff4500]), size: rand(.12, .24), life: rand(30, 50), drag: .99, grow: -.8 });
