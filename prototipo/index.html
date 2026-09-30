@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Overstrike 2 — Prototipo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <aside id="panel"><div id="panel-inner"></div></aside>
+
+    <main id="field">
+      <div id="topbar">
+        <div id="round-label">Ronda 1</div>
+        <div id="order"></div>
+      </div>
+      <div id="hint" class="hidden"></div>
+
+      <div id="toolbar">
+        <span class="tb-label">Probar efectos en la carta seleccionada</span>
+        <div class="tb-buttons">
+          <button data-fx="hit">⚔️ Golpe</button>
+          <button data-fx="crit">💥 Crítico</button>
+          <button data-fx="block">✋ Bloqueo</button>
+          <button data-fx="heal">💚 Curar</button>
+          <button data-fx="shield">🛡️ Escudo</button>
+          <button data-fx="burn">🔥 Quemadura</button>
+          <button data-fx="poison">🧪 Veneno</button>
+          <button data-fx="bleed">🩸 Sangrado</button>
+          <button data-fx="bomb">💣 Explosión</button>
+          <button data-fx="buff">⬆️ Buff</button>
+          <button data-fx="cleanse">🧹 Limpiar</button>
+          <button data-fx="tick">⏱️ Tick DoT</button>
+        </div>
+      </div>
+
+      <div id="log"></div>
+
+      <div id="overlay" class="hidden">
+        <div class="ov-box">
+          <h1 id="ov-title"></h1>
+          <p id="ov-sub"></p>
+          <button id="ov-restart">Jugar de nuevo</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="relic-pop" class="hidden"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="data.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
