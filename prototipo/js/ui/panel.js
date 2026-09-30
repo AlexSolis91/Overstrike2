@@ -10,12 +10,18 @@ const OBJ = { enemigo: 'Un enemigo', aliado: 'Un aliado', todosEnemigos: 'Todos 
 const ESC = { dano: 'Daño', hp: 'HP', vel: 'Velocidad' };
 
 export function setHint(t) { const h = $('#hint'); h.textContent = t; h.classList.toggle('hidden', !t); }
+let sinLeer = 0;
 export function log(texto, cls = '') {
   const el = document.createElement('div');
   el.className = `log-line ${cls}`; el.textContent = texto;
   const L = $('#log'); L.prepend(el);
-  while (L.children.length > 40) L.lastChild.remove();
+  while (L.children.length > 300) L.lastChild.remove();
+  if ($('#log-panel').classList.contains('hidden')) {           // contador de eventos nuevos mientras está cerrado
+    sinLeer++;
+    const b = $('#log-badge'); b.textContent = sinLeer > 99 ? '99+' : sinLeer; b.classList.remove('hidden');
+  }
 }
+export function logLeido() { sinLeer = 0; $('#log-badge').classList.add('hidden'); }
 
 export function renderOrden(orden, personajes, vistas) {
   if (!orden) return;
@@ -35,7 +41,6 @@ export function renderPanel(p, v, ui) {
   if (!p || !v) { root.innerHTML = '<div class="p-empty">Selecciona una carta para ver su información</div>'; return; }
   const s = v.stats, max = v.maxHp;
   const r = v.hp / max, total = Math.max(max, v.hp + v.escudo);
-  const miTurno = ui.miTurno && ui.actual === p.uid;
 
   const statRows = ['hp', 'spd', 'dmg', 'critRate', 'critDmg', 'armor', 'acc', 'res', 'block', 'dot', 'pen'].map(k => {
     const capped = (k === 'block' && s.block > .5) || (k === 'armor' && s.armor > .75);
@@ -61,14 +66,8 @@ export function renderPanel(p, v, ui) {
 
   const moves = p.movimientos.map(m => {
     const cd = v.cds[m.categoria] ?? 0;
-    const puede = miTurno && !v.muerto && cd === 0;
-    const bono = v.bonos[m.categoria] || 0;
-    const estimado = m.pct ? Math.round(ESCALADO[m.escala || 'dano'](s) * m.pct * (1 + bono)) : null;
-    const extra = [
-      estimado !== null ? `≈ <b>${estimado}</b> de daño${(m.golpes || 1) > 1 ? ` × ${m.golpes}` : ''} · escala por ${ESC[m.escala || 'dano']}` : '',
-      bono ? `bono acumulado +${Math.round(bono * 100)}%` : '',
-    ].filter(Boolean).join(' · ');
-    return `<div class="move ${puede ? 'can' : ''} ${miTurno && ui.movSel === m.categoria ? 'sel' : ''} cat-${m.categoria}" data-cat="${m.categoria}">
+    const extra = calculoTexto(m, v);
+    return `<div class="move cat-${m.categoria}">
       <div class="mv-top"><span class="mv-cat">${CAT[m.categoria]}</span><span class="mv-name">${m.nombre}</span>
         <span class="mv-cd ${cd ? '' : 'ok'}">${cd ? `⏳ ${cd}` : 'Listo'}</span></div>
       <div class="mv-meta">${OBJ[m.objetivo] || ''}${m.cd ? ` · Cooldown ${m.cd}` : ''}</div>
@@ -89,15 +88,44 @@ export function renderPanel(p, v, ui) {
       ${v.escudo >= 1 ? `<div class="shield" style="left:${v.hp / total * 100}%;width:${v.escudo / total * 100}%"></div>` : ''}
       <span>${Math.round(v.hp)} / ${Math.round(max)}${v.escudo >= 1 ? ` · 🛡 ${Math.round(v.escudo)}` : ''}</span>
     </div>
-    ${miTurno ? `<div class="turn-note">${ui.movSel ? 'Haz clic en un objetivo (Esc para cancelar)' : 'Tu turno: elige un movimiento'}</div>` : ''}
+    <section><h3>Estadísticas</h3><div class="stats">${statRows}</div></section>
+    <section><h3>Reliquias</h3><div class="relics">${slots}</div></section>
+    <section><h3>Buffs y debuffs</h3>${efectos.length ? `<div class="effects">${efectos.join('')}</div>` : '<div class="none">Sin buffs ni debuffs</div>'}</section>
     ${p.lider ? `<section><h3>Habilidad de líder</h3><div class="skill ${p.esLider ? '' : 'off'}"><b>${p.lider.nombre}</b><p>${p.lider.desc}</p>
       ${p.esLider ? '' : '<small>Inactiva: solo funciona en la casilla de líder</small>'}</div></section>` : ''}
     ${p.pasiva ? `<section><h3>Pasiva</h3><div class="skill"><b>${p.pasiva.nombre}</b><p>${p.pasiva.desc}</p></div></section>` : ''}
     <section><h3>Movimientos</h3><div class="moves">${moves}</div></section>
-    <section><h3>Buffs y debuffs</h3>${efectos.length ? `<div class="effects">${efectos.join('')}</div>` : '<div class="none">Sin buffs ni debuffs</div>'}</section>
-    <section><h3>Estadísticas</h3><div class="stats">${statRows}</div></section>
-    <section><h3>Reliquias</h3><div class="relics">${slots}</div></section>
     ${p.prueba ? '<div class="placeholder-note">Personaje de prueba: no es oficial, solo sirve para probar el motor.</div>' : ''}`;
+}
+
+function calculoTexto(m, v) {
+  const bono = v.bonos[m.categoria] || 0;
+  const estimado = m.pct ? Math.round(ESCALADO[m.escala || 'dano'](v.stats) * m.pct * (1 + bono)) : null;
+  return [
+    estimado !== null ? `≈ <b>${estimado}</b> de daño${(m.golpes || 1) > 1 ? ` × ${m.golpes}` : ''} · escala por ${ESC[m.escala || 'dano']}` : '',
+    bono ? `bono acumulado +${Math.round(bono * 100)}%` : '',
+  ].filter(Boolean).join(' · ');
+}
+
+// ---------------------------------------------------------------- barra de movimientos (abajo)
+export function renderAccion(p, v, ui) {
+  const bar = $('#actionbar');
+  if (!p || !v || !ui.miTurno) {
+    const texto = !p ? 'Esperando…' : p.lado === 'rival' ? `Turno rival: ${p.nombre}` : `${p.nombre} está actuando…`;
+    bar.innerHTML = ui.fin ? '' : `<div class="act-espera">${texto}</div>`;
+    return;
+  }
+  bar.innerHTML = p.movimientos.map(m => {
+    const cd = v.cds[m.categoria] ?? 0;
+    const calc = calculoTexto(m, v);
+    return `<button class="act ${m.categoria} ${cd || ui.ocupado ? 'off' : ''} ${ui.movSel === m.categoria ? 'sel' : ''}" data-cat="${m.categoria}">
+      <div class="act-top"><span class="act-cat">${CAT[m.categoria]}</span><span class="act-cd ${cd ? '' : 'ok'}">${cd ? '' : 'Listo'}</span></div>
+      <div class="act-name">${m.nombre}</div>
+      <div class="act-calc">${calc ? calc.split(' · ')[0] : OBJ[m.objetivo]}</div>
+      ${cd ? `<div class="act-cdbig">⏳ ${cd}</div>` : ''}
+      <div class="act-tip"><b>${m.nombre}</b>${OBJ[m.objetivo] || ''}${m.cd ? ` · Cooldown ${m.cd}` : ''}<br>${m.desc || ''}${calc ? `<br><span style="color:#fcd34d">${calc}</span>` : ''}</div>
+    </button>`;
+  }).join('');
 }
 
 // ---------------------------------------------------------------- carta de reliquia

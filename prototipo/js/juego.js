@@ -3,7 +3,7 @@ import { iniciarEscena, G, W, wait, banner } from './ui/graficos.js';
 import { precargar } from './ui/imagenes.js';
 import { Carta } from './ui/carta.js';
 import * as FX from './ui/fx.js';
-import { renderPanel, renderOrden, setHint, log, activarReliquias } from './ui/panel.js';
+import { renderPanel, renderOrden, renderAccion, setHint, log, logLeido, activarReliquias } from './ui/panel.js';
 import { crearCombate } from './motor/combate.js';
 import { elegirIA } from './motor/ia.js';
 import { EQUIPO_JUGADOR, EQUIPO_RIVAL } from './datos/equipos.js';
@@ -37,15 +37,18 @@ for (const p of P) {
 G.alTick = [(dt, T) => { for (const c of Object.values(cartas)) c.tick(dt, T, ui); }];
 activarReliquias(() => por(ui.inspeccionado));
 
-function refrescarPanel() { renderPanel(por(ui.inspeccionado), vistas[ui.inspeccionado], ui); }
+function refrescarPanel() { renderPanel(por(ui.inspeccionado), vistas[ui.inspeccionado], ui); refrescarAccion(); }
+function refrescarAccion() { renderAccion(por(ui.actual), vistas[ui.actual], ui); }
 function inspeccionar(uid) { ui.inspeccionado = uid; refrescarPanel(); }
 function aplicar(e) {
   if (!e.s) return;
   for (const [uid, v] of Object.entries(e.s)) { vistas[uid] = v; cartas[uid].aplicar(v); }
   if (e.s[ui.inspeccionado]) refrescarPanel();
+  else if (e.s[ui.actual]) refrescarAccion();
 }
 function barra() {
-  $('#toolbar').classList.toggle('disabled', !(ui.miTurno && !ui.ocupado));
+  $('#test-panel').classList.toggle('disabled', !(ui.miTurno && !ui.ocupado));
+  refrescarAccion();
 }
 
 // ---------------------------------------------------------------- reproducción de eventos
@@ -63,7 +66,7 @@ async function manejar(e) {
       await wait(1100);
       break;
     case 'turno':
-      ui.actual = e.id; aplicar(e); renderOrden(e.orden, P, vistas);
+      ui.actual = e.id; aplicar(e); renderOrden(e.orden, P, vistas); refrescarAccion();
       break;
     case 'dot':
       aplicar(e); FX.dot(c(e.a), e.dano, e.tipo);
@@ -194,7 +197,7 @@ async function procesar(res) {
 }
 
 function terminar(fin) {
-  ui.miTurno = false; ui.actual = null; ui.ocupado = true; barra(); setHint('');
+  ui.fin = fin; ui.miTurno = false; ui.actual = null; ui.ocupado = true; barra(); setHint('');
   $('#ov-title').textContent = fin.ganador === 'jugador' ? 'Victoria' : 'Derrota';
   $('#ov-sub').textContent = `Combate terminado en la ronda ${fin.ronda}`;
   setTimeout(() => $('#overlay').classList.remove('hidden'), 700);
@@ -212,7 +215,7 @@ async function ejecutar(categoria, objetivo) {
   await procesar(combate.actuar({ categoria, objetivo }));
 }
 function elegirMovimiento(cat) {
-  if (!ui.miTurno || ui.ocupado || ui.inspeccionado !== ui.actual) return;
+  if (!ui.miTurno || ui.ocupado) return;
   const op = ui.opciones.find(o => o.categoria === cat);
   if (!op?.disponible) return;
   const mov = por(ui.actual).movimientos.find(m => m.categoria === cat);
@@ -226,10 +229,29 @@ function tocarCarta(carta) {
   if (ui.movSel && ui.miTurno && ui.objetivosValidos?.includes(carta.p.uid)) { ejecutar(ui.movSel, carta.p.uid); return; }
   inspeccionar(carta.p.uid);
 }
-$('#panel-inner').addEventListener('click', e => { const m = e.target.closest('.move.can'); if (m) elegirMovimiento(m.dataset.cat); });
-addEventListener('keydown', e => { if (e.key === 'Escape' && ui.movSel) cancelarObjetivo(); });
+$('#actionbar').addEventListener('click', e => {
+  const b = e.target.closest('.act');
+  if (!b || b.classList.contains('off')) return;
+  if (ui.movSel === b.dataset.cat) { cancelarObjetivo(); return; }       // clic otra vez = cancelar
+  elegirMovimiento(b.dataset.cat);
+});
+function alternar(id, boton) {
+  const el = $(id), abrir = el.classList.contains('hidden');
+  for (const [otro, btn] of [['#log-panel', '#btn-log'], ['#test-panel', '#btn-test']]) { $(otro).classList.add('hidden'); $(btn).classList.remove('on'); }
+  if (abrir) { el.classList.remove('hidden'); $(boton).classList.add('on'); }
+  if (id === '#log-panel') logLeido();
+}
+$('#btn-log').addEventListener('click', () => alternar('#log-panel', '#btn-log'));
+$('#log-close').addEventListener('click', () => alternar('#log-panel', '#btn-log'));
+$('#btn-test').addEventListener('click', () => alternar('#test-panel', '#btn-test'));
+addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (ui.movSel) cancelarObjetivo();
+  else if (!$('#log-panel').classList.contains('hidden')) alternar('#log-panel', '#btn-log');
+  else if (!$('#test-panel').classList.contains('hidden')) alternar('#test-panel', '#btn-test');
+});
 $('#ov-restart').addEventListener('click', () => location.reload());
-$('#toolbar').addEventListener('click', async e => {
+$('#test-panel').addEventListener('click', async e => {
   const b = e.target.closest('button');
   if (!b || !ui.miTurno || ui.ocupado) return;
   cancelarObjetivo();

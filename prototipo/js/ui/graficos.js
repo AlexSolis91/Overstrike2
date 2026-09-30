@@ -64,7 +64,7 @@ function layout() {
   const { app, world } = G;
   const w = app.screen.width, h = app.screen.height;
   G.lastW = w; G.lastH = h;
-  const top = 52, bottom = window.innerWidth <= 900 ? 50 : 84, avail = Math.max(200, h - top - bottom);
+  const top = 52, bottom = window.innerWidth <= 900 ? 84 : 104, avail = Math.max(200, h - top - bottom);
   const s = Math.min(w / W, avail / H);
   world.scale.set(s);
   world.x = (w - W * s) / 2;

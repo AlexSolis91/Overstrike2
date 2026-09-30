@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=3">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
   <div id="app">
@@ -20,8 +20,13 @@
       </div>
       <div id="hint" class="hidden"></div>
 
-      <div id="toolbar">
-        <span class="tb-label">Probar efectos en la carta seleccionada</span>
+      <div id="tools">
+        <button id="btn-log" title="Registro de batalla">📜 Registro<span id="log-badge" class="hidden">0</span></button>
+        <button id="btn-test" title="Herramienta de pruebas (desarrollo)">🧪 Pruebas</button>
+      </div>
+
+      <div id="test-panel" class="hidden">
+        <div class="tp-head">Probar efectos en la carta seleccionada</div>
         <div class="tb-buttons">
           <button data-fx="hit">⚔️ Golpe</button>
           <button data-fx="crit">💥 Crítico</button>
@@ -43,7 +48,12 @@
         </div>
       </div>
 
-      <div id="log"></div>
+      <aside id="log-panel" class="hidden">
+        <div class="lp-head"><span>Registro de batalla</span><button id="log-close" title="Cerrar (Esc)">✕</button></div>
+        <div id="log"></div>
+      </aside>
+
+      <div id="actionbar"></div>
 
       <div id="overlay" class="hidden">
         <div class="ov-box">

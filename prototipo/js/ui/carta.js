@@ -80,14 +80,13 @@ export class Carta {
     this.flashG.alpha = 0; this.flashG.blendMode = 'add'; body.addChild(this.flashG);
     this.cracks = new PIXI.Graphics(); body.addChild(this.cracks);
     this.summonRow = new PIXI.Container(); this.summonRow.position.set(-CW / 2 + 4, -CH / 2 + 8); body.addChild(this.summonRow);
-    this.cdRow = new PIXI.Container(); this.cdRow.position.set(0, CH / 2 - 2); body.addChild(this.cdRow);
 
     if (p.esLider) {                                                   // casilla de líder
       this.corona = txt('👑', { size: 22, stroke: 0, font: EMOJI_FONT });
       this.corona.position.set(-CW / 2 + 2, -CH / 2 - 8); this.corona.rotation = -.35;
       c.addChild(this.corona);
     }
-    this.statusRow = new PIXI.Container(); this.statusRow.y = CH / 2 + 24; c.addChild(this.statusRow);
+    this.statusRow = new PIXI.Container(); this.statusRow.y = CH / 2 + 17; c.addChild(this.statusRow);
     this.marker = txt('▼', { size: 22, fill: '#ffd36b', stroke: 4 }); this.marker.y = -CH / 2 - 20; this.marker.alpha = 0; c.addChild(this.marker);
 
     c.eventMode = 'static'; c.cursor = 'pointer';
@@ -132,7 +131,7 @@ export class Carta {
       this.shieldFx.roundRect(-CW / 2 - 6, -CH / 2 - 6, CW + 12, CH + 12, 16).fill({ color: 0x67e8f9, alpha: .06 }).stroke({ width: 2, color: 0x9ff3ff, alpha: .9 });
       this.shieldBadge.text = `🛡 ${Math.round(v.escudo)}`;
     } else this.shieldBadge.text = '';
-    this.estados(); this.invocaciones(); this.cooldowns();
+    this.estados(); this.invocaciones();
     if (this.corona) this.corona.alpha = v.muerto ? .25 : 1;
   }
 
@@ -179,19 +178,6 @@ export class Carta {
         sp.mask = mk; m.addChild(mk, sp);
       } else m.addChild(txt(def.emoji, { size: 17, stroke: 0, font: EMOJI_FONT }));
       this.summonRow.addChild(m);
-    });
-  }
-
-  // Pequeños indicadores de Especial y Over sobre el borde inferior de la carta
-  cooldowns() {
-    for (const c of this.cdRow.removeChildren()) c.destroy({ children: true });
-    if (this.v.muerto) return;
-    [['especial', 'E', 0x60a5fa], ['over', 'O', 0xfbbf24]].forEach(([cat, letra, color], i) => {
-      const cd = this.v.cds[cat] ?? 0;
-      const b = new PIXI.Container(); b.x = (i - .5) * 30;
-      b.addChild(new PIXI.Graphics().roundRect(-13, -8, 26, 16, 8).fill({ color: cd ? 0x0b0f18 : color, alpha: cd ? .92 : .95 }).stroke({ width: 1.5, color }));
-      b.addChild(txt(cd ? `${letra}${cd}` : letra, { size: 9, weight: '900', fill: cd ? '#9aa3b2' : '#0b0f18', stroke: 0 }));
-      this.cdRow.addChild(b);
     });
   }
 
