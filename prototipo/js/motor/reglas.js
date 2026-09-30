@@ -14,6 +14,7 @@ export const ESCALADO = {
   dano: s => s.dmg,
   hp:   s => s.hp / 15,
   vel:  s => s.spd * .75,
+  hpMax: s => s.hp,        // para curas/escudos "X% del HP máx."
 };
 
 // Cooldown con el que empieza cada categoría (baja 1 al final de cada ronda).

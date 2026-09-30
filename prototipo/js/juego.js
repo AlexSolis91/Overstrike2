@@ -172,6 +172,10 @@ async function manejar(e) {
       break;
     case 'invocacionVuelve': await FX.invocacionVuelve(sprInvocacion); sprInvocacion = null; break;
     case 'actualizar': case 'finRonda': aplicar(e); break;
+    case 'bonoOculto':
+      aplicar(e); FX.textoSobre(c(e.id), '🛡️ ' + e.texto, '#fcd34d', 14, -125);
+      log(`${nombre(e.lider)} (líder): ${nombre(e.id)} gana ${e.texto}`, 'fx');
+      break;
   }
 }
 

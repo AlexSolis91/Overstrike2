@@ -7,7 +7,7 @@ import { imgHtml } from './imagenes.js';
 const $ = s => document.querySelector(s);
 const CAT = { basico: 'Básico', especial: 'Especial', over: 'Over' };
 const OBJ = { enemigo: 'Un enemigo', aliado: 'Un aliado', todosEnemigos: 'Todos los enemigos', todosAliados: 'Todos los aliados', propio: 'Invocación' };
-const ESC = { dano: 'Daño', hp: 'HP', vel: 'Velocidad' };
+const ESC = { dano: 'Daño', hp: 'HP', vel: 'Velocidad', hpMax: 'HP máx.' };
 
 export function setHint(t) { const h = $('#hint'); h.textContent = t; h.classList.toggle('hidden', !t); }
 let sinLeer = 0;
