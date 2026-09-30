@@ -1,5 +1,5 @@
 // Animaciones de los eventos del combate sobre las cartas.
-import { G, CW, CH, EMOJI_FONT, wait, rand, pick, cssHex, spawn, burst, txt, floatText, shakeScene, ringWave, slash, proyectil } from './graficos.js';
+import { G, CW, CH, EMOJI_FONT, wait, rand, pick, cssHex, spawn, burst, txt, floatText, shakeScene, ringWave, slash, proyectil, banner } from './graficos.js';
 import { TEX_INVOCACION } from './imagenes.js';
 import { INVOCACIONES } from '../datos/invocaciones.js';
 const { PIXI, gsap } = window;
@@ -207,6 +207,48 @@ export function lanzar(carta, color) {
   burst(x, y, { n: 12, colors: [color, 0xffffff], speed: 4, size: .22 });
 }
 export const proyectilA = (desde, hasta, color, dur) => proyectil(pos(desde), pos(hasta), color, dur);
+
+// ---------------------------------------------------------------- transformaciones
+export async function transformacion(carta, colorCss, nombre, cambiar) {
+  const col = parseInt(colorCss.slice(1), 16);
+  const { x, y } = pos(carta);
+  carta.c.zIndex = 20;
+  // 1) carga: la carta se eleva, tiembla y absorbe energía
+  gsap.to(carta.body.scale, { x: 1.14, y: 1.14, duration: .9, ease: 'power1.in' });
+  gsap.to(carta.body, { y: -18, duration: .9, ease: 'power1.in' });
+  const temblor = gsap.to(carta.body, { x: 3, duration: .05, repeat: 17, yoyo: true });
+  for (let i = 0; i < 46; i++) setTimeout(() => {
+    const a = rand(0, Math.PI * 2), r = rand(110, 170);
+    spawn({ x: x + Math.cos(a) * r, y: y + Math.sin(a) * r, vx: -Math.cos(a) * r / 16, vy: -Math.sin(a) * r / 16,
+      color: pick([col, 0xffd36b, 0xffffff]), size: rand(.22, .38), life: 17, drag: 1, grow: -.3 });
+  }, i * 18);
+  ringWave(x, y, col, { r0: 120, scale: .15, width: 4, dur: .85 });
+  await wait(900);
+  temblor.kill(); carta.body.x = 0;
+  // 2) explosión y giro
+  flash(carta, 1, col); shakeScene(16);
+  ringWave(x, y, col, { scale: 7, width: 8, dur: .7 }); ringWave(x, y, 0xffffff, { scale: 4, width: 4, dur: .5 });
+  burst(x, y, { n: 60, colors: [col, 0xffd36b, 0xffffff], speed: 12, size: .38, life: 42 });
+  await gsap.to(carta.body.scale, { x: 0, duration: .16, ease: 'power2.in' });
+  cambiar();
+  await gsap.to(carta.body.scale, { x: 1.14, duration: .24, ease: 'back.out(2)' });
+  // 3) anuncio
+  banner(nombre.toUpperCase(), { size: 46, color: colorCss, hold: .9 });
+  await wait(250);
+  gsap.to(carta.body, { y: 0, duration: .35, ease: 'power2.out' });
+  await gsap.to(carta.body.scale, { x: 1, y: 1, duration: .35, ease: 'power2.out' });
+  carta.c.zIndex = 1;
+  await wait(650);
+}
+export async function revertir(carta, cambiar) {
+  const { x, y } = pos(carta);
+  for (let i = 0; i < 22; i++) spawn({ x: x + rand(-50, 50), y: y + rand(-70, 70), vx: rand(-1.5, 1.5), vy: rand(-2, -.5),
+    color: pick([0x6b7280, 0x9ca3af, 0x374151]), size: rand(.6, 1.1), life: rand(40, 65), blend: 'normal', alpha: .6, drag: .97, grow: .8 });
+  await gsap.to(carta.body.scale, { x: 0, duration: .18, ease: 'power2.in' });
+  cambiar();
+  await gsap.to(carta.body.scale, { x: 1, duration: .22, ease: 'back.out(2)' });
+  await wait(250);
+}
 
 // ---------------------------------------------------------------- invocaciones
 export function posMedallon(carta, i) { return { x: carta.c.x - CW / 2 + 4, y: carta.c.y - CH / 2 + 8 + i * 38 }; }

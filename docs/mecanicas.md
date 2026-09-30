@@ -55,6 +55,7 @@ Cada personaje tiene exactamente **3 movimientos**, una **pasiva** y, opcionalme
 - **Empates:** gana la Velocidad base; si persiste, se decide al azar.
 - **DoT de turno** (Quemadura, Veneno): hacen daño al **inicio del turno** del afectado.
 - **Final de la ronda:** bajan duraciones, contadores de Bomba y cooldowns.
+- **Regla general de duraciones:** si un efecto se aplica a alguien que **ya actuó** en la ronda (o que está actuando), su duración no baja al final de esa ronda. Así **"N rondas" = N turnos del afectado**. Por ejemplo, una Quemadura de 1 ronda siempre hace daño 1 vez.
 
 ## 4. Resolución de un golpe
 
@@ -123,6 +124,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | Buff | Etiquetas | Efecto |
 |---|---|---|
 | ⚔️ Furia | Estadística | +X% Daño (dura rondas) |
+| ♨️ Aura de Fuego | Fuego | Cuando el portador recibe un **golpe** de un enemigo, le aplica al atacante Quemadura 5% (1 turno), con tirada de Puntería del portador |
 | 📣 Provocación | Provocación | Los enemigos deben dirigirle sus movimientos de **un objetivo** (incluidas invocaciones). No afecta AOE, objetivos al azar, movimientos a aliados, Confusión ni Posesión. Con varios, se elige entre ellos. Se puede Disipar |
 | ✦ Invocación | Invocación | Ver sección 9 |
 
@@ -131,7 +133,11 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | Acción | Parámetros | Descripción |
 |---|---|---|
 | `efecto` | id, valor, dur, mega, veces | Aplica un buff/debuff del registro (con su tirada) |
-| `curar` | pct, escala | Curación directa (siempre se aplica) |
+| `curar` | pct, escala · o `base: 'hpMaxObjetivo'` · o `base: 'curacion'` | Curación directa (siempre se aplica). Puede ser % del HP máx. del objetivo o % de la curación que activó una pasiva |
+| `bonoPermanente` | stat, pct, por | Bono permanente (p. ej. `hpPct` × Quemaduras en enemigos). Si sube el HP máx., el actual sube lo mismo |
+| `activarDoT` | efecto | Hace el daño de un DoT al instante sin consumirlo (cuenta como daño DoT) |
+| `extenderDuracion` | efecto, rondas | Suma rondas a un DoT activo |
+| `transformar` | turnos | Transforma al personaje en su forma (ver sección 12) |
 | `escudo` | pct, escala | Da Escudo (siempre se aplica) |
 | `limpiar` | cantidad, etiqueta | Quita debuffs |
 | `disipar` | cantidad, etiqueta | Quita buffs (tirada por buff) |
@@ -153,6 +159,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Gatillos de pasiva:**
   - `alAcertarCritico`.
   - `alDanoDoT`: cada vez que un DoT hace daño. Se puede filtrar por `tipo` y por lado (`en: 'enemigos'`).
+  - `alCurarAliado`: cada vez que un aliado **que no sea el dueño de la pasiva** recibe una curación real (incluye robo de HP).
 - **Límite:** una pasiva puede declarar `maxPorRonda`.
 - **Condiciones:**
   - `objetivoTiene: <efecto>`.
@@ -176,6 +183,22 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Piezas de líder disponibles:**
   - `reduccion { categoria, pct }`: reduce el daño recibido por los aliados.
   - `alAplicar { efecto, stat, valor }`: cada vez que su equipo **acierta** ese debuff en un enemigo, un aliado al azar (puede ser el líder) gana un bono **permanente e invisible** a esa estadística. No es un buff y no se puede disipar.
+
+## 12. Transformaciones
+
+- Un **estado** del personaje (no es buff): no se puede Disipar ni Limpiar.
+- **Duración:** en turnos propios dentro de la forma. El turno en que se transforma no cuenta, y un turno perdido por Control sí cuenta.
+- **Qué reemplaza la forma:** estadísticas base y extra, los 3 movimientos y la pasiva.
+- **Qué se conserva:** el % de vida, buffs, debuffs, escudos, invocaciones, bonos permanentes y la habilidad de **líder**.
+- **Cooldowns:**
+  - Los de la forma empiezan listos, salvo su Over (1 ronda de espera).
+  - Los de la forma base siguen bajando durante la transformación.
+- **Al terminar,** vuelve a la forma base.
+- **Imagen:** va en `assets/originales/transformaciones/`, con el nombre de la forma.
+- **Visual:**
+  - Al transformarse: carga de energía, explosión, giro de la carta y el nombre de la forma en grande.
+  - Mientras dura: marco que late en el color de la forma, partículas en los bordes y un contador de turnos.
+  - Al revertir: giro entre humo.
 
 ## 11. Imágenes
 

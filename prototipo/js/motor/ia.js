@@ -41,6 +41,10 @@ export function elegirIA(combate) {
     planes.push({ categoria: op.categoria, objetivo: objetivo?.uid || null });
   }
 
+  if (!planes.length) {                 // nada "ideal": usa el primer movimiento disponible con un objetivo válido
+    const op = esp.opciones.find(o => o.disponible && (o.objetivos.length || !['enemigo', 'aliado'].includes(a.movimientos.find(m => m.categoria === o.categoria).objetivo)));
+    return { categoria: op.categoria, objetivo: op.objetivos[0] || null };
+  }
   const de = c => planes.find(p => p.categoria === c);
   if (de('over') && Math.random() < .75) return de('over');
   if (de('especial') && Math.random() < .7) return de('especial');

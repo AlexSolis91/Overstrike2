@@ -15,7 +15,7 @@ const $ = s => document.querySelector(s);
 // ---------------------------------------------------------------- carga
 await iniciarEscena($('#field'));
 await precargar(
-  [...EQUIPO_JUGADOR, ...EQUIPO_RIVAL].map(p => p.imagen).concat(Object.values(INVOCACIONES).map(i => i.imagen)),
+  [...EQUIPO_JUGADOR, ...EQUIPO_RIVAL].flatMap(p => [p.imagen, p.transformacion?.imagen]).concat(Object.values(INVOCACIONES).map(i => i.imagen)),
   INVOCACIONES,
   (n, total) => { $('#loading-bar').style.width = `${n / total * 100}%`; $('#loading-text').textContent = `Cargando imágenes ${n}/${total}`; },
 );
@@ -172,6 +172,26 @@ async function manejar(e) {
       break;
     case 'invocacionVuelve': await FX.invocacionVuelve(sprInvocacion); sprInvocacion = null; break;
     case 'actualizar': case 'finRonda': aplicar(e); break;
+    case 'transformacion':
+      log(`🔥 ${nombre(e.id)} se transforma en ${e.nombre}`, 'sys');
+      await FX.transformacion(c(e.id), e.color, e.nombre, () => c(e.id).cambiarForma(e.s[e.id].forma));
+      aplicar(e);
+      break;
+    case 'transformacionFin':
+      log(`${nombre(e.id)} vuelve a su forma original`, 'sys');
+      await FX.revertir(c(e.id), () => c(e.id).cambiarForma(null));
+      aplicar(e);
+      break;
+    case 'auraFuego':
+      FX.textoSobre(c(e.a), '♨️ Aura de Fuego', '#ff8a5c', 13, -125);
+      log(`Aura de Fuego de ${nombre(e.a)} contraataca a ${nombre(e.de)}`, 'fx');
+      await wait(150);
+      break;
+    case 'bonoVisible': case 'extension':
+      aplicar(e); FX.textoSobre(c(e.a), e.texto, e.t === 'extension' ? '#ffa04d' : '#86efac', 14, -125);
+      log(`${nombre(e.a)}: ${e.texto}`, 'fx');
+      await wait(180);
+      break;
     case 'bonoOculto':
       aplicar(e); FX.textoSobre(c(e.id), '🛡️ ' + e.texto, '#fcd34d', 14, -125);
       log(`${nombre(e.lider)} (líder): ${nombre(e.id)} gana ${e.texto}`, 'fx');
@@ -222,7 +242,7 @@ function elegirMovimiento(cat) {
   if (!ui.miTurno || ui.ocupado) return;
   const op = ui.opciones.find(o => o.categoria === cat);
   if (!op?.disponible) return;
-  const mov = por(ui.actual).movimientos.find(m => m.categoria === cat);
+  const mov = (vistas[ui.actual]?.movs || por(ui.actual).movimientos).find(m => m.categoria === cat);
   if (mov.objetivo === 'enemigo' || mov.objetivo === 'aliado') {
     ui.movSel = cat; ui.objetivosValidos = op.objetivos; ui.tipoObjetivo = mov.objetivo;
     setHint(`${mov.nombre}: elige ${mov.objetivo === 'aliado' ? 'un aliado' : 'un enemigo'} · Esc para cancelar`);

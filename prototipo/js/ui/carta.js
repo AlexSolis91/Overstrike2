@@ -121,6 +121,13 @@ export class Carta {
       c.addChildAt(this.liderGlow, c.getChildIndex(this.shadow) + 1);
       this.liderT = 0;
     }
+    // Transformación: marco de energía del color de la forma + contador de turnos restantes
+    this.formaG = new PIXI.Graphics(); this.formaG.visible = false;
+    this.formaG.filters = [new PIXI.BlurFilter({ strength: 3 })];
+    c.addChildAt(this.formaG, c.getChildIndex(this.shadow) + 1);
+    this.formaBadge = new PIXI.Container(); this.formaBadge.position.set(CW / 2 + 2, -CH / 2 + 40); this.formaBadge.visible = false;
+    c.addChild(this.formaBadge);
+    this.formaKey = null;
     this.statusRow = new PIXI.Container(); this.statusRow.y = CH / 2 + 17; c.addChild(this.statusRow);
     this.marker = txt('▼', { size: 22, fill: '#ffd36b', stroke: 4 }); this.marker.y = -CH / 2 - 20; this.marker.alpha = 0; c.addChild(this.marker);
 
@@ -168,6 +175,31 @@ export class Carta {
     } else this.shieldBadge.text = '';
     this.estados(); this.invocaciones();
     if (this.liderGlow) this.liderGlow.alpha = v.muerto ? 0 : 1;
+    this.dibujarForma();
+  }
+
+  // Cambia la ilustración/nombre de la carta a la forma (o de vuelta a la base si forma = null)
+  cambiarForma(forma) {
+    const p = forma ? { ...this.p, nombre: forma.nombre, imagen: forma.imagen || '', emoji: forma.emoji || this.p.emoji, color: forma.color || this.p.color } : this.p;
+    this.face.texture = textura(p);
+    this.formaKey = null;
+  }
+  dibujarForma() {
+    const f = this.v?.forma;
+    const key = f && !this.v.muerto ? `${f.nombre}|${f.turnos}` : null;
+    if (key === this.formaKey) return;
+    this.formaKey = key;
+    this.formaG.visible = this.formaBadge.visible = !!key;
+    for (const ch of this.formaBadge.removeChildren()) ch.destroy({ children: true });
+    this.formaG.clear();
+    if (!key) return;
+    const col = parseInt(f.color.slice(1), 16);
+    this.formaCol = col;
+    this.formaG.roundRect(-CW / 2 - 4, -CH / 2 - 4, CW + 8, CH + 8, 15).stroke({ width: 6, color: col, alpha: .9 });
+    const g = new PIXI.Graphics().circle(0, 0, 14).fill({ color: 0x0b0f18, alpha: .95 }).stroke({ width: 2, color: col });
+    const a0 = -Math.PI / 2, a1 = a0 + Math.PI * 2 * Math.max(0, Math.min(1, f.turnos / f.total));
+    g.moveTo(Math.cos(a0) * 18, Math.sin(a0) * 18).arc(0, 0, 18, a0, a1).stroke({ width: 3, color: 0xffd36b });
+    this.formaBadge.addChild(g, txt(String(f.turnos), { size: 13, weight: '900', stroke: 3 }));
   }
 
   dibujarHp() {
@@ -255,6 +287,14 @@ export class Carta {
           : d < 2 * CW + CH ? [CW / 2 - (d - CW - CH), CH / 2] : [-CW / 2, CH / 2 - (d - 2 * CW - CH)];
         const k = this.body.scale.x;
         spawn({ x: x + px * k, y: y + this.body.y + py * k, color: pick([0xfff3c4, 0xf7c948, 0xffffff]), size: rand(.14, .24), life: 24, drag: .9, grow: -.6 });
+      }
+    }
+    if (v.forma && this.formaCol !== undefined) {   // forma: marco que late y llamas/energía subiendo por los bordes
+      this.formaG.alpha = .55 + .45 * Math.sin(T * 4);
+      if (Math.random() < .6 * dt) {
+        const lado = Math.random() < .5 ? -1 : 1, k = this.body.scale.x;
+        spawn({ x: x + lado * (CW / 2 + rand(-3, 5)) * k, y: y + this.body.y + rand(-CH / 2, CH / 2) * k, vy: rand(-1.2, -2.6), vx: lado * rand(0, .5),
+          color: pick([this.formaCol, 0xffd36b, 0xffffff]), size: rand(.14, .26), life: rand(26, 40), drag: .99, grow: -.7 });
       }
     }
     const tiene = id => v.estados.some(e => e.id === id);

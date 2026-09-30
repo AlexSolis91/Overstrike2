@@ -64,7 +64,7 @@ export function renderPanel(p, v, ui) {
     return `<div class="slot empty"><div class="slot-label">${sl.label}</div><div class="slot-name">Vacío</div><div class="slot-sub">${sl.bow ? 'Desbloqueado por el Arco' : 'Disponible'}</div></div>`;
   }).join('');
 
-  const moves = p.movimientos.map(m => {
+  const moves = (v.movs || p.movimientos).map(m => {
     const cd = v.cds[m.categoria] ?? 0;
     const extra = calculoTexto(m, v);
     return `<div class="move cat-${m.categoria}">
@@ -79,6 +79,7 @@ export function renderPanel(p, v, ui) {
     <div class="p-head ${p.lado === 'jugador' ? 'ally' : 'enemy'}">
       <div class="p-portrait" style="--c:${p.color}">${imgHtml(p.imagen, p.nombre) || p.emoji}</div>
       <div><div class="p-name">${p.nombre}</div><div class="p-role">${p.rol || ''}${p.prueba ? ' · de prueba' : ''}</div>
+        ${v.forma ? `<span class="p-side forma" style="--fc:${v.forma.color}">🔥 ${v.forma.nombre} · ${v.forma.turnos} turno(s)</span><br>` : ''}
         <span class="p-side ${p.lado === 'jugador' ? 'ally' : 'enemy'}">${p.lado === 'jugador' ? 'Tu equipo' : 'Rival'}</span>
         ${p.esLider ? '<span class="p-side lider">👑 Líder</span>' : ''}</div>
       ${v.muerto ? '<div class="p-dead">Derrotado</div>' : ''}
@@ -93,7 +94,8 @@ export function renderPanel(p, v, ui) {
     <section><h3>Buffs y debuffs</h3>${efectos.length ? `<div class="effects">${efectos.join('')}</div>` : '<div class="none">Sin buffs ni debuffs</div>'}</section>
     ${p.lider ? `<section><h3>Habilidad de líder</h3><div class="skill ${p.esLider ? '' : 'off'}"><b>${p.lider.nombre}</b><p>${p.lider.desc}</p>
       ${p.esLider ? '' : '<small>Inactiva: solo funciona en la casilla de líder</small>'}</div></section>` : ''}
-    ${p.pasiva ? `<section><h3>Pasiva</h3><div class="skill"><b>${p.pasiva.nombre}</b><p>${p.pasiva.desc}</p></div></section>` : ''}
+    ${(v.pasiva ?? p.pasiva) ? `<section><h3>Pasiva${v.forma ? ' (forma)' : ''}</h3><div class="skill"><b>${(v.pasiva ?? p.pasiva).nombre}</b><p>${(v.pasiva ?? p.pasiva).desc}</p></div></section>` : ''}
+    ${p.transformacion && !v.forma ? `<section><h3>Transformación</h3><div class="skill"><b>${p.transformacion.nombre}</b><p>${p.transformacion.pasiva ? `Pasiva: ${p.transformacion.pasiva.nombre}. ` : ''}Movimientos: ${p.transformacion.movimientos.map(m => m.nombre).join(', ')}.</p></div></section>` : ''}
     <section><h3>Movimientos</h3><div class="moves">${moves}</div></section>
     ${p.prueba ? '<div class="placeholder-note">Personaje de prueba: no es oficial, solo sirve para probar el motor.</div>' : ''}`;
 }
@@ -115,7 +117,7 @@ export function renderAccion(p, v, ui) {
     bar.innerHTML = ui.fin ? '' : `<div class="act-espera">${texto}</div>`;
     return;
   }
-  bar.innerHTML = p.movimientos.map(m => {
+  bar.innerHTML = (v.movs || p.movimientos).map(m => {
     const cd = v.cds[m.categoria] ?? 0;
     const calc = calculoTexto(m, v);
     return `<button class="act ${m.categoria} ${cd || ui.ocupado ? 'off' : ''} ${ui.movSel === m.categoria ? 'sel' : ''}" data-cat="${m.categoria}">

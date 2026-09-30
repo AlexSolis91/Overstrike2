@@ -174,6 +174,13 @@ def main():
     for carpeta, fn in tareas:
         (OUT / carpeta).mkdir(parents=True, exist_ok=True)
         (SRC / carpeta).mkdir(parents=True, exist_ok=True)
+        # Si una original quedó por error en la carpeta de salida, se mueve a "originales"
+        for extra in sorted((OUT / carpeta).glob('*')):
+            if extra.suffix.lower() in EXTS and extra.suffix.lower() != '.webp':
+                destino = SRC / carpeta / extra.name
+                if not destino.exists():
+                    extra.rename(destino)
+                    print(f'  (movida a originales) {carpeta}/{extra.name}')
         for src in sorted((SRC / carpeta).glob('*')):
             if src.suffix.lower() not in EXTS:
                 continue
