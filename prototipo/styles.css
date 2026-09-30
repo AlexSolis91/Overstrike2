@@ -166,6 +166,23 @@ section h3::after { content: ''; flex: 1; height: 1px; background: linear-gradie
 #ov-sub { color: var(--muted); }
 #ov-restart { margin-top: 10px; font-size: 14px; font-weight: 800; padding: 10px 22px; border-radius: 10px; border: 1px solid var(--gold); background: rgba(243, 213, 138, .12); color: var(--gold); cursor: pointer; }
 
+/* ---------- Habilidades y movimientos ---------- */
+.p-side.lider { background: rgba(251, 191, 36, .15); color: #fbbf24; margin-left: 4px; }
+.skill { padding: 8px 10px; border-radius: 8px; background: var(--panel-2); border: 1px solid var(--line); }
+.skill b { font-size: 13px; }
+.skill p { margin: 3px 0 0; color: var(--muted); font-size: 11.5px; line-height: 1.4; }
+.skill small { display: block; margin-top: 4px; color: #fbbf24; font-size: 10.5px; }
+.skill.off { opacity: .55; }
+.mv-top { justify-content: flex-start; }
+.mv-cat { font-size: 9px; font-weight: 900; letter-spacing: .6px; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; background: #232b3d; color: #cbd5e1; }
+.cat-especial .mv-cat { background: rgba(96, 165, 250, .18); color: #93c5fd; }
+.cat-over .mv-cat { background: rgba(251, 191, 36, .18); color: #fbbf24; }
+.mv-cd { margin-left: auto; font-size: 10px; font-weight: 800; color: var(--muted); white-space: nowrap; }
+.mv-cd.ok { color: var(--buff); }
+.mv-meta { font-size: 10.5px; color: #6b7589; margin-top: 3px; }
+.mv-calc { font-size: 11px; color: #fcd34d; margin-top: 4px; }
+.move:not(.can) { opacity: .8; }
+
 /* ---------- Imágenes ---------- */
 .p-portrait { overflow: hidden; }
 .p-portrait img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; display: block; }
