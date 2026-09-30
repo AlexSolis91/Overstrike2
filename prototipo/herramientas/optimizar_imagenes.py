@@ -3,12 +3,15 @@
 Uso (desde la carpeta prototipo):
     python herramientas/optimizar_imagenes.py
 
-Toma las imágenes de assets/originales/{personajes,invocaciones}/ y genera
-versiones WebP ligeras en assets/personajes/ y assets/invocaciones/:
+Toma las imágenes de assets/originales/<tipo>/ y genera versiones WebP ligeras en assets/<tipo>/:
 
-- Personajes: recorte centrado (con sesgo hacia arriba, donde suele estar la cara) a 800x680.
-- Invocaciones: quita el fondo (transparencia real, cuadriculado falso "de Google" o color liso),
-  recorta a la figura y la ajusta a 512x512 con fondo transparente.
+- personajes, transformaciones: recorte centrado (con sesgo hacia arriba, donde suele estar la cara)
+  a 800x680, la proporción de la ilustración de la carta.
+- invocaciones (512x512), reliquias (256x256): quita el fondo (transparencia real, cuadriculado falso
+  "de Google" o color liso), recorta a la figura y la centra en un cuadro con fondo transparente.
+
+El nombre del archivo debe ser el nombre del personaje/invocación/reliquia de su ficha
+(mayúsculas, espacios, acentos y extensiones dobles no importan).
 
 El nombre de salida se normaliza: "SunJinWoo.JPG.jpg" -> "sun-jin-woo.webp".
 Solo procesa imágenes nuevas o modificadas (usa --todo para rehacer todas).
@@ -29,6 +32,7 @@ EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.bmp', '.gif'}
 
 PERSONAJE_SIZE = (800, 680)   # misma proporción que la ilustración de la carta
 INVOCACION_SIZE = 512
+RELIQUIA_SIZE = 256
 
 
 def slug(path: Path) -> str:
@@ -132,7 +136,7 @@ def quitar_cuadricula(rgb: np.ndarray) -> np.ndarray:
     return np.dstack([out, alpha * 255]).astype(np.uint8)
 
 
-def invocacion(src: Path, dst: Path) -> str:
+def recorte_transparente(src: Path, dst: Path, size: int) -> str:
     im = ImageOps.exif_transpose(Image.open(src))
     if im.mode in ('RGBA', 'LA', 'P') and np.asarray(im.convert('RGBA'))[..., 3].min() < 250:
         rgba, nota = im.convert('RGBA'), 'ya tenía transparencia'
@@ -150,9 +154,9 @@ def invocacion(src: Path, dst: Path) -> str:
     bbox = rgba.getchannel('A').point(lambda v: 255 if v > 20 else 0).getbbox()
     if bbox:
         rgba = rgba.crop(bbox)
-    rgba.thumbnail((int(INVOCACION_SIZE * .94),) * 2, Image.LANCZOS)
-    lienzo = Image.new('RGBA', (INVOCACION_SIZE,) * 2, (0, 0, 0, 0))
-    lienzo.paste(rgba, ((INVOCACION_SIZE - rgba.width) // 2, (INVOCACION_SIZE - rgba.height) // 2))
+    rgba.thumbnail((int(size * .94),) * 2, Image.LANCZOS)
+    lienzo = Image.new('RGBA', (size,) * 2, (0, 0, 0, 0))
+    lienzo.paste(rgba, ((size - rgba.width) // 2, (size - rgba.height) // 2))
     lienzo.save(dst, 'WEBP', quality=88, method=6)
     return nota
 
@@ -160,10 +164,16 @@ def invocacion(src: Path, dst: Path) -> str:
 # ---------------------------------------------------------------- main
 def main():
     todo = '--todo' in sys.argv
-    tareas = [('personajes', personaje), ('invocaciones', invocacion)]
+    tareas = [
+        ('personajes', personaje),
+        ('transformaciones', personaje),
+        ('invocaciones', lambda a, b: recorte_transparente(a, b, INVOCACION_SIZE)),
+        ('reliquias', lambda a, b: recorte_transparente(a, b, RELIQUIA_SIZE)),
+    ]
     hechas = 0
     for carpeta, fn in tareas:
         (OUT / carpeta).mkdir(parents=True, exist_ok=True)
+        (SRC / carpeta).mkdir(parents=True, exist_ok=True)
         for src in sorted((SRC / carpeta).glob('*')):
             if src.suffix.lower() not in EXTS:
                 continue
