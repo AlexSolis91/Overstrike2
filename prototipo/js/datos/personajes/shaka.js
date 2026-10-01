@@ -17,9 +17,9 @@ export default {
   },
   pasiva: {
     nombre: 'Sangre de Atena',
-    desc: 'Cada vez que Shaka o un aliado pierde Escudo, ese aliado se cura un 8% del HP máx. de Shaka (máximo 3 veces por ronda).',
+    desc: 'Cada vez que Shaka o un aliado pierde Escudo, ese aliado se cura un 5% del HP máx. de Shaka (máximo 3 veces por ronda).',
     gatillo: 'alPerderEscudo', maxPorRonda: 3, soloSiCura: true,
-    accion: { tipo: 'curar', pct: .08, escala: 'hpMax', a: 'objetivo' },
+    accion: { tipo: 'curar', pct: .05, escala: 'hpMax', a: 'objetivo' },
   },
   movimientos: [
     {
@@ -32,9 +32,9 @@ export default {
     },
     {
       categoria: 'especial', nombre: 'Ohm', objetivo: 'propio', estilo: 'support', color: 0xfacc15, cd: 3,
-      desc: '3 aliados al azar (pueden repetirse) reciben un Escudo del 15% del HP máx. de Shaka y Furia (+50% Daño) por 2 rondas.',
+      desc: '3 aliados al azar (pueden repetirse) reciben un Escudo del 5% del HP máx. de Shaka y Furia (+50% Daño) por 2 rondas.',
       efectos: [{ cuando: 'final', accion: { tipo: 'multiple', a: { aliadosAzar: 3 }, acciones: [
-        { tipo: 'escudo', pct: .15, escala: 'hpMax' },
+        { tipo: 'escudo', pct: .05, escala: 'hpMax' },
         { tipo: 'efecto', id: 'dmgUp', dur: 2 },
       ] } }],
     },
