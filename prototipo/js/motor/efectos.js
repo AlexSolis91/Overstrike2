@@ -13,6 +13,7 @@ export const EFECTOS = {
   freeze:  { nombre: 'Congelación',  mega: 'Mega Congelación',  icono: '🧊', color: 0x7dd3fc, tipo: 'debuff', tags: ['Control'] },
   possess: { nombre: 'Posesión',     mega: 'Mega Posesión',     icono: '👁️', color: 0xc084fc, tipo: 'debuff', tags: ['Control'] },
   confuse: { nombre: 'Confusión',    icono: '🌀', color: 0xf0abfc, tipo: 'debuff', tags: ['Control'] },
+  weaken:  { nombre: 'Debilitar',   icono: '💔', color: 0xf87171, tipo: 'debuff', tags: ['Estadística'] },
   fear:    { nombre: 'Miedo',        icono: '😱', color: 0x94a3b8, tipo: 'debuff', tags: ['Control'] },
   // ---- Buffs
   taunt:   { nombre: 'Provocación', icono: '📣', color: 0xf97316, tipo: 'buff', tags: ['Provocación'] },
@@ -20,6 +21,10 @@ export const EFECTOS = {
   protect: { nombre: 'Protección', icono: '🔰', color: 0x60a5fa, tipo: 'buff', tags: ['Estadística'] },
   regen:   { nombre: 'Regeneración', icono: '💚', color: 0x4ade80, tipo: 'buff', tags: ['Curación'] },
   dmgUp:   { nombre: 'Furia',       icono: '⚔️', color: 0x4ade80, tipo: 'buff', tags: ['Estadística'] },
+  frenzy:  { nombre: 'Frenesí',     icono: '🎯', color: 0xf43f5e, tipo: 'buff', tags: ['Estadística'] },
+  haste:   { nombre: 'Celeridad',   icono: '💨', color: 0x38bdf8, tipo: 'buff', tags: ['Estadística'] },
+  bloodlust: { nombre: 'Sed de Sangre', icono: '🩸', color: 0xdc2626, tipo: 'buff', tags: ['Estadística'] },
+  keen:    { nombre: 'Agudeza',     icono: '👁', color: 0xfacc15, tipo: 'buff', tags: ['Estadística'] },
   summon:  { nombre: 'Invocación',  icono: '✦',  color: 0xffd36b, tipo: 'buff', tags: ['Invocación'] },
 };
 

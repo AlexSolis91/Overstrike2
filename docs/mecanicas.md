@@ -51,6 +51,8 @@ Cada personaje tiene exactamente **3 movimientos**, una **pasiva** y, opcionalme
 
 ## 3. Turnos y rondas
 
+- **Turno extra:** se juega de inmediato, después del movimiento que lo dio y de sus invocaciones. No procesa efectos de inicio de turno (DoT, Regeneración, Control) ni baja cooldowns. No hay límite de turnos extra (habrá mecánicas que reaccionen a ellos, p. ej. Anticipación).
+
 - **Orden:** cada personaje vivo actúa una vez por ronda, por Velocidad actual. El orden se recalcula después de cada acción.
 - **Empates:** gana la Velocidad base; si persiste, se decide al azar.
 - **DoT de turno** (Quemadura, Veneno): hacen daño al **inicio del turno** del afectado.
@@ -127,6 +129,16 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | ⚔️ Furia | Estadística | **+50% Daño** fijo (dura rondas). Valor universal en `reglas.js → BUFFS` |
 | 🔰 Protección | Estadística | **+30% Resistencia** (dura rondas) |
 | 💚 Regeneración | Curación | Cura **10% del HP máx.** del portador al inicio de su turno (dura rondas) |
+| 🎯 Frenesí | Estadística | **+50% Prob. Crítico** (puntos: 5% → 55%) |
+| 💨 Celeridad | Estadística | **+20% Velocidad** |
+| 🩸 Sed de Sangre | Estadística | **+30% Daño Crítico** (puntos: 50% → 80%) |
+| 👁 Agudeza | Estadística | **+50% Puntería** (puntos: 50% → 100%) |
+
+### Debuffs de estadística
+
+| Debuff | Etiquetas | Efecto |
+|---|---|---|
+| 💔 Debilitar | Estadística | Recibe **+50% de daño** de golpes y daño por efecto, calculado **después** de la Armadura (no afecta DoT ni Robar HP) |
 | ♨️ Aura de Fuego | Fuego | Cuando el portador recibe un **golpe** de un enemigo, le aplica al atacante Quemadura 5% (1 turno), con tirada de Puntería del portador |
 | 📣 Provocación | Provocación | Los enemigos deben dirigirle sus movimientos de **un objetivo** (incluidas invocaciones). No afecta AOE, objetivos al azar, movimientos a aliados, Confusión ni Posesión. Con varios, se elige entre ellos. Se puede Disipar |
 | ✦ Invocación | Invocación | Ver sección 9 |
@@ -150,9 +162,18 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | `detonar` | — | Explota ya todas las Bombas del objetivo |
 | `propagar` | efecto | Copia el DoT del objetivo principal (mismo valor y duración restante) a los destinos. Cada copia tira Puntería − Resistencia. Funciona aunque el objetivo muera y cuenta como aplicación |
 | `escudo` con `base: 'danoCausado'` | pct | Escudo igual a un % del daño total causado por el movimiento |
-| `efecto` con `idAzar: [ids]` | — | Elige al azar uno de los efectos (por cada objetivo) |
+| `efecto` con `idAzar: [ids]` | sinRepetir | Elige al azar uno de los efectos (por cada objetivo). Con `sinRepetir` no elige uno que el objetivo ya tenga activo |
+| `turnoExtra` | — | El objetivo gana 1 turno extra (ver sección 3) |
+| `bonoPermanente` con otra `stat` | stat, pct | P. ej. `critDmg` +5% por cada crítico (Teletransportación). Sin tope, se conserva entre formas |
 | `multiple` | acciones | Aplica varias acciones a **los mismos** objetivos elegidos (p. ej. Escudo + Furia a 3 aliados al azar) |
 | `danoRepartido` | base `'escudosEquipo'`, pct, paquetes | Total = pct × suma de los Escudos de todo el equipo del ejecutor (incluido él; no los consume). Se divide en N paquetes (10 por defecto) que caen al azar sobre enemigos → reparto desigual. Es daño por **efecto** (aplica Armadura y Escudo, sin bloqueo ni crítico) |
+
+**Modificadores de un golpe (en la ficha del movimiento):**
+- `critExtra`: suma puntos de Prob. Crítico solo a ese ataque.
+- `criticoSiHpMin`: crítico garantizado si el objetivo tiene ese % de HP o más (se puede **bloquear**).
+- `ignoraArmadura`: resta **puntos** de Armadura al objetivo (0.10 = 40% → 30%; 1 = la ignora toda).
+- `bonoPorHpPerdido { cada, pct }`: +pct de daño por cada tramo completo de HP perdido del atacante.
+- `objetivo: 'azar'` + `golpes: N`: cada golpe va a un enemigo al azar (puede repetir; ignora Provocación; si el elegido ya cayó, va a otro vivo).
 
 **A quién (`a`):** `objetivo` · `propio` · `todosEnemigos` · `otrosEnemigos` · `todosAliados` · `aliadoMasHerido` · `sobrevivientes` · `{ azar: N }` (N enemigos al azar, pueden repetir) · `{ distintos: N }` (hasta N enemigos distintos) · `{ aliadosAzar: N }` (N aliados al azar; puede incluir al ejecutor y repetir).
 
@@ -167,7 +188,9 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - `alDanoDoT`: cada vez que un DoT hace daño. Se puede filtrar por `tipo` y por lado (`en: 'enemigos'`).
   - `alCurarAliado`: cada vez que un aliado **que no sea el dueño de la pasiva** recibe una curación real (incluye robo de HP).
   - `alEliminar`: cuando el personaje **o sus invocaciones** eliminan a un enemigo (no cuentan muertes por DoT).
+  - `alTransformarse`: al transformarse. Usa la pasiva que tenía **antes** de transformarse (p. ej. Sangre Sayajin al pasar a Super Sayajin 3).
   - `alPerderEscudo`: cada vez que el dueño o un aliado pierde Escudo por un golpe o daño por efecto (los DoT no tocan escudos). `objetivo` = quien lo perdió.
+- **Robo de vida:** una pasiva puede declarar `roboVida: X`: cada golpe cura X × daño causado (incluye lo absorbido por escudos). Es curación normal.
 - **Inmunidades:** una pasiva puede declarar `inmuneA` con ids o etiquetas de efectos (p. ej. Sun Jin Woo: Veneno).
 - **Límite:** una pasiva puede declarar `maxPorRonda`. Con `soloSiCura: true`, una pasiva de curación no se activa ni gasta uso si ningún destino puede recibir curación (HP lleno).
 - **Condiciones:**
@@ -218,11 +241,12 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 ## 12. Transformaciones
 
 - Un **estado** del personaje (no es buff): no se puede Disipar ni Limpiar.
-- **Duración:** en turnos propios dentro de la forma. El turno en que se transforma no cuenta, y un turno perdido por Control sí cuenta.
-- **Qué reemplaza la forma:** estadísticas base y extra, los 3 movimientos y la pasiva.
-- **Qué se conserva:** el % de vida, buffs, debuffs, escudos, invocaciones, bonos permanentes y la habilidad de **líder**.
+- **Duración:** temporal (`turnos: N`, en turnos propios; el turno en que se transforma no cuenta y uno perdido por Control sí) o **permanente** (sin `turnos`: no vuelve atrás; la carta muestra ∞).
+- **Cadenas:** una forma puede tener su propia `transformacion` (Goku → Super Sayajin → Super Sayajin 3).
+- **Qué reemplaza la forma:** estadísticas base y extra (los bonos de la ficha anterior **no se suman**), los 3 movimientos y la pasiva.
+- **Qué se conserva:** el % de vida, buffs, debuffs, escudos, invocaciones, bonos permanentes y la habilidad de **líder**. Los buffs, debuffs y bonos se aplican sobre las estadísticas base de la nueva forma.
 - **Cooldowns:**
-  - Los de la forma empiezan listos, salvo su Over (1 ronda de espera).
+  - Los de la forma empiezan listos, salvo su Over, que empieza con su **cooldown completo**.
   - Los de la forma base siguen bajando durante la transformación.
 - **Al terminar,** vuelve a la forma base.
 - **Imagen:** va en `assets/originales/transformaciones/`, con el nombre de la forma.

@@ -79,7 +79,7 @@ export function renderPanel(p, v, ui) {
     <div class="p-head ${p.lado === 'jugador' ? 'ally' : 'enemy'}">
       <div class="p-portrait" style="--c:${p.color}">${imgHtml(p.imagen, p.nombre) || p.emoji}</div>
       <div><div class="p-name">${p.nombre}</div><div class="p-role">${p.rol || ''}${p.prueba ? ' · de prueba' : ''}</div>
-        ${v.forma ? `<span class="p-side forma" style="--fc:${v.forma.color}">🔥 ${v.forma.nombre} · ${v.forma.turnos} turno(s)</span><br>` : ''}
+        ${v.forma ? `<span class="p-side forma" style="--fc:${v.forma.color}">🔥 ${v.forma.nombre} · ${v.forma.permanente ? 'permanente' : `${v.forma.turnos} turno(s)`}</span><br>` : ''}
         <span class="p-side ${p.lado === 'jugador' ? 'ally' : 'enemy'}">${p.lado === 'jugador' ? 'Tu equipo' : 'Rival'}</span>
         ${p.esLider ? '<span class="p-side lider">👑 Líder</span>' : ''}</div>
       ${v.muerto ? '<div class="p-dead">Derrotado</div>' : ''}
@@ -95,7 +95,7 @@ export function renderPanel(p, v, ui) {
     ${p.lider ? `<section><h3>Habilidad de líder</h3><div class="skill ${p.esLider ? '' : 'off'}"><b>${p.lider.nombre}</b><p>${p.lider.desc}</p>
       ${p.esLider ? '' : '<small>Inactiva: solo funciona en la casilla de líder</small>'}</div></section>` : ''}
     ${(v.pasiva ?? p.pasiva) ? `<section><h3>Pasiva${v.forma ? ' (forma)' : ''}</h3><div class="skill"><b>${(v.pasiva ?? p.pasiva).nombre}</b><p>${(v.pasiva ?? p.pasiva).desc}</p></div></section>` : ''}
-    ${p.transformacion && !v.forma ? `<section><h3>Transformación</h3><div class="skill"><b>${p.transformacion.nombre}</b><p>${p.transformacion.pasiva ? `Pasiva: ${p.transformacion.pasiva.nombre}. ` : ''}Movimientos: ${p.transformacion.movimientos.map(m => m.nombre).join(', ')}.</p></div></section>` : ''}
+    ${v.transformacion ? `<section><h3>${v.forma ? 'Siguiente transformación' : 'Transformación'}</h3><div class="skill"><b>${v.transformacion.nombre}</b><p>${v.transformacion.pasiva ? `Pasiva: ${v.transformacion.pasiva}. ` : ''}Movimientos: ${v.transformacion.movimientos.join(', ')}.</p></div></section>` : ''}
     <section><h3>Movimientos</h3><div class="moves">${moves}</div></section>
     ${p.prueba ? '<div class="placeholder-note">Personaje de prueba: no es oficial, solo sirve para probar el motor.</div>' : ''}`;
 }

@@ -15,7 +15,7 @@ const $ = s => document.querySelector(s);
 // ---------------------------------------------------------------- carga
 await iniciarEscena($('#field'));
 await precargar(
-  [...EQUIPO_JUGADOR, ...EQUIPO_RIVAL].flatMap(p => [p.imagen, p.transformacion?.imagen]).concat(Object.values(INVOCACIONES).map(i => i.imagen)),
+  [...EQUIPO_JUGADOR, ...EQUIPO_RIVAL].flatMap(p => { const l = [p.imagen]; for (let f = p.transformacion; f; f = f.transformacion) l.push(f.imagen); return l; }).concat(Object.values(INVOCACIONES).map(i => i.imagen)),
   INVOCACIONES,
   (n, total) => { $('#loading-bar').style.width = `${n / total * 100}%`; $('#loading-text').textContent = `Cargando imágenes ${n}/${total}`; },
 );
@@ -191,6 +191,16 @@ async function manejar(e) {
       log(`🔥 ${nombre(e.id)} se transforma en ${e.nombre}`, 'sys');
       await FX.transformacion(c(e.id), e.color, e.nombre, () => c(e.id).cambiarForma(e.s[e.id].forma));
       aplicar(e);
+      break;
+    case 'turnoExtraGanado':
+      FX.textoSobre(c(e.id), '⏩ +1 turno', '#fde68a', 15, -125);
+      log(`⏩ ${nombre(e.id)} gana un turno extra`, 'fx');
+      await wait(250);
+      break;
+    case 'turnoExtra':
+      aplicar(e);
+      banner('¡TURNO EXTRA!', { size: 40, color: '#fde68a', hold: .4 }); await wait(450);
+      log(`⏩ Turno extra de ${nombre(e.id)}`, 'sys');
       break;
     case 'transformacionFin':
       log(`${nombre(e.id)} vuelve a su forma original`, 'sys');

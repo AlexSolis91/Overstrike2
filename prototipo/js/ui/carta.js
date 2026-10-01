@@ -187,7 +187,7 @@ export class Carta {
   }
   dibujarForma() {
     const f = this.v?.forma;
-    const key = f && !this.v.muerto ? `${f.nombre}|${f.turnos}` : null;
+    const key = f && !this.v.muerto ? `${f.nombre}|${f.turnos}|${f.permanente}` : null;
     if (key === this.formaKey) return;
     this.formaKey = key;
     this.formaG.visible = this.formaBadge.visible = !!key;
@@ -198,6 +198,11 @@ export class Carta {
     this.formaCol = col;
     this.formaG.roundRect(-CW / 2 - 4, -CH / 2 - 4, CW + 8, CH + 8, 15).stroke({ width: 6, color: col, alpha: .9 });
     const g = new PIXI.Graphics().circle(0, 0, 14).fill({ color: 0x0b0f18, alpha: .95 }).stroke({ width: 2, color: col });
+    if (f.permanente) {                               // forma permanente: anillo completo con ∞
+      g.circle(0, 0, 18).stroke({ width: 3, color: 0xffd36b });
+      this.formaBadge.addChild(g, txt('∞', { size: 16, weight: '900', stroke: 3 }));
+      return;
+    }
     const a0 = -Math.PI / 2, a1 = a0 + Math.PI * 2 * Math.max(0, Math.min(1, f.turnos / f.total));
     g.moveTo(Math.cos(a0) * 18, Math.sin(a0) * 18).arc(0, 0, 18, a0, a1).stroke({ width: 3, color: 0xffd36b });
     this.formaBadge.addChild(g, txt(String(f.turnos), { size: 13, weight: '900', stroke: 3 }));

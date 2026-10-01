@@ -26,6 +26,15 @@ export const BUFFS = {
   furia: .50,          // Furia: +50% Daño
   proteccion: .30,     // Protección: +30% Resistencia
   regeneracion: .10,   // Regeneración: cura 10% del HP máx. al inicio del turno del portador
+  frenesi: .50,        // Frenesí: +50% Prob. Crítico (puntos)
+  celeridad: .20,      // Celeridad: +20% Velocidad
+  sedDeSangre: .30,    // Sed de Sangre: +30% Daño Crítico (puntos)
+  agudeza: .50,        // Agudeza: +50% Puntería (puntos)
+};
+
+// Valores fijos de debuffs universales
+export const DEBUFFS = {
+  debilitar: .50,      // Debilitar: +50% de daño recibido (después de la Armadura)
 };
 
 export const CONTROL = {
