@@ -157,6 +157,11 @@ async function manejar(e) {
       log(`✦ Pasiva de ${nombre(e.id)}: ${e.nombre}`, 'fx');
       await wait(250);
       break;
+    case 'liderActua':
+      FX.textoSobre(c(e.id), `👑 ${e.nombre}`, '#fde68a', 14, -125);
+      log(`👑 Líder ${nombre(e.id)}: ${e.nombre}`, 'fx');
+      await wait(300);
+      break;
     case 'bono': aplicar(e); FX.textoSobre(c(e.id), e.texto, '#fbbf24', 14, -125); log(`${nombre(e.id)}: ${e.texto}`, 'fx'); break;
     case 'invocacion':
       log(`${nombre(e.de)} invoca a ${INVOCACIONES[e.key].nombre}${e.rareza ? ` (${e.rareza})` : ''}`, e.rareza === 'Legendario' ? 'sys' : 'fx');
