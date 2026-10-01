@@ -55,7 +55,8 @@ export const INVOCACIONES = {
     acciones: [{ tipo: 'golpe', pct: .35, elegir: 'masFuerte' }],
   },
   kamish: {
-    nombre: 'Kamish', rareza: 'Legendario', emoji: '🐲', color: 0xf59e0b, imagen: 'assets/invocaciones/kamish.webp', dur: 2,
+    nombre: 'Kamish', rareza: 'Legendario', emoji: '🐲', color: 0x9333ea, imagen: 'assets/invocaciones/kamish.webp', dur: 2,
+    enfoque: [.44, .16],
     desc: 'Golpea 50% a todos los enemigos. Al aparecer, golpea 150% a todos y aplica Miedo (2 rondas).',
     alAparecer: [
       { tipo: 'golpe', pct: 1.50, elegir: 'todos' },
