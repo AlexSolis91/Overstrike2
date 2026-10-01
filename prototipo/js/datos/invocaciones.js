@@ -41,7 +41,8 @@ export const INVOCACIONES = {
     acciones: [{ tipo: 'robarHP', pct: .05, a: { azar: 2 } }],
   },
   beru: {
-    nombre: 'Beru', rareza: 'Épico', emoji: '🐜', color: 0xdc2626, imagen: 'assets/invocaciones/beru.webp', dur: 3,
+    nombre: 'Beru', rareza: 'Épico', emoji: '🐜', color: 0x3b82f6, imagen: 'assets/invocaciones/beru.webp', dur: 3,
+    luminosa: true, enfoque: [.52, .24],
     desc: 'Golpea 2 veces (30%) a un enemigo al azar y aplica Sangrado o Veneno (50/50).',
     acciones: [{ tipo: 'golpe', pct: .30, golpes: 2, elegir: 'azar', efectos: [{ accion: { tipo: 'efecto', idAzar: ['bleed', 'poison'] } }] }],
   },
