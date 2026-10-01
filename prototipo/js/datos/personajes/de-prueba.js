@@ -46,8 +46,8 @@ export const liora = {
       desc: 'Limpia todos los debuffs de un aliado y lo cura 200% del Daño.',
       efectos: [{ accion: { tipo: 'limpiar' } }, { accion: { tipo: 'curar', pct: 2.0, escala: 'dano' } }] },
     { categoria: 'over', nombre: 'Bendición', objetivo: 'todosAliados', estilo: 'support', color: 0xffe27a, cd: 4,
-      desc: 'Cura a todos los aliados 100% del Daño y les otorga Furia (+20% Daño, 2 rondas).',
-      efectos: [{ accion: { tipo: 'curar', pct: 1.0, escala: 'dano' } }, { accion: { tipo: 'efecto', id: 'dmgUp', valor: .20, dur: 2 } }] },
+      desc: 'Cura a todos los aliados 100% del Daño y les otorga Furia (+50% Daño, 2 rondas).',
+      efectos: [{ accion: { tipo: 'curar', pct: 1.0, escala: 'dano' } }, { accion: { tipo: 'efecto', id: 'dmgUp', dur: 2 } }] },
   ],
 };
 

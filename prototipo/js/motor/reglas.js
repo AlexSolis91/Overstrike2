@@ -21,6 +21,13 @@ export const ESCALADO = {
 // Over = 2 -> disponible a partir de la ronda 3.
 export const CD_INICIAL = { basico: 0, especial: 0, over: 2 };
 
+// Valores fijos de buffs universales
+export const BUFFS = {
+  furia: .50,          // Furia: +50% Daño
+  proteccion: .30,     // Protección: +30% Resistencia
+  regeneracion: .10,   // Regeneración: cura 10% del HP máx. al inicio del turno del portador
+};
+
 export const CONTROL = {
   quiebreCongelacion: .30,   // +daño del golpe que rompe una Congelación
   miedoDano: .75,            // un personaje con Miedo hace 75% del daño
