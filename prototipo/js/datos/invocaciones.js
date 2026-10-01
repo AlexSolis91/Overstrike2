@@ -29,8 +29,8 @@ export const INVOCACIONES = {
     acciones: [{ tipo: 'golpe', pct: .45, elegir: 'menorHp' }],
   },
   shadowMingByung: {
-    nombre: 'Shadow Ming Byung', rareza: 'Raro', emoji: '🙏', color: 0x34d399, imagen: 'assets/invocaciones/shadow-ming-byung.webp', dur: 3,
-    luminosa: true,     // imagen con fondo negro: se muestra en modo "pantalla" (el negro se vuelve transparente)
+    nombre: 'Shadow Ming Byung', rareza: 'Raro', emoji: '🙏', color: 0x38bdf8, imagen: 'assets/invocaciones/shadow-ming-byung.webp', dur: 3,
+    enfoque: [.49, .2],
     desc: 'Cura 15% del HP máx. al aliado más herido. Al aparecer, limpia 1 debuff de cada aliado.',
     alAparecer: [{ tipo: 'limpiar', cantidad: 1, a: 'todosAliados' }],
     acciones: [{ tipo: 'curar', base: 'hpMaxObjetivo', pct: .15, a: 'aliadoMasHerido' }],
