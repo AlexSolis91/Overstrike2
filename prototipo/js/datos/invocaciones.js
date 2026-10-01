@@ -84,6 +84,7 @@ export const INVOCACIONES = {
   },
   rhaegal: {
     nombre: 'Rhaegal', rareza: 'Común', emoji: '🐉', color: 0x16a34a, imagen: 'assets/invocaciones/rhaegal.webp', dur: 3,
+    enfoque: [.565, .37],
     desc: 'Aplica Quemadura 2% (2 rondas) a todos los enemigos. Si es más débil que la Quemadura que ya tienen, no alarga su duración.',
     acciones: [{ tipo: 'efecto', id: 'burn', valor: .02, dur: 2, noRenueva: true, a: 'todosEnemigos' }],
   },
