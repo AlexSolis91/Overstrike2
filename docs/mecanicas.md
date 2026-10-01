@@ -130,6 +130,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | ⚔️ Furia | Estadística | **+50% Daño** fijo (dura rondas). Valor universal en `reglas.js → BUFFS` |
 | 🔰 Protección | Estadística | **+30% Resistencia** (dura rondas) |
 | 💚 Regeneración | Curación | Cura **10% del HP máx.** del portador al inicio de su turno (dura rondas) |
+| 🌫️ Sigilo | Sigilo | Los enemigos no pueden elegirlo con ataques de **un objetivo** (sí lo alcanzan AOE, golpes al azar e invocaciones). Si todos sus aliados lo tienen, no cuenta. Se rompe al recibir **cualquier** daño que baje HP o Escudo. No se puede aplicar a quien tiene Provocación, y recibir Provocación lo quita |
 | 🎯 Frenesí | Estadística | **+50% Prob. Crítico** (puntos: 5% → 55%) |
 | 💨 Celeridad | Estadística | **+20% Velocidad** |
 | 🩸 Sed de Sangre | Estadística | **+30% Daño Crítico** (puntos: 50% → 80%) |
@@ -168,6 +169,8 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | `propagar` | efecto | Copia el DoT del objetivo principal (mismo valor y duración restante) a los destinos. Cada copia tira Puntería − Resistencia. Funciona aunque el objetivo muera y cuenta como aplicación |
 | `escudo` con `base: 'danoCausado'` | pct | Escudo igual a un % del daño total causado por el movimiento |
 | `efecto` con `idAzar: [ids]` | sinRepetir | Elige al azar uno de los efectos (por cada objetivo). Con `sinRepetir` no elige uno que el objetivo ya tenga activo |
+| `extenderInvocaciones` | turnos | +N turnos de duración a todas las invocaciones activas del objetivo |
+| `reducirCooldown` | cantidad, categorias | Baja el cooldown de esos movimientos del objetivo (p. ej. Viserion: Especial y Over de Daenerys) |
 | `turnoExtra` | — | El objetivo gana 1 turno extra (ver sección 3) |
 | `bonoPermanente` con otra `stat` | stat, pct | P. ej. `critDmg` +5% por cada crítico (Teletransportación). Sin tope, se conserva entre formas |
 | `multiple` | acciones | Aplica varias acciones a **los mismos** objetivos elegidos (p. ej. Escudo + Furia a 3 aliados al azar) |
@@ -193,14 +196,17 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - `alDanoDoT`: cada vez que un DoT hace daño. Se puede filtrar por `tipo` y por lado (`en: 'enemigos'`).
   - `alCurarAliado`: cada vez que un aliado **que no sea el dueño de la pasiva** recibe una curación real (incluye robo de HP).
   - `alEliminar`: cuando el personaje **o sus invocaciones** eliminan a un enemigo (no cuentan muertes por DoT).
+  - `alIniciarTurno`: al empezar su turno, **solo si de verdad actúa** (no si pierde el turno por Control o Silencio; tampoco en turnos extra). Va después del DoT de inicio de turno.
   - `alTransformarse`: al transformarse. Usa la pasiva que tenía **antes** de transformarse (p. ej. Sangre Sayajin al pasar a Super Sayajin 3).
   - `alPerderEscudo`: cada vez que el dueño o un aliado pierde Escudo por un golpe o daño por efecto (los DoT no tocan escudos). `objetivo` = quien lo perdió.
 - **Robo de vida:** una pasiva puede declarar `roboVida: X`: cada golpe cura X × daño causado (incluye lo absorbido por escudos). Es curación normal.
 - **Inmunidades:** una pasiva puede declarar `inmuneA` con ids o etiquetas de efectos (p. ej. Sun Jin Woo: Veneno).
 - **Límite:** una pasiva puede declarar `maxPorRonda`. Con `soloSiCura: true`, una pasiva de curación no se activa ni gasta uso si ningún destino puede recibir curación (HP lleno).
+- **Quemadura débil (`noRenueva`):** una Quemadura es *débil* si su % final (con el Daño DoT de quien la aplica) es **menor** que el de la Quemadura activa. Se fusiona igual (+10% de la débil), pero si la acción tiene `noRenueva`, **no alarga la duración**. Hoy solo la usa Rhaegal.
 - **Condiciones:**
   - `objetivoTiene: <efecto>`.
   - `algunGolpeadoTenia: <efecto>`: al menos un objetivo golpeado (no bloqueado) lo tenía.
+  - `invocacionesMin: N`: el ejecutor tenía al menos N invocaciones activas al usar el movimiento.
 - **Duraciones:** las fichas pueden decir "turnos", pero todo dura **rondas**.
 - **Bonos acumulables:** `bonoPorSobreviviente` (+X% al movimiento por cada enemigo que sobrevive; permanente). Los temporales deben indicar su duración.
 
@@ -240,6 +246,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - Las habilidades de líder que afectan a "los aliados" **incluyen al propio líder** (p. ej. Gakido protege también a Madara).
 - **Piezas de líder disponibles:**
   - `reduccion { categoria, pct }`: reduce el daño recibido por los aliados.
+  - `bonoPorEfecto { efecto, stat, valor }`: todo su equipo gana +valor a esa estadística por cada **enemigo** con ese efecto (p. ej. Daenerys: +4% Puntería por enemigo quemado).
   - `alIniciarRonda { acción }`: al empezar cada ronda ejecuta una acción universal (p. ej. Shaka: Escudo 12% de su HP máx. al aliado con menor % de HP).
   - `alAplicar { efecto, stat, valor }`: cada vez que su equipo **acierta** ese debuff en un enemigo, un aliado al azar (puede ser el líder) gana un bono **permanente e invisible** a esa estadística. No es un buff y no se puede disipar.
 

@@ -203,6 +203,10 @@ async function manejar(e) {
       await FX.transformacion(c(e.id), e.color, e.nombre, () => c(e.id).cambiarForma(e.s[e.id].forma));
       aplicar(e);
       break;
+    case 'sigiloRoto':
+      aplicar(e); FX.textoSobre(c(e.a), '🌫️ Sigilo roto', '#cbd5e1', 14, -125);
+      log(`${nombre(e.a)} pierde el Sigilo`, 'fx');
+      break;
     case 'turnoExtraGanado':
       FX.textoSobre(c(e.id), '⏩ +1 turno', '#fde68a', 15, -125);
       log(`⏩ ${nombre(e.id)} gana un turno extra`, 'fx');

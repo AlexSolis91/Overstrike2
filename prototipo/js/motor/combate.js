@@ -60,6 +60,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       if (e.id === 'freeze') pct.spd -= CONTROL.congelacionVel * (e.mega ? 2 : 1);
     }
     sec.armor = Math.max(0, sec.armor); sec.acc = Math.max(0, sec.acc);   // Armadura y Puntería nunca bajan de 0%
+    for (const l of lideresDe(p)) {          // líder "bonoPorEfecto": +valor a una estadística por cada enemigo con ese efecto
+      const b = l.lider?.bonoPorEfecto;
+      if (b) sec[b.stat] = (sec[b.stat] || 0) + b.valor * enemigosDe(p).filter(x => get(x, b.efecto)).length;
+    }
     for (const [k, v] of Object.entries(p.permanente || {})) {
       if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
     }
@@ -108,6 +112,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'fear': texto = `Actúa al final de la ronda · −25% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'dmgUp': texto = `+${Math.round(e.valor * 100)}% Daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'taunt': texto = `Los enemigos deben atacarlo con sus movimientos de un objetivo · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'stealth': texto = `Los enemigos no pueden elegirlo con ataques de un objetivo · se rompe al recibir daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'protect': texto = `+${Math.round(BUFFS.proteccion * 100)}% Resistencia · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'frenzy': texto = `+${Math.round(BUFFS.frenesi * 100)}% Prob. Crítico · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'haste': texto = `+${Math.round(BUFFS.celeridad * 100)}% Velocidad · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -281,7 +286,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         n.inmune = true; n.recienLiberado = true;
         terminarTurno(n); continue;
       }
-      S.esperando = { id: n.uid, opciones: ops };
+      pasivas(n, 'alIniciarTurno', { objetivo: n });
+      if (comprobarFin()) return;
+      S.esperando = { id: n.uid, opciones: opciones(n) };
       return;
     }
   }
@@ -295,9 +302,19 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     }));
   }
   function objetivosValidos(p, m) {
-    if (m.objetivo === 'enemigo') return conProvocacion(enemigosDe(p));
+    if (m.objetivo === 'enemigo') return conSigilo(conProvocacion(enemigosDe(p)));
     if (m.objetivo === 'aliado') return aliadosDe(p);
     return [];
+  }
+  // Sigilo: no se puede elegir con ataques de un objetivo (si todos lo tienen, no cuenta)
+  function conSigilo(lista) {
+    const visibles = lista.filter(x => !get(x, 'stealth'));
+    return visibles.length ? visibles : lista;
+  }
+  // cualquier daño que baje HP o Escudo rompe el Sigilo
+  function recibioDano(t, cantidad) {
+    const s = cantidad > 0 && !t.muerto && get(t, 'stealth');
+    if (s) { quitar(t, s); emitir('sigiloRoto', { a: t.uid }, t); }
   }
   // Provocación: si algún candidato la tiene, los ataques de un solo objetivo solo pueden ir a ellos
   function conProvocacion(lista) {
@@ -348,6 +365,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const robo = a.pasiva?.roboVida;          // robo de vida: % del daño causado (incluye lo absorbido por escudos)
     if (robo && !a.muerto && a.hp < maxHp(a) && puedeCurarse(a)) curar(a, a, (aHp + aEsc) * robo);
     emitir('golpe', { de: a.uid, a: t.uid, dano: aHp, escudo: aEsc, critico, quiebre, color: mov.color, fuente: ctx.fuente, multi: (mov.golpes || 1) > 1 }, t);
+    recibioDano(t, aHp + aEsc);
     if (aEsc > 0) perdioEscudo(t);
     if (t.hp <= 0) morir(t, a);
     const aura = get(t, 'fireAura');
@@ -378,6 +396,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     d *= 1 - reduccion(t, 'efecto');
     const { aHp, aEsc } = repartir(t, d, stats(a).pen);
     emitir('danoEfecto', { de: a.uid, a: t.uid, dano: aHp, escudo: aEsc, color }, t);
+    recibioDano(t, aHp + aEsc);
     if (aEsc > 0) perdioEscudo(t);
     if (t.hp <= 0) morir(t, a);
   }
@@ -393,6 +412,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const d = valor * maxHp(t) * (1 - reduccion(t, 'dot'));
     t.hp -= d;
     emitir('dot', { a: t.uid, tipo, dano: d }, t);
+    recibioDano(t, d);
     if (t.hp <= 0) morir(t);
     for (const p of P) pasivas(p, 'alDanoDoT', { objetivo: t, tipo, dano: d });
   }
@@ -403,6 +423,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const d = pct * maxHp(t);
     t.hp -= d;
     emitir('robo', { de: a.uid, a: t.uid, cantidad: d }, t);
+    recibioDano(t, d);
     if (t.hp <= 0) morir(t, a);
     curar(a, a, d, true);
   }
@@ -434,6 +455,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const real = d * (1 - reduccion(t, 'dot'));
       t.hp -= real;
       emitir('dot', { a: t.uid, tipo: 'bomb', dano: real }, t);
+      recibioDano(t, real);
       if (t.hp <= 0) morir(t);
     }
     for (const x of aliadosDe(t)) {
@@ -441,6 +463,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const s = d * DOT.salpicaduraBomba * (1 - reduccion(x, 'dot'));
       x.hp -= s;
       emitir('salpicadura', { a: x.uid, dano: s }, x);
+      recibioDano(x, s);
       if (x.hp <= 0) morir(x);
     }
   }
@@ -468,7 +491,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       case 'burn': {
         const v = acc.valorFinal ?? DOT.quemadura(acc.valor ?? .10, sa.dot);   // valorFinal: copia exacta (Propagar)
         const e = get(t, 'burn');
-        if (e) { const f = Math.max(e.valor, v), d = Math.min(e.valor, v); e.valor = f + d * DOT.quemaduraSuma; e.dur = Math.max(e.dur, acc.dur ?? 2); }
+        if (e) {
+          const debil = v < e.valor;              // "débil" = menor % final que la Quemadura activa
+          const f = Math.max(e.valor, v), d = Math.min(e.valor, v); e.valor = f + d * DOT.quemaduraSuma;
+          if (!(debil && acc.noRenueva)) e.dur = Math.max(e.dur, acc.dur ?? 2);   // noRenueva: la débil no alarga la duración
+        }
         else t.estados.push({ id: 'burn', valor: v, dur: acc.dur ?? 2 });
         texto = `🔥 Quemadura ${Math.round(get(t, 'burn').valor * 1000) / 10}%`;
         break;
@@ -541,7 +568,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         break;
       }
       case 'confuse': case 'fear': case 'dmgUp': case 'taunt': case 'fireAura': case 'protect': case 'regen':
-      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'blind': {
+      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'blind': case 'stealth': {
+        if (acc.id === 'stealth' && get(t, 'taunt')) { emitir('sinEfecto', { a: t.uid, texto: 'Con Provocación no puede tener Sigilo' }); return; }
+        if (acc.id === 'taunt' && get(t, 'stealth')) { quitar(t, get(t, 'stealth')); emitir('sigiloRoto', { a: t.uid }, t); }
         if (acc.id === 'dmgUp') acc = { ...acc, valor: BUFFS.furia };      // Furia siempre +50%
         const e = get(t, acc.id);
         if (e) { e.dur = Math.max(e.dur, acc.dur ?? 2); if (acc.valor) e.valor = Math.max(e.valor || 0, acc.valor); }
@@ -639,6 +668,19 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           break;
         }
         case 'transformar': transformar(t, acc.turnos); break;
+        case 'extenderInvocaciones': {      // +N turnos a todas sus invocaciones activas
+          const l = todos(t, 'summon');
+          if (!l.length) break;
+          for (const e of l) e.dur += acc.turnos || 1;
+          emitir('extension', { a: t.uid, texto: `✦ Invocaciones +${acc.turnos || 1} turno` }, t);
+          break;
+        }
+        case 'reducirCooldown': {           // baja el cooldown de los movimientos indicados de su objetivo
+          let n = 0;
+          for (const c of acc.categorias || CATEGORIAS) if (t.cds[c] > 0) { t.cds[c] = Math.max(0, t.cds[c] - (acc.cantidad || 1)); n++; }
+          emitir(n ? 'extension' : 'sinEfecto', { a: t.uid, texto: n ? `⏳ −${acc.cantidad || 1} cooldown` : 'Sin cooldowns que reducir' }, t);
+          break;
+        }
         case 'turnoExtra':
           t.turnosExtra = (t.turnosExtra || 0) + 1;
           emitir('turnoExtraGanado', { id: t.uid }, t);
@@ -692,6 +734,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (!cond) return true;
     if (cond.objetivoTiene) return !!(ctx.objetivo && get(ctx.objetivo, cond.objetivoTiene));
     if (cond.algunGolpeadoTenia) return !!ctx.golpeadosTenian?.has(cond.algunGolpeadoTenia);
+    if (cond.invocacionesMin) return (ctx.invocaciones || 0) >= cond.invocacionesMin;
     return true;
   }
 
@@ -765,7 +808,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const activas = new Set(todos(a, 'summon').map(e => e.key));
     const pool = (TABLAS_INVOCACION[tabla] || []).filter(x => (!rarezas || rarezas.includes(INVOCACIONES[x.key].rareza))
       && (!activas.has(x.key) || (INVOCACIONES[x.key].max || 1) > 1));
-    if (!pool.length) { emitir('sinEfecto', { a: a.uid, texto: 'Sin sombras disponibles' }); return; }
+    if (!pool.length) { emitir('sinEfecto', { a: a.uid, texto: 'Todas sus invocaciones están activas' }); return; }
     let r = rng() * pool.reduce((s, x) => s + x.peso, 0);
     const elegido = pool.find(x => (r -= x.peso) < 0) || pool[pool.length - 1];
     invocar(a, elegido.key);
@@ -789,8 +832,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       for (const t of forzados || elegirObjetivos(a, acc.elegir)) {
         if (t.muerto) continue;
         emitir('invocacionAtaca', { de: a.uid, key: e.key, idx, a: t.uid });
+        const extra = acc.golpeExtraSi && get(t, acc.golpeExtraSi) ? 1 : 0;   // p. ej. Drogon: 2.º golpe si tiene Quemadura
         resolverSobreObjetivo(a, t, { nombre: def.nombre, categoria: 'invocacion', pct: acc.pct * potencia, escala: acc.escala || 'dano',
-          golpes: acc.golpes, color: def.color, efectos: acc.efectos }, { fuente: def.nombre });
+          golpes: (acc.golpes || 1) + extra, color: def.color, efectos: acc.efectos }, { fuente: def.nombre });
         emitir('invocacionVuelve', { de: a.uid, key: e.key });
       }
       return;
@@ -869,6 +913,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
 
     if (!a.muerto) {
       const principal = objetivo || objetivos[0] || null;
+      const invocacionesAntes = todos(a, 'summon').length;    // invocaciones activas al ejecutar el movimiento
       const previos = principal ? clonar(principal.estados) : [];    // para Propagar aunque el objetivo muera
       const c = { ...ctx, acum: { dano: 0, tenian: new Set() } };
       if (mov.invocar) invocar(a, mov.invocar);
@@ -881,7 +926,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
 
       const sobrevivientes = [...new Set(objetivos)].filter(t => !t.muerto && t.lado !== a.lado);
       const final = {
-        sobrevivientes, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian,
+        sobrevivientes, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, invocaciones: invocacionesAntes,
         estadoDe: id => (principal && !principal.muerto && get(principal, id)) || previos.find(e => e.id === id),
       };
       for (const ef of mov.efectos || []) if (ef.cuando === 'final' && cumple(ef.condicion, final)) ejecutarAccion(a, ef.accion, final);

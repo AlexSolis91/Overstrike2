@@ -8,7 +8,7 @@
 // alAparecer:  lo que hace UNA vez al ser invocada
 // Una acción es { tipo: 'golpe', pct, golpes, elegir, efectos } o cualquier acción universal del motor
 // (curar, escudo, robarHP, efecto, limpiar…) con su "a" (objetivo).
-// elegir (golpes): 'menorHp' | 'azar' | 'todos' | 'masFuerte'
+// elegir (golpes): 'menorHp' | 'azar' | 'todos' | 'masFuerte' · golpeExtraSi: <efecto> = un golpe más si el objetivo lo tiene
 // enfoque: [x, y] (0–1) punto de la imagen que se centra en el medallón (por defecto la parte superior central)
 // luminosa: true para imágenes con fondo negro (se dibujan en modo "pantalla": solo brilla lo claro)
 
@@ -76,10 +76,31 @@ export const INVOCACIONES = {
     desc: 'Escupe fuego a un enemigo al azar: 30% + Quemadura 5% (2 rondas).',
     acciones: [{ tipo: 'golpe', pct: .30, elegir: 'azar', efectos: [{ accion: { tipo: 'efecto', id: 'burn', valor: .05, dur: 2 } }] }],
   },
+  // ---------------------------------------------------------------- Dragones de Daenerys Targaryen
+  drogon: {
+    nombre: 'Drogon', rareza: 'Legendario', emoji: '🐲', color: 0xdc2626, imagen: 'assets/invocaciones/drogon.webp', dur: 3,
+    desc: 'Golpea 60% a un enemigo al azar; si tiene Quemadura, lo golpea una segunda vez.',
+    acciones: [{ tipo: 'golpe', pct: .60, elegir: 'azar', golpeExtraSi: 'burn' }],
+  },
+  rhaegal: {
+    nombre: 'Rhaegal', rareza: 'Común', emoji: '🐉', color: 0x16a34a, imagen: 'assets/invocaciones/rhaegal.webp', dur: 3,
+    desc: 'Aplica Quemadura 2% (2 rondas) a todos los enemigos. Si es más débil que la Quemadura que ya tienen, no alarga su duración.',
+    acciones: [{ tipo: 'efecto', id: 'burn', valor: .02, dur: 2, noRenueva: true, a: 'todosEnemigos' }],
+  },
+  viserion: {
+    nombre: 'Viserion', rareza: 'Épico', emoji: '🐉', color: 0xfde68a, imagen: 'assets/invocaciones/viserion.webp', dur: 3,
+    desc: 'Reduce 1 turno el cooldown del Especial y del Over de Daenerys.',
+    acciones: [{ tipo: 'reducirCooldown', cantidad: 1, categorias: ['especial', 'over'], a: 'propio' }],
+  },
 };
 
 // Tablas de invocación aleatoria (peso = probabilidad relativa)
 export const TABLAS_INVOCACION = {
+  dragones: [
+    { key: 'rhaegal', peso: 80 },
+    { key: 'viserion', peso: 15 },
+    { key: 'drogon', peso: 5 },
+  ],
   sombras: [
     { key: 'iron', peso: 26 },
     { key: 'igris', peso: 26 },

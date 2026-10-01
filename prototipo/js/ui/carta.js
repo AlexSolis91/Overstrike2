@@ -260,7 +260,7 @@ export class Carta {
     const v = this.v;
     if (!v) return;
     if (v.muerto) {
-      if (this.rk !== 'dead') { this.ring.clear(); this.aura.clear(); this.marker.alpha = 0; this.rk = 'dead'; }
+      if (this.rk !== 'dead') { this.ring.clear(); this.aura.clear(); this.marker.alpha = 0; this.body.alpha = 1; this.rk = 'dead'; }
       return;
     }
     const uid = this.p.uid;
@@ -305,6 +305,7 @@ export class Carta {
       }
     }
     const tiene = id => v.estados.some(e => e.id === id);
+    this.body.alpha = tiene('stealth') ? .45 + .1 * Math.sin(T * 3) : 1;   // Sigilo: carta translúcida
     if (tiene('burn') && Math.random() < .35 * dt)
       spawn({ x: x + rand(-60, 60), y: y + rand(30, 95), vy: rand(-1.4, -2.8), vx: rand(-.3, .3), color: pick([0xff7a2a, 0xffb347, 0xff4500]), size: rand(.12, .24), life: rand(30, 50), drag: .99, grow: -.8 });
     if (tiene('poison') && Math.random() < .1 * dt)
