@@ -234,7 +234,8 @@ export class Carta {
       const m = new PIXI.Container(); m.y = i * 38;
       const glow = new PIXI.Sprite(G.dotTex); glow.anchor.set(.5); glow.tint = def.color; glow.blendMode = 'add'; glow.scale.set(.95); glow.alpha = .7;
       m.addChild(glow); m.glow = glow;
-      const g = new PIXI.Graphics().circle(0, 0, 16).fill({ color: 0x0b0f18, alpha: .95 }).stroke({ width: 2, color: def.color });
+      const rare = { 'Común': 0x9ca3af, 'Raro': 0x4ade80, 'Especial': 0x60a5fa, 'Épico': 0xc084fc, 'Legendario': 0xfbbf24 }[def.rareza] ?? def.color;
+      const g = new PIXI.Graphics().circle(0, 0, 16).fill({ color: 0x0b0f18, alpha: .95 }).stroke({ width: 2.5, color: rare });
       const a0 = -Math.PI / 2, a1 = a0 + Math.PI * 2 * Math.max(0, Math.min(1, s.dur / def.dur));
       g.moveTo(Math.cos(a0) * 20, Math.sin(a0) * 20).arc(0, 0, 20, a0, a1).stroke({ width: 3, color: 0xffd36b });
       m.addChild(g);

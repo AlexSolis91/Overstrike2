@@ -293,6 +293,16 @@ export async function invocacionSale(carta, key, idx, objetivo) {
   if (key === 'dragon') for (let i = 0; i < 22; i++) setTimeout(() => spawn({ x: tx + rand(-14, 14), y: ty - lado * 20, vx: rand(-1.5, 1.5), vy: -lado * rand(4, 8), color: pick([0xff7a2a, 0xffd36b, 0xff3d00]), size: rand(.3, .5), life: 24, drag: .97, grow: .6 }), i * 8);
   return { cont, p };
 }
+export async function invocacionPulso(carta, key, idx) {
+  const def = INVOCACIONES[key];
+  const p = posMedallon(carta, Math.max(0, idx));
+  ringWave(p.x, p.y, def.color, { r0: 14, scale: 3, width: 3, dur: .45 });
+  burst(p.x, p.y, { n: 12, colors: [def.color, 0xffffff], speed: 4, size: .22 });
+  const s = spriteInvocacion(key, p.x, p.y, 54); s.scale.set(.3);
+  gsap.to(s.scale, { x: 1, y: 1, duration: .25, ease: 'back.out(2)' });
+  gsap.to(s, { alpha: 0, duration: .3, delay: .45, onComplete: () => s.destroy({ children: true }) });
+  await wait(380);
+}
 export async function invocacionVuelve(s) {
   if (!s) return;
   await gsap.to(s.cont, { x: s.p.x, y: s.p.y, alpha: 0, duration: .28, ease: 'power2.out' });

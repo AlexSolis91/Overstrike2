@@ -53,7 +53,7 @@ export function renderPanel(p, v, ui) {
     ...v.estados.map(e => `<div class="eff ${e.tipo}"><span class="ei">${e.icono}</span><div><b>${e.nombre}</b><small>${e.texto}</small></div>
       <div class="tags">${e.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div></div>`),
     ...v.invocaciones.map(i => { const d = INVOCACIONES[i.key];
-      return `<div class="eff buff"><span class="ei">${imgHtml(d.imagen, d.nombre) || d.emoji}</span><div><b>${d.nombre}</b><small>${d.golpes > 1 ? d.golpes + ' golpes de ' : ''}${Math.round(d.pct * 100)}% del ${ESC[d.escala || 'dano']} de ${p.nombre} · ${i.dur} ronda(s)${i.fresca ? ' · actúa desde su próximo turno' : ''}</small></div><div class="tags"><span class="tag">Invocación</span></div></div>`; }),
+      return `<div class="eff buff"><span class="ei">${imgHtml(d.imagen, d.nombre) || d.emoji}</span><div><b>${d.nombre}</b> <span class="tag" style="color:${RAREZAS[d.rareza]?.color || '#94a3b8'}">${d.rareza || ''}</span><small>${d.desc || ''} · ${i.dur} ronda(s)${i.fresca ? ' · actúa desde su próximo turno' : ''}</small></div><div class="tags"><span class="tag">Invocación</span></div></div>`; }),
   ];
 
   let desbloqueo = 0;

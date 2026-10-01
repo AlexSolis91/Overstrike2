@@ -7,7 +7,7 @@ import { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, CONTROL, DOT } from './reglas.
 import { EFECTOS, esDe } from './efectos.js';
 import { crearRng } from './rng.js';
 import { RELIQUIAS } from '../datos/reliquias.js';
-import { INVOCACIONES } from '../datos/invocaciones.js';
+import { INVOCACIONES, TABLAS_INVOCACION } from '../datos/invocaciones.js';
 
 const CATEGORIAS = ['basico', 'especial', 'over'];
 const clonar = o => JSON.parse(JSON.stringify(o));
@@ -104,7 +104,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     return {
       hp: Math.max(0, p.hp), maxHp: maxHp(p), escudo: p.escudo, muerto: p.muerto, esLider: p.esLider,
       stats: stats(p), estados: vistaEstados(p), cds: { ...p.cds }, bonos: { ...p.bonos }, inmune: p.inmune,
-      invocaciones: todos(p, 'summon').map(e => ({ key: e.key, dur: e.dur, fresca: !!e.fresca })),
+      invocaciones: todos(p, 'summon').map(e => ({ key: e.key, dur: e.dur, fresca: !!e.fresca, max: INVOCACIONES[e.key].dur })),
       forma: p.forma ? { nombre: p.forma.nombre, imagen: p.forma.imagen, emoji: p.forma.emoji, color: p.forma.color, turnos: p.forma.turnos, total: p.forma.total } : null,
       movs: p.movimientos, pasiva: p.pasiva,
     };
@@ -279,7 +279,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const { aHp, aEsc } = repartir(t, d, sa.pen);
     if (ctx.acum) ctx.acum.dano += aHp + aEsc;
     emitir('golpe', { de: a.uid, a: t.uid, dano: aHp, escudo: aEsc, critico, quiebre, color: mov.color, fuente: ctx.fuente, multi: (mov.golpes || 1) > 1 }, t);
-    if (t.hp <= 0) morir(t);
+    if (t.hp <= 0) morir(t, a);
     const aura = get(t, 'fireAura');
     if (aura && !t.muerto && !a.muerto && t.lado !== a.lado) {
       emitir('auraFuego', { a: t.uid, de: a.uid });
@@ -307,7 +307,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     d *= 1 - reduccion(t, 'efecto');
     const { aHp, aEsc } = repartir(t, d, stats(a).pen);
     emitir('danoEfecto', { de: a.uid, a: t.uid, dano: aHp, escudo: aEsc, color }, t);
-    if (t.hp <= 0) morir(t);
+    if (t.hp <= 0) morir(t, a);
   }
 
   // Daño DoT: % del HP máx.; ignora Armadura, Escudo y Bloqueo.
@@ -326,7 +326,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const d = pct * maxHp(t);
     t.hp -= d;
     emitir('robo', { de: a.uid, a: t.uid, cantidad: d }, t);
-    if (t.hp <= 0) morir(t);
+    if (t.hp <= 0) morir(t, a);
     curar(a, a, d, true);
   }
 
@@ -338,13 +338,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (real > 0) for (const p of aliadosDe(t)) if (p !== t) pasivas(p, 'alCurarAliado', { objetivo: t, curacion: real });
   }
 
-  function morir(t) {
+  function morir(t, asesino = null) {
     if (t.muerto) return;
     const bombas = todos(t, 'bomb');
     const invocaciones = todos(t, 'summon').length;
     t.muerto = true; t.hp = 0; t.escudo = 0; t.estados = [];
     emitir('muerte', { a: t.uid, invocaciones, lider: t.esLider && !!t.lider }, t);
     for (const b of bombas) explotarBomba(t, b, true);
+    if (asesino && asesino.lado !== t.lado) pasivas(asesino, 'alEliminar', { objetivo: t });
   }
 
   function explotarBomba(t, b, soloSalpicadura) {
@@ -378,6 +379,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   function aplicarEfecto(a, t, acc) {
     // Protección contra el bloqueo infinito: aplica a CUALQUIER vía (movimientos, pasivas, efectos garantizados)
     if (t.inmune && CONTROL.pierdeTurno.includes(acc.id)) { emitir('inmune', { a: t.uid }); return; }
+    const inm = t.pasiva?.inmuneA;
+    if (inm && (inm.includes(acc.id) || EFECTOS[acc.id].tags.some(tag => inm.includes(tag)))) { emitir('inmune', { a: t.uid, texto: `Inmune a ${EFECTOS[acc.id].nombre}` }); return; }
     const sa = stats(a);
     const def = EFECTOS[acc.id];
     let texto = def.nombre, id = acc.id;
@@ -481,7 +484,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (spec === 'otrosEnemigos') return enemigosDe(a).filter(x => x !== ctx.objetivo);
     if (spec === 'todosAliados') return aliadosDe(a);
     if (spec === 'sobrevivientes') return (ctx.sobrevivientes || []).filter(x => !x.muerto);
+    if (spec === 'aliadoMasHerido') { const l = aliadosDe(a); return l.length ? [l.reduce((x, y) => x.hp / maxHp(x) <= y.hp / maxHp(y) ? x : y)] : []; }
     if (spec.azar) return Array.from({ length: spec.azar }, () => enemigosDe(a)).filter(l => l.length).map(l => rng.elegir(l));
+    if (spec.distintos) return [...enemigosDe(a)].sort(() => rng() - .5).slice(0, spec.distintos);
     return [];
   }
 
@@ -490,7 +495,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       if (t.muerto && acc.tipo !== 'curar') continue;
       switch (acc.tipo) {
         case 'efecto':
-          for (let i = 0; i < (acc.veces || 1); i++) intentarEfecto(a, t, acc);
+          for (let i = 0; i < (acc.veces || 1); i++) intentarEfecto(a, t, acc.idAzar ? { ...acc, id: rng.elegir(acc.idAzar) } : acc);
           break;
         case 'curar': {
           const base = acc.base === 'hpMaxObjetivo' ? maxHp(t) : acc.base === 'curacion' ? (ctx.curacion || 0) : baseDe(a, acc.escala);
@@ -517,6 +522,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           break;
         }
         case 'transformar': transformar(t, acc.turnos); break;
+        case 'invocarAzar': invocarAzar(t, acc.tabla, acc.rarezas); break;
+        case 'potenciarInvocaciones': potenciarInvocaciones(t, acc.potencia || 1, acc.renovar); break;
         case 'escudo': {
           const c = (acc.base === 'danoCausado' ? (ctx.danoCausado || 0) : baseDe(a, acc.escala)) * acc.pct;
           if (c <= 0) break;
@@ -589,48 +596,101 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   }
 
   // ================================================================ invocaciones
+  // Reglas generales: máximo 3 invocaciones activas por invocador; si está lleno, se reemplaza la de menor duración restante.
+  // Un tipo ya activo se renueva (salvo que su "max" permita varias, como los Dragones de Ysera).
+  const MAX_INVOCACIONES = 3;
   function invocar(a, key) {
     const def = INVOCACIONES[key];
     const mismas = todos(a, 'summon').filter(e => e.key === key);
-    if (def.max === 1) {
-      for (const e of todos(a, 'summon')) emitir('invocacionRetira', { de: a.uid, key: e.key });
-      a.estados = a.estados.filter(e => e.id !== 'summon');
-    } else if (mismas.length >= def.max) {
+    if (mismas.length >= (def.max || 1)) {
       const vieja = mismas.reduce((x, y) => x.dur < y.dur ? x : y);
       vieja.dur = def.dur;
       emitir('invocacionRenueva', { de: a.uid, key }, a);
       return;
-    } else {
-      a.estados = a.estados.filter(e => e.id !== 'summon' || e.key === key);
     }
-    a.estados.push({ id: 'summon', key, dur: def.dur, fresca: true });
-    emitir('invocacion', { de: a.uid, key, idx: todos(a, 'summon').length - 1 }, a);
+    const activas = todos(a, 'summon');
+    if (activas.length >= MAX_INVOCACIONES) {
+      const sale = activas.reduce((x, y) => x.dur < y.dur ? x : y);
+      a.estados = a.estados.filter(e => e !== sale);
+      emitir('invocacionRetira', { de: a.uid, key: sale.key }, a);
+    }
+    const e = { id: 'summon', key, dur: def.dur, fresca: true };
+    a.estados.push(e);
+    emitir('invocacion', { de: a.uid, key, idx: todos(a, 'summon').length - 1, rareza: def.rareza }, a);
+    for (const acc of def.alAparecer || []) accionInvocacion(a, e, acc, 1);
   }
 
-  function ataqueInvocacion(a, e, t, pct) {
+  // Invocación aleatoria por pesos; nunca repite una que ya esté activa (si no se permiten varias de ese tipo)
+  function invocarAzar(a, tabla, rarezas) {
+    const activas = new Set(todos(a, 'summon').map(e => e.key));
+    const pool = (TABLAS_INVOCACION[tabla] || []).filter(x => (!rarezas || rarezas.includes(INVOCACIONES[x.key].rareza))
+      && (!activas.has(x.key) || (INVOCACIONES[x.key].max || 1) > 1));
+    if (!pool.length) { emitir('sinEfecto', { a: a.uid, texto: 'Sin sombras disponibles' }); return; }
+    let r = rng() * pool.reduce((s, x) => s + x.peso, 0);
+    const elegido = pool.find(x => (r -= x.peso) < 0) || pool[pool.length - 1];
+    invocar(a, elegido.key);
+  }
+
+  function elegirObjetivos(a, criterio) {
+    const rivales = conProvocacion(enemigosDe(a));
+    if (!rivales.length) return [];
+    if (criterio === 'todos') return enemigosDe(a);
+    if (criterio === 'menorHp') return [rivales.reduce((x, y) => x.hp / maxHp(x) < y.hp / maxHp(y) ? x : y)];
+    if (criterio === 'masFuerte') return [rivales.reduce((x, y) => stats(x).dmg >= stats(y).dmg ? x : y)];
+    return [rng.elegir(rivales)];
+  }
+
+  // Ejecuta UNA acción de una invocación. Los golpes usan las estadísticas del invocador; "potencia" multiplica los %.
+  function accionInvocacion(a, e, acc, potencia, forzados) {
+    if (a.muerto || S.fin) return;
     const def = INVOCACIONES[e.key];
-    emitir('invocacionAtaca', { de: a.uid, key: e.key, idx: todos(a, 'summon').indexOf(e), a: t.uid });
-    resolverSobreObjetivo(a, t, { nombre: def.nombre, categoria: 'invocacion', pct, escala: def.escala, golpes: def.golpes,
-      color: def.color, efectos: def.efectos }, { fuente: def.nombre });
-    emitir('invocacionVuelve', { de: a.uid, key: e.key });
+    const idx = todos(a, 'summon').indexOf(e);
+    if (acc.tipo === 'golpe') {
+      for (const t of forzados || elegirObjetivos(a, acc.elegir)) {
+        if (t.muerto) continue;
+        emitir('invocacionAtaca', { de: a.uid, key: e.key, idx, a: t.uid });
+        resolverSobreObjetivo(a, t, { nombre: def.nombre, categoria: 'invocacion', pct: acc.pct * potencia, escala: acc.escala || 'dano',
+          golpes: acc.golpes, color: def.color, efectos: acc.efectos }, { fuente: def.nombre });
+        emitir('invocacionVuelve', { de: a.uid, key: e.key });
+      }
+      return;
+    }
+    emitir('invocacionActua', { de: a.uid, key: e.key, idx });
+    ejecutarAccion(a, acc.pct ? { ...acc, pct: acc.pct * potencia } : acc, {});
+  }
+
+  function actuarInvocacion(a, e, potencia = 1) {
+    for (const acc of INVOCACIONES[e.key].acciones || []) accionInvocacion(a, e, acc, potencia);
   }
 
   function actuanInvocaciones(a) {
     for (const e of todos(a, 'summon')) {
       if (e.fresca || a.muerto || S.fin) continue;
-      const rivales = enemigosDe(a);
-      if (!rivales.length) return;
-      const def = INVOCACIONES[e.key];
-      const pool = conProvocacion(rivales);
-      const t = def.elegir === 'menorHp' ? pool.reduce((x, y) => x.hp / maxHp(x) < y.hp / maxHp(y) ? x : y) : rng.elegir(pool);
-      ataqueInvocacion(a, e, t, def.pct);
+      if (!enemigosDe(a).length) return;
+      actuarInvocacion(a, e);
     }
+  }
+
+  // Dominio del Monarca: todas actúan de inmediato con potencia extra y (opcional) renuevan su duración
+  function potenciarInvocaciones(a, potencia, renovar) {
+    const lista = todos(a, 'summon');
+    if (!lista.length) { emitir('sinEfecto', { a: a.uid, texto: 'Sin invocaciones' }); return; }
+    emitir('dominio', { id: a.uid, potencia }, a);
+    for (const e of lista) {
+      if (a.muerto || S.fin) break;
+      actuarInvocacion(a, e, potencia);
+      if (renovar) e.dur = INVOCACIONES[e.key].dur;
+    }
+    emitir('actualizar', {}, a);
   }
 
   function desatar(a, mov) {
     const lista = todos(a, 'summon').filter(e => e.key === mov.desatar);
     if (!lista.length) { emitir('sinEfecto', { a: a.uid, texto: 'Sin invocaciones' }); return; }
-    for (const e of lista) for (const t of enemigosDe(a)) ataqueInvocacion(a, e, t, mov.pctInvocacion);
+    for (const e of lista) {
+      const golpe = (INVOCACIONES[e.key].acciones || []).find(x => x.tipo === 'golpe') || {};
+      accionInvocacion(a, e, { ...golpe, tipo: 'golpe', pct: mov.pctInvocacion }, 1, enemigosDe(a));
+    }
     a.estados = a.estados.filter(e => !lista.includes(e));
     emitir('invocacionRetira', { de: a.uid, key: mov.desatar }, a);
   }

@@ -19,21 +19,6 @@ export const morrigan = {
   ],
 };
 
-export const sunJinWoo = {
-  id: 'sun-jin-woo', nombre: 'Sun Jin Woo', rol: 'Luchador', emoji: '🌑', color: '#8b5cf6', prueba: true,
-  imagen: 'assets/personajes/sun-jin-woo.webp',
-  base: { hp: 700, dmg: 68, spd: 88 }, extra: {},
-  slots: espacios('nichirin', 'botas', 'anilloCobre'),
-  movimientos: [
-    { categoria: 'basico', nombre: 'Daga Sombría', objetivo: 'enemigo', estilo: 'melee', color: 0xc4b5fd, pct: 1.0, escala: 'dano', cd: 0,
-      desc: 'Causa 100% del Daño a un enemigo.' },
-    { categoria: 'especial', nombre: 'Alzarse: Bestia', objetivo: 'propio', estilo: 'support', color: 0xef4444, cd: 3, invocar: 'bestia',
-      desc: 'Invoca a la Bestia Carmesí (2 rondas): golpea 2 veces (35%) a un enemigo al azar y aplica Sangrado. Reemplaza a otra invocación.' },
-    { categoria: 'over', nombre: 'Alzarse: Igris', objetivo: 'propio', estilo: 'support', color: 0x8b5cf6, cd: 4, invocar: 'igris',
-      desc: 'Invoca a Igris (3 rondas): golpea al enemigo con menos HP con 60% del Daño. Reemplaza a otra invocación.' },
-  ],
-};
-
 export const thorne = {
   id: 'thorne', nombre: 'Thorne', rol: 'Tanque', emoji: '🛡️', color: '#5aa9ff', prueba: true,
   base: { hp: 800, dmg: 45, spd: 65 }, extra: {},

@@ -17,9 +17,10 @@ export function elegirIA(combate) {
     const acciones = (mov.efectos || []).map(e => e.accion.tipo);
     let objetivo = null;
 
+    if (acciones.includes('potenciarInvocaciones') && invocaciones() < 2) continue;   // Dominio: vale la pena con 2+ sombras
     if (mov.invocar) {
       const def = INVOCACIONES[mov.invocar];
-      if (def.max === 1 ? invocaciones() > 0 : invocaciones(mov.invocar) >= def.max) continue;
+      if (invocaciones(mov.invocar) >= (def.max || 1) && invocaciones() >= 3) continue;
     } else if (mov.desatar) {
       if (invocaciones(mov.desatar) < 2) continue;
     } else if (mov.objetivo === 'enemigo') {

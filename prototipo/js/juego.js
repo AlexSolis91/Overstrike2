@@ -141,7 +141,7 @@ async function manejar(e) {
       await wait(280);
       break;
     case 'resistido': FX.textoSobre(c(e.a), 'RESISTIDO'); log(`${nombre(e.a)} resiste el efecto`); await wait(220); break;
-    case 'inmune': FX.textoSobre(c(e.a), 'INMUNE', '#e2e8f0'); log(`${nombre(e.a)} es inmune al Control`); await wait(220); break;
+    case 'inmune': FX.textoSobre(c(e.a), e.texto ? e.texto.toUpperCase() : 'INMUNE', '#e2e8f0'); log(`${nombre(e.a)}: ${e.texto || 'inmune al Control'}`); await wait(220); break;
     case 'sinEfecto': FX.textoSobre(c(e.a), e.texto); await wait(200); break;
     case 'limpieza': aplicar(e); FX.limpieza(c(e.a)); log(`${nombre(e.a)}: se limpian ${e.n} debuff(s)`, 'heal'); await wait(320); break;
     case 'disipar': aplicar(e); FX.disipar(c(e.a), e.n); log(`${nombre(e.a)}: se disipan ${e.n} buff(s)`, 'fx'); await wait(320); break;
@@ -159,9 +159,19 @@ async function manejar(e) {
       break;
     case 'bono': aplicar(e); FX.textoSobre(c(e.id), e.texto, '#fbbf24', 14, -125); log(`${nombre(e.id)}: ${e.texto}`, 'fx'); break;
     case 'invocacion':
-      log(`${nombre(e.de)} invoca a ${INVOCACIONES[e.key].nombre}`, 'fx');
+      log(`${nombre(e.de)} invoca a ${INVOCACIONES[e.key].nombre}${e.rareza ? ` (${e.rareza})` : ''}`, e.rareza === 'Legendario' ? 'sys' : 'fx');
+      if (e.rareza === 'Legendario') { banner(`¡${INVOCACIONES[e.key].nombre.toUpperCase()}!`, { size: 70, color: '#fbbf24', hold: 1 }); await wait(700); }
       await FX.invocacion(c(e.de), e.key, e.idx);
       aplicar(e);
+      break;
+    case 'invocacionActua':
+      log(`${INVOCACIONES[e.key].nombre} actúa`, 'fx');
+      await FX.invocacionPulso(c(e.de), e.key, e.idx);
+      break;
+    case 'dominio':
+      aplicar(e); FX.textoSobre(c(e.id), `👑 Sombras +${Math.round((e.potencia - 1) * 100)}%`, '#c4b5fd', 16, -125);
+      log(`${nombre(e.id)}: sus sombras actúan con +${Math.round((e.potencia - 1) * 100)}% de potencia`, 'sys');
+      await wait(300);
       break;
     case 'invocacionRetira': FX.invocacionSeVa(c(e.de), e.key); aplicar(e); log(`${INVOCACIONES[e.key].nombre} se retira`); break;
     case 'invocacionRenueva': aplicar(e); FX.textoSobre(c(e.de), 'Invocación renovada', '#fbbf24', 14, -125); break;

@@ -149,7 +149,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | `propagar` | efecto | Copia el DoT del objetivo principal (mismo valor y duración restante) a los destinos. Cada copia tira Puntería − Resistencia. Funciona aunque el objetivo muera y cuenta como aplicación |
 | `escudo` con `base: 'danoCausado'` | pct | Escudo igual a un % del daño total causado por el movimiento |
 
-**A quién (`a`):** `objetivo` · `propio` · `todosEnemigos` · `otrosEnemigos` · `todosAliados` · `sobrevivientes` · `{ azar: N }` (N enemigos al azar, pueden repetir).
+**A quién (`a`):** `objetivo` · `propio` · `todosEnemigos` · `otrosEnemigos` · `todosAliados` · `aliadoMasHerido` · `sobrevivientes` · `{ azar: N }` (N enemigos al azar, pueden repetir) · `{ distintos: N }` (hasta N enemigos distintos).
 
 ## 8. Gatillos y condiciones
 
@@ -161,6 +161,8 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - `alAcertarCritico`.
   - `alDanoDoT`: cada vez que un DoT hace daño. Se puede filtrar por `tipo` y por lado (`en: 'enemigos'`).
   - `alCurarAliado`: cada vez que un aliado **que no sea el dueño de la pasiva** recibe una curación real (incluye robo de HP).
+  - `alEliminar`: cuando el personaje **o sus invocaciones** eliminan a un enemigo (no cuentan muertes por DoT).
+- **Inmunidades:** una pasiva puede declarar `inmuneA` con ids o etiquetas de efectos (p. ej. Sun Jin Woo: Veneno).
 - **Límite:** una pasiva puede declarar `maxPorRonda`.
 - **Condiciones:**
   - `objetivoTiene: <efecto>`.
@@ -172,10 +174,30 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 
 - Son un **buff con etiqueta Invocación** del invocador. No ocupan espacio y no se les puede atacar.
 - Se pueden **Disipar** y desaparecen si muere el invocador.
-- Actúan solas **después del turno de su invocador**, a partir de su siguiente turno.
-- Su daño sale de las estadísticas del invocador (`pct`, `escala`, `golpes`).
-- **Máximo 1 invocación activa** por invocador (la nueva reemplaza a la anterior), salvo las que declaren `max` > 1 (Dragones: 3).
+- Todo lo que hacen escala con las **estadísticas del invocador**.
+- **Reglas generales (todos los invocadores):**
+  - Máximo **3 activas**.
+  - **Sin repetidas**: en invocaciones al azar se vuelve a tirar. Invocar un tipo ya activo lo renueva, salvo que su `max` permita varias (Dragones ×3).
+  - Si ya hay 3, la nueva **reemplaza a la de menor duración restante**.
+- **Cada invocación es un mini-personaje:**
+  - `acciones`: lo que hace **cada turno**, automáticamente después del turno de su invocador, desde el turno siguiente a aparecer.
+  - `alAparecer`: lo que hace **una vez** al ser invocada.
+  - Una acción es un `golpe` (con `pct`, `golpes`, `efectos` y `elegir`: `menorHp` · `azar` · `todos` · `masFuerte`) o cualquier acción universal (curar, escudo, robarHP, efecto, limpiar…).
+- **Rareza** (Común, Raro, Especial, Épico, Legendario): se ve en el color del borde de su medallón.
+- **Invocar al azar** (`invocarAzar`): usa una tabla de pesos y puede filtrar por rareza.
+- **Potenciar** (`potenciarInvocaciones`): todas actúan de inmediato con un multiplicador de potencia y, si se indica, renuevan su duración.
 - `desatar`: todas las invocaciones de un tipo atacan a todos los enemigos y se retiran (Dracarys).
+
+### Sombras de Sun Jin Woo (tabla `sombras`)
+| Sombra | Rareza | Peso | Rol |
+|---|---|---|---|
+| Iron | Común | 26 | 25% a un enemigo al azar + Escudo 50% al aliado más herido |
+| Igris | Común | 26 | 45% al enemigo con menos HP |
+| Shadow Ming Byung | Raro | 18 | Cura 15% HP máx. al aliado más herido · al aparecer: limpia 1 debuff a cada aliado |
+| Kaisel | Raro | 15 | Roba 5% HP máx. a 2 enemigos al azar (puede repetir) y cura al invocador |
+| Beru | Épico | 9 | 2×30% + Sangrado o Veneno |
+| Bellion | Épico | 5 | 35% al enemigo más fuerte · al aparecer: Aturdimiento a hasta 3 enemigos distintos |
+| Kamish | Legendario | 1 | 50% a todos · al aparecer: 150% a todos + Miedo |
 
 ## 10. Líder
 
