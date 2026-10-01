@@ -128,7 +128,8 @@ export class Carta {
     this.formaBadge = new PIXI.Container(); this.formaBadge.position.set(CW / 2 + 2, -CH / 2 + 40); this.formaBadge.visible = false;
     c.addChild(this.formaBadge);
     this.formaKey = null;
-    this.statusRow = new PIXI.Container(); this.statusRow.y = CH / 2 + 17; c.addChild(this.statusRow);
+    this.statusRow = new PIXI.Container(); this.statusRow.y = CH / 2;   // sobre el borde inferior de la carta
+    c.addChild(this.statusRow);
     this.marker = txt('▼', { size: 22, fill: '#ffd36b', stroke: 4 }); this.marker.y = -CH / 2 - 20; this.marker.alpha = 0; c.addChild(this.marker);
 
     c.eventMode = 'static'; c.cursor = 'pointer';
@@ -220,7 +221,7 @@ export class Carta {
     lista.forEach((st, i) => {
       const b = new PIXI.Container();
       b.x = (i - (lista.length - 1) / 2) * 27;
-      b.addChild(new PIXI.Graphics().circle(0, 0, 12).fill({ color: 0x0b0f18, alpha: .95 }).stroke({ width: 2, color: st.color }));
+      b.addChild(new PIXI.Graphics().circle(0, 0, 12).fill({ color: 0x0b0f18, alpha: .95 }).stroke({ width: 2.5, color: st.tipo === 'debuff' ? 0xef4444 : 0x22c55e }));   // verde = buff, rojo = debuff
       b.addChild(txt(st.icono, { size: 12, stroke: 0, font: EMOJI_FONT }));
       if (st.n !== '' && st.n !== undefined) { const n = txt(String(st.n), { size: 9, weight: '900', stroke: 3 }); n.position.set(9, 8); b.addChild(n); }
       this.statusRow.addChild(b);
