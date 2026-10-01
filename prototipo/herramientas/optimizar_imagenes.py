@@ -67,8 +67,14 @@ def fondo_estimado(rgb: np.ndarray):
     claros, grises = neutro_claro & (lum > 235), neutro_claro & (lum < 215)
     # cuadriculado gris/blanco: casi todo el borde, o al menos una parte con sus dos tonos (la figura puede tapar el resto)
     if (sat < 16).mean() > .85 or (neutro_claro.mean() > .2 and claros.mean() > .05 and grises.mean() > .05):
+        if grises.mean() < .02:                  # en realidad es blanco liso (sin el segundo tono del cuadriculado)
+            c = np.median(borde[claros], 0)
+            return c, c, 'color liso'
         mid = (np.percentile(lum, 5) + np.percentile(lum, 95)) / 2
         return borde[lum < mid].mean(0), borde[lum >= mid].mean(0), 'cuadriculado falso'
+    if claros.mean() > .3:                       # fondo blanco con trazos o figura tocando el borde
+        c = np.median(borde[claros], 0)
+        return c, c, 'color liso'
     return None
 
 

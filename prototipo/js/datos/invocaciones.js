@@ -37,6 +37,7 @@ export const INVOCACIONES = {
   },
   kaisel: {
     nombre: 'Kaisel', rareza: 'Raro', emoji: '🐉', color: 0x2563eb, imagen: 'assets/invocaciones/kaisel.webp', dur: 3,
+    enfoque: [.29, .21],
     desc: 'Roba 5% del HP máx. de 2 enemigos al azar (puede repetir) y cura a su invocador lo robado.',
     acciones: [{ tipo: 'robarHP', pct: .05, a: { azar: 2 } }],
   },
