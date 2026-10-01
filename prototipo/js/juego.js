@@ -293,6 +293,31 @@ function alternar(id, boton) {
 $('#btn-log').addEventListener('click', () => alternar('#log-panel', '#btn-log'));
 $('#log-close').addEventListener('click', () => alternar('#log-panel', '#btn-log'));
 $('#btn-test').addEventListener('click', () => alternar('#test-panel', '#btn-test'));
+
+// ---------------------------------------------------------------- pantalla completa
+// PC y Android: API de pantalla completa (+ girar a horizontal en móvil). iPhone: Safari no la permite en
+// páginas, así que se explica cómo instalarlo en la pantalla de inicio (ahí abre sin barras).
+const raiz = document.documentElement;
+const enPantallaCompleta = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+const instalada = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
+if (instalada) document.body.classList.add('app-instalada');
+function marcarFull() {
+  const on = enPantallaCompleta();
+  $('#btn-full').classList.toggle('on', on);
+  $('#btn-full').innerHTML = on ? '⛶<span class="lbl"> Salir</span>' : '⛶<span class="lbl"> Pantalla completa</span>';
+}
+$('#btn-full').addEventListener('click', async () => {
+  try {
+    if (enPantallaCompleta()) { await (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+    const pedir = raiz.requestFullscreen || raiz.webkitRequestFullscreen;
+    if (!pedir) { $('#ios-tip').classList.remove('hidden'); return; }
+    await pedir.call(raiz, { navigationUI: 'hide' });
+    if (matchMedia('(pointer: coarse)').matches) await screen.orientation?.lock?.('landscape').catch(() => {});
+  } catch (e) { console.warn('Pantalla completa no permitida:', e?.message); }   // p. ej. el navegador la rechazó
+});
+$('#ios-ok').addEventListener('click', () => $('#ios-tip').classList.add('hidden'));
+document.addEventListener('fullscreenchange', marcarFull);
+document.addEventListener('webkitfullscreenchange', marcarFull);
 addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   if (ui.movSel) cancelarObjetivo();

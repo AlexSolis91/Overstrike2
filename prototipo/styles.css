@@ -304,3 +304,14 @@ section h3::after { content: ''; flex: 1; height: 1px; background: linear-gradie
   .act-name { font-size: 12px; }
   .act-tip { width: 220px; }
 }
+
+/* ---------------------------------------------------------------- pantalla completa */
+body.app-instalada #btn-full { display: none; }        /* abierto desde el ícono: ya es pantalla completa */
+#ios-tip { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgba(3, 6, 12, .72); padding: 16px; }
+#ios-tip.hidden { display: none; }
+#ios-tip .ios-box { max-width: 340px; background: #111827; border: 1px solid var(--gold); border-radius: 14px; padding: 18px 18px 14px; color: #e5e7eb; font-size: 14px; line-height: 1.45; }
+#ios-tip b { color: var(--gold); }
+#ios-tip ol { margin: 8px 0 12px; padding-left: 20px; }
+#ios-tip .ico { display: inline-block; border: 1px solid #9ca3af; border-radius: 4px; padding: 0 4px; font-size: 12px; }
+#ios-tip button { width: 100%; padding: 9px; border-radius: 9px; border: 1px solid var(--gold); background: transparent; color: var(--gold); font-weight: 700; cursor: pointer; }
+@media (max-width: 900px) { #btn-full .lbl { display: none; } }
