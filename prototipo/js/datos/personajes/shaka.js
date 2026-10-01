@@ -18,7 +18,7 @@ export default {
   pasiva: {
     nombre: 'Sangre de Atena',
     desc: 'Cada vez que Shaka o un aliado pierde Escudo, ese aliado se cura un 8% del HP máx. de Shaka (máximo 3 veces por ronda).',
-    gatillo: 'alPerderEscudo', maxPorRonda: 3,
+    gatillo: 'alPerderEscudo', maxPorRonda: 3, soloSiCura: true,
     accion: { tipo: 'curar', pct: .08, escala: 'hpMax', a: 'objetivo' },
   },
   movimientos: [

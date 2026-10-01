@@ -600,6 +600,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (pa.filtro?.tipo && pa.filtro.tipo !== ctx.tipo) return;
     if (pa.filtro?.en === 'enemigos' && (!ctx.objetivo || ctx.objetivo.lado === p.lado)) return;
     if (pa.maxPorRonda && p.usosPasiva >= pa.maxPorRonda) return;
+    // soloSiCura: si nadie de los destinos puede recibir curación, no se activa ni gasta uso
+    if (pa.soloSiCura && !objetivosAccion(p, pa.accion.a, ctx).some(t => !t.muerto && t.hp < maxHp(t))) return;
     p.usosPasiva++;
     emitir('pasiva', { id: p.uid, nombre: pa.nombre });
     ejecutarAccion(p, pa.accion, ctx);
