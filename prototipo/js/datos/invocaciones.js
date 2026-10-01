@@ -79,6 +79,7 @@ export const INVOCACIONES = {
   // ---------------------------------------------------------------- Dragones de Daenerys Targaryen
   drogon: {
     nombre: 'Drogon', rareza: 'Legendario', emoji: '🐲', color: 0xdc2626, imagen: 'assets/invocaciones/drogon.webp', dur: 3,
+    enfoque: [.565, .465],
     desc: 'Golpea 60% a un enemigo al azar; si tiene Quemadura, lo golpea una segunda vez.',
     acciones: [{ tipo: 'golpe', pct: .60, elegir: 'azar', golpeExtraSi: 'burn' }],
   },
