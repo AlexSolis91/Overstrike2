@@ -48,6 +48,7 @@ export const INVOCACIONES = {
   },
   bellion: {
     nombre: 'Bellion', rareza: 'Épico', emoji: '⚔️', color: 0x7c3aed, imagen: 'assets/invocaciones/bellion.webp', dur: 3,
+    enfoque: [.585, .19],
     desc: 'Golpea 35% al enemigo más fuerte. Al aparecer, intenta Aturdir a hasta 3 enemigos distintos (cada uno con su tirada).',
     alAparecer: [{ tipo: 'efecto', id: 'stun', a: { distintos: 3 } }],
     acciones: [{ tipo: 'golpe', pct: .35, elegir: 'masFuerte' }],
