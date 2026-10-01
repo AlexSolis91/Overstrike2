@@ -1,5 +1,5 @@
 // Punto de entrada: une el motor (reglas) con la interfaz (animaciones y panel).
-import { iniciarEscena, G, W, wait, banner } from './ui/graficos.js';
+import { iniciarEscena, G, W, wait, banner, relayout } from './ui/graficos.js';
 import { precargar } from './ui/imagenes.js';
 import { Carta } from './ui/carta.js';
 import * as FX from './ui/fx.js';
@@ -11,6 +11,17 @@ import { INVOCACIONES } from './datos/invocaciones.js';
 
 const { gsap } = window;
 const $ = s => document.querySelector(s);
+
+// ---------------------------------------------------------------- modo celular
+const consultaMovil = matchMedia('(max-width: 900px), (max-height: 520px)');
+function modoMovil() {
+  const cl = document.body.classList, movil = consultaMovil.matches, horizontal = innerWidth > innerHeight;
+  cl.toggle('movil', movil); cl.toggle('movil-h', movil && horizontal); cl.toggle('movil-v', movil && !horizontal);
+  if (!movil) cl.remove('panel-abierto');
+  relayout();
+}
+modoMovil();
+addEventListener('resize', modoMovil);
 
 // ---------------------------------------------------------------- carga
 await iniciarEscena($('#field'));
@@ -270,14 +281,20 @@ function elegirMovimiento(cat) {
   const mov = (vistas[ui.actual]?.movs || por(ui.actual).movimientos).find(m => m.categoria === cat);
   if (mov.objetivo === 'enemigo' || mov.objetivo === 'aliado') {
     ui.movSel = cat; ui.objetivosValidos = op.objetivos; ui.tipoObjetivo = mov.objetivo;
-    setHint(`${mov.nombre}: elige ${mov.objetivo === 'aliado' ? 'un aliado' : 'un enemigo'} · Esc para cancelar`);
+    setHint(`${mov.nombre}: elige ${mov.objetivo === 'aliado' ? 'un aliado' : 'un enemigo'} · ${document.body.classList.contains('movil') ? 'toca el movimiento otra vez para cancelar' : 'Esc para cancelar'}`);
     refrescarPanel();
   } else ejecutar(cat, null);
 }
 function tocarCarta(carta) {
   if (ui.movSel && ui.miTurno && ui.objetivosValidos?.includes(carta.p.uid)) { ejecutar(ui.movSel, carta.p.uid); return; }
   inspeccionar(carta.p.uid);
+  if (document.body.classList.contains('movil')) document.body.classList.add('panel-abierto');   // celular: abre el cajón
 }
+
+const cerrarPanel = () => document.body.classList.remove('panel-abierto');
+$('#panel-close').addEventListener('click', cerrarPanel);
+$('#panel-fondo').addEventListener('click', cerrarPanel);
+$('#girar-x').addEventListener('click', () => $('#girar').classList.add('cerrado'));
 $('#actionbar').addEventListener('click', e => {
   const b = e.target.closest('.act');
   if (!b || b.classList.contains('off')) return;
@@ -320,6 +337,7 @@ document.addEventListener('fullscreenchange', marcarFull);
 document.addEventListener('webkitfullscreenchange', marcarFull);
 addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
+  if (document.body.classList.contains('panel-abierto')) { cerrarPanel(); return; }
   if (ui.movSel) cancelarObjetivo();
   else if (!$('#log-panel').classList.contains('hidden')) alternar('#log-panel', '#btn-log');
   else if (!$('#test-panel').classList.contains('hidden')) alternar('#test-panel', '#btn-test');

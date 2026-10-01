@@ -15,11 +15,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
   <div id="app">
-    <aside id="panel"><div id="panel-inner"></div></aside>
+    <aside id="panel"><button id="panel-close" title="Cerrar">✕</button><div id="panel-inner"></div></aside>
+    <div id="panel-fondo"></div>
 
     <main id="field">
       <div id="topbar">
@@ -27,10 +28,11 @@
         <div id="order"></div>
       </div>
       <div id="hint" class="hidden"></div>
+      <div id="girar">📱↻ Gira el teléfono para jugar mejor <button id="girar-x" title="Cerrar">✕</button></div>
 
       <div id="tools">
-        <button id="btn-log" title="Registro de batalla">📜 Registro<span id="log-badge" class="hidden">0</span></button>
-        <button id="btn-test" title="Herramienta de pruebas (desarrollo)">🧪 Pruebas</button>
+        <button id="btn-log" title="Registro de batalla">📜<span class="lbl"> Registro</span><span id="log-badge" class="hidden">0</span></button>
+        <button id="btn-test" title="Herramienta de pruebas (desarrollo)">🧪<span class="lbl"> Pruebas</span></button>
         <button id="btn-full" title="Pantalla completa">⛶<span class="lbl"> Pantalla completa</span></button>
       </div>
 

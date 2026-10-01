@@ -60,11 +60,29 @@ export async function iniciarEscena(contenedor) {
   return G;
 }
 
+export function relayout() {            // tras cambiar de modo (celular/PC): ajusta el lienzo y la escala
+  if (!G.app?.renderer) return;
+  G.app.resize();
+  G.lastW = -1;
+}
+
 function layout() {
   const { app, world } = G;
   const w = app.screen.width, h = app.screen.height;
   G.lastW = w; G.lastH = h;
-  const top = 52, bottom = window.innerWidth <= 900 ? 84 : 104, avail = Math.max(200, h - top - bottom);
+  const cl = document.body.classList;
+  if (cl.contains('movil')) {
+    // Zona útil del tablero (cartas, iconos de estado e insignias); fuera de ella solo hay fondo
+    const B = { x: 135, y: 50, w: 1010, h: 720 };
+    const m = cl.contains('movil-h') ? { top: 38, bottom: 4, left: 4, right: 176 } : { top: 74, bottom: 80, left: 4, right: 4 };
+    const aw = Math.max(100, w - m.left - m.right), ah = Math.max(100, h - m.top - m.bottom);
+    const s = Math.min(aw / B.w, ah / B.h);
+    world.scale.set(s);
+    world.x = m.left + (aw - B.w * s) / 2 - B.x * s;
+    world.y = m.top + (ah - B.h * s) / 2 - B.y * s;
+    return;
+  }
+  const top = 52, bottom = 104, avail = Math.max(200, h - top - bottom);
   const s = Math.min(w / W, avail / H);
   world.scale.set(s);
   world.x = (w - W * s) / 2;

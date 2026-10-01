@@ -265,7 +265,7 @@ section h3::after { content: ''; flex: 1; height: 1px; background: linear-gradie
 #loading-text { margin-top: 10px; font-size: 12px; color: var(--muted); }
 
 /* ---------- Carta de reliquia ---------- */
-#relic-pop { position: fixed; z-index: 20; width: 280px; }
+#relic-pop { position: fixed; z-index: 40; width: 280px; }
 .rc {
   --rc: #fff; padding: 14px; border-radius: 12px; background: linear-gradient(180deg, #151c2b, #0b0f18);
   border: 1px solid color-mix(in srgb, var(--rc) 55%, transparent);
@@ -291,19 +291,6 @@ section h3::after { content: ''; flex: 1; height: 1px; background: linear-gradie
 .rc-passive { margin-top: 10px; padding: 8px; border-radius: 8px; background: rgba(251, 191, 36, .08); border: 1px solid rgba(251, 191, 36, .3); font-size: 11.5px; line-height: 1.4; color: #fde68a; }
 .rc-passive b { display: block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
 
-@media (max-width: 900px) {
-  #app { flex-direction: column-reverse; }
-  #panel { width: 100%; flex: 0 0 42%; border-right: 0; border-top: 1px solid rgba(243, 213, 138, .18); }
-  #field { flex: 1; }
-  #topbar { top: 6px; left: 12px; transform: none; max-width: calc(100% - 190px); }
-  #round-label { font-size: 12px; }
-  #tools button { padding: 6px 8px; font-size: 11px; }
-  #log-panel, #test-panel { left: 12px; width: auto; }
-  #actionbar { gap: 6px; bottom: 8px; }
-  .act { width: 32vw; min-height: 64px; padding: 7px 8px 7px 11px; }
-  .act-name { font-size: 12px; }
-  .act-tip { width: 220px; }
-}
 
 /* ---------------------------------------------------------------- pantalla completa */
 body.app-instalada #btn-full { display: none; }        /* abierto desde el ícono: ya es pantalla completa */
@@ -314,4 +301,62 @@ body.app-instalada #btn-full { display: none; }        /* abierto desde el ícon
 #ios-tip ol { margin: 8px 0 12px; padding-left: 20px; }
 #ios-tip .ico { display: inline-block; border: 1px solid #9ca3af; border-radius: 4px; padding: 0 4px; font-size: 12px; }
 #ios-tip button { width: 100%; padding: 9px; border-radius: 9px; border: 1px solid var(--gold); background: transparent; color: var(--gold); font-weight: 700; cursor: pointer; }
-@media (max-width: 900px) { #btn-full .lbl { display: none; } }
+
+/* ================================================================ MODO CELULAR
+   body.movil      = pantalla chica (ancho <= 900 o alto <= 520)
+   body.movil-h    = celular en horizontal: movimientos en columna a la derecha
+   body.movil-v    = celular en vertical: movimientos abajo
+   El panel de información pasa a ser un cajón que se abre al tocar una carta. */
+#panel-close, #panel-fondo, #girar { display: none; }
+body.movil #app { display: block; }
+body.movil #field { position: fixed; inset: 0; height: auto; }
+body.movil #panel {
+  position: fixed; z-index: 30; top: 0; right: 0; bottom: 0; width: min(380px, 62vw); flex: none;
+  border-right: 0; border-left: 1px solid rgba(243, 213, 138, .3);
+  transform: translateX(105%); transition: transform .22s ease-out;
+  padding-top: env(safe-area-inset-top); padding-right: env(safe-area-inset-right);
+}
+body.movil.panel-abierto #panel { transform: none; }
+body.movil #panel-close {
+  display: grid; place-items: center; position: sticky; top: 8px; float: right; margin: 8px 8px 0 0; z-index: 2;
+  width: 34px; height: 34px; border-radius: 10px; font-size: 16px; cursor: pointer;
+  background: rgba(8, 11, 18, .9); color: var(--gold); border: 1px solid rgba(243, 213, 138, .4);
+}
+body.movil.panel-abierto #panel-fondo { display: block; position: fixed; inset: 0; z-index: 29; background: rgba(0, 0, 0, .45); }
+body.movil #panel-inner { padding: 12px 14px 24px; }
+body.movil .p-empty { margin-top: 30vh; }
+
+body.movil #topbar { top: max(6px, env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left)); transform: none; gap: 8px; padding: 4px 8px; max-width: calc(100% - 150px); }
+body.movil #round-label { font-size: 11px; }
+body.movil .chip { width: 24px; height: 24px; font-size: 12px; border-radius: 6px; }
+body.movil .chip.now { width: 30px; height: 30px; font-size: 16px; }
+body.movil #tools { top: max(6px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right)); gap: 5px; }
+body.movil #tools button { padding: 6px 8px; font-size: 13px; }
+body.movil #tools .lbl { display: none; }
+body.movil #hint { top: 44px; font-size: 11px; padding: 4px 10px; max-width: calc(100% - 20px); white-space: normal; text-align: center; }
+body.movil #log-panel, body.movil #test-panel { top: 44px; left: 8px; right: 8px; width: auto; bottom: 8px; }
+body.movil #test-panel { bottom: auto; max-height: calc(100% - 52px); overflow-y: auto; }
+body.movil .act-tip { display: none !important; }      /* sin "hover" en pantallas táctiles */
+
+/* horizontal: movimientos en columna a la derecha */
+body.movil-h #actionbar {
+  left: auto; right: max(8px, env(safe-area-inset-right)); top: 50%; bottom: auto; transform: translateY(-38%);
+  flex-direction: column; gap: 6px; max-width: none;
+}
+body.movil-h .act { width: 158px; min-height: 0; padding: 6px 8px 6px 11px; }
+body.movil-h .act-name { font-size: 12px; margin-top: 1px; }
+body.movil-h .act-calc { font-size: 10px; margin-top: 1px; }
+
+/* vertical: movimientos abajo + sugerencia de girar el teléfono */
+body.movil-v #actionbar { gap: 6px; bottom: max(8px, env(safe-area-inset-bottom)); }
+body.movil-v .act { width: 31vw; min-height: 60px; padding: 6px 7px 6px 10px; }
+body.movil-v .act-name { font-size: 11.5px; }
+body.movil-v #panel { top: auto; left: 0; width: auto; height: 72vh; border-left: 0; border-top: 1px solid rgba(243, 213, 138, .3);
+  border-radius: 16px 16px 0 0; transform: translateY(105%); }
+body.movil-v.panel-abierto #panel { transform: none; }
+body.movil-v #girar:not(.cerrado) {
+  display: flex; align-items: center; gap: 8px; position: fixed; z-index: 8; left: 50%; top: 76px; transform: translateX(-50%);
+  padding: 6px 8px 6px 12px; border-radius: 99px; font-size: 11.5px; font-weight: 700; white-space: nowrap;
+  background: rgba(8, 11, 18, .9); border: 1px solid rgba(243, 213, 138, .45); color: var(--gold);
+}
+#girar button { background: none; border: 0; color: var(--muted); font-size: 13px; cursor: pointer; }
