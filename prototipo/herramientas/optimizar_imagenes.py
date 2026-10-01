@@ -142,9 +142,14 @@ def recorte_transparente(src: Path, dst: Path, size: int) -> str:
         rgba, nota = im.convert('RGBA'), 'ya tenía transparencia'
     else:
         rgb = np.asarray(im.convert('RGB')).astype(float)
-        f = fondo_estimado(rgb)
+        b = max(4, min(rgb.shape[:2]) // 100)
+        borde = np.concatenate([rgb[:b].reshape(-1, 3), rgb[-b:].reshape(-1, 3), rgb[:, :b].reshape(-1, 3), rgb[:, -b:].reshape(-1, 3)])
+        oscuro = np.median(borde.mean(1)) < 45      # fondo negro/oscuro: se conserva y el juego la muestra en modo luminoso
+        f = None if oscuro else fondo_estimado(rgb)
         res = quitar_cuadricula(rgb) if f and f[2] == 'cuadriculado falso' else None
-        if res is not None:
+        if oscuro:
+            rgba, nota = im.convert('RGBA'), 'fondo oscuro conservado (usar "luminosa: true" en la invocación)'
+        elif res is not None:
             rgba, nota = Image.fromarray(res, 'RGBA'), 'fondo quitado (cuadriculado falso)'
         elif f:
             rgba, nota = Image.fromarray(quitar_fondo(rgb, f[0], f[1]), 'RGBA'), f'fondo quitado ({f[2]})'

@@ -229,3 +229,4 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - Van en `prototipo/assets/originales/<personajes|invocaciones|transformaciones|reliquias>/`.
 - El nombre del archivo es el nombre de la ficha.
 - Se optimizan con `python herramientas/optimizar_imagenes.py`.
+- **Invocaciones con fondo negro u oscuro:** el fondo se conserva y la invocación lleva `luminosa: true`. Se dibuja en modo "pantalla": el negro se vuelve transparente y la figura brilla como un espíritu (p. ej. Shadow Ming Byung).

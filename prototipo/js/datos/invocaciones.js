@@ -9,6 +9,7 @@
 // Una acción es { tipo: 'golpe', pct, golpes, elegir, efectos } o cualquier acción universal del motor
 // (curar, escudo, robarHP, efecto, limpiar…) con su "a" (objetivo).
 // elegir (golpes): 'menorHp' | 'azar' | 'todos' | 'masFuerte'
+// luminosa: true para imágenes con fondo negro (se dibujan en modo "pantalla": solo brilla lo claro)
 
 export const INVOCACIONES = {
   // ---------------------------------------------------------------- Sombras de Sun Jin Woo
@@ -27,6 +28,7 @@ export const INVOCACIONES = {
   },
   shadowMingByung: {
     nombre: 'Shadow Ming Byung', rareza: 'Raro', emoji: '🙏', color: 0x34d399, imagen: 'assets/invocaciones/shadow-ming-byung.webp', dur: 3,
+    luminosa: true,     // imagen con fondo negro: se muestra en modo "pantalla" (el negro se vuelve transparente)
     desc: 'Cura 15% del HP máx. al aliado más herido. Al aparecer, limpia 1 debuff de cada aliado.',
     alAparecer: [{ tipo: 'limpiar', cantidad: 1, a: 'todosAliados' }],
     acciones: [{ tipo: 'curar', base: 'hpMaxObjetivo', pct: .15, a: 'aliadoMasHerido' }],

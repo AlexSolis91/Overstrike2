@@ -257,7 +257,11 @@ function spriteInvocacion(key, x, y, size) {
   const cont = new PIXI.Container(); cont.position.set(x, y);
   const glow = new PIXI.Sprite(G.dotTex); glow.anchor.set(.5); glow.tint = def.color; glow.blendMode = 'add'; glow.scale.set(size / 30); glow.alpha = .8;
   const tex = TEX_INVOCACION[key];
-  if (tex) { const sp = new PIXI.Sprite(tex); sp.anchor.set(.5); sp.scale.set(size * 2.3 / tex.width); cont.addChild(glow, sp); }
+  if (tex) {
+    const sp = new PIXI.Sprite(tex); sp.anchor.set(.5); sp.scale.set(size * (def.luminosa ? 2.9 : 2.3) / tex.width);
+    if (def.luminosa) sp.blendMode = 'screen';      // el fondo negro desaparece y la figura brilla como un espíritu
+    cont.addChild(glow, sp);
+  }
   else cont.addChild(glow, txt(def.emoji, { size, stroke: 0, font: EMOJI_FONT }));
   G.fxLayer.addChild(cont);
   return cont;
