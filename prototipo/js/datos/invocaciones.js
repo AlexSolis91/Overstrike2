@@ -9,12 +9,14 @@
 // Una acción es { tipo: 'golpe', pct, golpes, elegir, efectos } o cualquier acción universal del motor
 // (curar, escudo, robarHP, efecto, limpiar…) con su "a" (objetivo).
 // elegir (golpes): 'menorHp' | 'azar' | 'todos' | 'masFuerte'
+// enfoque: [x, y] (0–1) punto de la imagen que se centra en el medallón (por defecto la parte superior central)
 // luminosa: true para imágenes con fondo negro (se dibujan en modo "pantalla": solo brilla lo claro)
 
 export const INVOCACIONES = {
   // ---------------------------------------------------------------- Sombras de Sun Jin Woo
   iron: {
     nombre: 'Iron', rareza: 'Común', emoji: '🛡️', color: 0x94a3b8, imagen: 'assets/invocaciones/iron.webp', dur: 3,
+    enfoque: [.385, .245],   // dónde está la cara en la imagen (para el medallón)
     desc: 'Golpea 25% a un enemigo al azar y da un Escudo de 50% al aliado más herido.',
     acciones: [
       { tipo: 'golpe', pct: .25, elegir: 'azar' },

@@ -241,7 +241,7 @@ export class Carta {
       m.addChild(g);
       const tex = TEX_INVOCACION[s.key];
       if (tex) {
-        const sp = new PIXI.Sprite(tex); sp.anchor.set(.5, .36); sp.scale.set(56 / tex.width);
+        const sp = new PIXI.Sprite(tex); sp.anchor.set(...(def.enfoque || [.5, .36])); sp.scale.set((def.enfoque ? 80 : 56) / tex.width);
         const mk = new PIXI.Graphics().circle(0, 0, 14.5).fill(0xffffff);
         sp.mask = mk; m.addChild(mk, sp);
       } else m.addChild(txt(def.emoji, { size: 17, stroke: 0, font: EMOJI_FONT }));

@@ -62,8 +62,11 @@ def fondo_estimado(rgb: np.ndarray):
     if borde.std(0).mean() < 10:                                   # color liso
         c = np.median(borde, 0)
         return c, c, 'color liso'
-    if (sat < 16).mean() > .85:                                    # cuadriculado gris/blanco
-        lum = borde.mean(1)
+    lum = borde.mean(1)
+    neutro_claro = (sat < 16) & (lum > 150)
+    claros, grises = neutro_claro & (lum > 235), neutro_claro & (lum < 215)
+    # cuadriculado gris/blanco: casi todo el borde, o al menos una parte con sus dos tonos (la figura puede tapar el resto)
+    if (sat < 16).mean() > .85 or (neutro_claro.mean() > .2 and claros.mean() > .05 and grises.mean() > .05):
         mid = (np.percentile(lum, 5) + np.percentile(lum, 95)) / 2
         return borde[lum < mid].mean(0), borde[lum >= mid].mean(0), 'cuadriculado falso'
     return None
@@ -136,6 +139,26 @@ def quitar_cuadricula(rgb: np.ndarray) -> np.ndarray:
     return np.dstack([out, alpha * 255]).astype(np.uint8)
 
 
+def desvanecer_cortes(rgba: Image.Image) -> Image.Image:
+    """Si la figura queda cortada por un borde de la imagen (llega opaca hasta el borde), suaviza ese corte
+    con un desvanecido para que no se vea una línea recta al volar por el campo."""
+    a = np.asarray(rgba).astype(float)
+    alpha = a[..., 3]
+    h, w = alpha.shape
+    n = max(8, int(min(h, w) * .07))
+    rampa = np.linspace(0, 1, n)
+    for lado in ('top', 'bottom', 'left', 'right'):
+        franja = {'top': alpha[0], 'bottom': alpha[-1], 'left': alpha[:, 0], 'right': alpha[:, -1]}[lado]
+        if (franja > 200).mean() < .15:          # ese borde casi no toca la figura: nada que suavizar
+            continue
+        if lado == 'top': alpha[:n] *= rampa[:, None]
+        if lado == 'bottom': alpha[-n:] *= rampa[::-1, None]
+        if lado == 'left': alpha[:, :n] *= rampa[None, :]
+        if lado == 'right': alpha[:, -n:] *= rampa[None, ::-1]
+    a[..., 3] = alpha
+    return Image.fromarray(a.astype(np.uint8), 'RGBA')
+
+
 def recorte_transparente(src: Path, dst: Path, size: int) -> str:
     im = ImageOps.exif_transpose(Image.open(src))
     if im.mode in ('RGBA', 'LA', 'P') and np.asarray(im.convert('RGBA'))[..., 3].min() < 250:
@@ -159,6 +182,7 @@ def recorte_transparente(src: Path, dst: Path, size: int) -> str:
     bbox = rgba.getchannel('A').point(lambda v: 255 if v > 20 else 0).getbbox()
     if bbox:
         rgba = rgba.crop(bbox)
+    rgba = desvanecer_cortes(rgba)
     rgba.thumbnail((int(size * .94),) * 2, Image.LANCZOS)
     lienzo = Image.new('RGBA', (size,) * 2, (0, 0, 0, 0))
     lienzo.paste(rgba, ((size - rgba.width) // 2, (size - rgba.height) // 2))
