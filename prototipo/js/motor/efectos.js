@@ -14,6 +14,11 @@ export const EFECTOS = {
   possess: { nombre: 'Posesión',     mega: 'Mega Posesión',     icono: '👁️', color: 0xc084fc, tipo: 'debuff', tags: ['Control'] },
   confuse: { nombre: 'Confusión',    icono: '🌀', color: 0xf0abfc, tipo: 'debuff', tags: ['Control'] },
   weaken:  { nombre: 'Debilitar',   icono: '💔', color: 0xf87171, tipo: 'debuff', tags: ['Estadística'] },
+  silence: { nombre: 'Silencio',     icono: '🔇', color: 0xa78bfa, tipo: 'debuff', tags: ['Control'] },
+  blind:   { nombre: 'Ceguera',     icono: '🕶️', color: 0x9ca3af, tipo: 'debuff', tags: ['Estadística'] },
+  wear:    { nombre: 'Desgaste',    icono: '🪓', color: 0xd97706, tipo: 'debuff', tags: ['Estadística'] },
+  plague:  { nombre: 'Peste',       icono: '🦠', color: 0x84cc16, tipo: 'debuff', tags: ['Peste'] },
+  blackPlague: { nombre: 'Peste Negra', icono: '☠️', color: 0x3f6212, tipo: 'debuff', tags: ['Peste'] },
   fear:    { nombre: 'Miedo',        icono: '😱', color: 0x94a3b8, tipo: 'debuff', tags: ['Control'] },
   // ---- Buffs
   taunt:   { nombre: 'Provocación', icono: '📣', color: 0xf97316, tipo: 'buff', tags: ['Provocación'] },

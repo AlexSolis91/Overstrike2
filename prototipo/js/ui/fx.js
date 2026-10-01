@@ -96,7 +96,8 @@ export function escudo(carta, cantidad) {
 }
 
 const COLORES = { burn: '#ffa04d', poison: '#9dff7a', bleed: '#ff5a78', hemo: '#ff1a3c', bomb: '#ffc466', dmgUp: '#7dffa8',
-  stun: '#fde047', freeze: '#bae6fd', possess: '#d8b4fe', confuse: '#f0abfc', fear: '#cbd5e1' };
+  stun: '#fde047', freeze: '#bae6fd', possess: '#d8b4fe', confuse: '#f0abfc', fear: '#cbd5e1',
+  silence: '#c4b5fd', blind: '#d1d5db', wear: '#fbbf24', plague: '#bef264', blackPlague: '#a3e635', weaken: '#fca5a5' };
 
 export function efecto(carta, id, texto) {
   const { x, y } = pos(carta);

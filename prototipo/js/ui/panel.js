@@ -118,10 +118,10 @@ export function renderAccion(p, v, ui) {
     return;
   }
   bar.innerHTML = (v.movs || p.movimientos).map(m => {
-    const cd = v.cds[m.categoria] ?? 0;
+    const cd = v.cds[m.categoria] ?? 0, mudo = v.silenciado === m.categoria;
     const calc = calculoTexto(m, v);
-    return `<button class="act ${m.categoria} ${cd || ui.ocupado ? 'off' : ''} ${ui.movSel === m.categoria ? 'sel' : ''}" data-cat="${m.categoria}">
-      <div class="act-top"><span class="act-cat">${CAT[m.categoria]}</span><span class="act-cd ${cd ? '' : 'ok'}">${cd ? '' : 'Listo'}</span></div>
+    return `<button class="act ${m.categoria} ${cd || mudo || ui.ocupado ? 'off' : ''} ${mudo ? 'mudo' : ''} ${ui.movSel === m.categoria ? 'sel' : ''}" data-cat="${m.categoria}">
+      <div class="act-top"><span class="act-cat">${CAT[m.categoria]}</span><span class="act-cd ${cd || mudo ? '' : 'ok'}">${mudo ? '🔇 Silenciado' : cd ? '' : 'Listo'}</span></div>
       <div class="act-name">${m.nombre}</div>
       <div class="act-calc">${calc ? calc.split(' · ')[0] : OBJ[m.objetivo]}</div>
       ${cd ? `<div class="act-cdbig">⏳ ${cd}</div>` : ''}

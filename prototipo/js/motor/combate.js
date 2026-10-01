@@ -10,6 +10,7 @@ import { RELIQUIAS } from '../datos/reliquias.js';
 import { INVOCACIONES, TABLAS_INVOCACION } from '../datos/invocaciones.js';
 
 const CATEGORIAS = ['basico', 'especial', 'over'];
+const NOMBRE_CAT = { basico: 'Básico', especial: 'Especial', over: 'Over' };
 const NOMBRE_STAT = { hpPct: 'HP máx.', critDmg: 'Daño Crítico', critRate: 'Prob. Crítico', armor: 'Armadura', res: 'Resistencia', acc: 'Puntería', pen: 'Perforación' };
 const clonar = o => JSON.parse(JSON.stringify(o));
 
@@ -54,7 +55,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       if (e.id === 'haste') pct.spd += BUFFS.celeridad;
       if (e.id === 'bloodlust') sec.critDmg += BUFFS.sedDeSangre;
       if (e.id === 'keen') sec.acc += BUFFS.agudeza;
+      if (e.id === 'blind') sec.acc -= DEBUFFS.ceguera;
+      if (e.id === 'wear') sec.armor -= e.valor;
+      if (e.id === 'freeze') pct.spd -= CONTROL.congelacionVel * (e.mega ? 2 : 1);
     }
+    sec.armor = Math.max(0, sec.armor); sec.acc = Math.max(0, sec.acc);   // Armadura y Puntería nunca bajan de 0%
     for (const [k, v] of Object.entries(p.permanente || {})) {
       if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
     }
@@ -88,10 +93,17 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'burn': texto = `${pctTxt(e.valor)} HP máx. al inicio del turno · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'bleed': texto = `${pctTxt(e.valor)} HP máx. por golpe recibido · hasta limpiarlo`; break;
         case 'hemo': texto = `${pctTxt(e.valor)} por golpe y por movimiento · +1 por golpe`; n = Math.round(e.valor * 100); break;
-        case 'stun': case 'freeze': case 'possess':
-          texto = e.id === 'possess' ? `Ataca a sus aliados · ${e.turnos} turno(s)` :
-            e.id === 'freeze' ? `Pierde ${e.turnos} turno(s) · un golpe rompe el hielo (+30%)` : `Pierde ${e.turnos} turno(s)`;
+        case 'stun': case 'possess':
+          texto = e.id === 'possess' ? `Ataca a sus aliados · ${e.turnos} turno(s)` : `Pierde ${e.turnos} turno(s)`;
           n = e.turnos; break;
+        case 'freeze':
+          texto = `${e.capas ? `${e.capas} capa(s) de hielo: pierde su turno si no las rompen (cada golpe rompe 1, +${Math.round(CONTROL.quiebreCongelacion * 100)}% daño)` : 'Hielo roto: puede actuar'} · −${Math.round(CONTROL.congelacionVel * (e.mega ? 200 : 100))}% Velocidad · ${e.dur} ronda(s)`;
+          n = e.capas || e.dur; break;
+        case 'silence': texto = `No puede usar su ${NOMBRE_CAT[e.categoria]} · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'blind': texto = `−${Math.round(DEBUFFS.ceguera * 100)}% Puntería · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'wear': texto = `−${Math.round(e.valor * 100)}% Armadura · +${Math.round(DEBUFFS.desgaste * 100)}% por golpe recibido (máx. ${Math.round(DEBUFFS.desgasteMax * 100)}%) · hasta limpiarlo`; n = Math.round(e.valor * 100); break;
+        case 'plague': texto = `No puede recibir curaciones · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'blackPlague': texto = `No puede recibir curaciones · pierde ${Math.round(DEBUFFS.pesteNegra * 100)}% del HP máx. al final de su turno · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'confuse': texto = `50% de cambiar de objetivo · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'fear': texto = `Actúa al final de la ronda · −25% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'dmgUp': texto = `+${Math.round(e.valor * 100)}% Daño · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -118,7 +130,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   function vista(p) {
     return {
       hp: Math.max(0, p.hp), maxHp: maxHp(p), escudo: p.escudo, muerto: p.muerto, esLider: p.esLider,
-      stats: stats(p), estados: vistaEstados(p), cds: { ...p.cds }, bonos: { ...p.bonos }, inmune: p.inmune,
+      stats: stats(p), estados: vistaEstados(p), cds: { ...p.cds }, silenciado: get(p, 'silence')?.categoria || null, bonos: { ...p.bonos }, inmune: p.inmune,
       invocaciones: todos(p, 'summon').map(e => ({ key: e.key, dur: e.dur, fresca: !!e.fresca, max: INVOCACIONES[e.key].dur })),
       forma: p.forma ? { nombre: p.forma.nombre, imagen: p.forma.imagen, emoji: p.forma.emoji, color: p.forma.color, turnos: p.forma.turnos, total: p.forma.total, permanente: !!p.forma.permanente } : null,
       transformacion: p.transformacion ? { nombre: p.transformacion.nombre, pasiva: p.transformacion.pasiva?.nombre, movimientos: p.transformacion.movimientos.map(m => m.nombre) } : null,
@@ -183,8 +195,15 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
 
   // Devuelve true si el personaje no puede elegir su acción este turno (perdió el turno o está poseído)
   function procesarControl(p) {
-    const c = p.estados.find(e => CONTROL.pierdeTurno.includes(e.id));
+    const c = p.estados.find(e => CONTROL.pierdeTurno.includes(e.id) && (e.id !== 'freeze' || e.capas > 0));
     if (!c) return false;
+    if (c.id === 'freeze') {       // hielo sin romper: pierde el turno y el hielo desaparece (el debuff sigue: −Velocidad)
+      c.capas = 0;
+      emitir('pierdeTurno', { id: p.uid, motivo: 'freeze' }, p);
+      p.inmune = true; p.recienLiberado = true;
+      emitir('controlFin', { id: p.uid }, p);
+      return true;
+    }
     c.turnos--;
     if (c.id === 'possess') {
       emitir('poseido', { id: p.uid, mega: !!c.mega }, p);
@@ -207,6 +226,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   }
 
   function terminarTurno(p) {
+    if (get(p, 'blackPlague') && !p.muerto) pesteNegra(p);
     S.actuaron.add(p); S.orden.push(p.uid);
     if (p.inmune && !p.recienLiberado) p.inmune = false;
     p.recienLiberado = false;
@@ -217,6 +237,18 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       else emitir('actualizar', {}, p);
     }
     S.actual = null;
+  }
+
+  // Peste Negra: reduce el HP máx. (5% del original, piso 25%). No es daño; el HP actual solo baja si queda por encima del nuevo máximo.
+  // La pérdida es permanente (aunque se limpie) y se guarda como bono permanente negativo, así sigue en las transformaciones.
+  function pesteNegra(p) {
+    const perdido = p.pestePerdida || 0;
+    const quita = Math.min(DEBUFFS.pesteNegra, 1 - DEBUFFS.pesteNegraPiso - perdido);
+    if (quita <= 1e-9) return;
+    p.pestePerdida = perdido + quita;
+    p.permanente.hpPct = (p.permanente.hpPct || 0) - quita;
+    p.hp = Math.min(p.hp, maxHp(p));
+    emitir('bonoVisible', { a: p.uid, texto: `☠️ −${Math.round(quita * 100)}% HP máx.` }, p);
   }
 
   function comprobarFin() {
@@ -243,7 +275,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       if (comprobarFin()) return;
       if (n.muerto) { terminarTurno(n); continue; }
       if (procesarControl(n)) { terminarTurno(n); continue; }
-      S.esperando = { id: n.uid, opciones: opciones(n) };
+      const ops = opciones(n);
+      if (!ops.some(o => o.disponible)) {            // Silencio: lo único listo está bloqueado -> pierde el turno
+        emitir('pierdeTurno', { id: n.uid, motivo: 'silence' }, n);
+        n.inmune = true; n.recienLiberado = true;
+        terminarTurno(n); continue;
+      }
+      S.esperando = { id: n.uid, opciones: ops };
       return;
     }
   }
@@ -251,7 +289,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   function opciones(p) {
     return p.movimientos.map(m => ({
       categoria: m.categoria,
-      disponible: (p.cds[m.categoria] || 0) === 0,
+      disponible: (p.cds[m.categoria] || 0) === 0 && get(p, 'silence')?.categoria !== m.categoria,
       cd: p.cds[m.categoria] || 0,
       objetivos: objetivosValidos(p, m).map(t => t.uid),
     }));
@@ -296,17 +334,19 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (get(a, 'fear')) d *= CONTROL.miedoDano;
     let quiebre = false;
     const hielo = get(t, 'freeze');
-    if (hielo) {
-      d *= 1 + CONTROL.quiebreCongelacion; quiebre = true;
-      if (hielo.mega) { hielo.mega = false; hielo.turnos = Math.min(hielo.turnos, 1); } else quitar(t, hielo);
+    // 1 golpe = 1 capa rota (+8%). Un golpe de un movimiento que APLICA Congelación no rompe capas (ayuda a mantenerlas)
+    if (hielo?.capas > 0 && !(mov.efectos || []).some(ef => ef.accion?.id === 'freeze')) {
+      d *= 1 + CONTROL.quiebreCongelacion; quiebre = true; hielo.capas--;
     }
     d *= 1 - Math.min(Math.max(0, st.armor - (mov.ignoraArmadura || 0)), TOPES.armor);   // ignorar Armadura: resta puntos
     if (get(t, 'weaken')) d *= 1 + DEBUFFS.debilitar;
     d *= 1 - reduccion(t, 'golpe');
     const { aHp, aEsc } = repartir(t, d, sa.pen);
     if (ctx.acum) ctx.acum.dano += aHp + aEsc;
+    const des = get(t, 'wear');                // Desgaste: cada golpe recibido (no bloqueado) quita 5 puntos más de Armadura
+    if (des && des.valor < DEBUFFS.desgasteMax) des.valor = Math.min(DEBUFFS.desgasteMax, des.valor + DEBUFFS.desgaste);
     const robo = a.pasiva?.roboVida;          // robo de vida: % del daño causado (incluye lo absorbido por escudos)
-    if (robo && !a.muerto && a.hp < maxHp(a)) curar(a, a, (aHp + aEsc) * robo);
+    if (robo && !a.muerto && a.hp < maxHp(a) && puedeCurarse(a)) curar(a, a, (aHp + aEsc) * robo);
     emitir('golpe', { de: a.uid, a: t.uid, dano: aHp, escudo: aEsc, critico, quiebre, color: mov.color, fuente: ctx.fuente, multi: (mov.golpes || 1) > 1 }, t);
     if (aEsc > 0) perdioEscudo(t);
     if (t.hp <= 0) morir(t, a);
@@ -367,8 +407,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     curar(a, a, d, true);
   }
 
+  const puedeCurarse = t => !get(t, 'plague') && !get(t, 'blackPlague');
   function curar(a, t, cantidad, silencioso = false) {
     if (t.muerto) return;
+    if (!puedeCurarse(t)) { emitir('sinEfecto', { a: t.uid, texto: '🦠 No puede curarse' }); return; }
     const real = Math.max(0, Math.min(cantidad, maxHp(t) - t.hp));
     t.hp += real;
     emitir('curacion', { de: a.uid, a: t.uid, cantidad: real, robo: silencioso }, t);
@@ -415,7 +457,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
 
   function aplicarEfecto(a, t, acc) {
     // Protección contra el bloqueo infinito: aplica a CUALQUIER vía (movimientos, pasivas, efectos garantizados)
-    if (t.inmune && CONTROL.pierdeTurno.includes(acc.id)) { emitir('inmune', { a: t.uid }); return; }
+    if (t.inmune && (CONTROL.pierdeTurno.includes(acc.id) || acc.id === 'silence')) { emitir('inmune', { a: t.uid }); return; }
     const inm = t.pasiva?.inmuneA;
     if (inm && (inm.includes(acc.id) || EFECTOS[acc.id].tags.some(tag => inm.includes(tag)))) { emitir('inmune', { a: t.uid, texto: `Inmune a ${EFECTOS[acc.id].nombre}` }); return; }
     const sa = stats(a);
@@ -461,7 +503,37 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         texto = `💣 Bomba (${acc.dur ?? DOT.contadorBomba})`;
         break;
       }
-      case 'stun': case 'freeze': case 'possess': {
+      case 'freeze': {          // 1 capa (−25% Vel). Congelar a quien ya está congelado = Mega (2 capas, −50%). A una Mega no le hace nada
+        const e = get(t, 'freeze'), dur = acc.dur ?? CONTROL.durCongelacion;
+        if (e?.mega) { emitir('sinEfecto', { a: t.uid, texto: 'Ya tiene Mega Congelación' }); return; }
+        if (e) Object.assign(e, { mega: true, capas: 2, dur });
+        else t.estados.push({ id: 'freeze', mega: !!acc.mega, capas: acc.mega ? 2 : 1, dur });
+        texto = get(t, 'freeze').mega ? def.mega : def.nombre;
+        break;
+      }
+      case 'silence': {        // bloquea al azar uno de sus movimientos que NO esté en cooldown
+        const e = get(t, 'silence');
+        if (e) { e.dur = Math.max(e.dur, acc.dur ?? 2); texto = `🔇 ${NOMBRE_CAT[e.categoria]} silenciado`; break; }
+        const listos = t.movimientos.filter(m => (t.cds[m.categoria] || 0) === 0);
+        if (!listos.length) { emitir('sinEfecto', { a: t.uid, texto: 'Nada que silenciar' }); return; }
+        const cat = rng.elegir(listos).categoria;
+        t.estados.push({ id: 'silence', categoria: cat, dur: acc.dur ?? 2 });
+        texto = `🔇 ${NOMBRE_CAT[cat]} silenciado`;
+        break;
+      }
+      case 'wear': {           // sin duración: dura hasta que lo limpien
+        if (get(t, 'wear')) { emitir('sinEfecto', { a: t.uid, texto: 'Ya tiene Desgaste' }); return; }
+        t.estados.push({ id: 'wear', valor: DEBUFFS.desgaste });
+        break;
+      }
+      case 'plague': {         // Peste sobre Peste = Peste Negra
+        const p1 = get(t, 'plague'), p2 = get(t, 'blackPlague'), dur = acc.dur ?? 2;
+        if (p2) { p2.dur = Math.max(p2.dur, dur); id = 'blackPlague'; texto = EFECTOS.blackPlague.nombre; break; }
+        if (p1) { quitar(t, p1); t.estados.push({ id: 'blackPlague', dur: Math.max(p1.dur, dur) }); id = 'blackPlague'; texto = '☠️ ¡PESTE NEGRA!'; break; }
+        t.estados.push({ id: 'plague', dur });
+        break;
+      }
+      case 'stun': case 'possess': {
         const turnos = acc.mega ? 2 : 1, e = get(t, acc.id);
         if (e) { e.turnos = Math.max(e.turnos, turnos); e.mega = e.mega || !!acc.mega; }
         else t.estados.push({ id: acc.id, turnos, mega: !!acc.mega });
@@ -469,7 +541,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         break;
       }
       case 'confuse': case 'fear': case 'dmgUp': case 'taunt': case 'fireAura': case 'protect': case 'regen':
-      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': {
+      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'blind': {
         if (acc.id === 'dmgUp') acc = { ...acc, valor: BUFFS.furia };      // Furia siempre +50%
         const e = get(t, acc.id);
         if (e) { e.dur = Math.max(e.dur, acc.dur ?? 2); if (acc.valor) e.valor = Math.max(e.valor || 0, acc.valor); }
@@ -630,7 +702,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (pa.filtro?.en === 'enemigos' && (!ctx.objetivo || ctx.objetivo.lado === p.lado)) return;
     if (pa.maxPorRonda && p.usosPasiva >= pa.maxPorRonda) return;
     // soloSiCura: si nadie de los destinos puede recibir curación, no se activa ni gasta uso
-    if (pa.soloSiCura && !objetivosAccion(p, pa.accion.a, ctx).some(t => !t.muerto && t.hp < maxHp(t))) return;
+    if (pa.soloSiCura && !objetivosAccion(p, pa.accion.a, ctx).some(t => !t.muerto && t.hp < maxHp(t) && puedeCurarse(t))) return;
     p.usosPasiva++;
     emitir('pasiva', { id: p.uid, nombre: pa.nombre });
     ejecutarAccion(p, pa.accion, ctx);
@@ -845,13 +917,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         const a = S.actual;
         if (!a || !S.esperando) throw new Error('No es momento de actuar');
         const mov = a.movimientos.find(m => m.categoria === categoria);
-        if (!mov || (a.cds[categoria] || 0) > 0) throw new Error('Movimiento no disponible');
+        if (!mov || (a.cds[categoria] || 0) > 0 || get(a, 'silence')?.categoria === categoria) throw new Error('Movimiento no disponible');
         const t = objetivo ? P.find(p => p.uid === objetivo) : null;
         if ((mov.objetivo === 'enemigo' || mov.objetivo === 'aliado') && !objetivosValidos(a, mov).includes(t)) throw new Error('Objetivo no válido');
         S.esperando = null;
         ejecutarMovimiento(a, mov, t);
         if (!a.muerto && !comprobarFin()) actuanInvocaciones(a);
-        if (a.turnosExtra > 0 && !a.muerto && !comprobarFin()) {   // turno extra: sin DoT, Regeneración ni control; no baja cooldowns
+        if (a.turnosExtra > 0 && !a.muerto && !comprobarFin() && opciones(a).some(o => o.disponible)) {   // turno extra: sin DoT, Regeneración ni control; no baja cooldowns
           a.turnosExtra--;
           emitir('turnoExtra', { id: a.uid }, a);
           S.esperando = { id: a.uid, opciones: opciones(a) };
@@ -883,6 +955,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           case 'buff': aplicarEfecto(t, t, { id: 'dmgUp', valor: .25, dur: 2 }); break;
           case 'stun': aplicarEfecto(fuente, t, { id: 'stun' }); break;
           case 'freeze': aplicarEfecto(fuente, t, { id: 'freeze' }); break;
+          case 'silence': aplicarEfecto(fuente, t, { id: 'silence', dur: 2 }); break;
+          case 'blind': aplicarEfecto(fuente, t, { id: 'blind', dur: 2 }); break;
+          case 'wear': aplicarEfecto(fuente, t, { id: 'wear' }); break;
+          case 'plague': aplicarEfecto(fuente, t, { id: 'plague', dur: 2 }); break;
+          case 'weaken': aplicarEfecto(fuente, t, { id: 'weaken', dur: 2 }); break;
           case 'possess': aplicarEfecto(fuente, t, { id: 'possess' }); break;
           case 'confuse': aplicarEfecto(fuente, t, { id: 'confuse', dur: 2 }); break;
           case 'fear': aplicarEfecto(fuente, t, { id: 'fear', dur: 2 }); break;

@@ -64,7 +64,7 @@ function barra() {
 
 // ---------------------------------------------------------------- reproducción de eventos
 let embestida = null, sprInvocacion = null;
-const MOTIVO = { stun: '💫 PIERDE EL TURNO', freeze: '🧊 CONGELADO' };
+const MOTIVO = { stun: '💫 PIERDE EL TURNO', freeze: '🧊 CONGELADO', silence: '🔇 SILENCIADO' };
 
 async function manejar(e) {
   const c = uid => cartas[uid];

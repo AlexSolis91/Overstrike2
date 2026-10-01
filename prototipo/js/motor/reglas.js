@@ -35,10 +35,17 @@ export const BUFFS = {
 // Valores fijos de debuffs universales
 export const DEBUFFS = {
   debilitar: .50,      // Debilitar: +50% de daño recibido (después de la Armadura)
+  ceguera: .50,        // Ceguera: −50 puntos de Puntería
+  desgaste: .05,       // Desgaste: −5 puntos de Armadura al aplicarse y por cada golpe recibido...
+  desgasteMax: .25,    // ...hasta −25 puntos
+  pesteNegra: .05,     // Peste Negra: −5% del HP máx. original al final de cada turno del portador...
+  pesteNegraPiso: .25, // ...sin bajar del 25% del HP máx. original
 };
 
 export const CONTROL = {
-  quiebreCongelacion: .30,   // +daño del golpe que rompe una Congelación
+  quiebreCongelacion: .08,   // +daño del golpe que rompe una capa de hielo
+  congelacionVel: .25,       // Congelación: −25% Velocidad (Mega: el doble) mientras dure el debuff
+  durCongelacion: 2,
   miedoDano: .75,            // un personaje con Miedo hace 75% del daño
   confusionProb: .50,        // probabilidad de que un movimiento confundido cambie de objetivo
   pierdeTurno: ['stun', 'freeze', 'possess'],   // controles que quitan turnos (y dan inmunidad al terminar)

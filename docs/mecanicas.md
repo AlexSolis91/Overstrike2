@@ -113,14 +113,15 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | Debuff | Efecto | Mega |
 |---|---|---|
 | 💫 Aturdimiento | Pierde su próximo turno | 2 turnos |
-| 🧊 Congelación | Pierde su próximo turno; un golpe directo rompe el hielo con +30% de daño (los DoT no lo rompen) | 2 turnos; el primer golpe la baja a normal |
+| 🧊 Congelación | Dura 2 rondas y da −25% Velocidad todo ese tiempo. Crea **1 capa** de hielo: si llega a su turno con capas, pierde el turno (y el hielo desaparece, el debuff sigue). Cada **golpe** rompe 1 capa con +8% de daño; DoT, daño por efecto y golpes bloqueados no rompen capas, ni los golpes de un movimiento que aplica Congelación | Congelar a alguien congelado (tirada normal) = Mega: **2 capas**, −50% Velocidad, renueva 2 rondas. Congelar una Mega no hace nada |
+| 🔇 Silencio | Bloquea al azar uno de sus movimientos que **no esté en cooldown** (dura rondas; al transformarse sigue bloqueada esa categoría). Si no tiene ningún movimiento usable, pierde el turno (con inmunidad anti-cadena). La Posesión gana: el poseído usa su Básico igual | — |
 | 👁️ Posesión | En su turno ataca a un aliado suyo al azar con su Básico | 2 turnos |
 | 🌀 Confusión | 50% de que un movimiento de un objetivo vaya a un personaje al azar (dura rondas) | — |
 | 😱 Miedo | Actúa al final de la ronda y hace −25% de daño (dura rondas) | — |
 
 - "Próximo turno" es literal: si aún no había actuado en la ronda, pierde ese mismo turno.
 - No acumulan turnos: se queda el mayor.
-- **Protección contra el bloqueo infinito:** al terminar de perder turnos por Aturdimiento, Congelación o Posesión, el personaje queda inmune a esos tres durante su siguiente turno.
+- **Protección contra el bloqueo infinito:** al terminar de perder turnos por Aturdimiento, Congelación, Posesión o Silencio, el personaje queda inmune a esos cuatro durante su siguiente turno.
 
 ### Buffs
 
@@ -138,6 +139,10 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 
 | Debuff | Etiquetas | Efecto |
 |---|---|---|
+| 🕶️ Ceguera | Estadística | **−50 puntos de Puntería** (50% → 0%). Solo afecta la aplicación de debuffs y Disipar (los golpes no fallan; para eso existe Bloqueo) |
+| 🪓 Desgaste | Estadística | −5 puntos de Armadura al aplicarse y −5 más por cada golpe recibido (no bloqueado), hasta −25. Sin duración: dura hasta que lo limpien. Reaplicarlo no suma. La Armadura nunca baja de 0% |
+| 🦠 Peste | Peste | No puede recibir **ninguna** curación (incluye robo de vida, Robar HP, Regeneración y pasivas). Sí recibe escudos. Peste sobre Peste = Peste Negra |
+| ☠️ Peste Negra | Peste | Igual que Peste y además, al final de cada turno del portador (también si lo perdió), pierde **5% del HP máx. original** (piso: 25%). No es daño: el HP actual solo baja si queda por encima del nuevo máximo. La pérdida es **permanente** aunque se limpie (solo la recuperan futuras mecánicas de aumento de HP máx.) |
 | 💔 Debilitar | Estadística | Recibe **+50% de daño** de golpes y daño por efecto, calculado **después** de la Armadura (no afecta DoT ni Robar HP) |
 | ♨️ Aura de Fuego | Fuego | Cuando el portador recibe un **golpe** de un enemigo, le aplica al atacante Quemadura 5% (1 turno), con tirada de Puntería del portador |
 | 📣 Provocación | Provocación | Los enemigos deben dirigirle sus movimientos de **un objetivo** (incluidas invocaciones). No afecta AOE, objetivos al azar, movimientos a aliados, Confusión ni Posesión. Con varios, se elige entre ellos. Se puede Disipar |
