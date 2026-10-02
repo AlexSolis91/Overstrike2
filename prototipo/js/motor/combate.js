@@ -115,6 +115,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'taunt': texto = `Los enemigos deben atacarlo con sus movimientos de un objetivo · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'pierce': texto = `+${Math.round(BUFFS.perforacion * 100)}% Penetración de escudo · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'solarBurn': texto = `Las curaciones le hacen daño (ignora Armadura y Escudo) · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'aoeDodge': texto = `Esquiva los movimientos de área de los enemigos (daño y efectos) · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'stealth': texto = `Los enemigos no pueden elegirlo con ataques de un objetivo · se rompe al recibir daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'protect': texto = `+${Math.round(BUFFS.proteccion * 100)}% Resistencia · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'frenzy': texto = `+${Math.round(BUFFS.frenesi * 100)}% Prob. Crítico · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -308,6 +309,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (m.objetivo === 'enemigo') return conSigilo(conProvocacion(enemigosDe(p)));
     if (m.objetivo === 'aliado') return aliadosDe(p);
     return [];
+  }
+  // Esquiva Área: los movimientos de "todos los enemigos" (daño y efectos) no lo alcanzan
+  function sinEsquiva(lista) {
+    const fuera = lista.filter(x => get(x, 'aoeDodge'));
+    for (const x of fuera) emitir('esquiva', { a: x.uid });
+    return lista.filter(x => !fuera.includes(x));
   }
   // Sigilo: no se puede elegir con ataques de un objetivo (si todos lo tienen, no cuenta)
   function conSigilo(lista) {
@@ -583,7 +590,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         break;
       }
       case 'confuse': case 'fear': case 'dmgUp': case 'taunt': case 'fireAura': case 'protect': case 'regen':
-      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': {
+      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': {
         if (acc.id === 'stealth' && get(t, 'taunt')) { emitir('sinEfecto', { a: t.uid, texto: 'Con Provocación no puede tener Sigilo' }); return; }
         if (acc.id === 'taunt' && get(t, 'stealth')) { quitar(t, get(t, 'stealth')); emitir('sigiloRoto', { a: t.uid }, t); }
         if (acc.id === 'dmgUp') acc = { ...acc, valor: BUFFS.furia };      // Furia siempre +50%
@@ -621,6 +628,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (acc.cantidad && deb.length > acc.cantidad) deb = [...deb].sort(() => rng() - .5).slice(0, acc.cantidad);
     t.estados = t.estados.filter(e => !deb.includes(e));
     emitir('limpieza', { de: a.uid, a: t.uid, n: deb.length }, t);
+    return deb.length;
   }
   function disipar(a, t, acc) {
     const sa = stats(a), st = stats(t);
@@ -635,7 +643,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   function objetivosAccion(a, spec, ctx) {
     if (!spec || spec === 'objetivo') return ctx.objetivo ? [ctx.objetivo] : [];
     if (spec === 'propio') return [a];
-    if (spec === 'todosEnemigos') return enemigosDe(a);
+    if (spec === 'todosEnemigos') return ctx.esMovimiento ? sinEsquiva(enemigosDe(a)) : enemigosDe(a);
+    if (spec === 'otrosAliados') return aliadosDe(a).filter(x => x !== a);
+    if (spec.aliadoAzarSin) { const l = aliadosDe(a).filter(x => !get(x, spec.aliadoAzarSin)); return l.length ? [rng.elegir(l)] : []; }
     if (spec === 'otrosEnemigos') return enemigosDe(a).filter(x => x !== ctx.objetivo);
     if (spec === 'todosAliados') return aliadosDe(a);
     if (spec === 'sobrevivientes') return (ctx.sobrevivientes || []).filter(x => !x.muerto);
@@ -652,6 +662,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       switch (acc.tipo) {
         case 'efecto':
           for (let i = 0; i < (acc.veces || 1); i++) {
+            if (acc.prob !== undefined && rng() >= acc.prob) continue;     // prob: probabilidad de que el efecto se intente
             if (!acc.idAzar) { intentarEfecto(a, t, acc); continue; }
             const ids = acc.sinRepetir ? acc.idAzar.filter(id => !get(t, id)) : acc.idAzar;   // sinRepetir: no elige uno que ya tenga
             if (!ids.length) { emitir('sinEfecto', { a: t.uid, texto: 'Ya tiene todos' }); continue; }
@@ -720,7 +731,22 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           emitir('escudo', { de: a.uid, a: t.uid, cantidad: c }, t);
           break;
         }
-        case 'limpiar': limpiar(a, t, acc); break;
+        case 'limpiar': ctx.limpiados = (ctx.limpiados || 0) + limpiar(a, t, acc); break;
+        case 'reiniciarCooldowns': {         // pone en 0 los cooldowns indicados del objetivo
+          let n = 0;
+          for (const c of acc.categorias || CATEGORIAS) if (t.cds[c] > 0) { t.cds[c] = 0; n++; }
+          if (n) emitir('extension', { a: t.uid, texto: '⏳ Cooldowns reiniciados' }, t);
+          break;
+        }
+        case 'golpesPorConteo': {            // un golpe a un enemigo al azar por cada unidad contada (p. ej. debuffs limpiados)
+          const n = ctx[acc.conteo] || 0;
+          for (let i = 0; i < n && !a.muerto; i++) {
+            const e = rng.elegir(enemigosDe(a));
+            if (!e) break;
+            resolverSobreObjetivo(a, e, { nombre: acc.nombre || 'Golpe', categoria: acc.categoria || 'over', pct: acc.pct, escala: acc.escala || 'dano', color: acc.color }, {});
+          }
+          break;
+        }
         case 'disipar': disipar(a, t, acc); break;
         case 'robarHP': robarHP(a, t, acc.pct); break;
         case 'danoEfecto': danoEfecto(a, t, (ctx.dano || 0) * acc.fraccion, 0xc084fc); break;
@@ -758,6 +784,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (p.muerto || !pa || pa.gatillo !== gatillo) return;
     if (pa.filtro?.tipo && pa.filtro.tipo !== ctx.tipo) return;
     if (pa.filtro?.en === 'enemigos' && (!ctx.objetivo || ctx.objetivo.lado === p.lado)) return;
+    if (pa.filtro?.categorias && !pa.filtro.categorias.includes(ctx.categoria)) return;
     if (pa.maxPorRonda && p.usosPasiva >= pa.maxPorRonda) return;
     // soloSiCura: si nadie de los destinos puede recibir curación, no se activa ni gasta uso
     if (pa.soloSiCura && !objetivosAccion(p, pa.accion.a, ctx).some(t => !t.muerto && t.hp < maxHp(t) && puedeCurarse(t))) return;
@@ -916,7 +943,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     }
     // 'azar': cada golpe va a un enemigo al azar (puede repetir; ignora Provocación)
     const azar = mov.objetivo === 'azar' ? Array.from({ length: mov.golpes || 1 }, () => rng.elegir(enemigosDe(a))).filter(Boolean) : null;
-    const objetivos = azar ? azar : mov.objetivo === 'todosEnemigos' ? enemigosDe(a)
+    const objetivos = azar ? azar : mov.objetivo === 'todosEnemigos' ? sinEsquiva(enemigosDe(a))
       : mov.objetivo === 'todosAliados' ? aliadosDe(a)
         : mov.objetivo === 'propio' ? [a] : [objetivo].filter(Boolean);
     emitir('movimiento', { id: a.uid, categoria: mov.categoria, nombre: mov.nombre, estilo: mov.estilo, color: mov.color,
@@ -941,7 +968,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
 
       const sobrevivientes = [...new Set(objetivos)].filter(t => !t.muerto && t.lado !== a.lado);
       const final = {
-        sobrevivientes, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, invocaciones: invocacionesAntes,
+        sobrevivientes, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, invocaciones: invocacionesAntes, esMovimiento: true,
         estadoDe: id => (principal && !principal.muerto && get(principal, id)) || previos.find(e => e.id === id),
       };
       for (const ef of mov.efectos || []) if (ef.cuando === 'final' && cumple(ef.condicion, final)) ejecutarAccion(a, ef.accion, final);
@@ -951,6 +978,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       }
     }
     emitir('movimientoFin', { id: a.uid, estilo: mov.estilo }, a);
+    if (!ctx.forzado && !a.muerto) for (const p of enemigosDe(a)) pasivas(p, 'alUsarMovimientoEnemigo', { objetivo: a, categoria: mov.categoria });
   }
 
   // ================================================================ API pública
@@ -1021,6 +1049,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           case 'plague': aplicarEfecto(fuente, t, { id: 'plague', dur: 2 }); break;
           case 'weaken': aplicarEfecto(fuente, t, { id: 'weaken', dur: 2 }); break;
           case 'pierce': aplicarEfecto(t, t, { id: 'pierce', dur: 2 }); break;
+          case 'aoeDodge': aplicarEfecto(t, t, { id: 'aoeDodge', dur: 2 }); break;
           case 'solarBurn': aplicarEfecto(fuente, t, { id: 'solarBurn', dur: 2 }); break;
           case 'possess': aplicarEfecto(fuente, t, { id: 'possess' }); break;
           case 'confuse': aplicarEfecto(fuente, t, { id: 'confuse', dur: 2 }); break;

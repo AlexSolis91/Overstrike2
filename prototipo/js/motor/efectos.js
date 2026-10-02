@@ -24,6 +24,7 @@ export const EFECTOS = {
   // ---- Buffs
   taunt:   { nombre: 'Provocación', icono: '📣', color: 0xf97316, tipo: 'buff', tags: ['Provocación'] },
   fireAura: { nombre: 'Aura de Fuego', icono: '♨️', color: 0xff6a3d, tipo: 'buff', tags: ['Fuego'] },
+  aoeDodge: { nombre: 'Esquiva Área', icono: '💨', color: 0x93c5fd, tipo: 'buff', tags: ['Esquiva'] },
   stealth: { nombre: 'Sigilo',      icono: '🌫️', color: 0x94a3b8, tipo: 'buff', tags: ['Sigilo'] },
   pierce:  { nombre: 'Perforación', icono: '🗡️', color: 0x22d3ee, tipo: 'buff', tags: ['Estadística'] },
   protect: { nombre: 'Protección', icono: '🔰', color: 0x60a5fa, tipo: 'buff', tags: ['Estadística'] },
