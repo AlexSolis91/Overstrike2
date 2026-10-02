@@ -645,6 +645,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (spec === 'propio') return [a];
     if (spec === 'todosEnemigos') return ctx.esMovimiento ? sinEsquiva(enemigosDe(a)) : enemigosDe(a);
     if (spec === 'otrosAliados') return aliadosDe(a).filter(x => x !== a);
+    if (spec.otrosAliadosAzar) return [...aliadosDe(a).filter(x => x !== a)].sort(() => rng() - .5).slice(0, spec.otrosAliadosAzar);
     if (spec.aliadoAzarSin) { const l = aliadosDe(a).filter(x => !get(x, spec.aliadoAzarSin)); return l.length ? [rng.elegir(l)] : []; }
     if (spec === 'otrosEnemigos') return enemigosDe(a).filter(x => x !== ctx.objetivo);
     if (spec === 'todosAliados') return aliadosDe(a);
@@ -704,7 +705,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'reducirCooldown': {           // baja el cooldown de los movimientos indicados de su objetivo
           let n = 0;
           for (const c of acc.categorias || CATEGORIAS) if (t.cds[c] > 0) { t.cds[c] = Math.max(0, t.cds[c] - (acc.cantidad || 1)); n++; }
-          emitir(n ? 'extension' : 'sinEfecto', { a: t.uid, texto: n ? `⏳ −${acc.cantidad || 1} cooldown` : 'Sin cooldowns que reducir' }, t);
+          if (n) emitir('extension', { a: t.uid, texto: `⏳ −${acc.cantidad || 1} cooldown` }, t);
           break;
         }
         case 'turnoExtra':
@@ -776,6 +777,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (cond.objetivoTiene) return !!(ctx.objetivo && get(ctx.objetivo, cond.objetivoTiene));
     if (cond.algunGolpeadoTenia) return !!ctx.golpeadosTenian?.has(cond.algunGolpeadoTenia);
     if (cond.invocacionesMin) return (ctx.invocaciones || 0) >= cond.invocacionesMin;
+    if (cond.objetivoOverListo) {      // el objetivo tiene su Over listo para usar (sin cooldown ni Silencio)
+      const t = ctx.objetivo;
+      return !!t && t.movimientos.some(m => m.categoria === 'over') && !(t.cds.over > 0) && get(t, 'silence')?.categoria !== 'over';
+    }
     return true;
   }
 

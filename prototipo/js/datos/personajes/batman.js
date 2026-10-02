@@ -25,23 +25,25 @@ export default {
     {
       categoria: 'basico', nombre: 'Batarang', objetivo: 'enemigo', estilo: 'ranged', color: 0x94a3b8,
       pct: .70, escala: 'dano', cd: 0,
-      desc: 'Causa 70% y aplica Aturdimiento.',
-      efectos: [{ accion: { tipo: 'efecto', id: 'stun' } }],
+      desc: 'Causa 70%. Si el objetivo tiene su Over listo para usar, intenta Aturdirlo.',
+      efectos: [{ condicion: { objetivoOverListo: true }, accion: { tipo: 'efecto', id: 'stun' } }],
     },
     {
-      categoria: 'especial', nombre: 'Tácticas de las Sombras', objetivo: 'todosAliados', estilo: 'support', color: 0xfacc15, cd: 3,
-      desc: 'Todos los aliados ganan Agudeza (+50% Puntería, 2 rondas) y aplica Quemadura Solar (2 rondas) a todos los enemigos.',
+      categoria: 'especial', nombre: 'Tácticas de las Sombras', objetivo: 'propio', estilo: 'support', color: 0xfacc15, cd: 3,
+      desc: 'Batman y 1 aliado al azar ganan Agudeza (+50% Puntería, 2 rondas). Aplica Quemadura Solar (2 rondas) a todos los enemigos (tirada de Puntería).',
       efectos: [
-        { accion: { tipo: 'efecto', id: 'keen', dur: 2 } },
+        { cuando: 'final', accion: { tipo: 'efecto', id: 'keen', dur: 2, a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'efecto', id: 'keen', dur: 2, a: { otrosAliadosAzar: 1 } } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'solarBurn', dur: 2, a: 'todosEnemigos' } },
       ],
     },
     {
       categoria: 'over', nombre: 'Plan de Contingencia', objetivo: 'propio', estilo: 'support', color: 0x64748b, cd: 5,
-      desc: 'Limpia todos los debuffs de los aliados y reinicia los cooldowns de Especial y Over de sus aliados (no los suyos). Por cada debuff limpiado golpea 30% (escala por HP) a un enemigo al azar.',
+      desc: 'Limpia todos los debuffs de los aliados, reinicia el cooldown del Especial de sus aliados y les baja 1 el del Over (no los suyos). Por cada debuff limpiado golpea 30% (escala por HP) a un enemigo al azar.',
       efectos: [
         { cuando: 'final', accion: { tipo: 'limpiar', a: 'todosAliados' } },
-        { cuando: 'final', accion: { tipo: 'reiniciarCooldowns', categorias: ['especial', 'over'], a: 'otrosAliados' } },
+        { cuando: 'final', accion: { tipo: 'reiniciarCooldowns', categorias: ['especial'], a: 'otrosAliados' } },
+        { cuando: 'final', accion: { tipo: 'reducirCooldown', cantidad: 1, categorias: ['over'], a: 'otrosAliados' } },
         { cuando: 'final', accion: { tipo: 'golpesPorConteo', conteo: 'limpiados', nombre: 'Plan de Contingencia', pct: .30, escala: 'hp', color: 0x94a3b8, a: 'propio' } },
       ],
     },
