@@ -275,3 +275,14 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - El nombre del archivo es el nombre de la ficha.
 - Se optimizan con `python herramientas/optimizar_imagenes.py`.
 - **Invocaciones con fondo negro u oscuro:** el fondo se conserva y la invocación lleva `luminosa: true`. Se dibuja en modo "pantalla": el negro se vuelve transparente y la figura brilla como un espíritu (p. ej. Shadow Ming Byung).
+
+## 13. Pantallas y construcción de equipos
+
+- **Flujo:** Lobby → Construcción de equipo → presentación VS → Partida → Resultado (Revancha · Cambiar equipo · Menú). El botón "atrás" del navegador/celular vuelve entre pantallas; salir en plena partida la abandona (🏠 pide confirmación).
+- **Lobby:** modos de juego. Activo: **Partida rápida** (contra la IA). Próximamente: Campaña, Multijugador, Hordas, Jefe de Clan, Arena.
+- **Equipos:** siempre **5** personajes, sin repetir dentro del mismo equipo (sí se puede repetir entre tu equipo y el rival). La **primera casilla es el líder**; la pantalla muestra qué habilidad de líder quedará activa o avisa si no hay.
+- **Rival:** *Aleatorio* (5 al azar entre los oficiales) o *Construir* (lo armas tú, útil para probar balance).
+- **Galería:** solo personajes oficiales; los de prueba están ocultos. Filtros por rol. La "i" abre la ficha completa (estadísticas base sin reliquias, líder, pasiva, movimientos y transformaciones).
+- **Registro de personajes:** `js/datos/personajes/index.js` (`OFICIALES`). Toda ficha oficial nueva se agrega ahí y aparece sola en la galería.
+- **Técnica:** los menús son HTML (`js/ui/menu.js`, `menu.css`); la batalla sigue en Pixi. Una partida nueva después de otra recarga la página y entra directo (equipos guardados en `sessionStorage`), para que no queden animaciones de la anterior.
+

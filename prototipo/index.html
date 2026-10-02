@@ -11,13 +11,63 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icono-192.png">
   <link rel="apple-touch-icon" href="assets/icono-180.png">
-  <title>Overstrike 2 — Prototipo</title>
+  <title>Overstrike 2</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="menu.css?v=2">
 </head>
-<body>
+<body data-pantalla="cargando">
+  <!-- ============================================================ LOBBY -->
+  <section id="pantalla-menu" class="pantalla">
+    <div class="menu-chispas"></div>
+    <div class="logo">
+      <svg class="logo-espadas" viewBox="0 0 200 200" aria-hidden="true">
+        <defs><linearGradient id="lg-oro" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".5" stop-color="#f3d58a"/><stop offset="1" stop-color="#a8741c"/></linearGradient></defs>
+        <g fill="url(#lg-oro)" stroke="#3a2a0a" stroke-width="2">
+          <g transform="rotate(45 100 100)"><path d="M96 10 L104 10 L106 140 L94 140 Z"/><rect x="78" y="138" width="44" height="9" rx="3"/><rect x="95" y="147" width="10" height="28" rx="3"/><circle cx="100" cy="181" r="7"/></g>
+          <g transform="rotate(-45 100 100)"><path d="M96 10 L104 10 L106 140 L94 140 Z"/><rect x="78" y="138" width="44" height="9" rx="3"/><rect x="95" y="147" width="10" height="28" rx="3"/><circle cx="100" cy="181" r="7"/></g>
+        </g>
+      </svg>
+      <h1 class="logo-titulo">OVERSTRIKE</h1>
+      <div class="logo-num"><span>2</span></div>
+    </div>
+    <nav id="menu-modos"></nav>
+    <footer class="menu-pie"><button id="menu-full" class="eq-btn">⛶ Pantalla completa</button><span>Prototipo · v0.9</span></footer>
+  </section>
+
+  <!-- ============================================================ CONSTRUCCIÓN DE EQUIPOS -->
+  <section id="pantalla-equipo" class="pantalla">
+    <header class="eq-top">
+      <button id="eq-volver" class="eq-btn">← Menú</button>
+      <h2>Construye tu equipo</h2>
+      <button id="eq-listo" class="eq-listo" disabled>¡Listo!</button>
+    </header>
+    <div class="eq-equipos">
+      <div class="eq-fila" data-lado="jugador">
+        <div class="eq-etq">Tu equipo</div>
+        <div class="eq-slots"></div>
+        <button class="eq-btn eq-azar" data-lado="jugador" title="Llenar al azar">🎲</button>
+      </div>
+      <div class="eq-fila" data-lado="rival">
+        <div class="eq-etq">Rival<div class="eq-modo"><button data-modo="azar">🎲 Aleatorio</button><button data-modo="construir">✋ Construir</button></div></div>
+        <div class="eq-slots"></div>
+        <button class="eq-btn eq-azar" data-lado="rival" title="Llenar al azar">🎲</button>
+      </div>
+    </div>
+    <div id="eq-lider" class="eq-lider"></div>
+    <div id="eq-filtros" class="eq-filtros"></div>
+    <div id="eq-galeria" class="eq-galeria"></div>
+    <div id="eq-aviso"></div>
+  </section>
+
+  <div id="ficha" class="hidden"><div class="ficha-caja"><button id="ficha-x" title="Cerrar">✕</button><div id="ficha-cont"></div></div></div>
+
+  <!-- ============================================================ PRESENTACIÓN VS -->
+  <section id="pantalla-vs" class="hidden"><div id="vs-j" class="vs-lado"></div><div class="vs-centro">VS</div><div id="vs-r" class="vs-lado"></div></section>
+
+  <!-- ============================================================ BATALLA -->
   <div id="app">
     <aside id="panel"><button id="panel-close" title="Cerrar">✕</button><div id="panel-inner"></div></aside>
     <div id="panel-fondo"></div>
@@ -31,6 +81,7 @@
       <div id="girar">📱↻ Gira el teléfono para jugar mejor <button id="girar-x" title="Cerrar">✕</button></div>
 
       <div id="tools">
+        <button id="btn-menu" title="Volver al menú">🏠</button>
         <button id="btn-log" title="Registro de batalla">📜<span class="lbl"> Registro</span><span id="log-badge" class="hidden">0</span></button>
         <button id="btn-test" title="Herramienta de pruebas (desarrollo)">🧪<span class="lbl"> Pruebas</span></button>
         <button id="btn-full" title="Pantalla completa">⛶<span class="lbl"> Pantalla completa</span></button>
@@ -78,7 +129,7 @@
         <div class="ov-box">
           <h1 id="ov-title"></h1>
           <p id="ov-sub"></p>
-          <button id="ov-restart">Jugar de nuevo</button>
+          <div class="ov-botones"><button id="ov-revancha">⚔️ Revancha</button><button id="ov-equipo">👥 Cambiar equipo</button><button id="ov-menu">🏠 Menú</button></div>
         </div>
       </div>
     </main>

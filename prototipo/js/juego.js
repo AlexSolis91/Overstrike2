@@ -6,7 +6,8 @@ import * as FX from './ui/fx.js';
 import { renderPanel, renderOrden, renderAccion, setHint, log, logLeido, activarReliquias } from './ui/panel.js';
 import { crearCombate } from './motor/combate.js';
 import { elegirIA } from './motor/ia.js';
-import { EQUIPO_JUGADOR, EQUIPO_RIVAL } from './datos/equipos.js';
+import { OFICIALES, porId } from './datos/personajes/index.js';
+import { iniciarMenu, irA, presentarVS, cargarSeleccion } from './ui/menu.js';
 import { INVOCACIONES } from './datos/invocaciones.js';
 
 const { gsap } = window;
@@ -26,27 +27,57 @@ addEventListener('resize', modoMovil);
 // ---------------------------------------------------------------- carga
 await iniciarEscena($('#field'));
 await precargar(
-  [...EQUIPO_JUGADOR, ...EQUIPO_RIVAL].flatMap(p => { const l = [p.imagen]; for (let f = p.transformacion; f; f = f.transformacion) l.push(f.imagen); return l; }).concat(Object.values(INVOCACIONES).map(i => i.imagen)),
+  OFICIALES.flatMap(p => { const l = [p.imagen]; for (let f = p.transformacion; f; f = f.transformacion) l.push(f.imagen); return l; }).concat(Object.values(INVOCACIONES).map(i => i.imagen)),
   INVOCACIONES,
   (n, total) => { $('#loading-bar').style.width = `${n / total * 100}%`; $('#loading-text').textContent = `Cargando imágenes ${n}/${total}`; },
 );
 const ld = $('#loading'); ld.classList.add('fade'); setTimeout(() => ld.remove(), 500);
 
-// ---------------------------------------------------------------- combate y cartas
-const combate = crearCombate({ equipoJugador: EQUIPO_JUGADOR, equipoRival: EQUIPO_RIVAL });
-const P = combate.personajes;
+// ---------------------------------------------------------------- partida (se crea con los equipos elegidos)
+let combate = null, P = [], ui = { ocupado: true }, vistas = {}, cartas = {};
+let partida = 0;                 // identifica la partida en curso: al salir, las animaciones pendientes se detienen
+let ultima = null;               // { jugador: [ids], rival: [ids], rivalModo } para Revancha / Cambiar equipo
 const por = uid => P.find(p => p.uid === uid);
 const nombre = uid => por(uid)?.nombre ?? '';
-const ui = { actual: null, inspeccionado: P[0].uid, miTurno: false, movSel: null, objetivosValidos: null, tipoObjetivo: null, ocupado: true, opciones: null };
-const vistas = {}, cartas = {};
 const colX = i => W / 2 + (i - 2) * 178;
-for (const p of P) {
-  cartas[p.uid] = new Carta(p, colX(p.pos), p.lado === 'rival' ? 215 : 585, tocarCarta);
-  vistas[p.uid] = combate.vista(p);
-  cartas[p.uid].aplicar(vistas[p.uid], true);
-}
-G.alTick = [(dt, T) => { for (const c of Object.values(cartas)) c.tick(dt, T, ui); }];
 activarReliquias(() => por(ui.inspeccionado));
+
+async function iniciarPartida(eqJ, eqR) {
+  partida++;
+  combate = crearCombate({ equipoJugador: eqJ, equipoRival: eqR });
+  P = combate.personajes;
+  ui = { actual: null, inspeccionado: P[0].uid, miTurno: false, movSel: null, objetivosValidos: null, tipoObjetivo: null, ocupado: true, opciones: null };
+  vistas = {}; cartas = {};
+  for (const p of P) {
+    cartas[p.uid] = new Carta(p, colX(p.pos), p.lado === 'rival' ? 215 : 585, tocarCarta);
+    vistas[p.uid] = combate.vista(p);
+    cartas[p.uid].aplicar(vistas[p.uid], true);
+  }
+  G.alTick = [(dt, T) => { for (const c of Object.values(cartas)) c.tick(dt, T, ui); }];
+  window.__os2.combate = combate; window.__os2.ui = ui;
+  irA('partida');
+  relayout();
+  for (const [i, carta] of Object.values(cartas).entries()) {
+    const desde = carta.p.lado === 'jugador' ? 1000 : -200;
+    carta.c.y = desde; carta.c.alpha = 0;
+    gsap.to(carta.c, { y: carta.hy, alpha: 1, duration: .6, delay: .15 + (i % 5) * .08 + (carta.p.lado === 'jugador' ? .2 : 0), ease: 'back.out(1.4)' });
+  }
+  refrescarPanel();
+  await wait(1100);
+  await procesar(combate.iniciar());
+}
+
+// Empezar una partida desde el menú. La primera se arma en el momento; las siguientes recargan la página y entran
+// directo (así no quedan animaciones ni restos de la partida anterior).
+async function jugar(eqJ, eqR, rivalModo) {
+  ultima = { jugador: eqJ.map(p => p.id), rival: eqR.map(p => p.id), rivalModo };
+  if (combate) {
+    try { sessionStorage.setItem('os2-partida', JSON.stringify(ultima)); location.reload(); return; } catch (e) { /* sin almacenamiento: sigue aquí */ }
+  }
+  await presentarVS(eqJ, eqR);
+  await iniciarPartida(eqJ, eqR);
+}
+function salirDePartida() { partida++; ui.miTurno = false; ui.ocupado = true; $('#overlay').classList.add('hidden'); }
 
 function refrescarPanel() { renderPanel(por(ui.inspeccionado), vistas[ui.inspeccionado], ui); refrescarAccion(); }
 function refrescarAccion() { renderAccion(por(ui.actual), vistas[ui.actual], ui); }
@@ -244,8 +275,10 @@ async function manejar(e) {
 }
 
 async function procesar(res) {
+  const esta = partida;
   ui.ocupado = true; barra();
-  for (const e of res.eventos) await manejar(e);
+  for (const e of res.eventos) { if (esta !== partida) return; await manejar(e); }
+  if (esta !== partida) return;
   if (res.fin) return terminar(res.fin);
   const esp = res.esperando;
   const actor = por(esp.id);
@@ -260,6 +293,7 @@ async function procesar(res) {
     inspeccionar(actor.uid);
     setHint(`Turno rival: ${actor.nombre}`);
     await wait(700);
+    if (esta !== partida) return;
     await procesar(combate.actuar(elegirIA(combate)));
   }
 }
@@ -350,7 +384,11 @@ addEventListener('keydown', e => {
   else if (!$('#log-panel').classList.contains('hidden')) alternar('#log-panel', '#btn-log');
   else if (!$('#test-panel').classList.contains('hidden')) alternar('#test-panel', '#btn-test');
 });
-$('#ov-restart').addEventListener('click', () => location.reload());
+$('#ov-revancha').addEventListener('click', () => jugar(ultima.jugador.map(porId), ultima.rival.map(porId), ultima.rivalModo));
+$('#ov-equipo').addEventListener('click', () => { cargarSeleccion(ultima.jugador.map(porId), ultima.rival.map(porId), ultima.rivalModo); irA('equipo'); });
+$('#ov-menu').addEventListener('click', () => irA('menu'));
+$('#btn-menu').addEventListener('click', () => { if (ui.fin || confirm('¿Abandonar la partida y volver al menú?')) irA('menu'); });
+$('#menu-full').addEventListener('click', () => $('#btn-full').click());
 $('#test-panel').addEventListener('click', async e => {
   const b = e.target.closest('button');
   if (!b || !ui.miTurno || ui.ocupado) return;
@@ -360,13 +398,16 @@ $('#test-panel').addEventListener('click', async e => {
 
 // Acceso para pruebas desde la consola del navegador (p. ej. que la IA juegue por el jugador)
 window.__os2 = { combate, ui, jugarIA: () => ui.miTurno && !ui.ocupado && (() => { const d = elegirIA(combate); return ejecutar(d.categoria, d.objetivo); })() };
+window.__os2.empezar = (j, r) => jugar(j.map(porId), r.map(porId), 'construir');   // pruebas: __os2.empezar(['goku',...], [...])
 
-// ---------------------------------------------------------------- inicio
-for (const [i, carta] of Object.values(cartas).entries()) {
-  const desde = carta.p.lado === 'jugador' ? 1000 : -200;
-  carta.c.y = desde; carta.c.alpha = 0;
-  gsap.to(carta.c, { y: carta.hy, alpha: 1, duration: .6, delay: .15 + (i % 5) * .08 + (carta.p.lado === 'jugador' ? .2 : 0), ease: 'back.out(1.4)' });
-}
-refrescarPanel();
-await wait(1100);
-await procesar(combate.iniciar());
+// ---------------------------------------------------------------- inicio: menú, o directo a la partida si venimos de "Revancha"/"Jugar"
+iniciarMenu({ jugar: (j, r) => jugar(j, r, document.querySelector('.eq-modo button.on')?.dataset.modo || 'azar'), salirDePartida });
+let pendiente = null;
+try { pendiente = JSON.parse(sessionStorage.getItem('os2-partida') || 'null'); sessionStorage.removeItem('os2-partida'); } catch (e) { /* sin almacenamiento */ }
+const eqs = pendiente && [pendiente.jugador.map(porId), pendiente.rival.map(porId)];
+if (eqs && eqs.every(eq => eq.length === 5 && eq.every(Boolean))) {
+  ultima = pendiente;
+  irA('partida', { reemplazar: true });
+  await presentarVS(...eqs);
+  await iniciarPartida(...eqs);
+} else irA('menu', { reemplazar: true });
