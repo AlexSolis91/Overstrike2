@@ -8,6 +8,7 @@ import { crearCombate } from './motor/combate.js';
 import { elegirIA } from './motor/ia.js';
 import { OFICIALES, porId } from './datos/personajes/index.js';
 import { iniciarMenu, irA, presentarVS, cargarSeleccion } from './ui/menu.js';
+import { iniciarGuia, cerrarGuia, guiaAbierta } from './ui/guia.js';
 import { INVOCACIONES } from './datos/invocaciones.js';
 
 const { gsap } = window;
@@ -379,6 +380,7 @@ document.addEventListener('fullscreenchange', marcarFull);
 document.addEventListener('webkitfullscreenchange', marcarFull);
 addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
+  if (guiaAbierta()) { cerrarGuia(); return; }
   if (document.body.classList.contains('panel-abierto')) { cerrarPanel(); return; }
   if (ui.movSel) cancelarObjetivo();
   else if (!$('#log-panel').classList.contains('hidden')) alternar('#log-panel', '#btn-log');
@@ -399,6 +401,8 @@ $('#test-panel').addEventListener('click', async e => {
 // Acceso para pruebas desde la consola del navegador (p. ej. que la IA juegue por el jugador)
 window.__os2 = { combate, ui, jugarIA: () => ui.miTurno && !ui.ocupado && (() => { const d = elegirIA(combate); return ejecutar(d.categoria, d.objetivo); })() };
 window.__os2.empezar = (j, r) => jugar(j.map(porId), r.map(porId), 'construir');   // pruebas: __os2.empezar(['goku',...], [...])
+
+iniciarGuia();
 
 // ---------------------------------------------------------------- inicio: menú, o directo a la partida si venimos de "Revancha"/"Jugar"
 iniciarMenu({ jugar: (j, r) => jugar(j, r, document.querySelector('.eq-modo button.on')?.dataset.modo || 'azar'), salirDePartida });

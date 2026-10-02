@@ -252,3 +252,44 @@ body.app-instalada #menu-full { visibility: hidden; }
   .gc-info { top: 7px; right: 7px; width: 20px; height: 20px; font-size: 11px; }
   .gc-rol { font-size: 9px; }
 }
+
+/* ================================================================ GUÍA DE EFECTOS */
+#guia { position: fixed; inset: 0; z-index: 46; display: grid; place-items: center; padding: 14px; background: rgba(3, 6, 12, .78); }
+#guia.hidden { display: none; }
+.gu-caja { width: min(1040px, 100%); max-height: 100%; display: flex; flex-direction: column; border-radius: 14px; overflow: hidden;
+  background: linear-gradient(180deg, #121827, #0a0e17); border: 1px solid rgba(243, 213, 138, .4); box-shadow: 0 20px 60px rgba(0, 0, 0, .6); }
+.gu-top { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.gu-top h2 { margin: 0; font: 900 18px Cinzel, serif; color: var(--gold); white-space: nowrap; }
+#gu-buscar { flex: 1; min-width: 0; padding: 7px 12px; border-radius: 9px; font: 600 13px Inter, sans-serif; color: var(--text); background: #0b0f18; border: 1px solid rgba(255, 255, 255, .15); }
+#gu-buscar:focus { outline: none; border-color: var(--gold); }
+#gu-x { width: 32px; height: 32px; flex: none; border-radius: 10px; cursor: pointer; background: rgba(8, 11, 18, .9); color: var(--gold); border: 1px solid rgba(243, 213, 138, .4); }
+.gu-nota { margin: 0; padding: 8px 14px; font-size: 11.5px; color: var(--muted); border-bottom: 1px solid var(--line); }
+.gu-nota b.b { color: var(--buff); } .gu-nota b.d { color: var(--debuff); }
+.gu-cols { display: grid; grid-template-columns: 1fr 1fr; min-height: 0; overflow: hidden; flex: 1; }
+.gu-col { overflow-y: auto; padding: 10px 12px 16px; min-height: 0; }
+.gu-col.buff { border-right: 1px solid var(--line); }
+.gu-col h3 { position: sticky; top: -10px; z-index: 1; margin: -10px -12px 8px; padding: 10px 12px 8px; font: 900 14px Cinzel, serif; letter-spacing: .08em; text-transform: uppercase; background: #111725; }
+.gu-col.buff h3 { color: var(--buff); } .gu-col.debuff h3 { color: var(--debuff); }
+.gu-col h3 small { font: 700 11px Inter, sans-serif; color: var(--muted); }
+.gu-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px; border-radius: 10px; margin-bottom: 6px; background: rgba(255, 255, 255, .025); }
+.gu-item.oculto { display: none; }
+.gu-ico { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; background: #0b0f18; border: 2.5px solid; }
+.gu-item.buff .gu-ico { border-color: #22c55e; } .gu-item.debuff .gu-ico { border-color: #ef4444; }
+.gu-nom { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; font-size: 13.5px; }
+.gu-nom small { color: var(--muted); font-size: 11px; }
+.gu-tag { font: 700 9.5px Inter, sans-serif; padding: 1px 6px; border-radius: 99px; color: var(--muted); background: #1a2132; border: 1px solid rgba(255, 255, 255, .08); }
+.gu-item p { margin: 3px 0 0; font-size: 12px; line-height: 1.45; color: #cbd5e1; }
+@media (max-width: 640px) and (orientation: portrait) {
+  .gu-cols { grid-template-columns: 1fr; overflow-y: auto; }
+  .gu-col { overflow: visible; }
+  .gu-col.buff { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+@media (max-height: 520px) {
+  #guia { padding: 6px; }
+  .gu-top { padding: 6px 10px; }
+  .gu-top h2 { font-size: 14px; }
+  .gu-nota { display: none; }
+  .gu-item { padding: 6px; gap: 8px; }
+  .gu-ico { width: 28px; height: 28px; font-size: 14px; }
+  .gu-item p { font-size: 11px; }
+}

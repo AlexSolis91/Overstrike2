@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=9">
-  <link rel="stylesheet" href="menu.css?v=2">
+  <link rel="stylesheet" href="menu.css?v=3">
 </head>
 <body data-pantalla="cargando">
   <!-- ============================================================ LOBBY -->
@@ -62,6 +62,13 @@
     <div id="eq-aviso"></div>
   </section>
 
+  <div id="guia" class="hidden">
+    <div class="gu-caja">
+      <header class="gu-top"><h2>📖 Guía de efectos</h2><input id="gu-buscar" type="search" placeholder="Buscar (nombre, efecto o etiqueta)…"><button id="gu-x" title="Cerrar">✕</button></header>
+      <p class="gu-nota">Los <b class="b">buffs</b> a aliados siempre se aplican. Los <b class="d">debuffs</b> tiran <b>Puntería − Resistencia</b> para entrar. Las duraciones son en rondas. Tras perder un turno por Control, queda inmune a Control durante su siguiente turno.</p>
+      <div class="gu-cols"><section id="gu-buffs" class="gu-col buff"></section><section id="gu-debuffs" class="gu-col debuff"></section></div>
+    </div>
+  </div>
   <div id="ficha" class="hidden"><div class="ficha-caja"><button id="ficha-x" title="Cerrar">✕</button><div id="ficha-cont"></div></div></div>
 
   <!-- ============================================================ PRESENTACIÓN VS -->
@@ -82,6 +89,7 @@
 
       <div id="tools">
         <button id="btn-menu" title="Volver al menú">🏠</button>
+        <button id="btn-guia" data-abre-guia title="Guía de buffs y debuffs">📖<span class="lbl"> Guía</span></button>
         <button id="btn-log" title="Registro de batalla">📜<span class="lbl"> Registro</span><span id="log-badge" class="hidden">0</span></button>
         <button id="btn-test" title="Herramienta de pruebas (desarrollo)">🧪<span class="lbl"> Pruebas</span></button>
         <button id="btn-full" title="Pantalla completa">⛶<span class="lbl"> Pantalla completa</span></button>
