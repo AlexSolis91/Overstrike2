@@ -652,6 +652,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (spec === 'sobrevivientes') return (ctx.sobrevivientes || []).filter(x => !x.muerto);
     if (spec.aliadosAzar) return Array.from({ length: spec.aliadosAzar }, () => aliadosDe(a)).filter(l => l.length).map(l => rng.elegir(l));
     if (spec === 'aliadoMasHerido') { const l = aliadosDe(a); return l.length ? [l.reduce((x, y) => x.hp / maxHp(x) <= y.hp / maxHp(y) ? x : y)] : []; }
+    if (spec.azarCon) {
+      const { efecto, min = 1 } = spec.azarCon;
+      let l = enemigosDe(a).filter(x => todos(x, efecto).length >= min);
+      if (ctx.esMovimiento) l = l.filter(x => !get(x, 'aoeDodge'));
+      return l.length ? [rng.elegir(l)] : [];
+    }
     if (spec.azar) return Array.from({ length: spec.azar }, () => enemigosDe(a)).filter(l => l.length).map(l => rng.elegir(l));
     if (spec.distintos) return [...enemigosDe(a)].sort(() => rng() - .5).slice(0, spec.distintos);
     return [];
@@ -685,8 +691,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           break;
         }
         case 'activarDoT': {           // hace el daño de un DoT al instante sin consumirlo (cuenta como daño DoT)
-          const e = get(t, acc.efecto);
-          if (e) danoDoT(t, e.valor, acc.efecto);
+          const l = todos(t, acc.efecto);           // todas las acumulaciones (p. ej. 5 Venenos)
+          if (l.length) danoDoT(t, l.reduce((s, x) => s + x.valor, 0), acc.efecto);
           break;
         }
         case 'extenderDuracion': {
@@ -777,6 +783,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (cond.objetivoTiene) return !!(ctx.objetivo && get(ctx.objetivo, cond.objetivoTiene));
     if (cond.algunGolpeadoTenia) return !!ctx.golpeadosTenian?.has(cond.algunGolpeadoTenia);
     if (cond.invocacionesMin) return (ctx.invocaciones || 0) >= cond.invocacionesMin;
+    if (cond.objetivoMasHpQueYo) return !!ctx.objetivo && !!ctx.atacante && (ctx.hpObjetivoAntes ?? ctx.objetivo.hp) > ctx.atacante.hp;
     if (cond.objetivoOverListo) {      // el objetivo tiene su Over listo para usar (sin cooldown ni Silencio)
       const t = ctx.objetivo;
       return !!t && t.movimientos.some(m => m.categoria === 'over') && !(t.cds.over > 0) && get(t, 'silence')?.categoria !== 'over';
@@ -932,11 +939,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const hostil = t.lado !== a.lado || ctx.forzado;
     if (hostil && rng() < Math.min(stats(t).block, TOPES.block)) { emitir('bloqueo', { de: a.uid, a: t.uid }); return; }
     if (ctx.acum) for (const e of t.estados) ctx.acum.tenian.add(e.id);     // lo que tenía el objetivo al ser golpeado
+    const hpObjetivoAntes = t.hp;
     if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) golpear(a, t, mov, ctx);
     if (t.muerto) return;
     for (const ef of mov.efectos || []) {
       if (ef.cuando && ef.cuando !== 'objetivo') continue;
-      if (cumple(ef.condicion, { objetivo: t })) ejecutarAccion(a, ef.accion, { objetivo: t });
+      const c = { objetivo: t, atacante: a, hpObjetivoAntes };
+      if (cumple(ef.condicion, c)) ejecutarAccion(a, ef.accion, c);
     }
   }
 
