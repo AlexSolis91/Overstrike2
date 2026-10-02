@@ -11,7 +11,7 @@ import { INVOCACIONES, TABLAS_INVOCACION } from '../datos/invocaciones.js';
 
 const CATEGORIAS = ['basico', 'especial', 'over'];
 const NOMBRE_CAT = { basico: 'Básico', especial: 'Especial', over: 'Over' };
-const NOMBRE_STAT = { hpPct: 'HP máx.', critDmg: 'Daño Crítico', critRate: 'Prob. Crítico', armor: 'Armadura', res: 'Resistencia', acc: 'Puntería', pen: 'Perforación' };
+const NOMBRE_STAT = { hpPct: 'HP máx.', critDmg: 'Daño Crítico', critRate: 'Prob. Crítico', armor: 'Armadura', res: 'Resistencia', acc: 'Puntería', pen: 'Penetración de escudo' };
 const clonar = o => JSON.parse(JSON.stringify(o));
 
 export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() }) {
@@ -55,6 +55,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       if (e.id === 'haste') pct.spd += BUFFS.celeridad;
       if (e.id === 'bloodlust') sec.critDmg += BUFFS.sedDeSangre;
       if (e.id === 'keen') sec.acc += BUFFS.agudeza;
+      if (e.id === 'pierce') sec.pen += BUFFS.perforacion;
       if (e.id === 'blind') sec.acc -= DEBUFFS.ceguera;
       if (e.id === 'wear') sec.armor -= e.valor;
       if (e.id === 'freeze') pct.spd -= CONTROL.congelacionVel * (e.mega ? 2 : 1);
@@ -112,6 +113,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'fear': texto = `Actúa al final de la ronda · −25% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'dmgUp': texto = `+${Math.round(e.valor * 100)}% Daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'taunt': texto = `Los enemigos deben atacarlo con sus movimientos de un objetivo · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'pierce': texto = `+${Math.round(BUFFS.perforacion * 100)}% Penetración de escudo · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'solarBurn': texto = `Las curaciones le hacen daño (ignora Armadura y Escudo) · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'stealth': texto = `Los enemigos no pueden elegirlo con ataques de un objetivo · se rompe al recibir daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'protect': texto = `+${Math.round(BUFFS.proteccion * 100)}% Resistencia · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'frenzy': texto = `+${Math.round(BUFFS.frenesi * 100)}% Prob. Crítico · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -337,7 +340,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   }
   const baseDe = (p, escala) => (ESCALADO[escala || 'dano'])(stats(p));
 
-  // Un GOLPE: Crítico -> (Miedo) -> (quiebre de Congelación) -> Armadura -> reducciones -> Perforación/Escudo
+  // Un GOLPE: Crítico -> (Miedo) -> (quiebre de Congelación) -> Armadura -> reducciones -> Penetración de escudo/Escudo
   function golpear(a, t, mov, ctx) {
     const sa = stats(a), st = stats(t);
     let d = baseDe(a, mov.escala) * mov.pct * (1 + (a.bonos[mov.categoria] || 0));
@@ -363,7 +366,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const des = get(t, 'wear');                // Desgaste: cada golpe recibido (no bloqueado) quita 5 puntos más de Armadura
     if (des && des.valor < DEBUFFS.desgasteMax) des.valor = Math.min(DEBUFFS.desgasteMax, des.valor + DEBUFFS.desgaste);
     const robo = a.pasiva?.roboVida;          // robo de vida: % del daño causado (incluye lo absorbido por escudos)
-    if (robo && !a.muerto && a.hp < maxHp(a) && puedeCurarse(a)) curar(a, a, (aHp + aEsc) * robo);
+    if (robo && !a.muerto && (get(a, 'solarBurn') || (a.hp < maxHp(a) && puedeCurarse(a)))) curar(a, a, (aHp + aEsc) * robo);
     emitir('golpe', { de: a.uid, a: t.uid, dano: aHp, escudo: aEsc, critico, quiebre, color: mov.color, fuente: ctx.fuente, multi: (mov.golpes || 1) > 1 }, t);
     recibioDano(t, aHp + aEsc);
     if (aEsc > 0) perdioEscudo(t);
@@ -428,14 +431,26 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     curar(a, a, d, true);
   }
 
-  const puedeCurarse = t => !get(t, 'plague') && !get(t, 'blackPlague');
+  const puedeCurarse = t => !get(t, 'plague') && !get(t, 'blackPlague') && !get(t, 'solarBurn');
   function curar(a, t, cantidad, silencioso = false) {
     if (t.muerto) return;
+    if (get(t, 'solarBurn')) { danoSolar(t, cantidad); return; }      // Quemadura Solar: la curación hace daño (gana a la Peste)
     if (!puedeCurarse(t)) { emitir('sinEfecto', { a: t.uid, texto: '🦠 No puede curarse' }); return; }
     const real = Math.max(0, Math.min(cantidad, maxHp(t) - t.hp));
     t.hp += real;
     emitir('curacion', { de: a.uid, a: t.uid, cantidad: real, robo: silencioso }, t);
     if (real > 0) for (const p of aliadosDe(t)) if (p !== t) pasivas(p, 'alCurarAliado', { objetivo: t, curacion: real });
+  }
+
+  // Quemadura Solar: el monto COMPLETO de la curación se vuelve daño. Ignora Armadura y Escudo, no se bloquea ni es crítico,
+  // le afectan las reducciones de DoT y nadie recibe crédito si mata.
+  function danoSolar(t, cantidad) {
+    const d = cantidad * (1 - reduccion(t, 'dot'));
+    if (d <= 0) return;
+    t.hp -= d;
+    emitir('dot', { a: t.uid, tipo: 'solarBurn', dano: d }, t);
+    recibioDano(t, d);
+    if (t.hp <= 0) morir(t);
   }
 
   function morir(t, asesino = null) {
@@ -568,7 +583,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         break;
       }
       case 'confuse': case 'fear': case 'dmgUp': case 'taunt': case 'fireAura': case 'protect': case 'regen':
-      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'blind': case 'stealth': {
+      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': {
         if (acc.id === 'stealth' && get(t, 'taunt')) { emitir('sinEfecto', { a: t.uid, texto: 'Con Provocación no puede tener Sigilo' }); return; }
         if (acc.id === 'taunt' && get(t, 'stealth')) { quitar(t, get(t, 'stealth')); emitir('sigiloRoto', { a: t.uid }, t); }
         if (acc.id === 'dmgUp') acc = { ...acc, valor: BUFFS.furia };      // Furia siempre +50%
@@ -1005,6 +1020,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           case 'wear': aplicarEfecto(fuente, t, { id: 'wear' }); break;
           case 'plague': aplicarEfecto(fuente, t, { id: 'plague', dur: 2 }); break;
           case 'weaken': aplicarEfecto(fuente, t, { id: 'weaken', dur: 2 }); break;
+          case 'pierce': aplicarEfecto(t, t, { id: 'pierce', dur: 2 }); break;
+          case 'solarBurn': aplicarEfecto(fuente, t, { id: 'solarBurn', dur: 2 }); break;
           case 'possess': aplicarEfecto(fuente, t, { id: 'possess' }); break;
           case 'confuse': aplicarEfecto(fuente, t, { id: 'confuse', dur: 2 }); break;
           case 'fear': aplicarEfecto(fuente, t, { id: 'fear', dur: 2 }); break;

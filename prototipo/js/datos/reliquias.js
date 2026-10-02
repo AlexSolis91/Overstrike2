@@ -18,7 +18,7 @@ export const STAT_META = {
   res:      { label: 'Resistencia',   icon: '🧿' },
   block:    { label: 'Bloqueo',       icon: '✋' },
   dot:      { label: 'Daño DoT',      icon: '☠️' },
-  pen:      { label: 'Perforación',   icon: '🗡️' },
+  pen:      { label: 'Penetración de escudo', icon: '🗡️' },
   hpPct:    { label: 'HP',            icon: '❤️' },
   dmgPct:   { label: 'Daño',          icon: '⚔️' },
   spdPct:   { label: 'Velocidad',     icon: '⚡' },

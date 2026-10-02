@@ -19,11 +19,13 @@ export const EFECTOS = {
   wear:    { nombre: 'Desgaste',    icono: '🪓', color: 0xd97706, tipo: 'debuff', tags: ['Estadística'] },
   plague:  { nombre: 'Peste',       icono: '🦠', color: 0x84cc16, tipo: 'debuff', tags: ['Peste'] },
   blackPlague: { nombre: 'Peste Negra', icono: '☠️', color: 0x3f6212, tipo: 'debuff', tags: ['Peste'] },
+  solarBurn: { nombre: 'Quemadura Solar', icono: '☀️', color: 0xfbbf24, tipo: 'debuff', tags: ['Quemadura Solar'] },
   fear:    { nombre: 'Miedo',        icono: '😱', color: 0x94a3b8, tipo: 'debuff', tags: ['Control'] },
   // ---- Buffs
   taunt:   { nombre: 'Provocación', icono: '📣', color: 0xf97316, tipo: 'buff', tags: ['Provocación'] },
   fireAura: { nombre: 'Aura de Fuego', icono: '♨️', color: 0xff6a3d, tipo: 'buff', tags: ['Fuego'] },
   stealth: { nombre: 'Sigilo',      icono: '🌫️', color: 0x94a3b8, tipo: 'buff', tags: ['Sigilo'] },
+  pierce:  { nombre: 'Perforación', icono: '🗡️', color: 0x22d3ee, tipo: 'buff', tags: ['Estadística'] },
   protect: { nombre: 'Protección', icono: '🔰', color: 0x60a5fa, tipo: 'buff', tags: ['Estadística'] },
   regen:   { nombre: 'Regeneración', icono: '💚', color: 0x4ade80, tipo: 'buff', tags: ['Curación'] },
   dmgUp:   { nombre: 'Furia',       icono: '⚔️', color: 0x4ade80, tipo: 'buff', tags: ['Estadística'] },

@@ -33,7 +33,9 @@ export function elegirIA(combate) {
         objetivo = con.length ? con.reduce((x, y) => ratio(x) < ratio(y) ? x : y) : null;
         if (!objetivo) continue;
       } else {
-        objetivo = cands.reduce((x, y) => ratio(x) < ratio(y) ? x : y);
+        const sanables = acciones.includes('curar') ? cands.filter(p => !p.estados.some(e => e.id === 'solarBurn')) : cands;   // Quemadura Solar: curarlo lo daña
+        if (!sanables.length) continue;
+        objetivo = sanables.reduce((x, y) => ratio(x) < ratio(y) ? x : y);
         if (acciones.includes('curar') && ratio(objetivo) > .85) continue;
       }
     } else if (mov.objetivo === 'todosAliados' && acciones.includes('curar') && !acciones.includes('efecto') && !acciones.includes('escudo')) {

@@ -30,6 +30,7 @@ export const BUFFS = {
   celeridad: .20,      // Celeridad: +20% Velocidad
   sedDeSangre: .30,    // Sed de Sangre: +30% Daño Crítico (puntos)
   agudeza: .50,        // Agudeza: +50% Puntería (puntos)
+  perforacion: .50,    // Perforación: +50% Penetración de escudo (puntos; tope 100%)
 };
 
 // Valores fijos de debuffs universales

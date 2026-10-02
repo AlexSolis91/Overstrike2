@@ -97,7 +97,7 @@ export function escudo(carta, cantidad) {
 
 const COLORES = { burn: '#ffa04d', poison: '#9dff7a', bleed: '#ff5a78', hemo: '#ff1a3c', bomb: '#ffc466', dmgUp: '#7dffa8',
   stun: '#fde047', freeze: '#bae6fd', possess: '#d8b4fe', confuse: '#f0abfc', fear: '#cbd5e1',
-  silence: '#c4b5fd', stealth: '#cbd5e1', blind: '#d1d5db', wear: '#fbbf24', plague: '#bef264', blackPlague: '#a3e635', weaken: '#fca5a5' };
+  silence: '#c4b5fd', pierce: '#67e8f9', solarBurn: '#fde047', stealth: '#cbd5e1', blind: '#d1d5db', wear: '#fbbf24', plague: '#bef264', blackPlague: '#a3e635', weaken: '#fca5a5' };
 
 export function efecto(carta, id, texto) {
   const { x, y } = pos(carta);
@@ -133,7 +133,7 @@ export function efecto(carta, id, texto) {
 
 export function dot(carta, dano, tipo) {
   const { x, y } = pos(carta);
-  const cfg = { burn: ['#ffa04d', 0xff7a2a], poison: ['#9dff7a', 0x7ee36b], bleed: ['#ff5a78', 0xff3355], hemo: ['#ff1a3c', 0xd0002a], bomb: ['#ffb03b', 0xffb03b] }[tipo] || ['#fff', 0xffffff];
+  const cfg = { burn: ['#ffa04d', 0xff7a2a], poison: ['#9dff7a', 0x7ee36b], bleed: ['#ff5a78', 0xff3355], hemo: ['#ff1a3c', 0xd0002a], bomb: ['#ffb03b', 0xffb03b], solarBurn: ['#fde047', 0xfbbf24] }[tipo] || ['#fff', 0xffffff];
   flash(carta, .4, cfg[1]); sacudir(carta, 3);
   if (tipo === 'burn') for (let i = 0; i < 16; i++) spawn({ x: x + rand(-50, 50), y: y + rand(30, 90), vy: rand(-2, -4), color: pick([0xff7a2a, 0xffd36b]), size: rand(.2, .35), life: 40 });
   if (tipo === 'poison') for (let i = 0; i < 10; i++) spawn({ x: x + rand(-45, 45), y: y + rand(10, 80), vy: rand(-.8, -1.6), color: 0x7ee36b, size: rand(.3, .5), life: 50, tex: G.hardTex, blend: 'normal', alpha: .85, grow: .4 });

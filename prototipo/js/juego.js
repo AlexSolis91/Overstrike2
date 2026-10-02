@@ -81,7 +81,7 @@ async function manejar(e) {
       break;
     case 'dot':
       aplicar(e); FX.dot(c(e.a), e.dano, e.tipo);
-      log(`${nombre(e.a)} pierde ${Math.round(e.dano)} (${{ burn: 'Quemadura', poison: 'Veneno', bleed: 'Sangrado', hemo: 'Hemorragia', bomb: 'Bomba' }[e.tipo]})`, 'dmg');
+      log(`${nombre(e.a)} pierde ${Math.round(e.dano)} (${{ burn: 'Quemadura', poison: 'Veneno', bleed: 'Sangrado', hemo: 'Hemorragia', bomb: 'Bomba', solarBurn: 'Quemadura Solar' }[e.tipo]})`, 'dmg');
       await wait(320);
       break;
     case 'pierdeTurno':
@@ -148,7 +148,7 @@ async function manejar(e) {
       break;
     case 'efecto':
       aplicar(e); FX.efecto(c(e.a), e.id, e.texto);
-      log(`${nombre(e.a)}: ${e.texto.replace(/^\S+\s/, '')}`, 'fx');
+      log(`${nombre(e.a)}: ${e.texto.replace(/^[^\p{L}\d+\-¡]+\s/u, '')}`, 'fx');   // quita solo un emoji inicial
       await wait(280);
       break;
     case 'resistido': FX.textoSobre(c(e.a), 'RESISTIDO'); log(`${nombre(e.a)} resiste el efecto`); await wait(220); break;

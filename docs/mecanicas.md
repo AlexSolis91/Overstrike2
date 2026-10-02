@@ -18,7 +18,7 @@ está aquí, primero se define y se agrega a este registro; nunca se programa "s
 | Armadura | 0% | Reduce el daño recibido · **tope 75%** |
 | Bloqueo | 0% | Anula el movimiento completo (daño y efectos) · **tope 50%** |
 | Daño DoT | 0% | Aumenta los DoT que aplica |
-| Perforación | 0% | % del daño que ignora el Escudo |
+| Penetración de escudo | 0% | % del daño que ignora el Escudo (tope 100%) |
 
 - Estadística final = (base + suma de planos) × (1 + suma de %).
 - La ficha indica solo lo que se **suma** a la base común.
@@ -68,7 +68,7 @@ Cada personaje tiene exactamente **3 movimientos**, una **pasiva** y, opcionalme
 5. **Congelación** del objetivo: × 1.30, y se rompe el hielo.
 6. **Armadura:** × (1 − Armadura).
 7. **Reducciones** por categoría (p. ej. líder).
-8. **Perforación:** esa parte va directo al HP; el resto golpea el Escudo, y lo que sobra del Escudo pasa al HP.
+8. **Penetración de escudo:** esa parte va directo al HP; el resto golpea el Escudo, y lo que sobra del Escudo pasa al HP.
 9. **Después del golpe:** se activa "al acertar crítico" y luego Sangrado/Hemorragia del objetivo.
 10. **Efectos del movimiento:** se aplican si no fue bloqueado.
 
@@ -131,6 +131,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | 🔰 Protección | Estadística | **+30% Resistencia** (dura rondas) |
 | 💚 Regeneración | Curación | Cura **10% del HP máx.** del portador al inicio de su turno (dura rondas) |
 | 🌫️ Sigilo | Sigilo | Los enemigos no pueden elegirlo con ataques de **un objetivo** (sí lo alcanzan AOE, golpes al azar e invocaciones). Si todos sus aliados lo tienen, no cuenta. Se rompe al recibir **cualquier** daño que baje HP o Escudo. No se puede aplicar a quien tiene Provocación, y recibir Provocación lo quita |
+| 🗡️ Perforación | Estadística | **+50 puntos de Penetración de escudo** (0% → 50%; tope 100%) |
 | 🎯 Frenesí | Estadística | **+50% Prob. Crítico** (puntos: 5% → 55%) |
 | 💨 Celeridad | Estadística | **+20% Velocidad** |
 | 🩸 Sed de Sangre | Estadística | **+30% Daño Crítico** (puntos: 50% → 80%) |
@@ -144,6 +145,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | 🪓 Desgaste | Estadística | −5 puntos de Armadura al aplicarse y −5 más por cada golpe recibido (no bloqueado), hasta −25. Sin duración: dura hasta que lo limpien. Reaplicarlo no suma. La Armadura nunca baja de 0% |
 | 🦠 Peste | Peste | No puede recibir **ninguna** curación (incluye robo de vida, Robar HP, Regeneración y pasivas). Sí recibe escudos. Peste sobre Peste = Peste Negra |
 | ☠️ Peste Negra | Peste | Igual que Peste y además, al final de cada turno del portador (también si lo perdió), pierde **5% del HP máx. original** (piso: 25%). No es daño: el HP actual solo baja si queda por encima del nuevo máximo. La pérdida es **permanente** aunque se limpie (solo la recuperan futuras mecánicas de aumento de HP máx.) |
+| ☀️ Quemadura Solar | Quemadura Solar | Toda curación que reciba (movimientos, Regeneración, robo de vida, Robar HP, pasivas) se vuelve **daño por el monto completo**, aunque tenga el HP lleno. Ignora Armadura y Escudo, no se bloquea ni es crítico, le afectan las reducciones de DoT, rompe Sigilo y nadie recibe crédito si mata. Gana a la Peste. **No** cuenta como Quemadura. Las pasivas "solo si cura" no se activan sobre él y la IA no lo cura con curaciones de un objetivo. Se puede limpiar |
 | 💔 Debilitar | Estadística | Recibe **+50% de daño** de golpes y daño por efecto, calculado **después** de la Armadura (no afecta DoT ni Robar HP) |
 | ♨️ Aura de Fuego | Fuego | Cuando el portador recibe un **golpe** de un enemigo, le aplica al atacante Quemadura 5% (1 turno), con tirada de Puntería del portador |
 | 📣 Provocación | Provocación | Los enemigos deben dirigirle sus movimientos de **un objetivo** (incluidas invocaciones). No afecta AOE, objetivos al azar, movimientos a aliados, Confusión ni Posesión. Con varios, se elige entre ellos. Se puede Disipar |
