@@ -30,10 +30,10 @@ export default {
     {
       categoria: 'especial', nombre: 'Detonador del Caos', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x22c55e,
       pct: .75, escala: 'dano', cd: 3,
-      desc: 'Causa 75% a todos los enemigos y les aplica Veneno. Luego aplica Mega Aturdimiento a un enemigo al azar con 4 o más acumulaciones de Veneno.',
+      desc: 'Causa 75% a todos los enemigos y les aplica Veneno. Luego aplica Mega Aturdimiento a un enemigo al azar con 3 o más acumulaciones de Veneno.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison' } },
-        { cuando: 'final', accion: { tipo: 'efecto', id: 'stun', mega: true, a: { azarCon: { efecto: 'poison', min: 4 } } } },
+        { cuando: 'final', accion: { tipo: 'efecto', id: 'stun', mega: true, a: { azarCon: { efecto: 'poison', min: 3 } } } },
       ],
     },
     {
