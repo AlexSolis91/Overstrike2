@@ -293,3 +293,7 @@ body.app-instalada #menu-full { visibility: hidden; }
   .gu-ico { width: 28px; height: 28px; font-size: 14px; }
   .gu-item p { font-size: 11px; }
 }
+
+/* pantallas medianas: los botones de arriba solo con ícono para no tapar la barra de ronda */
+@media (max-width: 1800px) { #tools .lbl { display: none; } }
+@media (max-width: 1300px) { #topbar { left: 12px; transform: none; max-width: calc(100% - 270px); } }

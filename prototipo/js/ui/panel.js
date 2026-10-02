@@ -3,6 +3,7 @@ import { RELIQUIAS, RAREZAS, STAT_META, COSTOS_ESPACIO } from '../datos/reliquia
 import { INVOCACIONES } from '../datos/invocaciones.js';
 import { ESCALADO } from '../motor/reglas.js';
 import { imgHtml } from './imagenes.js';
+import { hpVisible } from './graficos.js';
 
 const $ = s => document.querySelector(s);
 const CAT = { basico: 'Básico', especial: 'Especial', over: 'Over' };
@@ -87,7 +88,7 @@ export function renderPanel(p, v, ui) {
     <div class="p-hpbar">
       <div class="fill ${r > .5 ? '' : r > .25 ? 'mid' : 'low'}" style="width:${v.hp / total * 100}%"></div>
       ${v.escudo >= 1 ? `<div class="shield" style="left:${v.hp / total * 100}%;width:${v.escudo / total * 100}%"></div>` : ''}
-      <span>${Math.round(v.hp)} / ${Math.round(max)}${v.escudo >= 1 ? ` · 🛡 ${Math.round(v.escudo)}` : ''}</span>
+      <span>${hpVisible(v.hp)} / ${Math.round(max)}${v.escudo >= 1 ? ` · 🛡 ${Math.round(v.escudo)}` : ''}</span>
     </div>
     <section><h3>Estadísticas</h3><div class="stats">${statRows}</div></section>
     <section><h3>Reliquias</h3><div class="relics">${slots}</div></section>

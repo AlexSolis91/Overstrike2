@@ -1,5 +1,5 @@
 // Carta de personaje en el campo. Se dibuja a partir de la ficha (estática) y de la "vista" que manda el motor.
-import { G, CW, CH, EMOJI_FONT, canvasTex, rr, shade, txt, spawn, rand, pick } from './graficos.js';
+import { G, CW, CH, EMOJI_FONT, canvasTex, rr, shade, txt, spawn, rand, pick, hpVisible } from './graficos.js';
 import { IMG, TEX_INVOCACION, drawCover } from './imagenes.js';
 import { INVOCACIONES } from '../datos/invocaciones.js';
 const { PIXI, gsap } = window;
@@ -217,7 +217,7 @@ export class Carta {
     const r = d.hp / max;
     if (hpW > 0) { g.rect(x0, y, hpW, h).fill(r > .5 ? 0x3ccf7a : r > .25 ? 0xf2c21b : 0xe23b3b); g.rect(x0, y, hpW, h * .4).fill({ color: 0xffffff, alpha: .2 }); }
     if (d.sh > 0) g.rect(x0 + hpW, y, w * d.sh / total, h).fill({ color: 0x67e8f9, alpha: .95 });
-    this.hpText.text = `${Math.max(0, Math.round(d.hp))}${d.sh >= 1 ? '  +' + Math.round(d.sh) : ''}`;
+    this.hpText.text = `${hpVisible(d.hp)}${d.sh >= 1 ? '  +' + Math.round(d.sh) : ''}`;
   }
 
   estados() {

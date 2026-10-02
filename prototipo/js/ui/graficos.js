@@ -6,6 +6,8 @@ export const EMOJI_FONT = '"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoj
 export const wait = ms => new Promise(r => setTimeout(r, ms));
 export const rand = (a, b) => a + Math.random() * (b - a);
 export const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+// HP que se muestra: si está vivo con una fracción (p. ej. 0.3), se ve 1, nunca 0
+export const hpVisible = hp => hp > 0 ? Math.max(1, Math.ceil(hp - 1e-4)) : 0;
 export const cssHex = n => '#' + n.toString(16).padStart(6, '0');
 
 // si la pestaña se congela un momento, las animaciones saltan al tiempo real en vez de quedarse atrás
