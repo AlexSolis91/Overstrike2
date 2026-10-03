@@ -49,7 +49,7 @@ export const SONIDOS = {
   muerte:  { duck: .8, capas: [{ o: 'tono', forma: 'sawtooth', f: [300, 60], d: .7, v: .1 }, { o: 'ruido', filtro: 'lowpass', f: [800, 100], d: .6, v: .18 }] },
 
   // ---------------------------------------------------------------- curación y escudos
-  curacion: { gap: 60, capas: [...arpegio([523, 659, 784], { d: .15, v: .08 }), { o: 'ruido', filtro: 'highpass', f: [6000, 8000], d: .3, v: .03 }] },
+  curacion: { gap: 120, archivo: 'assets/audio/sfx/curacion.mp3', v: .85, capas: [...arpegio([523, 659, 784], { d: .15, v: .08 }), { o: 'ruido', filtro: 'highpass', f: [6000, 8000], d: .3, v: .03 }] },
   escudo:   { gap: 60, capas: [{ o: 'tono', forma: 'triangle', f: [300, 600], d: .25, v: .12 }, { o: 'tono', forma: 'sine', f: [600, 1200], d: .3, v: .06, t: .05 }] },
   robo:     { capas: [{ o: 'tono', forma: 'sawtooth', f: [200, 500], d: .25, v: .05 }, { o: 'tono', forma: 'sine', f: [400, 800], d: .25, v: .06 }] },
 
