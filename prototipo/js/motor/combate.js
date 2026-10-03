@@ -3,7 +3,7 @@
 // - Ningún personaje tiene código propio: sus fichas solo combinan piezas (acciones, gatillos, condiciones, efectos).
 // - Todo el azar pasa por un generador con semilla (misma semilla + mismas decisiones = misma partida).
 
-import { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, CONTROL, DOT, BUFFS, DEBUFFS } from './reglas.js';
+import { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, CONTROL, DOT, BUFFS, DEBUFFS, probAplicar } from './reglas.js';
 import { EFECTOS, esDe } from './efectos.js';
 import { crearRng } from './rng.js';
 import { RELIQUIAS } from '../datos/reliquias.js';
@@ -62,7 +62,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       if (e.id === 'wear') sec.armor -= e.valor;
       if (e.id === 'freeze') pct.spd -= CONTROL.congelacionVel * (e.mega ? 2 : 1);
     }
-    sec.armor = Math.max(0, sec.armor); sec.acc = Math.max(0, sec.acc);   // Armadura y Puntería nunca bajan de 0%
+    sec.armor = Math.max(0, sec.armor);   // la Armadura nunca baja de 0% (la Puntería sí puede quedar negativa, p. ej. con Ceguera)
     for (const l of lideresDe(p)) {          // líder "bonoPorEfecto": +valor a una estadística por cada enemigo con ese efecto
       const b = l.lider?.bonoPorEfecto;
       if (b) sec[b.stat] = (sec[b.stat] || 0) + b.valor * enemigosDe(p).filter(x => get(x, b.efecto)).length;
@@ -517,7 +517,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (t.muerto) return;
     if (def.tipo === 'buff') { aplicarEfecto(a, t, acc); return; }       // los buffs a aliados siempre se aplican
     const sa = stats(a), st = stats(t);
-    if (rng() >= sa.acc - st.res) { emitir('resistido', { a: t.uid, id: acc.id }); return; }
+    if (rng() >= probAplicar(sa.acc, st.res)) { emitir('resistido', { a: t.uid, id: acc.id }); return; }
     aplicarEfecto(a, t, acc);
   }
 
@@ -671,7 +671,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     let buf = t.estados.filter(e => EFECTOS[e.id].tipo === 'buff' && (!acc.etiqueta || esDe(e, acc.etiqueta)));
     if (acc.cantidad && buf.length > acc.cantidad) buf = [...buf].sort(() => rng() - .5).slice(0, acc.cantidad);
     let n = 0;
-    for (const b of buf) if (rng() < sa.acc - st.res) { quitar(t, b); n++; }
+    for (const b of buf) if (rng() < probAplicar(sa.acc, st.res)) { quitar(t, b); n++; }
     emitir('disipar', { de: a.uid, a: t.uid, n }, t);
   }
 

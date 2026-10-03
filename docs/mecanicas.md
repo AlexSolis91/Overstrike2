@@ -13,8 +13,8 @@ está aquí, primero se define y se agrega a este registro; nunca se programa "s
 | HP, Daño, Velocidad | De la ficha | HP 500–800 · Daño 40–90 · Velocidad 60–100 · regla **1 Daño ≈ 10 HP** |
 | Prob. Crítico | 5% | |
 | Daño Crítico | 50% | Crítico = daño × (1 + Daño Crítico) |
-| Puntería | 50% | Probabilidad de aplicar debuffs a enemigos (− Resistencia). Los buffs no la usan |
-| Resistencia | 0% | Se resta a la Puntería del rival |
+| Puntería | 0% | Para aplicar debuffs a enemigos, contra su Resistencia (ver **Tirada de Puntería**). Los buffs no la usan. Puede quedar negativa (Ceguera) |
+| Resistencia | 50% | Defiende de los debuffs contra la Puntería del rival |
 | Armadura | 0% | Reduce el daño recibido · **tope 75%** |
 | Bloqueo | 0% | Anula el movimiento completo (daño y efectos) · **tope 50%** |
 | Daño DoT | 0% | Aumenta los DoT que aplica |
@@ -89,13 +89,13 @@ Cada personaje tiene exactamente **3 movimientos**, una **pasiva** y, opcionalme
 Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para filtros.
 
 - **Aplicación:**
-  - Debuff a enemigo: `Puntería − Resistencia`.
+  - Debuff a enemigo: **Tirada de Puntería** (estilo Raid). Si la Puntería del atacante **≥** la Resistencia del objetivo, **entra siempre**. Si no, la probabilidad es `100% − (Resistencia − Puntería)`, con un **mínimo de 10%** (nadie es inmune solo por estadísticas). Ej.: base contra base (0% vs 50%) = 50%; con Agudeza (50% vs 50%) = 100%; contra Protección (0% vs 80%) = 20%.
   - **Buffs a aliados (incluido uno mismo): siempre se aplican (100%).**
 - **Siempre se aplican (100%):** curaciones directas, **escudos**, limpiezas y buffs.
   - Escudo y Curación son conceptos **separados**, con etiquetas distintas.
   - Los **escudos no tienen duración ni tope**: se acumulan y duran hasta que los rompen.
 - **Limpiar** (debuffs de aliados): nunca falla.
-- **Disipar** (buffs de enemigos): una tirada `Puntería − Resistencia` **por cada buff**.
+- **Disipar** (buffs de enemigos): una **Tirada de Puntería** **por cada buff**.
 - Si se quitan menos de los que hay, se eligen **al azar**.
 
 ### DoT (etiqueta `DoT`)
@@ -135,13 +135,13 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | 💢 Frenesí | Estadística | **+50% Prob. Crítico** (puntos: 5% → 55%) |
 | ⚡ Celeridad | Estadística | **+20% Velocidad** |
 | 🪓 Letalidad | Estadística | **+30% Daño Crítico** (puntos: 50% → 80%) |
-| 🏹 Agudeza | Estadística | **+50% Puntería** (puntos: 50% → 100%) |
+| 🏹 Agudeza | Estadística | **+50% Puntería** (puntos: 0% → 50%; contra Resistencia base, entra siempre) |
 
 ### Debuffs de estadística
 
 | Debuff | Etiquetas | Efecto |
 |---|---|---|
-| 🕶️ Ceguera | Estadística | **−50 puntos de Puntería** (50% → 0%). Solo afecta la aplicación de debuffs y Disipar (los golpes no fallan; para eso existe Bloqueo) |
+| 🕶️ Ceguera | Estadística | **−50 puntos de Puntería** (0% → −50%; contra Resistencia base solo entra el mínimo de 10%). Solo afecta la aplicación de debuffs y Disipar (los golpes no fallan; para eso existe Bloqueo) |
 | 💥 Desgaste | Estadística | −5 puntos de Armadura al aplicarse y −5 más por cada golpe recibido (no bloqueado), hasta −25. Sin duración: dura hasta que lo limpien. Reaplicarlo no suma. La Armadura nunca baja de 0% |
 | 🦠 Peste | Peste | No puede recibir **ninguna** curación (incluye robo de vida, Robar HP, Regeneración y pasivas). Sí recibe escudos. Peste sobre Peste = Peste Negra |
 | ☠️ Peste Negra | Peste | Igual que Peste y además, al final de cada turno del portador (también si lo perdió), pierde **5% del HP máx. original** (piso: 25%). No es daño: el HP actual solo baja si queda por encima del nuevo máximo. La pérdida es **permanente** aunque se limpie (solo la recuperan futuras mecánicas de aumento de HP máx.) |
@@ -168,7 +168,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | `danoEfecto` | fraccion | Daño por efecto = fracción del daño que activó la acción |
 | `replicarDoT` | efecto, factor | Daño por efecto igual a factor × el DoT del objetivo, sobre el HP máx. de cada destino |
 | `detonar` | — | Explota ya todas las Bombas del objetivo |
-| `propagar` | efecto | Copia un debuff del objetivo principal **en su estado actual** (intensidad, duración restante, acumulación, turnos, capas, reducción de Desgaste…) a los destinos. Cada copia tira Puntería − Resistencia y se apila con las reglas normales. Funciona aunque el objetivo muera. **Restricción:** si la ficha indica un debuff (`efecto: 'burn'`, como Purgatorio de Rengoku), solo propaga ese y, si el objetivo no lo tiene, no pasa nada. Sin restricción (`efecto: 'azar'`, como Bola de Fuerza de Reptile), elige uno al azar entre **cualquier** debuff que el objetivo **ya tenía antes** del movimiento. El Silencio copiado bloquea un movimiento al azar del nuevo objetivo |
+| `propagar` | efecto | Copia un debuff del objetivo principal **en su estado actual** (intensidad, duración restante, acumulación, turnos, capas, reducción de Desgaste…) a los destinos. Cada copia hace su Tirada de Puntería y se apila con las reglas normales. Funciona aunque el objetivo muera. **Restricción:** si la ficha indica un debuff (`efecto: 'burn'`, como Purgatorio de Rengoku), solo propaga ese y, si el objetivo no lo tiene, no pasa nada. Sin restricción (`efecto: 'azar'`, como Bola de Fuerza de Reptile), elige uno al azar entre **cualquier** debuff que el objetivo **ya tenía antes** del movimiento. El Silencio copiado bloquea un movimiento al azar del nuevo objetivo |
 | `escudo` con `base: 'danoCausado'` | pct | Escudo igual a un % del daño total causado por el movimiento |
 | `efecto` con `idAzar: [ids]` | sinRepetir | Elige al azar uno de los efectos (por cada objetivo). Con `sinRepetir` no elige uno que el objetivo ya tenga activo |
 | `extenderInvocaciones` | turnos | +N turnos de duración a todas las invocaciones activas del objetivo |

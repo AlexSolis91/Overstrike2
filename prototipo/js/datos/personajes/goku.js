@@ -2,7 +2,7 @@ import { espacios } from '../reliquias.js';
 
 // Ficha oficial #6 (revisada el 2026-10-01). Dos transformaciones PERMANENTES encadenadas:
 // Goku -> Goku Super Sayajin -> Goku Super Sayajin 3. Cada forma trae sus propias estadísticas base;
-// "extra" = diferencia contra la base común (Prob. Crítico 5%, Resistencia 0%, Penetración de escudo 0%, Armadura 0%).
+// "extra" = diferencia contra la base común (Prob. Crítico 5%, Resistencia 50%, Penetración de escudo 0%, Armadura 0%).
 
 const sangreSayajin = {
   nombre: 'Sangre Sayajin',

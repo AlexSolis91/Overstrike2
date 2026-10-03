@@ -3,11 +3,16 @@
 // Estadísticas secundarias con las que empiezan todos los personajes (la ficha suma "extra" encima).
 export const BASE_COMUN = {
   critRate: .05, critDmg: .50,
-  acc: .50, res: 0,
+  acc: 0, res: .50,
   armor: 0, block: 0, dot: 0, pen: 0,
 };
 
 export const TOPES = { block: .50, armor: .75 };
+
+// Tirada de debuffs (estilo Raid): si la Puntería alcanza a la Resistencia, el debuff entra siempre;
+// si no, la probabilidad baja 1% por cada punto de diferencia, sin bajar del mínimo.
+export const PUNTERIA = { minimo: .10 };
+export const probAplicar = (acc, res) => acc >= res ? 1 : Math.max(PUNTERIA.minimo, 1 - (res - acc));
 
 // Escalado de movimientos: primero se calcula el "Daño base" y luego se aplica el % del movimiento.
 export const ESCALADO = {
