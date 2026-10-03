@@ -298,3 +298,11 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Opciones por sonido:** `v` volumen, `dur` segundos máximos (con desvanecimiento), `var` variación de tono, `gap` tiempo mínimo entre repeticiones, `duck` baja la música mientras suena. Los archivos se precargan al primer toque.
 - **Música** (`assets/audio/`): `menu.mp3` (lobby y equipos, en bucle), `batalla-1/2/3.mp3` (uno al azar en cada partida, en bucle), `victoria.mp3` y `derrota.mp3` (al terminar). Transición suave entre pantallas.
 - **Ajustes (🔊):** volumen de Música y de Efectos y Silenciar todo, guardados por dispositivo. Los navegadores solo dejan sonar después del primer toque del jugador.
+
+## 15. Cinemática de Over
+
+- Al ejecutar un **Over**, antes de que ocurra cualquier cosa: la pantalla se oscurece, la **carta del personaje** (con su HP, Daño y Velocidad actuales) vuela al centro y crece con un aura y rayos del color del Over, aparece "— OVER —" y el **nombre del movimiento**, y la carta regresa a su lugar.
+- **Solo cuando la cinemática termina** ocurre el Over: transformaciones con su propia animación, golpes, efectos. El primer golpe del Over sacude la pantalla.
+- Suena el sonido de Over y la música baja mientras dura.
+- Los Overs **rivales** van un 25% más rápido. **Tocar la pantalla** la acelera. En ⚙️ Ajustes: **"Cinemática de Over rápida"** (el doble de rápida), guardado por dispositivo.
+

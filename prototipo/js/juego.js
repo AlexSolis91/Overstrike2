@@ -1,5 +1,5 @@
 // Punto de entrada: une el motor (reglas) con la interfaz (animaciones y panel).
-import { iniciarEscena, G, W, wait, banner, relayout } from './ui/graficos.js';
+import { iniciarEscena, G, W, wait, banner, relayout, shakeScene } from './ui/graficos.js';
 import { precargar } from './ui/imagenes.js';
 import { Carta } from './ui/carta.js';
 import * as FX from './ui/fx.js';
@@ -9,7 +9,7 @@ import { elegirIA } from './motor/ia.js';
 import { OFICIALES, porId } from './datos/personajes/index.js';
 import { iniciarMenu, irA, presentarVS, cargarSeleccion } from './ui/menu.js';
 import { iniciarGuia, cerrarGuia, guiaAbierta } from './ui/guia.js';
-import { sonar, finDePartida, iniciarAjustes, ajustesAbiertos, cerrarAjustes } from './ui/audio.js';
+import { sonar, finDePartida, iniciarAjustes, ajustesAbiertos, cerrarAjustes, ajustes } from './ui/audio.js';
 import { EFECTOS } from './motor/efectos.js';
 import { INVOCACIONES } from './datos/invocaciones.js';
 
@@ -98,6 +98,7 @@ function barra() {
 
 // ---------------------------------------------------------------- reproducción de eventos
 let embestida = null, sprInvocacion = null;
+let overEnCurso = null;            // uid del que está ejecutando un Over (para el impacto de su primer golpe)
 const MOTIVO = { stun: '💫 PIERDE EL TURNO', freeze: '🧊 CONGELADO', silence: '🔇 SILENCIADO' };
 
 // Sonido de cada evento (todo pasa por el registro universal de sonidos)
@@ -177,7 +178,11 @@ async function manejar(e) {
     case 'movimiento': {
       const a = c(e.id), objetivos = e.objetivos.map(c);
       log(`${nombre(e.id)} usa ${e.nombre}`, 'sys');
-      if (e.categoria === 'over') { banner(e.nombre.toUpperCase(), { size: 44, color: '#fbbf24', hold: .6 }); await wait(550); }
+      if (e.categoria === 'over') {        // cinemática: termina COMPLETA antes de que ocurra el Over
+        const vel = (por(e.id).lado === 'rival' ? 1.25 : 1) * (ajustes().overRapido ? 2 : 1);
+        await FX.cinematicaOver(a, e.nombre, e.color, { velocidad: vel });
+        overEnCurso = e.id;
+      }
       if (e.estilo === 'melee' && objetivos[0] && objetivos[0] !== a) { await FX.embestir(a, objetivos[0]); embestida = a; }
       else {
         FX.lanzar(a, e.color);
@@ -188,7 +193,7 @@ async function manejar(e) {
       break;
     }
     case 'movimientoFin':
-      aplicar(e);
+      aplicar(e); overEnCurso = null;
       if (embestida) { await FX.regresar(embestida); embestida = null; }
       break;
     case 'bloqueo':
@@ -196,6 +201,7 @@ async function manejar(e) {
       break;
     case 'golpe':
       aplicar(e); FX.golpe(c(e.a), e);
+      if (overEnCurso && e.de === overEnCurso) { overEnCurso = null; shakeScene(11); await wait(90); }   // impacto del Over
       log(`${e.fuente || nombre(e.de)} → ${nombre(e.a)}: -${Math.round(e.dano)}${e.escudo >= 1 ? ` (🛡 -${Math.round(e.escudo)})` : ''}${e.critico ? ' ¡Crítico!' : ''}`, 'dmg');
       await wait(e.multi ? 240 : 170);
       break;

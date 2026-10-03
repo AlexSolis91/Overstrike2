@@ -2,7 +2,7 @@
 // Los navegadores solo dejan sonar una página después de que el jugador toca algo: el audio se activa con el primer toque.
 import { SONIDOS, MUSICA } from '../datos/sonidos.js';
 
-const AJ = { musica: .5, efectos: .8, mudo: false };
+const AJ = { musica: .5, efectos: .8, mudo: false, overRapido: false };
 try { Object.assign(AJ, JSON.parse(localStorage.getItem('os2-audio') || '{}')); } catch (e) { /* sin almacenamiento */ }
 const guardar = () => { try { localStorage.setItem('os2-audio', JSON.stringify(AJ)); } catch (e) { /* sin almacenamiento */ } };
 
@@ -123,7 +123,7 @@ function agacharMusica(seg) {
 export function iniciarAjustes() {
   const $ = s => document.querySelector(s);
   const pintar = () => {
-    $('#aj-musica').value = Math.round(AJ.musica * 100); $('#aj-efectos').value = Math.round(AJ.efectos * 100); $('#aj-mudo').checked = AJ.mudo;
+    $('#aj-musica').value = Math.round(AJ.musica * 100); $('#aj-efectos').value = Math.round(AJ.efectos * 100); $('#aj-mudo').checked = AJ.mudo; $('#aj-over').checked = AJ.overRapido;
     $('#aj-musica-v').textContent = `${Math.round(AJ.musica * 100)}%`; $('#aj-efectos-v').textContent = `${Math.round(AJ.efectos * 100)}%`;
     for (const b of document.querySelectorAll('[data-abre-ajustes]')) b.textContent = AJ.mudo ? '🔇' : '🔊';
   };
@@ -133,6 +133,7 @@ export function iniciarAjustes() {
   $('#aj-efectos').addEventListener('input', e => { ajustar({ efectos: e.target.value / 100 }); pintar(); });
   $('#aj-efectos').addEventListener('change', () => sonar('golpe'));
   $('#aj-mudo').addEventListener('change', e => { ajustar({ mudo: e.target.checked }); pintar(); });
+  $('#aj-over').addEventListener('change', e => ajustar({ overRapido: e.target.checked }));
   $('#aj-probar').addEventListener('click', () => { ['golpe', 'curacion', 'escudo', 'veneno'].forEach((n, i) => setTimeout(() => sonar(n), i * 700)); });
   pintar();
 }

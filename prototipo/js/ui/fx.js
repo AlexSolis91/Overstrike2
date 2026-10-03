@@ -1,5 +1,5 @@
 // Animaciones de los eventos del combate sobre las cartas.
-import { G, CW, CH, EMOJI_FONT, wait, rand, pick, cssHex, spawn, burst, txt, floatText, shakeScene, ringWave, slash, proyectil, banner } from './graficos.js';
+import { G, W, H, CW, CH, EMOJI_FONT, wait, rand, pick, cssHex, spawn, burst, txt, floatText, shakeScene, ringWave, slash, proyectil, banner } from './graficos.js';
 import { TEX_INVOCACION } from './imagenes.js';
 import { INVOCACIONES } from '../datos/invocaciones.js';
 const { PIXI, gsap } = window;
@@ -317,4 +317,74 @@ export function invocacionSeVa(carta, key) {
   const def = INVOCACIONES[key];
   const p = posMedallon(carta, 0);
   burst(p.x, p.y, { n: 16, colors: [def.color, 0x9aa3b2], speed: 4, size: .25 });
+}
+
+// ---------------------------------------------------------------- cinemática de Over (estilo Master Duel)
+// La carta sale de su lugar, crece al centro con aura, rayos y el nombre del Over, y vuelve. La promesa termina
+// cuando la carta ya regresó: recién entonces el juego ejecuta el Over (golpes, transformación…), a la vista.
+// velocidad: 1 normal · más alto = más rápida. Tocar la pantalla la acelera.
+export function cinematicaOver(carta, nombre, color, { velocidad = 1 } = {}) {
+  return new Promise(resolve => {
+    const col = typeof color === 'number' ? color : parseInt(String(color).replace('#', ''), 16) || 0xfbbf24;
+    const cx = W / 2, cy = H / 2 - 45;
+    const capa = new PIXI.Container(); G.scene.addChild(capa);          // encima de todo el tablero
+    const fondo = new PIXI.Graphics().rect(-W, -H, W * 3, H * 3).fill(0x020409); fondo.alpha = 0;
+    const rayos = new PIXI.Graphics();
+    for (let i = 0; i < 18; i++) {
+      const a = i / 18 * Math.PI * 2, r = 1100;
+      rayos.poly([0, 0, Math.cos(a - .05) * r, Math.sin(a - .05) * r, Math.cos(a + .05) * r, Math.sin(a + .05) * r]).fill({ color: col, alpha: .16 });
+    }
+    rayos.blendMode = 'add'; rayos.position.set(cx, cy); rayos.alpha = 0;
+    const halo = new PIXI.Sprite(G.dotTex); halo.anchor.set(.5); halo.tint = col; halo.blendMode = 'add'; halo.position.set(cx, cy); halo.scale.set(0); halo.alpha = 0;
+    const borde = new PIXI.Sprite(G.dotTex); borde.anchor.set(.5); borde.tint = 0xffffff; borde.blendMode = 'add'; borde.position.set(cx, cy); borde.scale.set(0); borde.alpha = 0;
+    // "foto" de la carta completa (ilustración + HP, Daño, Velocidad, estados) a doble resolución para que se vea nítida grande
+    let foto = null;
+    try {
+      const rot = carta.body.rotation; carta.body.rotation = 0;
+      foto = G.app.renderer.generateTexture({ target: carta.body, resolution: 2.5, antialias: true });
+      carta.body.rotation = rot;
+    } catch (e) { foto = null; }
+    const sp = new PIXI.Sprite(foto || carta.face.texture); sp.anchor.set(.5); sp.scale.set(foto ? 1 : .5);
+    const escalaBase = foto ? 1 : .5;
+    sp.position.set(carta.c.x, carta.c.y + carta.body.y);
+    const etiqueta = txt('— OVER —', { size: 20, weight: '900', font: 'Cinzel', fill: '#fbbf24', stroke: 5 });
+    etiqueta.position.set(cx, cy + 290); etiqueta.alpha = 0;
+    const titulo = txt(nombre.toUpperCase(), { size: 50, weight: '900', font: 'Cinzel', fill: '#fde68a', stroke: 8, shadow: true });
+    titulo.position.set(cx, cy + 330); titulo.alpha = 0; titulo.scale.set(.6);
+    const destello = new PIXI.Graphics().rect(-W, -H, W * 3, H * 3).fill(0xffffff); destello.alpha = 0; destello.blendMode = 'add';
+    capa.addChild(fondo, rayos, halo, borde, sp, etiqueta, titulo, destello);
+    carta.c.alpha = 0;                                                   // la original "se levanta" de su lugar
+
+    const tl = gsap.timeline({ onComplete: fin });
+    tl.to(fondo, { alpha: .8, duration: .25 })
+      .to(sp, { x: cx, y: cy, rotation: 0, duration: .5, ease: 'power3.out' }, .05)
+      .fromTo(sp, { rotation: -.35 }, { rotation: 0, duration: .5, ease: 'back.out(1.4)' }, .05)
+      .to(sp.scale, { x: 2.4 * escalaBase, y: 2.4 * escalaBase, duration: .5, ease: 'back.out(1.5)' }, .05)
+      .to(halo, { alpha: .6, duration: .3 }, .25).to(halo.scale, { x: 11, y: 11, duration: .6, ease: 'power2.out' }, .25)
+      .to(borde, { alpha: .35, duration: .2 }, .35).to(borde.scale, { x: 5.2, y: 6.6, duration: .4, ease: 'power2.out' }, .35)
+      .to(rayos, { alpha: 1, duration: .3 }, .35).to(rayos, { rotation: .7, duration: 1.7, ease: 'none' }, .35)
+      .add(() => {
+        destello.alpha = .55; gsap.to(destello, { alpha: 0, duration: .35 });
+        for (let i = 0; i < 40; i++) {
+          const a = rand(0, Math.PI * 2), v = rand(4, 11);
+          spawn({ layer: capa, x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, color: pick([col, 0xfde68a, 0xffffff]), size: rand(.25, .5), life: 30, drag: .93 });
+        }
+      }, .52)
+      .to(etiqueta, { alpha: 1, duration: .2 }, .58)
+      .to(titulo, { alpha: 1, duration: .2 }, .6).to(titulo.scale, { x: 1, y: 1, duration: .4, ease: 'back.out(2.6)' }, .6)
+      .to({}, { duration: .7 })                                          // momento de gloria
+      .to([titulo, etiqueta, rayos, halo, borde], { alpha: 0, duration: .25 })
+      .to(sp, { x: carta.c.x, y: carta.c.y + carta.body.y, duration: .35, ease: 'power2.in' }, '<')
+      .to(sp.scale, { x: escalaBase, y: escalaBase, duration: .35, ease: 'power2.in' }, '<')
+      .to(fondo, { alpha: 0, duration: .3 }, '<+.1');
+    tl.timeScale(velocidad);
+    const acelerar = () => tl.timeScale(Math.max(velocidad, 1) * 4);     // tocar para saltar
+    G.app.canvas.addEventListener('pointerdown', acelerar);
+    function fin() {
+      G.app.canvas.removeEventListener('pointerdown', acelerar);
+      carta.c.alpha = 1;
+      setTimeout(() => { capa.destroy({ children: true }); foto?.destroy(true); }, 600);   // da tiempo a que terminen las partículas
+      resolve();
+    }
+  });
 }
