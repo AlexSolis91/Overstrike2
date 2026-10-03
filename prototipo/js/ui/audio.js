@@ -26,6 +26,7 @@ function iniciar() {
   const n = ctx.sampleRate;                         // 1 s de ruido blanco reutilizable
   ruidoBuf = ctx.createBuffer(1, n, n);
   const d = ruidoBuf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  for (const s of Object.values(SONIDOS)) if (s.archivo) cargarArchivo(s.archivo);   // precarga los efectos con archivo
   if (deseada) musica(deseada);
 }
 for (const ev of ['pointerdown', 'keydown', 'touchend']) addEventListener(ev, iniciar, { capture: true, passive: true });
@@ -71,11 +72,17 @@ export function sonar(nombre) {
   if (voces > 10) return;                                          // límite de sonidos simultáneos
   ultimo[nombre] = ahora;
   if (s.duck) agacharMusica(s.duck);
-  if (s.archivo && buffers[s.archivo]) {
-    const src = ctx.createBufferSource(); src.buffer = buffers[s.archivo]; src.connect(busEfectos); src.start();
+  if (s.archivo && buffers[s.archivo] !== 'fallo') {      // efecto con archivo real (nunca usa el sintetizado salvo que el archivo falle)
+    const buf = buffers[s.archivo];
+    if (!buf) { if (!(s.archivo in buffers)) cargarArchivo(s.archivo); return; }   // aún cargando: se omite esta vez
+    const src = ctx.createBufferSource(), g = ctx.createGain(), t = ctx.currentTime;
+    src.buffer = buf; src.playbackRate.value = 1 + (Math.random() * 2 - 1) * (s.var || 0);
+    g.gain.value = s.v ?? 1;
+    const d = Math.min(s.dur || buf.duration, buf.duration);   // dur: corta el archivo a esos segundos con un desvanecimiento
+    if (d < buf.duration) { g.gain.setValueAtTime(s.v ?? 1, t + Math.max(0, d - .15)); g.gain.linearRampToValueAtTime(0, t + d); }
+    src.connect(g); g.connect(busEfectos); src.start(t, 0, d + .02);
     voces++; src.onended = () => voces--; return;
   }
-  if (s.archivo && !(s.archivo in buffers)) cargarArchivo(s.archivo);
   const varTono = 1 + (Math.random() * 2 - 1) * (s.var || 0);
   const t0 = ctx.currentTime + .005;
   let fin = t0;
@@ -83,8 +90,13 @@ export function sonar(nombre) {
   voces++; setTimeout(() => voces--, (fin - t0) * 1000 + 60);
 }
 async function cargarArchivo(src) {
-  buffers[src] = null;
-  try { buffers[src] = await ctx.decodeAudioData(await (await fetch(src)).arrayBuffer()); } catch (e) { delete buffers[src]; }
+  if (src in buffers) return;
+  buffers[src] = null;                                        // null = cargando
+  try {
+    const r = await fetch(src);
+    if (!r.ok) throw new Error(r.status);
+    buffers[src] = await ctx.decodeAudioData(await r.arrayBuffer());
+  } catch (e) { buffers[src] = 'fallo'; console.warn('No se pudo cargar el sonido', src); }   // usa el sintetizado
 }
 
 // ---------------------------------------------------------------- música

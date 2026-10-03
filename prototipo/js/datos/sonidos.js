@@ -5,6 +5,7 @@
 //   { o: 'ruido', filtro: 'lowpass'|'highpass'|'bandpass', f: [inicio, fin] Hz, q, d, v, t }
 // Opcionales del sonido: var (variación de tono al azar, 0.06 = ±6%), duck (baja la música unos segundos), gap (ms mínimos entre repeticiones).
 // Para usar un ARCHIVO real en lugar del sintetizado: archivo: 'assets/audio/sfx/golpe.mp3'
+//   con archivo, opcionales: v (volumen 0–1), dur (segundos máx.; corta con desvanecimiento), var (variación de velocidad/tono)
 
 // Música: si el archivo no existe todavía, esa pista simplemente no suena (Victoria/Derrota usan su versión sintetizada).
 export const MUSICA = {
@@ -54,7 +55,7 @@ export const SONIDOS = {
 
   // ---------------------------------------------------------------- daño por turno (DoT)
   quemadura:  { gap: 60, capas: [{ o: 'ruido', filtro: 'bandpass', f: [1200, 700], q: 2, d: .25, v: .18 }, { o: 'ruido', filtro: 'highpass', f: [4000, 4000], d: .2, v: .04 }] },
-  veneno:     { gap: 60, capas: [{ o: 'tono', forma: 'sine', f: [300, 180], d: .15, v: .1 }, { o: 'tono', forma: 'sine', f: [420, 250], d: .15, v: .08, t: .08 }] },
+  veneno:     { gap: 60, archivo: 'assets/audio/sfx/veneno.mp3', dur: 1.6, v: .9, capas: [{ o: 'tono', forma: 'sine', f: [300, 180], d: .15, v: .1 }, { o: 'tono', forma: 'sine', f: [420, 250], d: .15, v: .08, t: .08 }] },
   sangrado:   { gap: 60, capas: [{ o: 'ruido', filtro: 'lowpass', f: [900, 200], d: .2, v: .2 }, { o: 'tono', forma: 'sine', f: [120, 70], d: .2, v: .16 }] },
   solar:      { gap: 60, capas: [{ o: 'tono', forma: 'square', f: [660, 330], d: .25, v: .06 }, { o: 'ruido', filtro: 'highpass', f: [5000, 5000], d: .2, v: .05 }] },
   explosion:  { duck: .8, capas: [{ o: 'ruido', filtro: 'lowpass', f: [2500, 80], d: .7, v: .42 }, { o: 'tono', forma: 'sine', f: [90, 30], d: .6, v: .38 }] },
