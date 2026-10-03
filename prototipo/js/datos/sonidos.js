@@ -39,11 +39,11 @@ export const SONIDOS = {
   over:   { duck: 1.4, capas: [{ o: 'ruido', filtro: 'lowpass', f: [3000, 60], d: .9, v: .4 }, { o: 'tono', forma: 'sawtooth', f: [55, 40], d: .9, v: .16 }, { o: 'tono', forma: 'square', f: [220, 880], d: .45, v: .05 }] },
 
   // ---------------------------------------------------------------- impactos
-  golpe:   { var: .07, gap: 35, capas: [{ o: 'ruido', filtro: 'lowpass', f: [1800, 300], d: .12, v: .3 }, { o: 'tono', forma: 'triangle', f: [180, 60], d: .12, v: .26 }] },
-  critico: { var: .05, capas: [{ o: 'ruido', filtro: 'lowpass', f: [2600, 250], d: .18, v: .38 }, { o: 'tono', forma: 'triangle', f: [200, 50], d: .18, v: .3 }, { o: 'tono', forma: 'square', f: [880, 220], d: .18, v: .1 }, { o: 'ruido', filtro: 'bandpass', f: [3000, 800], q: 1, d: .15, v: .16 }] },
+  golpe:   { var: .05, gap: 35, archivo: 'assets/audio/sfx/golpe.mp3', v: .85, capas: [{ o: 'ruido', filtro: 'lowpass', f: [1800, 300], d: .12, v: .3 }, { o: 'tono', forma: 'triangle', f: [180, 60], d: .12, v: .26 }] },
+  critico: { var: .03, archivo: 'assets/audio/sfx/golpe.mp3', v: 1, capas: [{ o: 'ruido', filtro: 'lowpass', f: [2600, 250], d: .18, v: .38 }, { o: 'tono', forma: 'triangle', f: [200, 50], d: .18, v: .3 }, { o: 'tono', forma: 'square', f: [880, 220], d: .18, v: .1 }, { o: 'ruido', filtro: 'bandpass', f: [3000, 800], q: 1, d: .15, v: .16 }] },
   efectoDano: { var: .07, gap: 35, capas: [{ o: 'ruido', filtro: 'bandpass', f: [1400, 400], q: 1, d: .12, v: .18 }] },
   bloqueo: { capas: [{ o: 'tono', forma: 'square', f: [300, 280], d: .06, v: .14 }, { o: 'tono', forma: 'triangle', f: [1200, 1150], d: .16, v: .1 }, { o: 'ruido', filtro: 'highpass', f: [3000, 3000], d: .05, v: .12 }] },
-  escudoGolpe: { var: .05, gap: 35, capas: [{ o: 'tono', forma: 'sine', f: [1400, 900], d: .2, v: .1 }, { o: 'ruido', filtro: 'bandpass', f: [5000, 2000], q: 1, d: .1, v: .08 }] },
+  escudoGolpe: { var: .05, gap: 35, archivo: 'assets/audio/sfx/golpe.mp3', v: .55, capas: [{ o: 'tono', forma: 'sine', f: [1400, 900], d: .2, v: .1 }, { o: 'ruido', filtro: 'bandpass', f: [5000, 2000], q: 1, d: .1, v: .08 }] },
   quiebre: { capas: [{ o: 'ruido', filtro: 'highpass', f: [6000, 2500], d: .25, v: .22 }, { o: 'tono', forma: 'triangle', f: [2000, 2600], d: .12, v: .08 }, { o: 'tono', forma: 'triangle', f: [2400, 3000], d: .12, v: .06, t: .05 }] },
   esquiva: { capas: [{ o: 'ruido', filtro: 'bandpass', f: [3000, 1200], q: 1, d: .15, v: .1 }] },
   muerte:  { duck: .8, capas: [{ o: 'tono', forma: 'sawtooth', f: [300, 60], d: .7, v: .1 }, { o: 'ruido', filtro: 'lowpass', f: [800, 100], d: .6, v: .18 }] },
