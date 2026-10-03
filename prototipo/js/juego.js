@@ -288,7 +288,7 @@ async function manejar(e) {
       log(`${nombre(e.a)} esquiva el ataque de área`, 'fx');
       break;
     case 'sigiloRoto':
-      aplicar(e); FX.textoSobre(c(e.a), '🌫️ Sigilo roto', '#cbd5e1', 14, -125);
+      aplicar(e); FX.textoSobre(c(e.a), '👤 Sigilo roto', '#cbd5e1', 14, -125);
       log(`${nombre(e.a)} pierde el Sigilo`, 'fx');
       break;
     case 'turnoExtraGanado':

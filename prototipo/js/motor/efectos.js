@@ -50,7 +50,7 @@ export const EFECTOS = {
     desc: `Quien lo golpee recibe Quemadura 5% (1 turno).` },
   aoeDodge: { nombre: 'Esquiva Área', icono: '💨', color: 0x93c5fd, tipo: 'buff', tags: ['Esquiva'],
     desc: `No lo alcanzan los movimientos de área de los enemigos: ni su daño ni sus efectos.` },
-  stealth: { nombre: 'Sigilo',      icono: '🌫️', color: 0x94a3b8, tipo: 'buff', tags: ['Sigilo'],
+  stealth: { nombre: 'Sigilo',      icono: '👤', color: 0x94a3b8, tipo: 'buff', tags: ['Sigilo'],
     desc: `Los enemigos no pueden elegirlo con ataques de un solo objetivo. Se rompe al recibir cualquier daño.` },
   pierce:  { nombre: 'Perforación', icono: '🗡️', color: 0x22d3ee, tipo: 'buff', tags: ['Estadística'],
     desc: `+${p(BUFFS.perforacion)} de Penetración de escudo: esa parte del daño pasa directo al HP aunque el objetivo tenga Escudo.` },
