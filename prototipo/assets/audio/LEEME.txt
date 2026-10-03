@@ -1,0 +1,5 @@
+Pon aqui la musica del juego (MP3):
+  menu.mp3      - lobby y construccion de equipo (en bucle)
+  batalla.mp3   - durante la partida (en bucle)
+  victoria.mp3  - al ganar (corta)
+  derrota.mp3   - al perder (corta)

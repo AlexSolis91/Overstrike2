@@ -1,6 +1,7 @@
 // Guía de efectos: manual con todos los buffs (izquierda) y debuffs (derecha) del registro universal.
 // Se arma sola desde EFECTOS, así que cada efecto nuevo aparece aquí sin tocar este archivo.
 import { EFECTOS } from '../motor/efectos.js';
+import { sonar } from './audio.js';
 
 const $ = s => document.querySelector(s);
 const MEGA = { stun: 'Mega Aturdimiento', freeze: 'Mega Congelación', possess: 'Mega Posesión' };
@@ -23,7 +24,7 @@ function filtrar() {
   const q = sinAcentos($('#gu-buscar').value.trim());
   for (const el of document.querySelectorAll('.gu-item')) el.classList.toggle('oculto', !!q && !el.dataset.buscar.includes(q));
 }
-export function abrirGuia() { $('#guia').classList.remove('hidden'); $('#gu-buscar').value = ''; filtrar(); }
+export function abrirGuia() { sonar('abrir'); $('#guia').classList.remove('hidden'); $('#gu-buscar').value = ''; filtrar(); }
 export const cerrarGuia = () => $('#guia').classList.add('hidden');
 export const guiaAbierta = () => !$('#guia').classList.contains('hidden');
 

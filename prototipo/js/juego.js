@@ -9,6 +9,8 @@ import { elegirIA } from './motor/ia.js';
 import { OFICIALES, porId } from './datos/personajes/index.js';
 import { iniciarMenu, irA, presentarVS, cargarSeleccion } from './ui/menu.js';
 import { iniciarGuia, cerrarGuia, guiaAbierta } from './ui/guia.js';
+import { sonar, finDePartida, iniciarAjustes, ajustesAbiertos, cerrarAjustes } from './ui/audio.js';
+import { EFECTOS } from './motor/efectos.js';
 import { INVOCACIONES } from './datos/invocaciones.js';
 
 const { gsap } = window;
@@ -98,8 +100,46 @@ function barra() {
 let embestida = null, sprInvocacion = null;
 const MOTIVO = { stun: '💫 PIERDE EL TURNO', freeze: '🧊 CONGELADO', silence: '🔇 SILENCIADO' };
 
+// Sonido de cada evento (todo pasa por el registro universal de sonidos)
+const SONIDO_DOT = { burn: 'quemadura', poison: 'veneno', bleed: 'sangrado', hemo: 'sangrado', bomb: 'explosion', solarBurn: 'solar' };
+const SONIDO_CONTROL = { stun: 'aturdir', freeze: 'congelar', silence: 'silenciar' };
+function sonidoDe(e) {
+  switch (e.t) {
+    case 'ronda': return 'ronda';
+    case 'movimiento':
+      if (e.categoria === 'over') sonar('over');
+      return e.estilo === 'melee' ? 'melee' : e.estilo === 'support' ? 'magia' : e.objetivos?.length > 1 ? 'area' : 'lanzar';
+    case 'golpe':
+      if (e.quiebre) sonar('quiebre');
+      return e.critico ? 'critico' : e.dano < 1 && e.escudo > 0 ? 'escudoGolpe' : 'golpe';
+    case 'danoEfecto': return 'efectoDano';
+    case 'bloqueo': return 'bloqueo';
+    case 'robo': return 'robo';
+    case 'curacion': return e.cantidad >= 1 && !e.robo ? 'curacion' : null;
+    case 'escudo': return 'escudo';
+    case 'dot': return SONIDO_DOT[e.tipo];
+    case 'explosion': return 'explosion';
+    case 'efecto': return SONIDO_CONTROL[e.id] || (EFECTOS[e.id]?.tipo === 'buff' ? 'buff' : 'debuff');
+    case 'resistido': case 'inmune': return 'resistido';
+    case 'limpieza': return 'limpiar';
+    case 'disipar': return 'disipar';
+    case 'pierdeTurno': return 'pierdeTurno';
+    case 'muerte': return 'muerte';
+    case 'pasiva': return 'pasiva';
+    case 'liderActua': return 'lider';
+    case 'invocacion': return e.rareza === 'Legendario' ? 'invocacionLegendaria' : 'invocacion';
+    case 'invocacionAtaca': return 'lanzar';
+    case 'transformacion': return 'transformacion';
+    case 'turnoExtra': return 'turnoExtra';
+    case 'esquiva': return 'esquiva';
+    case 'sigiloRoto': return 'sigiloRoto';
+  }
+  return null;
+}
+
 async function manejar(e) {
   const c = uid => cartas[uid];
+  const s = sonidoDe(e); if (s) sonar(s);
   switch (e.t) {
     case 'ronda':
       $('#round-label').textContent = `Ronda ${e.n}`;
@@ -301,6 +341,7 @@ async function procesar(res) {
 
 function terminar(fin) {
   ui.fin = fin; ui.miTurno = false; ui.actual = null; ui.ocupado = true; barra(); setHint('');
+  finDePartida(fin.ganador === 'jugador');
   $('#ov-title').textContent = fin.ganador === 'jugador' ? 'Victoria' : 'Derrota';
   $('#ov-sub').textContent = `Combate terminado en la ronda ${fin.ronda}`;
   setTimeout(() => $('#overlay').classList.remove('hidden'), 700);
@@ -380,6 +421,7 @@ document.addEventListener('fullscreenchange', marcarFull);
 document.addEventListener('webkitfullscreenchange', marcarFull);
 addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
+  if (ajustesAbiertos()) { cerrarAjustes(); return; }
   if (guiaAbierta()) { cerrarGuia(); return; }
   if (document.body.classList.contains('panel-abierto')) { cerrarPanel(); return; }
   if (ui.movSel) cancelarObjetivo();
@@ -400,9 +442,13 @@ $('#test-panel').addEventListener('click', async e => {
 
 // Acceso para pruebas desde la consola del navegador (p. ej. que la IA juegue por el jugador)
 window.__os2 = { combate, ui, jugarIA: () => ui.miTurno && !ui.ocupado && (() => { const d = elegirIA(combate); return ejecutar(d.categoria, d.objetivo); })() };
+window.__os2.audio = { sonar, finDePartida };          // pruebas de sonido desde la consola
 window.__os2.empezar = (j, r) => jugar(j.map(porId), r.map(porId), 'construir');   // pruebas: __os2.empezar(['goku',...], [...])
 
 iniciarGuia();
+iniciarAjustes();
+// Clic de interfaz para todos los botones (los que tienen su propio sonido lo suman encima)
+document.addEventListener('click', e => { if (e.target.closest('button:not([disabled])')) sonar('clic'); }, true);
 
 // ---------------------------------------------------------------- inicio: menú, o directo a la partida si venimos de "Revancha"/"Jugar"
 iniciarMenu({ jugar: (j, r) => jugar(j, r, document.querySelector('.eq-modo button.on')?.dataset.modo || 'azar'), salirDePartida });

@@ -297,3 +297,17 @@ body.app-instalada #menu-full { visibility: hidden; }
 /* pantallas medianas: los botones de arriba solo con ícono para no tapar la barra de ronda */
 @media (max-width: 1800px) { #tools .lbl { display: none; } }
 @media (max-width: 1300px) { #topbar { left: 12px; transform: none; max-width: calc(100% - 270px); } }
+
+/* ================================================================ AJUSTES DE SONIDO */
+#ajustes { position: fixed; inset: 0; z-index: 47; display: grid; place-items: center; padding: 14px; background: rgba(3, 6, 12, .75); }
+#ajustes.hidden { display: none; }
+.aj-caja { width: min(380px, 100%); border-radius: 14px; overflow: hidden; background: linear-gradient(180deg, #121827, #0a0e17); border: 1px solid rgba(243, 213, 138, .4); box-shadow: 0 20px 60px rgba(0, 0, 0, .6); padding-bottom: 12px; }
+#aj-x { width: 32px; height: 32px; flex: none; margin-left: auto; border-radius: 10px; cursor: pointer; background: rgba(8, 11, 18, .9); color: var(--gold); border: 1px solid rgba(243, 213, 138, .4); }
+.aj-fila { display: grid; grid-template-columns: 96px 1fr 42px; align-items: center; gap: 10px; padding: 10px 16px 0; font-size: 13.5px; font-weight: 700; }
+.aj-fila input[type=range] { width: 100%; accent-color: #f3d58a; }
+.aj-fila b { text-align: right; font-size: 12px; color: var(--muted); }
+.aj-mudo { display: flex; grid-template-columns: none; cursor: pointer; }
+.aj-mudo input { width: 18px; height: 18px; accent-color: #f3d58a; }
+#aj-probar { margin: 14px 16px 0; }
+.aj-nota { margin: 10px 16px 0; font-size: 11px; color: var(--muted); }
+.pie-botones { display: flex; gap: 6px; }

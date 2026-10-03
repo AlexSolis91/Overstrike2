@@ -2,6 +2,7 @@
 import { OFICIALES } from '../datos/personajes/index.js';
 import { BASE_COMUN } from '../motor/reglas.js';
 import { imgHtml } from './imagenes.js';
+import { sonar, musica } from './audio.js';
 
 const $ = s => document.querySelector(s);
 const TAM = 5;                                   // los equipos siempre son de 5
@@ -33,6 +34,7 @@ function mostrar(p) {
   const antes = document.body.dataset.pantalla;
   document.body.dataset.pantalla = p;
   if (antes === 'partida' && p !== 'partida') alSalirDePartida?.();
+  musica(p === 'partida' ? 'batalla' : 'menu');
   if (p === 'equipo') renderEquipo();
 }
 addEventListener('popstate', () => {
@@ -110,9 +112,9 @@ function renderEquipo() {
 function alternarPersonaje(id) {
   const p = OFICIALES.find(x => x.id === id), lado = E.editando, eq = equipoDe(lado);
   const i = eq.findIndex(x => x.id === id);
-  if (i >= 0) eq.splice(i, 1);
-  else if (eq.length < TAM) eq.push(p);
-  else return aviso('El equipo ya tiene 5 personajes: quita uno primero');
+  if (i >= 0) { eq.splice(i, 1); sonar('quitar'); }
+  else if (eq.length < TAM) { eq.push(p); sonar('elegir'); }
+  else { sonar('resistido'); return aviso('El equipo ya tiene 5 personajes: quita uno primero'); }
   E.sel = null;
   renderEquipo();
 }
@@ -155,8 +157,8 @@ function fichaHtml(p) {
     ${p.pasiva ? `<div class="fb"><b>✦ Pasiva: ${p.pasiva.nombre}</b><p>${p.pasiva.desc}</p></div>` : ''}
     <section><h4>Movimientos</h4>${p.movimientos.map(movHtml).join('')}</section>${formas}`;
 }
-function abrirFicha(id) { $('#ficha-cont').innerHTML = fichaHtml(OFICIALES.find(p => p.id === id)); $('#ficha').classList.remove('hidden'); }
-const cerrarFicha = () => $('#ficha').classList.add('hidden');
+function abrirFicha(id) { $('#ficha-cont').innerHTML = fichaHtml(OFICIALES.find(p => p.id === id)); $('#ficha').classList.remove('hidden'); sonar('abrir'); }
+const cerrarFicha = () => { $('#ficha').classList.add('hidden'); sonar('cerrar'); };
 
 // ---------------------------------------------------------------- presentación VS
 export function presentarVS(eqJ, eqR) {
@@ -187,6 +189,7 @@ export function iniciarMenu({ jugar, salirDePartida }) {
   });
   $('#eq-listo').addEventListener('click', () => {
     if (!listo()) return;
+    sonar('listo');
     alJugar([...E.jugador], E.rivalModo === 'azar' ? aleatorio() : [...E.rival]);
   });
   $('#ficha').addEventListener('click', e => { if (e.target.id === 'ficha' || e.target.closest('#ficha-x')) cerrarFicha(); });
