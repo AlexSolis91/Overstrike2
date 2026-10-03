@@ -59,14 +59,15 @@ function animar() {
   }, dur + 150);
 }
 
-// gano: true/false · ronda · duracionMs · personajes: estadísticas con nombre/imagen/color · recompensas: lista
-export function mostrarResultados({ gano, ronda, duracionMs, personajes, recompensas = [] }) {
+// gano: true/false · empate · limite (terminó por límite de rondas) · ronda · duracionMs · personajes: estadísticas con nombre/imagen/color · recompensas: lista
+export function mostrarResultados({ gano, empate = false, limite = false, ronda, duracionMs, personajes, recompensas = [] }) {
   datos = { personajes };
   const caja = $('#overlay');
-  caja.classList.toggle('derrota', !gano);
-  $('#ov-title').textContent = gano ? 'Victoria' : 'Derrota';
+  caja.classList.toggle('derrota', !gano && !empate);
+  caja.classList.toggle('empate', empate);
+  $('#ov-title').textContent = empate ? 'Empate' : gano ? 'Victoria' : 'Derrota';
   const m = Math.floor(duracionMs / 60000), s = Math.round(duracionMs / 1000) % 60;
-  $('#ov-sub').textContent = `Ronda ${ronda} · Duración ${m}:${String(s).padStart(2, '0')}`;
+  $('#ov-sub').textContent = `${limite ? 'Límite de rondas · ' : ''}Ronda ${ronda} · Duración ${m}:${String(s).padStart(2, '0')}`;
   $('#res-premios').innerHTML = premios(recompensas);
   cartas('jugador');
   caja.classList.remove('hidden');

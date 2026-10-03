@@ -319,6 +319,8 @@ body.app-instalada #menu-full { visibility: hidden; }
 #overlay #ov-title { font-size: clamp(40px, 7vw, 64px); background: linear-gradient(180deg, #fff6d6, #f3d58a 45%, #b07a1e); -webkit-background-clip: text; background-clip: text; color: transparent; }
 #overlay.derrota #ov-title { background: linear-gradient(180deg, #fecaca, #ef4444 50%, #7f1d1d); -webkit-background-clip: text; background-clip: text; }
 #overlay.derrota .res-caja { border-color: rgba(239, 68, 68, .45); }
+#overlay.empate #ov-title { background: linear-gradient(180deg, #f1f5f9, #94a3b8 50%, #334155); -webkit-background-clip: text; background-clip: text; }
+#overlay.empate .res-caja { border-color: rgba(148, 163, 184, .45); }
 #overlay #ov-sub { margin: 2px 0 10px; }
 .res-recompensas { margin: 0 auto 10px; padding: 8px 12px; border-radius: 12px; background: linear-gradient(90deg, rgba(14, 116, 144, .12), rgba(14, 116, 144, .28), rgba(14, 116, 144, .12)); border: 1px solid rgba(103, 232, 249, .25); }
 .res-recompensas h3 { margin: 0 0 6px; font: 900 14px Cinzel, serif; letter-spacing: .08em; color: #a5f3fc; }

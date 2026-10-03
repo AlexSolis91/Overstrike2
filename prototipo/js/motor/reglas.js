@@ -26,6 +26,9 @@ export const ESCALADO = {
 // Over = 2 -> disponible a partir de la ronda 3.
 export const CD_INICIAL = { basico: 0, especial: 0, over: 2 };
 
+// Límite de rondas: al terminar esta ronda, gana el equipo con más personajes vivos (mismo número = empate).
+export const LIMITE_RONDAS = 20;
+
 // Valores fijos de buffs universales
 export const BUFFS = {
   furia: .50,          // Furia: +50% Daño

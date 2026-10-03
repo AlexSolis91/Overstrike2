@@ -57,6 +57,7 @@ Cada personaje tiene exactamente **3 movimientos**, una **pasiva** y, opcionalme
 - **Empates:** gana la Velocidad base; si persiste, se decide al azar.
 - **DoT de turno** (Quemadura, Veneno): hacen daño al **inicio del turno** del afectado.
 - **Final de la ronda:** bajan duraciones, contadores de Bomba y cooldowns.
+- **Límite de 20 rondas** (`LIMITE_RONDAS` en `reglas.js`): al terminar la ronda 20, gana el equipo con **más personajes vivos** (las invocaciones no cuentan). Mismo número = **Empate**. Evita partidas infinitas (p. ej. Shaka contra Shaka); en simulaciones 5 contra 5 llega al límite ~1% de las partidas.
 - **Regla general de duraciones:** si un efecto se aplica a alguien que **ya actuó** en la ronda (o que está actuando), su duración no baja al final de esa ronda. Así **"N rondas" = N turnos del afectado**. Por ejemplo, una Quemadura de 1 ronda siempre hace daño 1 vez.
 
 ## 4. Resolución de un golpe
@@ -314,7 +315,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 
 ## 16. Pantalla de resultados
 
-- Al terminar la partida aparece **Victoria** o **Derrota** (en rojo), con la **ronda** final y la **duración**.
+- Al terminar la partida aparece **Victoria**, **Derrota** (en rojo) o **Empate** (en gris), con la **ronda** final y la **duración** (y "Límite de rondas" si terminó así). El empate detiene la música sin pista propia por ahora.
 - **Recompensas**: caja lista para futuros modos. Partida rápida no da premios y muestra "Esta partida no otorga recompensas". Un modo que dé premios pasa una lista `[{ tipo, cantidad, rareza?, nombre? }]` (tipos en `js/datos/recompensas.js`: oro, reliquia, fragmento, llave, runa, experiencia; color según rareza).
 - Pestañas **Tu equipo / Rival**. Cada carta muestra, con barras animadas y números que suben contando:
   - ⚔️ **Daño**: daño real causado a enemigos (HP + Escudo), **sin el sobrante** del golpe que mata.

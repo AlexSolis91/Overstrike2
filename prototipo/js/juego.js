@@ -349,12 +349,12 @@ async function procesar(res) {
 
 function terminar(fin) {
   ui.fin = fin; ui.miTurno = false; ui.actual = null; ui.ocupado = true; barra(); setHint('');
-  finDePartida(fin.ganador === 'jugador');
+  finDePartida(fin.ganador === 'empate' ? null : fin.ganador === 'jugador');
   const personajes = combate.estadisticas().map(e => {
     const p = por(e.uid), f = vistas[e.uid]?.forma;            // si terminó transformado, se muestra su forma
     return { ...e, nombre: f?.nombre || p.nombre, imagen: f?.imagen || p.imagen, emoji: f?.emoji || p.emoji, color: f?.color || p.color };
   });
-  setTimeout(() => mostrarResultados({ gano: fin.ganador === 'jugador', ronda: fin.ronda, duracionMs: Date.now() - inicioPartida, personajes, recompensas: fin.recompensas || [] }), 700);
+  setTimeout(() => mostrarResultados({ gano: fin.ganador === 'jugador', empate: fin.ganador === 'empate', limite: !!fin.limite, ronda: fin.ronda, duracionMs: Date.now() - inicioPartida, personajes, recompensas: fin.recompensas || [] }), 700);
 }
 
 // ---------------------------------------------------------------- entrada del jugador

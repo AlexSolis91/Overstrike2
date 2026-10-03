@@ -3,7 +3,7 @@
 // - Ningún personaje tiene código propio: sus fichas solo combinan piezas (acciones, gatillos, condiciones, efectos).
 // - Todo el azar pasa por un generador con semilla (misma semilla + mismas decisiones = misma partida).
 
-import { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, CONTROL, DOT, BUFFS, DEBUFFS, PUNTERIA, probAplicar } from './reglas.js';
+import { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, LIMITE_RONDAS, CONTROL, DOT, BUFFS, DEBUFFS, PUNTERIA, probAplicar } from './reglas.js';
 import { EFECTOS, esDe } from './efectos.js';
 import { crearRng } from './rng.js';
 import { RELIQUIAS } from '../datos/reliquias.js';
@@ -271,11 +271,18 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     return true;
   }
 
+  // Límite de rondas: gana quien tenga más personajes vivos; mismo número = empate
+  function finPorLimite() {
+    const gj = vivos('jugador').length, gr = vivos('rival').length;
+    S.fin = { ganador: gj > gr ? 'jugador' : gr > gj ? 'rival' : 'empate', ronda: S.ronda, limite: true };
+    emitir('fin', S.fin);
+  }
+
   function avanzar() {
     while (!comprobarFin()) {
       let n = S.ronda ? siguiente() : null;
       if (!n) {
-        if (S.ronda) { finRonda(); if (comprobarFin()) return; }
+        if (S.ronda) { finRonda(); if (comprobarFin()) return; if (S.ronda >= LIMITE_RONDAS) { finPorLimite(); return; } }
         iniciarRonda();
         n = siguiente();
         if (!n) return;

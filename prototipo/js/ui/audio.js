@@ -104,9 +104,10 @@ export function musica(nombre) {
   actual = { nombre, p };
 }
 // Fin de partida: corta la música de batalla y toca el tema de Victoria o Derrota
+// gano: true = victoria, false = derrota, null = empate (por ahora sin pista: solo se detiene la música)
 export function finDePartida(gano) {
   musica(null);
-  if (!ctx) return;
+  if (!ctx || gano === null) return;
   const p = pista(gano ? 'victoria' : 'derrota');
   if (!p.ok) return;
   p.el.currentTime = 0;
