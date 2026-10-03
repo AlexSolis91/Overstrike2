@@ -766,7 +766,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           for (const [e, d] of porEnemigo) danoEfecto(a, e, d, 0xfde68a);
           break;
         }
-        case 'invocarAzar': invocarAzar(t, acc.tabla, acc.rarezas); break;
+        case 'invocarAzar': invocarAzar(t, acc.tabla, acc.rarezas, acc.renueva); break;
         case 'potenciarInvocaciones': potenciarInvocaciones(t, acc.potencia || 1, acc.renovar); break;
         case 'escudo': {
           const c = (acc.base === 'danoCausado' ? (ctx.danoCausado || 0) : baseDe(a, acc.escala)) * acc.pct;
@@ -910,10 +910,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   }
 
   // Invocación aleatoria por pesos; nunca repite una que ya esté activa (si no se permiten varias de ese tipo)
-  function invocarAzar(a, tabla, rarezas) {
+  // renueva: si sale una invocación ya activa, se renueva en vez de volver a tirar (así se respetan los pesos de la tabla)
+  function invocarAzar(a, tabla, rarezas, renueva = false) {
     const activas = new Set(todos(a, 'summon').map(e => e.key));
     const pool = (TABLAS_INVOCACION[tabla] || []).filter(x => (!rarezas || rarezas.includes(INVOCACIONES[x.key].rareza))
-      && (!activas.has(x.key) || (INVOCACIONES[x.key].max || 1) > 1));
+      && (renueva || !activas.has(x.key) || (INVOCACIONES[x.key].max || 1) > 1));
     if (!pool.length) { emitir('sinEfecto', { a: a.uid, texto: 'Todas sus invocaciones están activas' }); return; }
     let r = rng() * pool.reduce((s, x) => s + x.peso, 0);
     const elegido = pool.find(x => (r -= x.peso) < 0) || pool[pool.length - 1];
