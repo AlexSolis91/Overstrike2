@@ -8,6 +8,7 @@ import goku from './goku.js';
 import daenerys from './daenerys-targaryen.js';
 import batman from './batman.js';
 import joker from './the-joker.js';
+import reptile from './reptile.js';
 
-export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, daenerys, batman, joker];
+export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, daenerys, batman, joker, reptile];
 export const porId = id => OFICIALES.find(p => p.id === id);

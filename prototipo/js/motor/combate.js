@@ -355,6 +355,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const tramos = Math.floor((1 - a.hp / maxHp(a)) / mov.bonoPorHpPerdido.cada + 1e-9);
       d *= 1 + Math.max(0, tramos) * mov.bonoPorHpPerdido.pct;
     }
+    const bc = a.pasiva?.bonoContra;          // pasiva: +X% de daño a enemigos con un efecto (p. ej. Reptile contra envenenados)
+    if (bc && get(t, bc.efecto)) d *= 1 + bc.pct;
+    if (mov.bonoPorAcumulacion) {             // movimiento: +X% por cada acumulación de un efecto en el objetivo (con tope)
+      const b = mov.bonoPorAcumulacion;
+      d *= 1 + Math.min(todos(t, b.efecto).length, b.max ?? 99) * b.pct;
+    }
     const garantizado = mov.criticoSiHpMin !== undefined && t.hp / maxHp(t) >= mov.criticoSiHpMin;
     const critico = ctx.forzarCritico || garantizado || rng() < sa.critRate + (mov.critExtra || 0);
     if (critico) d *= 1 + sa.critDmg;
@@ -376,6 +382,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (robo && !a.muerto && (get(a, 'solarBurn') || (a.hp < maxHp(a) && puedeCurarse(a)))) curar(a, a, (aHp + aEsc) * robo);
     emitir('golpe', { de: a.uid, a: t.uid, dano: aHp, escudo: aEsc, critico, quiebre, color: mov.color, fuente: ctx.fuente, multi: (mov.golpes || 1) > 1 }, t);
     recibioDano(t, aHp + aEsc);
+    pasivas(a, 'alGolpear', { objetivo: t });          // gatillo "cada vez que golpea" (filtro opcional: el objetivo tiene X)
     if (aEsc > 0) perdioEscudo(t);
     if (t.hp <= 0) morir(t, a);
     const aura = get(t, 'fireAura');
@@ -783,6 +790,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (cond.objetivoTiene) return !!(ctx.objetivo && get(ctx.objetivo, cond.objetivoTiene));
     if (cond.algunGolpeadoTenia) return !!ctx.golpeadosTenian?.has(cond.algunGolpeadoTenia);
     if (cond.invocacionesMin) return (ctx.invocaciones || 0) >= cond.invocacionesMin;
+    if (cond.objetivoEliminado) return !!ctx.objetivo?.muerto;
     if (cond.objetivoMasHpQueYo) return !!ctx.objetivo && !!ctx.atacante && (ctx.hpObjetivoAntes ?? ctx.objetivo.hp) > ctx.atacante.hp;
     if (cond.objetivoOverListo) {      // el objetivo tiene su Over listo para usar (sin cooldown ni Silencio)
       const t = ctx.objetivo;
@@ -797,6 +805,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (pa.filtro?.tipo && pa.filtro.tipo !== ctx.tipo) return;
     if (pa.filtro?.en === 'enemigos' && (!ctx.objetivo || ctx.objetivo.lado === p.lado)) return;
     if (pa.filtro?.categorias && !pa.filtro.categorias.includes(ctx.categoria)) return;
+    if (pa.filtro?.objetivoTiene && !(ctx.objetivo && get(ctx.objetivo, pa.filtro.objetivoTiene))) return;
     if (pa.maxPorRonda && p.usosPasiva >= pa.maxPorRonda) return;
     // soloSiCura: si nadie de los destinos puede recibir curación, no se activa ni gasta uso
     if (pa.soloSiCura && !objetivosAccion(p, pa.accion.a, ctx).some(t => !t.muerto && t.hp < maxHp(t) && puedeCurarse(t))) return;
