@@ -73,7 +73,7 @@ export const SONIDOS = {
 
   // ---------------------------------------------------------------- momentos
   ronda:     { duck: 1.2, capas: [{ o: 'tono', forma: 'sine', f: [110, 105], d: 1.2, v: .3 }, { o: 'tono', forma: 'sine', f: [220, 210], d: .9, v: .12 }, { o: 'tono', forma: 'sine', f: [330, 325], d: .6, v: .06 }, { o: 'ruido', filtro: 'lowpass', f: [400, 100], d: .3, v: .16 }] },
-  transformacion: { duck: 1.6, capas: [{ o: 'tono', forma: 'sawtooth', f: [110, 880], d: 1, v: .08 }, { o: 'ruido', filtro: 'bandpass', f: [300, 5000], q: 1, d: 1, v: .12 }, { o: 'tono', forma: 'sine', f: [880, 880], d: .5, v: .1, t: .9 }] },
+  transformacion: { duck: 2.6, archivo: 'assets/audio/sfx/transformacion.mp3', v: 1, capas: [{ o: 'tono', forma: 'sawtooth', f: [110, 880], d: 1, v: .08 }, { o: 'ruido', filtro: 'bandpass', f: [300, 5000], q: 1, d: 1, v: .12 }, { o: 'tono', forma: 'sine', f: [880, 880], d: .5, v: .1, t: .9 }] },
   invocacion: { archivo: 'assets/audio/sfx/invocacion.mp3', v: .85, capas: [...arpegio([392, 523, 659, 784], { d: .3, v: .08 }), { o: 'ruido', filtro: 'highpass', f: [5000, 8000], d: .5, v: .04 }] },
   invocacionLegendaria: { duck: 1.6, archivo: 'assets/audio/sfx/invocacion.mp3', v: 1, capas: [{ o: 'tono', forma: 'sine', f: [80, 60], d: 1.2, v: .3 }, { o: 'ruido', filtro: 'lowpass', f: [1500, 80], d: .8, v: .3 }, ...arpegio([392, 523, 659, 784, 1046], { forma: 'triangle', d: .35, v: .09, t: .1 })] },
   turnoExtra: { capas: arpegio([523, 784, 1046], { forma: 'square', d: .09, paso: .06, v: .06 }) },
