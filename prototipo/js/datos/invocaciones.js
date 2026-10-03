@@ -78,19 +78,19 @@ export const INVOCACIONES = {
   },
   // ---------------------------------------------------------------- Dragones de Daenerys Targaryen
   drogon: {
-    nombre: 'Drogon', rareza: 'Legendario', emoji: '🐲', color: 0xdc2626, imagen: 'assets/invocaciones/drogon.webp', dur: 3,
+    nombre: 'Drogon', rareza: 'Legendario', emoji: '🐲', color: 0xdc2626, imagen: 'assets/invocaciones/drogon.webp', dur: 2,
     enfoque: [.565, .465],
     desc: 'Golpea 60% a un enemigo al azar; si tiene Quemadura, lo golpea una segunda vez.',
     acciones: [{ tipo: 'golpe', pct: .60, elegir: 'azar', golpeExtraSi: 'burn' }],
   },
   rhaegal: {
-    nombre: 'Rhaegal', rareza: 'Común', emoji: '🐉', color: 0x16a34a, imagen: 'assets/invocaciones/rhaegal.webp', dur: 3,
+    nombre: 'Rhaegal', rareza: 'Común', emoji: '🐉', color: 0x16a34a, imagen: 'assets/invocaciones/rhaegal.webp', dur: 2,
     enfoque: [.565, .37],
-    desc: '40% de probabilidad de aplicar Quemadura 2% (2 rondas) a cada enemigo. Si es más débil que la Quemadura que ya tienen, no alarga su duración.',
-    acciones: [{ tipo: 'efecto', id: 'burn', valor: .02, dur: 2, noRenueva: true, prob: .40, a: 'todosEnemigos' }],
+    desc: '60% de probabilidad de aplicar Quemadura 2% (2 rondas) a cada enemigo. Si es más débil que la Quemadura que ya tienen, no alarga su duración.',
+    acciones: [{ tipo: 'efecto', id: 'burn', valor: .02, dur: 2, noRenueva: true, prob: .60, a: 'todosEnemigos' }],
   },
   viserion: {
-    nombre: 'Viserion', rareza: 'Épico', emoji: '🐉', color: 0xfde68a, imagen: 'assets/invocaciones/viserion.webp', dur: 3,
+    nombre: 'Viserion', rareza: 'Épico', emoji: '🐉', color: 0xfde68a, imagen: 'assets/invocaciones/viserion.webp', dur: 2,
     enfoque: [.29, .645], luminosa: true,   // fondo negro: se dibuja en modo pantalla
     desc: 'Reduce 1 turno el cooldown del Especial y del Over de Daenerys.',
     acciones: [{ tipo: 'reducirCooldown', cantidad: 1, categorias: ['especial', 'over'], a: 'propio' }],
