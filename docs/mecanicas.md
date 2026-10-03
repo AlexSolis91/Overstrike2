@@ -295,7 +295,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 
 - **Registro universal:** `js/datos/sonidos.js` (`SONIDOS` y `MUSICA`). Cada evento de la batalla tiene su sonido (golpe, crítico, bloqueo, escudo, cada DoT, buff/debuff, control, Over, transformación, invocación, Legendaria, muerte, ronda…), así que todo lo nuevo suena solo.
 - **Efectos:** se generan por código (sintetizador del navegador). Cualquiera se puede reemplazar por un archivo real agregando `archivo: 'assets/audio/sfx/<nombre>.mp3'`.
-- **Música:** archivos en `prototipo/assets/audio/`: `menu.mp3` (lobby y equipos, en bucle), `batalla.mp3` (partida, en bucle), `victoria.mp3` y `derrota.mp3` (cortas). Transición suave entre pantallas. Si falta Victoria/Derrota, suena su versión sintetizada.
+- **Música:** archivos en `prototipo/assets/audio/`: `menu.mp3` (lobby y equipos, en bucle), `batalla-1.mp3`, `batalla-2.mp3`… (temas de partida: **uno al azar en cada partida**, en bucle; la lista está en `MUSICA.batalla`), `victoria.mp3` y `derrota.mp3` (cortas). Transición suave entre pantallas. Si falta Victoria/Derrota, suena su versión sintetizada.
 - **Momentos épicos** (Over, transformación, Legendaria, ronda, explosión, muerte) bajan la música unos segundos.
 - **Ajustes (🔊):** volumen de Música y de Efectos y Silenciar todo, guardados por dispositivo. Los navegadores solo dejan sonar después del primer toque del jugador.
 - **Límites:** un mismo sonido no se repite encimado y hay un máximo de sonidos simultáneos; los golpes varían un poco de tono para no cansar.

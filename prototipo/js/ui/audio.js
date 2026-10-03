@@ -88,9 +88,17 @@ async function cargarArchivo(src) {
 }
 
 // ---------------------------------------------------------------- música
+// Una lista de pistas (temas de partida) = una al azar por partida
+let elegidaBatalla = null;
+const rutaDe = nombre => {
+  const r = MUSICA[nombre];
+  if (!Array.isArray(r)) return r;
+  if (!r.length) return null;
+  return elegidaBatalla ??= r[Math.floor(Math.random() * r.length)];
+};
 function pista(nombre) {
   if (pistas[nombre]) return pistas[nombre];
-  const el = new Audio(); el.src = MUSICA[nombre]; el.loop = nombre === 'menu' || nombre === 'batalla'; el.preload = 'auto'; el.crossOrigin = 'anonymous';
+  const el = new Audio(); el.src = rutaDe(nombre); el.loop = nombre === 'menu' || nombre === 'batalla'; el.preload = 'auto'; el.crossOrigin = 'anonymous';
   const p = pistas[nombre] = { el, gain: ctx.createGain(), ok: true };
   p.gain.gain.value = 0;
   ctx.createMediaElementSource(el).connect(p.gain); p.gain.connect(busMusica);   // por Web Audio: el volumen funciona también en iPhone
@@ -108,7 +116,7 @@ export function musica(nombre) {
   if (actual && actual.nombre === nombre) return;
   if (actual) { const viejo = actual.p; desvanecer(viejo, 0, 1); setTimeout(() => { if (actual?.p !== viejo) viejo.el.pause(); }, 1100); }
   actual = null;
-  if (!nombre || !MUSICA[nombre]) return;
+  if (!nombre || !rutaDe(nombre)) return;
   const p = pista(nombre);
   if (!p.ok) return;
   p.el.currentTime = 0;

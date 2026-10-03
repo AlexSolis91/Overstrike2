@@ -9,7 +9,11 @@
 // Música: si el archivo no existe todavía, esa pista simplemente no suena (Victoria/Derrota usan su versión sintetizada).
 export const MUSICA = {
   menu: 'assets/audio/menu.mp3',
-  batalla: 'assets/audio/batalla.mp3',
+  batalla: [                       // temas de partida: en cada partida se elige uno al azar
+    'assets/audio/batalla-1.mp3',  // Jinwoo Saves A-Rank Team (Solo Leveling)
+    'assets/audio/batalla-2.mp3',  // Battle Theme #2 (Yu-Gi-Oh! Master Duel)
+    'assets/audio/batalla-3.mp3',  // Keycard Theme #5 (Yu-Gi-Oh! Master Duel)
+  ],
   victoria: 'assets/audio/victoria.mp3',
   derrota: 'assets/audio/derrota.mp3',
 };
