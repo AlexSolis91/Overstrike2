@@ -294,7 +294,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 ## 14. Sonido
 
 - **Registro universal:** `js/datos/sonidos.js`. Cada evento de la batalla y de la interfaz tiene un nombre (la lista completa está al inicio del archivo). Si el evento tiene **archivo**, suena; si no, queda en **silencio**. No hay sonidos sintetizados.
-- **Efectos con archivo** (`assets/audio/sfx/`): botones (incluidos los movimientos disponibles), golpes (normal, crítico más fuerte y golpe al escudo más suave), Curación, **Escudo de HP** (no confundir con el futuro buff Escudo Sagrado), Quemadura, Veneno, Congelación (al aplicarse y al perder el turno congelado), transformación e invocaciones (la Legendaria más fuerte).
+- **Efectos con archivo** (`assets/audio/sfx/`): botones (incluidos los movimientos disponibles), golpes (normal, crítico más fuerte y golpe al escudo más suave), Curación, **Escudo de HP** (no confundir con el futuro buff Escudo Sagrado), Quemadura, Veneno, Congelación (al aplicarse y al perder el turno congelado), **Over** (al ejecutarlo, junto con su banner), transformación e invocaciones (la Legendaria más fuerte).
 - **Opciones por sonido:** `v` volumen, `dur` segundos máximos (con desvanecimiento), `var` variación de tono, `gap` tiempo mínimo entre repeticiones, `duck` baja la música mientras suena. Los archivos se precargan al primer toque.
 - **Música** (`assets/audio/`): `menu.mp3` (lobby y equipos, en bucle), `batalla-1/2/3.mp3` (uno al azar en cada partida, en bucle), `victoria.mp3` y `derrota.mp3` (al terminar). Transición suave entre pantallas.
 - **Ajustes (🔊):** volumen de Música y de Efectos y Silenciar todo, guardados por dispositivo. Los navegadores solo dejan sonar después del primer toque del jugador.

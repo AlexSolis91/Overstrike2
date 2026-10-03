@@ -39,6 +39,7 @@ export const SONIDOS = {
   veneno:               { archivo: sfx('veneno'), v: .9, dur: 1.6, gap: 60 },
   congelar:             { archivo: sfx('hielo'), v: .9 },
   pierdeTurnoHielo:     { archivo: sfx('hielo'), v: .9 },
+  over:                 { archivo: sfx('over'), v: 1, duck: 2.4 },
   transformacion:       { archivo: sfx('transformacion'), v: 1, duck: 2.6 },
   invocacion:           { archivo: sfx('invocacion'), v: .85 },
   invocacionLegendaria: { archivo: sfx('invocacion'), v: 1, duck: 1.6 },
