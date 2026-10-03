@@ -54,7 +54,7 @@ export const SONIDOS = {
   robo:     { capas: [{ o: 'tono', forma: 'sawtooth', f: [200, 500], d: .25, v: .05 }, { o: 'tono', forma: 'sine', f: [400, 800], d: .25, v: .06 }] },
 
   // ---------------------------------------------------------------- daño por turno (DoT)
-  quemadura:  { gap: 60, capas: [{ o: 'ruido', filtro: 'bandpass', f: [1200, 700], q: 2, d: .25, v: .18 }, { o: 'ruido', filtro: 'highpass', f: [4000, 4000], d: .2, v: .04 }] },
+  quemadura:  { gap: 60, archivo: 'assets/audio/sfx/quemadura.mp3', v: .9, capas: [{ o: 'ruido', filtro: 'bandpass', f: [1200, 700], q: 2, d: .25, v: .18 }, { o: 'ruido', filtro: 'highpass', f: [4000, 4000], d: .2, v: .04 }] },
   veneno:     { gap: 60, archivo: 'assets/audio/sfx/veneno.mp3', dur: 1.6, v: .9, capas: [{ o: 'tono', forma: 'sine', f: [300, 180], d: .15, v: .1 }, { o: 'tono', forma: 'sine', f: [420, 250], d: .15, v: .08, t: .08 }] },
   sangrado:   { gap: 60, capas: [{ o: 'ruido', filtro: 'lowpass', f: [900, 200], d: .2, v: .2 }, { o: 'tono', forma: 'sine', f: [120, 70], d: .2, v: .16 }] },
   solar:      { gap: 60, capas: [{ o: 'tono', forma: 'square', f: [660, 330], d: .25, v: .06 }, { o: 'ruido', filtro: 'highpass', f: [5000, 5000], d: .2, v: .05 }] },
