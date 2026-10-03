@@ -123,7 +123,7 @@ function sonidoDe(e) {
     case 'resistido': case 'inmune': return 'resistido';
     case 'limpieza': return 'limpiar';
     case 'disipar': return 'disipar';
-    case 'pierdeTurno': return 'pierdeTurno';
+    case 'pierdeTurno': return e.motivo === 'freeze' ? 'pierdeTurnoHielo' : 'pierdeTurno';
     case 'muerte': return 'muerte';
     case 'pasiva': return 'pasiva';
     case 'liderActua': return 'lider';

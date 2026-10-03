@@ -67,7 +67,8 @@ export const SONIDOS = {
   limpiar:  { capas: [{ o: 'ruido', filtro: 'highpass', f: [2000, 9000], d: .35, v: .08 }, { o: 'tono', forma: 'sine', f: [800, 1600], d: .3, v: .06 }] },
   disipar:  { capas: [{ o: 'ruido', filtro: 'bandpass', f: [6000, 600], q: 1, d: .35, v: .1 }, { o: 'tono', forma: 'sine', f: [1200, 400], d: .3, v: .06 }] },
   aturdir:  { capas: arpegio([700, 560, 700, 560], { forma: 'sine', d: .09, paso: .08, v: .08 }) },
-  congelar: { capas: [{ o: 'tono', forma: 'triangle', f: [1800, 2400], d: .2, v: .08 }, { o: 'tono', forma: 'triangle', f: [2600, 3200], d: .25, v: .06, t: .05 }, { o: 'ruido', filtro: 'highpass', f: [7000, 7000], d: .3, v: .05 }] },
+  congelar: { archivo: 'assets/audio/sfx/hielo.mp3', v: .9, capas: [{ o: 'tono', forma: 'triangle', f: [1800, 2400], d: .2, v: .08 }, { o: 'tono', forma: 'triangle', f: [2600, 3200], d: .25, v: .06, t: .05 }, { o: 'ruido', filtro: 'highpass', f: [7000, 7000], d: .3, v: .05 }] },
+  pierdeTurnoHielo: { archivo: 'assets/audio/sfx/hielo.mp3', v: .9, capas: [{ o: 'tono', forma: 'triangle', f: [1800, 2400], d: .2, v: .08 }, { o: 'ruido', filtro: 'highpass', f: [7000, 7000], d: .3, v: .05 }] },
   silenciar: { capas: [{ o: 'ruido', filtro: 'lowpass', f: [1200, 150], d: .3, v: .12 }, { o: 'tono', forma: 'sine', f: [400, 200], d: .25, v: .06 }] },
   pierdeTurno: { capas: [{ o: 'tono', forma: 'square', f: [160, 120], d: .25, v: .06 }, { o: 'tono', forma: 'square', f: [150, 110], d: .25, v: .05, t: .12 }] },
 
