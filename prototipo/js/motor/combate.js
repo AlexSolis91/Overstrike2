@@ -774,7 +774,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           break;
         }
         case 'invocarAzar': invocarAzar(t, acc.tabla, acc.rarezas, acc.renueva); break;
-        case 'potenciarInvocaciones': potenciarInvocaciones(t, acc.potencia || 1, acc.renovar); break;
+        case 'potenciarInvocaciones': potenciarInvocaciones(t, acc.potencia || 1, acc.renovar, acc.veces || 1); break;
         case 'escudo': {
           const c = (acc.base === 'danoCausado' ? (ctx.danoCausado || 0) : baseDe(a, acc.escala)) * acc.pct;
           if (c <= 0) break;
@@ -978,15 +978,16 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   }
 
   // Dominio del Monarca: todas actúan de inmediato con potencia extra y (opcional) renuevan su duración
-  function potenciarInvocaciones(a, potencia, renovar) {
+  // veces: cuántas veces actúa cada invocación (en rondas: todas una vez, luego todas otra vez)
+  function potenciarInvocaciones(a, potencia, renovar, veces = 1) {
     const lista = todos(a, 'summon');
     if (!lista.length) { emitir('sinEfecto', { a: a.uid, texto: 'Sin invocaciones' }); return; }
-    emitir('dominio', { id: a.uid, potencia }, a);
-    for (const e of lista) {
-      if (a.muerto || S.fin) break;
+    emitir('dominio', { id: a.uid, potencia, veces }, a);
+    for (let v = 0; v < veces; v++) for (const e of lista) {
+      if (a.muerto || S.fin || !enemigosDe(a).length) break;
       actuarInvocacion(a, e, potencia);
-      if (renovar) duracionCompleta(a, e);
     }
+    if (renovar) for (const e of lista) duracionCompleta(a, e);
     emitir('actualizar', {}, a);
   }
 

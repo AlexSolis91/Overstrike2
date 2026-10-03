@@ -25,13 +25,13 @@ export default {
     },
     {
       categoria: 'especial', nombre: '¡Arise!', objetivo: 'propio', estilo: 'support', color: 0x8b5cf6, cd: 2,
-      desc: 'Invoca 1 sombra al azar (Común: Iron, Igris · Raro: Shadow Ming Byung, Kaisel · Épico: Beru, Bellion · Legendario: Kamish). Máximo 3 a la vez.',
-      efectos: [{ cuando: 'final', accion: { tipo: 'invocarAzar', tabla: 'sombras', a: 'propio' } }],
+      desc: 'Invoca 3 sombras al azar (Común: Iron, Igris · Raro: Shadow Ming Byung, Kaisel · Épico: Beru, Bellion · Legendario: Kamish). Máximo 3 a la vez.',
+      efectos: [1, 2, 3].map(() => ({ cuando: 'final', accion: { tipo: 'invocarAzar', tabla: 'sombras', a: 'propio' } })),
     },
     {
       categoria: 'over', nombre: 'Dominio del Monarca', objetivo: 'propio', estilo: 'support', color: 0x6d28d9, cd: 4,
-      desc: 'Todas sus sombras actúan de inmediato con +50% de potencia y renuevan su duración.',
-      efectos: [{ cuando: 'final', accion: { tipo: 'potenciarInvocaciones', potencia: 1.5, renovar: true, a: 'propio' } }],
+      desc: 'Todas sus sombras actúan 2 veces de inmediato y renuevan su duración.',
+      efectos: [{ cuando: 'final', accion: { tipo: 'potenciarInvocaciones', veces: 2, renovar: true, a: 'propio' } }],
     },
   ],
 };

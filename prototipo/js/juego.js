@@ -265,8 +265,10 @@ async function manejar(e) {
       await FX.invocacionPulso(c(e.de), e.key, e.idx);
       break;
     case 'dominio':
-      aplicar(e); FX.textoSobre(c(e.id), `👑 Sombras +${Math.round((e.potencia - 1) * 100)}%`, '#c4b5fd', 16, -125);
-      log(`${nombre(e.id)}: sus sombras actúan con +${Math.round((e.potencia - 1) * 100)}% de potencia`, 'sys');
+      aplicar(e);
+      { const extra = e.potencia > 1 ? ` +${Math.round((e.potencia - 1) * 100)}%` : '', veces = e.veces > 1 ? ` ×${e.veces}` : '';
+        FX.textoSobre(c(e.id), `👑 Invocaciones${veces}${extra}`, '#c4b5fd', 16, -125);
+        log(`${nombre(e.id)}: sus invocaciones actúan${e.veces > 1 ? ` ${e.veces} veces` : ''}${extra ? ` con${extra} de potencia` : ''}`, 'sys'); }
       await wait(300);
       break;
     case 'invocacionRetira': FX.invocacionSeVa(c(e.de), e.key); aplicar(e); log(`${INVOCACIONES[e.key].nombre} se retira`); break;

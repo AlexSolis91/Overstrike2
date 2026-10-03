@@ -15,7 +15,7 @@
 export const INVOCACIONES = {
   // ---------------------------------------------------------------- Sombras de Sun Jin Woo
   iron: {
-    nombre: 'Iron', rareza: 'Común', emoji: '🛡️', color: 0x94a3b8, imagen: 'assets/invocaciones/iron.webp', dur: 3,
+    nombre: 'Iron', rareza: 'Común', emoji: '🛡️', color: 0x94a3b8, imagen: 'assets/invocaciones/iron.webp', dur: 2,
     enfoque: [.385, .245],   // dónde está la cara en la imagen (para el medallón)
     desc: 'Golpea 25% a un enemigo al azar y da un Escudo de 50% al aliado más herido.',
     acciones: [
@@ -24,38 +24,38 @@ export const INVOCACIONES = {
     ],
   },
   igris: {
-    nombre: 'Igris', rareza: 'Común', emoji: '🥷', color: 0x8b5cf6, imagen: 'assets/invocaciones/igris.webp', dur: 3,
+    nombre: 'Igris', rareza: 'Común', emoji: '🥷', color: 0x8b5cf6, imagen: 'assets/invocaciones/igris.webp', dur: 2,
     desc: 'Golpea 45% al enemigo con menos HP.',
     acciones: [{ tipo: 'golpe', pct: .45, elegir: 'menorHp' }],
   },
   shadowMingByung: {
-    nombre: 'Shadow Ming Byung', rareza: 'Raro', emoji: '🙏', color: 0x38bdf8, imagen: 'assets/invocaciones/shadow-ming-byung.webp', dur: 3,
+    nombre: 'Shadow Ming Byung', rareza: 'Raro', emoji: '🙏', color: 0x38bdf8, imagen: 'assets/invocaciones/shadow-ming-byung.webp', dur: 2,
     enfoque: [.49, .2],
     desc: 'Cura 15% del HP máx. al aliado más herido. Al aparecer, limpia 1 debuff de cada aliado.',
     alAparecer: [{ tipo: 'limpiar', cantidad: 1, a: 'todosAliados' }],
     acciones: [{ tipo: 'curar', base: 'hpMaxObjetivo', pct: .15, a: 'aliadoMasHerido' }],
   },
   kaisel: {
-    nombre: 'Kaisel', rareza: 'Raro', emoji: '🐉', color: 0x2563eb, imagen: 'assets/invocaciones/kaisel.webp', dur: 3,
+    nombre: 'Kaisel', rareza: 'Raro', emoji: '🐉', color: 0x2563eb, imagen: 'assets/invocaciones/kaisel.webp', dur: 2,
     enfoque: [.29, .21],
     desc: 'Roba 5% del HP máx. de 2 enemigos al azar (puede repetir) y cura a su invocador lo robado.',
     acciones: [{ tipo: 'robarHP', pct: .05, a: { azar: 2 } }],
   },
   beru: {
-    nombre: 'Beru', rareza: 'Épico', emoji: '🐜', color: 0xa855f7, imagen: 'assets/invocaciones/beru.webp', dur: 3,
+    nombre: 'Beru', rareza: 'Épico', emoji: '🐜', color: 0xa855f7, imagen: 'assets/invocaciones/beru.webp', dur: 2,
     enfoque: [.37, .41],
     desc: 'Golpea 2 veces (30%) a un enemigo al azar. Cada golpe tiene 50% de probabilidad de aplicar Sangrado o Veneno (50/50).',
     acciones: [{ tipo: 'golpe', pct: .30, golpes: 2, elegir: 'azar', efectos: [{ accion: { tipo: 'efecto', idAzar: ['bleed', 'poison'], prob: .50 } }] }],
   },
   bellion: {
-    nombre: 'Bellion', rareza: 'Épico', emoji: '⚔️', color: 0x7c3aed, imagen: 'assets/invocaciones/bellion.webp', dur: 3,
+    nombre: 'Bellion', rareza: 'Épico', emoji: '⚔️', color: 0x7c3aed, imagen: 'assets/invocaciones/bellion.webp', dur: 2,
     enfoque: [.585, .19],
     desc: 'Golpea 35% al enemigo más fuerte. Al aparecer, tiene 60% de probabilidad de Aturdir a cada uno de hasta 3 enemigos distintos (cada uno con su tirada).',
     alAparecer: [{ tipo: 'efecto', id: 'stun', prob: .60, a: { distintos: 3 } }],
     acciones: [{ tipo: 'golpe', pct: .35, elegir: 'masFuerte' }],
   },
   kamish: {
-    nombre: 'Kamish', rareza: 'Legendario', emoji: '🐲', color: 0x9333ea, imagen: 'assets/invocaciones/kamish.webp', dur: 2,
+    nombre: 'Kamish', rareza: 'Legendario', emoji: '🐲', color: 0x9333ea, imagen: 'assets/invocaciones/kamish.webp', dur: 1,
     enfoque: [.44, .16],
     desc: 'Golpea 50% a todos los enemigos. Al aparecer, golpea 150% a todos y tiene 80% de probabilidad de aplicar Miedo (2 rondas) a cada uno.',
     alAparecer: [

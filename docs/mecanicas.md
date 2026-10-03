@@ -239,19 +239,19 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - Una acción es un `golpe` (con `pct`, `golpes`, `efectos` y `elegir`: `menorHp` · `azar` · `todos` · `masFuerte`) o cualquier acción universal (curar, escudo, robarHP, efecto, limpiar…).
 - **Rareza** (Común, Raro, Especial, Épico, Legendario): se ve en el color del borde de su medallón.
 - **Invocar al azar** (`invocarAzar`): usa una tabla de pesos y puede filtrar por rareza.
-- **Potenciar** (`potenciarInvocaciones`): todas actúan de inmediato con un multiplicador de potencia y, si se indica, renuevan su duración.
+- **Potenciar** (`potenciarInvocaciones`): todas actúan de inmediato (`veces`: cuántas veces, por defecto 1) con un multiplicador de `potencia` opcional y, si se indica, renuevan su duración al terminar. Dominio del Monarca: 2 veces al 100%.
 - `desatar`: todas las invocaciones de un tipo atacan a todos los enemigos y se retiran (Dracarys).
 
 ### Sombras de Sun Jin Woo (tabla `sombras`)
-| Sombra | Rareza | Peso | Rol |
-|---|---|---|---|
-| Iron | Común | 26 | 25% a un enemigo al azar + Escudo 50% al aliado más herido |
-| Igris | Común | 26 | 45% al enemigo con menos HP |
-| Shadow Ming Byung | Raro | 18 | Cura 15% HP máx. al aliado más herido · al aparecer: limpia 1 debuff a cada aliado |
-| Kaisel | Raro | 15 | Roba 5% HP máx. a 2 enemigos al azar (puede repetir) y cura al invocador |
-| Beru | Épico | 9 | 2×30% + Sangrado o Veneno |
-| Bellion | Épico | 5 | 35% al enemigo más fuerte · al aparecer: Aturdimiento a hasta 3 enemigos distintos |
-| Kamish | Legendario | 1 | 50% a todos · al aparecer: 150% a todos + Miedo |
+| Sombra | Rareza | Peso | Dura | Rol |
+|---|---|---|---|---|
+| Iron | Común | 26 | 2 | 25% a un enemigo al azar + Escudo 50% al aliado más herido |
+| Igris | Común | 26 | 2 | 45% al enemigo con menos HP |
+| Shadow Ming Byung | Raro | 18 | 2 | Cura 15% HP máx. al aliado más herido · al aparecer: limpia 1 debuff a cada aliado |
+| Kaisel | Raro | 15 | 2 | Roba 5% HP máx. a 2 enemigos al azar (puede repetir) y cura al invocador |
+| Beru | Épico | 9 | 2 | 2×30% + Sangrado o Veneno |
+| Bellion | Épico | 5 | 2 | 35% al enemigo más fuerte · al aparecer: Aturdimiento a hasta 3 enemigos distintos |
+| Kamish | Legendario | 1 | 1 | 50% a todos · al aparecer: 150% a todos + Miedo |
 
 ## 10. Líder
 

@@ -172,6 +172,7 @@ export function burst(x, y, { n = 14, colors = [0xffffff], speed = 6, size = .28
 function actualizarParticulas(dt) {
   for (let i = parts.length - 1; i >= 0; i--) {
     const p = parts[i];
+    if (p.s.destroyed) { parts.splice(i, 1); continue; }   // su capa ya se borró (p. ej. al terminar la cinemática de Over)
     p.vx *= Math.pow(p.drag, dt); p.vy = p.vy * Math.pow(p.drag, dt) + p.g * dt;
     p.s.x += p.vx * dt; p.s.y += p.vy * dt; p.life -= dt;
     const t = Math.max(0, p.life / p.max);
