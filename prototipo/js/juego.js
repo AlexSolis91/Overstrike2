@@ -101,7 +101,7 @@ function barra() {
 // ---------------------------------------------------------------- reproducción de eventos
 let embestida = null, sprInvocacion = null;
 let overEnCurso = null;            // uid del que está ejecutando un Over (para el impacto de su primer golpe)
-const MOTIVO = { stun: '💫 PIERDE EL TURNO', freeze: '🧊 CONGELADO', silence: '🔇 SILENCIADO' };
+const MOTIVO = { stun: '💫 PIERDE EL TURNO', freeze: '❄️ CONGELADO', silence: '🔇 SILENCIADO' };
 
 // Sonido de cada evento (todo pasa por el registro universal de sonidos)
 const SONIDO_DOT = { burn: 'quemadura', poison: 'veneno', bleed: 'sangrado', hemo: 'sangrado', bomb: 'explosion', solarBurn: 'solar' };

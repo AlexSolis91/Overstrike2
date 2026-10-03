@@ -55,7 +55,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       if (e.id === 'protect') sec.res += BUFFS.proteccion;
       if (e.id === 'frenzy') sec.critRate += BUFFS.frenesi;
       if (e.id === 'haste') pct.spd += BUFFS.celeridad;
-      if (e.id === 'bloodlust') sec.critDmg += BUFFS.sedDeSangre;
+      if (e.id === 'bloodlust') sec.critDmg += BUFFS.letalidad;
       if (e.id === 'keen') sec.acc += BUFFS.agudeza;
       if (e.id === 'pierce') sec.pen += BUFFS.perforacion;
       if (e.id === 'blind') sec.acc -= DEBUFFS.ceguera;
@@ -122,7 +122,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'protect': texto = `+${Math.round(BUFFS.proteccion * 100)}% Resistencia · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'frenzy': texto = `+${Math.round(BUFFS.frenesi * 100)}% Prob. Crítico · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'haste': texto = `+${Math.round(BUFFS.celeridad * 100)}% Velocidad · ${e.dur} ronda(s)`; n = e.dur; break;
-        case 'bloodlust': texto = `+${Math.round(BUFFS.sedDeSangre * 100)}% Daño Crítico · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'bloodlust': texto = `+${Math.round(BUFFS.letalidad * 100)}% Daño Crítico · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'keen': texto = `+${Math.round(BUFFS.agudeza * 100)}% Puntería · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'weaken': texto = `Recibe +${Math.round(DEBUFFS.debilitar * 100)}% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'regen': texto = `Cura ${Math.round(BUFFS.regeneracion * 100)}% del HP máx. al inicio de su turno · ${e.dur} ronda(s)`; n = e.dur; break;

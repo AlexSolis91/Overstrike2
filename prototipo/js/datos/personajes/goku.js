@@ -6,7 +6,7 @@ import { espacios } from '../reliquias.js';
 
 const sangreSayajin = {
   nombre: 'Sangre Sayajin',
-  desc: 'Cada vez que Goku se transforma gana 1 turno adicional y recibe uno de estos buffs al azar (que no tenga activo) por 2 rondas: Furia, Frenesí, Celeridad, Sed de Sangre o Agudeza.',
+  desc: 'Cada vez que Goku se transforma gana 1 turno adicional y recibe uno de estos buffs al azar (que no tenga activo) por 2 rondas: Furia, Frenesí, Celeridad, Letalidad o Agudeza.',
   gatillo: 'alTransformarse',
   accion: { tipo: 'multiple', a: 'propio', acciones: [
     { tipo: 'turnoExtra' },
