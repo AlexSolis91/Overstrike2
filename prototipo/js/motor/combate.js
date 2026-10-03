@@ -895,12 +895,19 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   // Reglas generales: máximo 3 invocaciones activas por invocador; si está lleno, se reemplaza la de menor duración restante.
   // Un tipo ya activo se renueva (salvo que su "max" permita varias, como los Dragones de Ysera).
   const MAX_INVOCACIONES = 3;
+  // Duración completa de una invocación con la regla general: si su invocador ya actuó (o está actuando) en esta ronda,
+  // no pierde duración al final de ella. Así "dura N" = actúa N veces.
+  function duracionCompleta(a, e) {
+    e.dur = INVOCACIONES[e.key].dur;
+    e.nuevo = S.actuaron.has(a) || S.actual === a;
+  }
+
   function invocar(a, key) {
     const def = INVOCACIONES[key];
     const mismas = todos(a, 'summon').filter(e => e.key === key);
     if (mismas.length >= (def.max || 1)) {
       const vieja = mismas.reduce((x, y) => x.dur < y.dur ? x : y);
-      vieja.dur = def.dur;
+      duracionCompleta(a, vieja);
       emitir('invocacionRenueva', { de: a.uid, key }, a);
       return;
     }
@@ -910,7 +917,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       a.estados = a.estados.filter(e => e !== sale);
       emitir('invocacionRetira', { de: a.uid, key: sale.key }, a);
     }
-    const e = { id: 'summon', key, dur: def.dur, fresca: true };
+    const e = { id: 'summon', key, fresca: true };
+    duracionCompleta(a, e);
     a.estados.push(e);
     emitir('invocacion', { de: a.uid, key, idx: todos(a, 'summon').length - 1, rareza: def.rareza }, a);
     for (const acc of def.alAparecer || []) accionInvocacion(a, e, acc, 1);
@@ -977,7 +985,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     for (const e of lista) {
       if (a.muerto || S.fin) break;
       actuarInvocacion(a, e, potencia);
-      if (renovar) e.dur = INVOCACIONES[e.key].dur;
+      if (renovar) duracionCompleta(a, e);
     }
     emitir('actualizar', {}, a);
   }
