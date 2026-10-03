@@ -306,3 +306,18 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - Suena el sonido de Over y la música baja mientras dura.
 - Los Overs **rivales** van un 25% más rápido. **Tocar la pantalla** la acelera. En ⚙️ Ajustes: **"Cinemática de Over rápida"** (el doble de rápida), guardado por dispositivo.
 
+
+## 16. Pantalla de resultados
+
+- Al terminar la partida aparece **Victoria** o **Derrota** (en rojo), con la **ronda** final y la **duración**.
+- **Recompensas**: caja lista para futuros modos. Partida rápida no da premios y muestra "Esta partida no otorga recompensas". Un modo que dé premios pasa una lista `[{ tipo, cantidad, rareza?, nombre? }]` (tipos en `js/datos/recompensas.js`: oro, reliquia, fragmento, llave, runa, experiencia; color según rareza).
+- Pestañas **Tu equipo / Rival**. Cada carta muestra, con barras animadas y números que suben contando:
+  - ⚔️ **Daño**: daño real causado a enemigos (HP + Escudo), **sin el sobrante** del golpe que mata.
+  - 🛡️ **Escudo**: Escudo de HP otorgado.
+  - 💚 **Curación**: solo lo que realmente sanó (no cuenta la curación con HP lleno).
+  - 🎯 **Daño recibido**.
+  - ☠️ **Eliminaciones**: de quien hizo el último daño.
+- **DoT** (Quemadura, Veneno, Sangrado, Hemorragia, Bomba, Quemadura Solar): el daño es de **quien lo aplicó**; si varios Venenos son de distintos personajes, se reparte. Si alguien **activa** (detona) un DoT, el daño es de quien lo activa. Lo copiado con **Propagar** es de quien propaga.
+- **Invocaciones** suman al personaje que las invocó.
+- El daño entre aliados (Confusión, Posesión) no cuenta como daño causado.
+- **MVP** 👑 por equipo: Daño + Escudo + Curación + ½ Daño recibido + 150 por eliminación.

@@ -9,6 +9,7 @@ import { elegirIA } from './motor/ia.js';
 import { OFICIALES, porId } from './datos/personajes/index.js';
 import { iniciarMenu, irA, presentarVS, cargarSeleccion } from './ui/menu.js';
 import { iniciarGuia, cerrarGuia, guiaAbierta } from './ui/guia.js';
+import { mostrarResultados, iniciarResultados } from './ui/resultados.js';
 import { sonar, finDePartida, iniciarAjustes, ajustesAbiertos, cerrarAjustes, ajustes } from './ui/audio.js';
 import { EFECTOS } from './motor/efectos.js';
 import { INVOCACIONES } from './datos/invocaciones.js';
@@ -38,7 +39,7 @@ const ld = $('#loading'); ld.classList.add('fade'); setTimeout(() => ld.remove()
 
 // ---------------------------------------------------------------- partida (se crea con los equipos elegidos)
 let combate = null, P = [], ui = { ocupado: true }, vistas = {}, cartas = {};
-let partida = 0;                 // identifica la partida en curso: al salir, las animaciones pendientes se detienen
+let partida = 0, inicioPartida = 0;                 // identifica la partida en curso: al salir, las animaciones pendientes se detienen
 let ultima = null;               // { jugador: [ids], rival: [ids], rivalModo } para Revancha / Cambiar equipo
 const por = uid => P.find(p => p.uid === uid);
 const nombre = uid => por(uid)?.nombre ?? '';
@@ -47,6 +48,7 @@ activarReliquias(() => por(ui.inspeccionado));
 
 async function iniciarPartida(eqJ, eqR) {
   partida++;
+  inicioPartida = Date.now();
   combate = crearCombate({ equipoJugador: eqJ, equipoRival: eqR });
   P = combate.personajes;
   ui = { actual: null, inspeccionado: P[0].uid, miTurno: false, movSel: null, objetivosValidos: null, tipoObjetivo: null, ocupado: true, opciones: null };
@@ -348,9 +350,11 @@ async function procesar(res) {
 function terminar(fin) {
   ui.fin = fin; ui.miTurno = false; ui.actual = null; ui.ocupado = true; barra(); setHint('');
   finDePartida(fin.ganador === 'jugador');
-  $('#ov-title').textContent = fin.ganador === 'jugador' ? 'Victoria' : 'Derrota';
-  $('#ov-sub').textContent = `Combate terminado en la ronda ${fin.ronda}`;
-  setTimeout(() => $('#overlay').classList.remove('hidden'), 700);
+  const personajes = combate.estadisticas().map(e => {
+    const p = por(e.uid), f = vistas[e.uid]?.forma;            // si terminó transformado, se muestra su forma
+    return { ...e, nombre: f?.nombre || p.nombre, imagen: f?.imagen || p.imagen, emoji: f?.emoji || p.emoji, color: f?.color || p.color };
+  });
+  setTimeout(() => mostrarResultados({ gano: fin.ganador === 'jugador', ronda: fin.ronda, duracionMs: Date.now() - inicioPartida, personajes, recompensas: fin.recompensas || [] }), 700);
 }
 
 // ---------------------------------------------------------------- entrada del jugador
@@ -452,6 +456,7 @@ window.__os2.audio = { sonar, finDePartida };          // pruebas de sonido desd
 window.__os2.empezar = (j, r) => jugar(j.map(porId), r.map(porId), 'construir');   // pruebas: __os2.empezar(['goku',...], [...])
 
 iniciarGuia();
+iniciarResultados();
 iniciarAjustes();
 // Clic de interfaz para todos los botones (los que tienen su propio sonido lo suman encima)
 document.addEventListener('click', e => { if (e.target.closest('button:not([disabled]):not(.act.off)')) sonar('clic'); }, true);
