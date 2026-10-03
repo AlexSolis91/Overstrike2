@@ -448,7 +448,7 @@ window.__os2.empezar = (j, r) => jugar(j.map(porId), r.map(porId), 'construir');
 iniciarGuia();
 iniciarAjustes();
 // Clic de interfaz para todos los botones (los que tienen su propio sonido lo suman encima)
-document.addEventListener('click', e => { if (e.target.closest('button:not([disabled])')) sonar('clic'); }, true);
+document.addEventListener('click', e => { if (e.target.closest('button:not([disabled]):not(.act.off)')) sonar('clic'); }, true);
 
 // ---------------------------------------------------------------- inicio: menú, o directo a la partida si venimos de "Revancha"/"Jugar"
 iniciarMenu({ jugar: (j, r) => jugar(j, r, document.querySelector('.eq-modo button.on')?.dataset.modo || 'azar'), salirDePartida });

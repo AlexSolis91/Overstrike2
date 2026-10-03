@@ -24,7 +24,7 @@ const arpegio = (notas, { forma = 'sine', d = .14, paso = .07, v = .1, t = 0 } =
 
 export const SONIDOS = {
   // ---------------------------------------------------------------- interfaz
-  clic:   { gap: 30, capas: [{ o: 'tono', forma: 'triangle', f: [900, 700], d: .05, v: .12 }] },
+  clic:   { gap: 30, archivo: 'assets/audio/sfx/boton.mp3', v: .8, capas: [{ o: 'tono', forma: 'triangle', f: [900, 700], d: .05, v: .12 }] },
   elegir: { capas: [{ o: 'tono', forma: 'triangle', f: [520, 780], d: .09, v: .16 }, { o: 'tono', forma: 'sine', f: [780, 1040], d: .08, v: .1, t: .05 }] },
   quitar: { capas: [{ o: 'tono', forma: 'triangle', f: [600, 380], d: .1, v: .15 }] },
   listo:  { capas: arpegio([523, 659, 784, 1046], { forma: 'triangle', d: .16, v: .13 }) },
