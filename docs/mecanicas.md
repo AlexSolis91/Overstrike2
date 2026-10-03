@@ -168,7 +168,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | `danoEfecto` | fraccion | Daño por efecto = fracción del daño que activó la acción |
 | `replicarDoT` | efecto, factor | Daño por efecto igual a factor × el DoT del objetivo, sobre el HP máx. de cada destino |
 | `detonar` | — | Explota ya todas las Bombas del objetivo |
-| `propagar` | efecto | Copia el DoT del objetivo principal (mismo valor y duración restante) a los destinos. Cada copia tira Puntería − Resistencia. Funciona aunque el objetivo muera y cuenta como aplicación |
+| `propagar` | efecto | Copia un debuff del objetivo principal **en su estado actual** (intensidad, duración restante, acumulación, turnos, capas, reducción de Desgaste…) a los destinos. Cada copia tira Puntería − Resistencia y se apila con las reglas normales. Funciona aunque el objetivo muera. Con `efecto: 'azar'` elige uno al azar entre los debuffs que el objetivo **ya tenía antes** del movimiento (Bola de Fuerza de Reptile). El Silencio copiado bloquea un movimiento al azar del nuevo objetivo |
 | `escudo` con `base: 'danoCausado'` | pct | Escudo igual a un % del daño total causado por el movimiento |
 | `efecto` con `idAzar: [ids]` | sinRepetir | Elige al azar uno de los efectos (por cada objetivo). Con `sinRepetir` no elige uno que el objetivo ya tenga activo |
 | `extenderInvocaciones` | turnos | +N turnos de duración a todas las invocaciones activas del objetivo |
@@ -186,7 +186,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - `bonoPorHpPerdido { cada, pct }`: +pct de daño por cada tramo completo de HP perdido del atacante.
 - `objetivo: 'azar'` + `golpes: N`: cada golpe va a un enemigo al azar (puede repetir; ignora Provocación; si el elegido ya cayó, va a otro vivo).
 
-**A quién (`a`):** `objetivo` · `propio` · `todosEnemigos` · `otrosEnemigos` · `todosAliados` · `aliadoMasHerido` · `sobrevivientes` · `{ azar: N }` (N enemigos al azar, pueden repetir) · `{ distintos: N }` (hasta N enemigos distintos) · `{ azarCon: { efecto, min } }` (un enemigo al azar con al menos `min` acumulaciones de ese efecto; respeta Esquiva Área en movimientos de área) · `{ aliadosAzar: N }` (N aliados al azar; puede incluir al ejecutor y repetir).
+**A quién (`a`):** `objetivo` · `propio` · `todosEnemigos` · `otrosEnemigos` · `todosAliados` · `aliadoMasHerido` · `sobrevivientes` · `{ azar: N }` (N enemigos al azar, pueden repetir) · `{ distintos: N }` (hasta N enemigos distintos) · `otroEnemigoAzar` (un enemigo al azar distinto del objetivo principal) · `{ azarCon: { efecto, min } }` (un enemigo al azar con al menos `min` acumulaciones de ese efecto; respeta Esquiva Área en movimientos de área) · `{ aliadosAzar: N }` (N aliados al azar; puede incluir al ejecutor y repetir).
 
 ## 8. Gatillos y condiciones
 

@@ -530,7 +530,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         break;
       }
       case 'poison': {
-        const v = DOT.veneno(sa.dot), pila = todos(t, 'poison');
+        const v = acc.valorFinal ?? DOT.veneno(sa.dot), pila = todos(t, 'poison');
         if (pila.length < DOT.maxVeneno) t.estados.push({ id: 'poison', valor: v, dur: acc.dur ?? DOT.durVeneno });
         else {
           const debil = pila.reduce((x, y) => (x.valor < y.valor || (x.valor === y.valor && x.dur < y.dur)) ? x : y);
@@ -541,7 +541,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       }
       case 'bleed': {
         if (get(t, 'hemo')) { emitir('sinEfecto', { a: t.uid, texto: 'Ya tiene Hemorragia' }); return; }
-        const v = DOT.sangrado(sa.dot), e = get(t, 'bleed');
+        const v = acc.valorFinal ?? DOT.sangrado(sa.dot), e = get(t, 'bleed');
         if (e) {
           e.valor = Math.max(e.valor, v);
           if (rng() < DOT.hemorragiaProb) {
@@ -555,15 +555,22 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       }
       case 'bomb': {
         if (todos(t, 'bomb').length >= DOT.maxBombas) { emitir('sinEfecto', { a: t.uid, texto: 'Máximo de bombas' }); return; }
-        t.estados.push({ id: 'bomb', valor: DOT.bomba(sa.dot), contador: acc.dur ?? DOT.contadorBomba });
+        t.estados.push({ id: 'bomb', valor: acc.valorFinal ?? DOT.bomba(sa.dot), contador: acc.dur ?? DOT.contadorBomba });
         texto = `💣 Bomba (${acc.dur ?? DOT.contadorBomba})`;
+        break;
+      }
+      case 'hemo': {            // solo llega como copia (Propagar): reemplaza un Sangrado o mejora una Hemorragia
+        const e = get(t, 'hemo');
+        if (e) e.valor = Math.max(e.valor, acc.valorFinal ?? 0);
+        else { const b = get(t, 'bleed'); if (b) quitar(t, b); t.estados.push({ id: 'hemo', valor: acc.valorFinal ?? DOT.sangrado(sa.dot) }); }
+        texto = '¡HEMORRAGIA!';
         break;
       }
       case 'freeze': {          // 1 capa (−25% Vel). Congelar a quien ya está congelado = Mega (2 capas, −50%). A una Mega no le hace nada
         const e = get(t, 'freeze'), dur = acc.dur ?? CONTROL.durCongelacion;
         if (e?.mega) { emitir('sinEfecto', { a: t.uid, texto: 'Ya tiene Mega Congelación' }); return; }
         if (e) Object.assign(e, { mega: true, capas: 2, dur });
-        else t.estados.push({ id: 'freeze', mega: !!acc.mega, capas: acc.mega ? 2 : 1, dur });
+        else t.estados.push({ id: 'freeze', mega: !!acc.mega, capas: acc.capas ?? (acc.mega ? 2 : 1), dur });
         texto = get(t, 'freeze').mega ? def.mega : def.nombre;
         break;
       }
@@ -579,7 +586,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       }
       case 'wear': {           // sin duración: dura hasta que lo limpien
         if (get(t, 'wear')) { emitir('sinEfecto', { a: t.uid, texto: 'Ya tiene Desgaste' }); return; }
-        t.estados.push({ id: 'wear', valor: DEBUFFS.desgaste });
+        t.estados.push({ id: 'wear', valor: acc.valorFinal ?? DEBUFFS.desgaste });
         break;
       }
       case 'plague': {         // Peste sobre Peste = Peste Negra
@@ -589,8 +596,15 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         t.estados.push({ id: 'plague', dur });
         break;
       }
+      case 'blackPlague': {    // solo llega como copia (Propagar)
+        const p1 = get(t, 'plague'), p2 = get(t, 'blackPlague'), dur = acc.dur ?? 2;
+        if (p2) { p2.dur = Math.max(p2.dur, dur); break; }
+        if (p1) quitar(t, p1);
+        t.estados.push({ id: 'blackPlague', dur });
+        break;
+      }
       case 'stun': case 'possess': {
-        const turnos = acc.mega ? 2 : 1, e = get(t, acc.id);
+        const turnos = acc.turnos ?? (acc.mega ? 2 : 1), e = get(t, acc.id);
         if (e) { e.turnos = Math.max(e.turnos, turnos); e.mega = e.mega || !!acc.mega; }
         else t.estados.push({ id: acc.id, turnos, mega: !!acc.mega });
         texto = acc.mega ? def.mega : def.nombre;
@@ -655,6 +669,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (spec.otrosAliadosAzar) return [...aliadosDe(a).filter(x => x !== a)].sort(() => rng() - .5).slice(0, spec.otrosAliadosAzar);
     if (spec.aliadoAzarSin) { const l = aliadosDe(a).filter(x => !get(x, spec.aliadoAzarSin)); return l.length ? [rng.elegir(l)] : []; }
     if (spec === 'otrosEnemigos') return enemigosDe(a).filter(x => x !== ctx.objetivo);
+    if (spec === 'otroEnemigoAzar') { const l = enemigosDe(a).filter(x => x !== ctx.objetivo); return l.length ? [rng.elegir(l)] : []; }
     if (spec === 'todosAliados') return aliadosDe(a);
     if (spec === 'sobrevivientes') return (ctx.sobrevivientes || []).filter(x => !x.muerto);
     if (spec.aliadosAzar) return Array.from({ length: spec.aliadosAzar }, () => aliadosDe(a)).filter(l => l.length).map(l => rng.elegir(l));
@@ -769,9 +784,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           if (e) danoEfecto(a, t, e.valor * acc.factor * maxHp(t), EFECTOS[acc.efecto].color);
           break;
         }
-        case 'propagar': {     // copia el DoT del objetivo principal (mismo valor y duración restante); cada copia tira Puntería
-          const src = ctx.estadoDe?.(acc.efecto);
-          if (src) intentarEfecto(a, t, { id: acc.efecto, valorFinal: src.valor, dur: src.dur });
+        case 'propagar': {     // copia un debuff del objetivo principal en su estado actual; cada copia tira Puntería
+          // efecto: 'azar' = uno al azar entre los debuffs que el objetivo YA tenía antes del movimiento
+          const id = acc.efecto !== 'azar' ? acc.efecto
+            : (ctx._propagado ??= rng.elegir([...new Set((ctx.debuffsPrevios || []).map(e => e.id))]) || null);
+          const src = id && ctx.estadoDe?.(id);
+          if (src) intentarEfecto(a, t, copiaDe(src));
           break;
         }
         case 'detonar': {
@@ -783,6 +801,15 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         }
       }
     }
+  }
+
+  // Datos para aplicar una COPIA exacta de un debuff (Propagar): misma intensidad y duración restante
+  function copiaDe(e) {
+    const c = { id: e.id, valorFinal: e.valor, dur: e.dur };
+    if (e.id === 'bomb') c.dur = e.contador;
+    if (e.id === 'stun' || e.id === 'possess') { c.turnos = e.turnos; c.mega = e.mega; }
+    if (e.id === 'freeze') { c.mega = e.mega; c.capas = e.capas || (e.mega ? 2 : 1); }
+    return c;
   }
 
   function cumple(cond, ctx) {
@@ -993,6 +1020,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const final = {
         sobrevivientes, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, invocaciones: invocacionesAntes, esMovimiento: true,
         estadoDe: id => (principal && !principal.muerto && get(principal, id)) || previos.find(e => e.id === id),
+        debuffsPrevios: previos.filter(e => EFECTOS[e.id]?.tipo === 'debuff'),
       };
       for (const ef of mov.efectos || []) if (ef.cuando === 'final' && cumple(ef.condicion, final)) ejecutarAccion(a, ef.accion, final);
       if (mov.bonoPorSobreviviente && sobrevivientes.length) {

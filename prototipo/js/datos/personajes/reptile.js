@@ -33,8 +33,11 @@ export default {
     {
       categoria: 'especial', nombre: 'Bola de Fuerza', objetivo: 'enemigo', estilo: 'ranged', color: 0x4ade80,
       pct: 1.30, escala: 'dano', cd: 3,
-      desc: 'Causa 130% y aplica Debilitar (recibe +50% de daño) por 2 rondas.',
-      efectos: [{ accion: { tipo: 'efecto', id: 'weaken', dur: 2 } }],
+      desc: 'Causa 130% y aplica Debilitar (recibe +50% de daño) por 2 rondas. Si el objetivo ya tenía algún debuff, propaga uno de ellos al azar a otro enemigo al azar (misma intensidad y duración restante; tirada de Puntería).',
+      efectos: [
+        { accion: { tipo: 'efecto', id: 'weaken', dur: 2 } },
+        { cuando: 'final', accion: { tipo: 'propagar', efecto: 'azar', a: 'otroEnemigoAzar' } },
+      ],
     },
     {
       categoria: 'over', nombre: 'Fatality: Lengua Ácida', objetivo: 'enemigo', estilo: 'melee', color: 0xa3e635,
