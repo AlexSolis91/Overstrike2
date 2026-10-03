@@ -13,7 +13,7 @@ está aquí, primero se define y se agrega a este registro; nunca se programa "s
 | HP, Daño, Velocidad | De la ficha | HP 500–800 · Daño 40–90 · Velocidad 60–100 · regla **1 Daño ≈ 10 HP** |
 | Prob. Crítico | 5% | |
 | Daño Crítico | 50% | Crítico = daño × (1 + Daño Crítico) |
-| Puntería | 0% | Para aplicar debuffs a enemigos, contra su Resistencia (ver **Tirada de Puntería**). Los buffs no la usan. Puede quedar negativa (Ceguera) |
+| Puntería | 50% | Para aplicar debuffs a enemigos, contra su Resistencia (ver **Tirada de Puntería**). Los buffs no la usan. Puede quedar negativa (Ceguera) |
 | Resistencia | 50% | Defiende de los debuffs contra la Puntería del rival |
 | Armadura | 0% | Reduce el daño recibido · **tope 75%** |
 | Bloqueo | 0% | Anula el movimiento completo (daño y efectos) · **tope 50%** |
@@ -89,7 +89,11 @@ Cada personaje tiene exactamente **3 movimientos**, una **pasiva** y, opcionalme
 Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para filtros.
 
 - **Aplicación:**
-  - Debuff a enemigo: **Tirada de Puntería** (estilo Raid). Si la Puntería del atacante **≥** la Resistencia del objetivo, **entra siempre**. Si no, la probabilidad es `100% − (Resistencia − Puntería)`, con un **mínimo de 10%** (nadie es inmune solo por estadísticas). Ej.: base contra base (0% vs 50%) = 50%; con Agudeza (50% vs 50%) = 100%; contra Protección (0% vs 80%) = 20%.
+  - Debuff a enemigo, en 2 filtros (estilo Raid):
+    1. **Probabilidad del movimiento** (`prob` en la acción de la ficha; **100% si la ficha no la indica**). Si falla, no pasa nada (no se muestra "Resistido"). Guía para fichas: Básicos 10–30%, Especiales 30–60%, Overs 60–100%; cuanto más potente el debuff, más baja.
+    2. **Tirada de Puntería**. Si la Puntería del atacante **≥** la Resistencia del objetivo, **entra siempre**. Si no, la probabilidad es `100% − (Resistencia − Puntería)`, con un **mínimo de 10%** (nadie es inmune solo por estadísticas). Si falla: "Resistido". Ej.: base contra base (50% vs 50%) = entra siempre (decide solo el % del movimiento); contra Protección (50% vs 80%) = 70%; con Ceguera contra base (0% vs 50%) = 50%.
+  - **Cada golpe tira por separado:** en ataques a varios, una tirada por objetivo; en multi-golpe al mismo objetivo, una tirada por golpe (2 golpes = 2 tiradas).
+  - Las copias de **Propagar** solo hacen el filtro 2.
   - **Buffs a aliados (incluido uno mismo): siempre se aplican (100%).**
 - **Siempre se aplican (100%):** curaciones directas, **escudos**, limpiezas y buffs.
   - Escudo y Curación son conceptos **separados**, con etiquetas distintas.
@@ -135,19 +139,19 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | 💢 Frenesí | Estadística | **+50% Prob. Crítico** (puntos: 5% → 55%) |
 | ⚡ Celeridad | Estadística | **+20% Velocidad** |
 | 🪓 Letalidad | Estadística | **+30% Daño Crítico** (puntos: 50% → 80%) |
-| 🏹 Agudeza | Estadística | **+50% Puntería** (puntos: 0% → 50%; contra Resistencia base, entra siempre) |
+| 🏹 Agudeza | Estadística | **+50% Puntería** (puntos: 50% → 100%; para superar Resistencias altas) |
 
 ### Debuffs de estadística
 
 | Debuff | Etiquetas | Efecto |
 |---|---|---|
-| 🕶️ Ceguera | Estadística | **−50 puntos de Puntería** (0% → −50%; contra Resistencia base solo entra el mínimo de 10%). Solo afecta la aplicación de debuffs y Disipar (los golpes no fallan; para eso existe Bloqueo) |
+| 🕶️ Ceguera | Estadística | **−50 puntos de Puntería** (50% → 0%; contra Resistencia base, entra la mitad de las veces). La Puntería puede quedar negativa. Solo afecta la aplicación de debuffs y Disipar (los golpes no fallan; para eso existe Bloqueo) |
 | 💥 Desgaste | Estadística | −5 puntos de Armadura al aplicarse y −5 más por cada golpe recibido (no bloqueado), hasta −25. Sin duración: dura hasta que lo limpien. Reaplicarlo no suma. La Armadura nunca baja de 0% |
 | 🦠 Peste | Peste | No puede recibir **ninguna** curación (incluye robo de vida, Robar HP, Regeneración y pasivas). Sí recibe escudos. Peste sobre Peste = Peste Negra |
 | ☠️ Peste Negra | Peste | Igual que Peste y además, al final de cada turno del portador (también si lo perdió), pierde **5% del HP máx. original** (piso: 25%). No es daño: el HP actual solo baja si queda por encima del nuevo máximo. La pérdida es **permanente** aunque se limpie (solo la recuperan futuras mecánicas de aumento de HP máx.) |
 | 🔆 Quemadura Solar | Quemadura Solar | Toda curación que reciba (movimientos, Regeneración, robo de vida, Robar HP, pasivas) se vuelve **daño por el monto completo**, aunque tenga el HP lleno. Ignora Armadura y Escudo, no se bloquea ni es crítico, le afectan las reducciones de DoT, rompe Sigilo y nadie recibe crédito si mata. Gana a la Peste. **No** cuenta como Quemadura. Las pasivas "solo si cura" no se activan sobre él y la IA no lo cura con curaciones de un objetivo. Se puede limpiar |
 | 💔 Debilitar | Estadística | Recibe **+50% de daño** de golpes y daño por efecto, calculado **después** de la Armadura (no afecta DoT ni Robar HP) |
-| ♨️ Aura de Fuego | Fuego | Cuando el portador recibe un **golpe** de un enemigo, le aplica al atacante Quemadura 5% (1 turno), con tirada de Puntería del portador |
+| ♨️ Aura de Fuego | Fuego | Cuando el portador recibe un **golpe** de un enemigo, tiene **50%** de probabilidad de aplicarle al atacante Quemadura 5% (1 turno), con Tirada de Puntería del portador |
 | 🎯 Provocación | Provocación | Los enemigos deben dirigirle sus movimientos de **un objetivo** (incluidas invocaciones). No afecta AOE, objetivos al azar, movimientos a aliados, Confusión ni Posesión. Con varios, se elige entre ellos. Se puede Disipar |
 | ✦ Invocación | Invocación | Ver sección 9 |
 

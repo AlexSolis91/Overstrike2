@@ -39,8 +39,8 @@ export default {
       categoria: 'over', nombre: 'Chibaku Tensei', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x9ca3af,
       pct: 1.20, escala: 'dano', cd: 4,
       bonoPorSobreviviente: .05,
-      desc: 'Causa 120% del Daño a todos los enemigos. Por cada enemigo que sobreviva, este ataque gana +5% de daño (permanente). Aplica Miedo (2 rondas) a los sobrevivientes.',
-      efectos: [{ cuando: 'final', accion: { tipo: 'efecto', id: 'fear', dur: 2, a: 'sobrevivientes' } }],
+      desc: 'Causa 120% del Daño a todos los enemigos. Por cada enemigo que sobreviva, este ataque gana +5% de daño (permanente). 75% de probabilidad de aplicar Miedo (2 rondas) a cada sobreviviente.',
+      efectos: [{ cuando: 'final', accion: { tipo: 'efecto', id: 'fear', dur: 2, prob: .75, a: 'sobrevivientes' } }],
     },
   ],
 };

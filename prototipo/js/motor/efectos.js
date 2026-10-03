@@ -1,7 +1,7 @@
 // Registro universal de buffs y debuffs. Cada efecto existe UNA sola vez y todos los personajes lo usan igual.
 // tipo: 'buff' | 'debuff'   ·   tags: etiquetas internas para filtros (limpiar solo DoT, inmune a Control, etc.)
 
-import { BUFFS, DEBUFFS, CONTROL, DOT } from './reglas.js';
+import { BUFFS, DEBUFFS, CONTROL, DOT, PUNTERIA } from './reglas.js';
 
 const p = v => `${Math.round(v * 1000) / 10}%`;
 
@@ -47,7 +47,7 @@ export const EFECTOS = {
   taunt:   { nombre: 'Provocación', icono: '🎯', color: 0xf97316, tipo: 'buff', tags: ['Provocación'],
     desc: `Los enemigos deben atacarlo con sus movimientos de un solo objetivo. No afecta ataques de área ni al azar.` },
   fireAura: { nombre: 'Aura de Fuego', icono: '♨️', color: 0xff6a3d, tipo: 'buff', tags: ['Fuego'],
-    desc: `Quien lo golpee recibe Quemadura 5% (1 turno).` },
+    desc: `Quien lo golpee tiene ${p(PUNTERIA.auraFuego)} de probabilidad de recibir Quemadura 5% (1 turno).` },
   aoeDodge: { nombre: 'Esquiva Área', icono: '💨', color: 0x93c5fd, tipo: 'buff', tags: ['Esquiva'],
     desc: `No lo alcanzan los movimientos de área de los enemigos: ni su daño ni sus efectos.` },
   stealth: { nombre: 'Sigilo',      icono: '👤', color: 0x94a3b8, tipo: 'buff', tags: ['Sigilo'],

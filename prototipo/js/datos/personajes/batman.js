@@ -17,24 +17,24 @@ export default {
   },
   pasiva: {
     nombre: 'Análisis de Puntos Débiles',
-    desc: 'Cada vez que un enemigo usa su Especial o su Over, le aplica al azar uno de estos debuffs que no tenga: Debilitar, Ceguera, Desgaste, Silenciar, Peste o Congelación (2 rondas; tirada de Puntería).',
+    desc: 'Cada vez que un enemigo usa su Especial o su Over, tiene 50% de probabilidad de aplicarle al azar uno de estos debuffs que no tenga: Debilitar, Ceguera, Desgaste, Silenciar, Peste o Congelación (2 rondas; tirada de Puntería).',
     gatillo: 'alUsarMovimientoEnemigo', filtro: { categorias: ['especial', 'over'] },
-    accion: { tipo: 'efecto', idAzar: ['weaken', 'blind', 'wear', 'silence', 'plague', 'freeze'], sinRepetir: true, dur: 2, a: 'objetivo' },
+    accion: { tipo: 'efecto', idAzar: ['weaken', 'blind', 'wear', 'silence', 'plague', 'freeze'], sinRepetir: true, dur: 2, prob: .50, a: 'objetivo' },
   },
   movimientos: [
     {
       categoria: 'basico', nombre: 'Batarang', objetivo: 'enemigo', estilo: 'ranged', color: 0x94a3b8,
       pct: .70, escala: 'dano', cd: 0,
-      desc: 'Causa 70%. Si el objetivo tiene su Over listo para usar, intenta Aturdirlo.',
-      efectos: [{ condicion: { objetivoOverListo: true }, accion: { tipo: 'efecto', id: 'stun' } }],
+      desc: 'Causa 70%. Si el objetivo tiene su Over listo para usar, tiene 20% de probabilidad de Aturdirlo.',
+      efectos: [{ condicion: { objetivoOverListo: true }, accion: { tipo: 'efecto', id: 'stun', prob: .20 } }],
     },
     {
       categoria: 'especial', nombre: 'Tácticas de las Sombras', objetivo: 'propio', estilo: 'support', color: 0xfacc15, cd: 3,
-      desc: 'Batman y 1 aliado al azar ganan Agudeza (+50% Puntería, 2 rondas). Aplica Quemadura Solar (2 rondas) a todos los enemigos (tirada de Puntería).',
+      desc: 'Batman y 1 aliado al azar ganan Agudeza (+50% Puntería, 2 rondas). 40% de probabilidad de aplicar Quemadura Solar (2 rondas) a cada enemigo.',
       efectos: [
         { cuando: 'final', accion: { tipo: 'efecto', id: 'keen', dur: 2, a: 'propio' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'keen', dur: 2, a: { otrosAliadosAzar: 1 } } },
-        { cuando: 'final', accion: { tipo: 'efecto', id: 'solarBurn', dur: 2, a: 'todosEnemigos' } },
+        { cuando: 'final', accion: { tipo: 'efecto', id: 'solarBurn', dur: 2, prob: .40, a: 'todosEnemigos' } },
       ],
     },
     {

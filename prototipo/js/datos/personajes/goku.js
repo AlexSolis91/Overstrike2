@@ -90,8 +90,8 @@ export default {
     {
       categoria: 'especial', nombre: 'Kamehameha', objetivo: 'enemigo', estilo: 'ranged', color: 0x60a5fa,
       pct: 1.30, escala: 'dano', cd: 2,
-      desc: 'Causa 130%. Aplica Debilitar (recibe +50% de daño) por 2 rondas.',
-      efectos: [{ accion: { tipo: 'efecto', id: 'weaken', dur: 2 } }],
+      desc: 'Causa 130% con 40% de probabilidad de aplicar Debilitar (recibe +50% de daño) por 2 rondas.',
+      efectos: [{ accion: { tipo: 'efecto', id: 'weaken', dur: 2, prob: .40 } }],
     },
     {
       categoria: 'over', nombre: 'Super Saiyajin', objetivo: 'propio', estilo: 'support', color: 0xfacc15, cd: 3,

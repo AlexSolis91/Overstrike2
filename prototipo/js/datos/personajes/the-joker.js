@@ -13,27 +13,27 @@ export default {
 
   pasiva: {
     nombre: 'Anarquía y Caos',
-    desc: 'Hasta 2 veces por ronda: cuando un enemigo recibe daño de Veneno, aplica Aturdimiento o Confusión (1 ronda), al azar, a un enemigo al azar (tirada de Puntería).',
+    desc: 'Hasta 2 veces por ronda: cuando un enemigo recibe daño de Veneno, tiene 40% de probabilidad de aplicar Aturdimiento o Confusión (1 ronda), al azar, a un enemigo al azar (tirada de Puntería).',
     gatillo: 'alDanoDoT', filtro: { tipo: 'poison', en: 'enemigos' }, maxPorRonda: 2,
-    accion: { tipo: 'efecto', idAzar: ['stun', 'confuse'], dur: 1, a: { azar: 1 } },
+    accion: { tipo: 'efecto', idAzar: ['stun', 'confuse'], dur: 1, prob: .40, a: { azar: 1 } },
   },
   movimientos: [
     {
       categoria: 'basico', nombre: 'Naipes Impregnados', objetivo: 'enemigo', estilo: 'ranged', color: 0xa855f7,
       pct: 1.00, escala: 'dano', cd: 0,
-      desc: 'Causa 100% y aplica Veneno. Si el objetivo tenía más HP actual que The Joker, aplica 2 Venenos más, cada uno a un enemigo al azar (pueden caer en el mismo).',
+      desc: 'Causa 100% y tiene 30% de probabilidad de aplicar Veneno. Si el objetivo tenía más HP actual que The Joker, intenta 2 Venenos más (30% cada uno), cada uno a un enemigo al azar (pueden caer en el mismo).',
       efectos: [
-        { accion: { tipo: 'efecto', id: 'poison' } },
-        { condicion: { objetivoMasHpQueYo: true }, accion: { tipo: 'efecto', id: 'poison', a: { azar: 2 } } },
+        { accion: { tipo: 'efecto', id: 'poison', prob: .30 } },
+        { condicion: { objetivoMasHpQueYo: true }, accion: { tipo: 'efecto', id: 'poison', prob: .30, a: { azar: 2 } } },
       ],
     },
     {
       categoria: 'especial', nombre: 'Detonador del Caos', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x22c55e,
       pct: .75, escala: 'dano', cd: 3,
-      desc: 'Causa 75% a todos los enemigos y les aplica Veneno. Luego aplica Mega Aturdimiento a un enemigo al azar con 3 o más acumulaciones de Veneno.',
+      desc: 'Causa 75% a todos los enemigos con 60% de probabilidad de aplicar Veneno a cada uno. Luego tiene 30% de probabilidad de aplicar Mega Aturdimiento a un enemigo al azar con 3 o más acumulaciones de Veneno.',
       efectos: [
-        { accion: { tipo: 'efecto', id: 'poison' } },
-        { cuando: 'final', accion: { tipo: 'efecto', id: 'stun', mega: true, a: { azarCon: { efecto: 'poison', min: 3 } } } },
+        { accion: { tipo: 'efecto', id: 'poison', prob: .60 } },
+        { cuando: 'final', accion: { tipo: 'efecto', id: 'stun', mega: true, prob: .30, a: { azarCon: { efecto: 'poison', min: 3 } } } },
       ],
     },
     {

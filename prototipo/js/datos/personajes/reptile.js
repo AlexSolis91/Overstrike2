@@ -24,18 +24,18 @@ export default {
     {
       categoria: 'basico', nombre: 'Escupitajo Ácido', objetivo: 'enemigo', estilo: 'ranged', color: 0x84cc16,
       pct: .90, escala: 'dano', cd: 0,
-      desc: 'Causa 90% y aplica Veneno. Si el objetivo ya tenía Veneno, también aplica Desgaste.',
+      desc: 'Causa 90% con 30% de probabilidad de aplicar Veneno. Si el objetivo ya tenía Veneno, también tiene 20% de probabilidad de aplicar Desgaste.',
       efectos: [
-        { condicion: { objetivoTiene: 'poison' }, accion: { tipo: 'efecto', id: 'wear' } },   // se revisa ANTES de poner el nuevo Veneno
-        { accion: { tipo: 'efecto', id: 'poison' } },
+        { condicion: { objetivoTiene: 'poison' }, accion: { tipo: 'efecto', id: 'wear', prob: .20 } },   // se revisa ANTES de poner el nuevo Veneno
+        { accion: { tipo: 'efecto', id: 'poison', prob: .30 } },
       ],
     },
     {
       categoria: 'especial', nombre: 'Bola de Fuerza', objetivo: 'enemigo', estilo: 'ranged', color: 0x4ade80,
       pct: 1.30, escala: 'dano', cd: 3,
-      desc: 'Causa 130% y aplica Debilitar (recibe +50% de daño) por 2 rondas. Si el objetivo ya tenía algún debuff, propaga uno de ellos al azar a otro enemigo al azar (misma intensidad y duración restante; tirada de Puntería).',
+      desc: 'Causa 130% con 40% de probabilidad de aplicar Debilitar (recibe +50% de daño) por 2 rondas. Si el objetivo ya tenía algún debuff, propaga uno de ellos al azar a otro enemigo al azar (misma intensidad y duración restante; tirada de Puntería).',
       efectos: [
-        { accion: { tipo: 'efecto', id: 'weaken', dur: 2 } },
+        { accion: { tipo: 'efecto', id: 'weaken', dur: 2, prob: .40 } },
         { cuando: 'final', accion: { tipo: 'propagar', efecto: 'azar', a: 'otroEnemigoAzar' } },
       ],
     },

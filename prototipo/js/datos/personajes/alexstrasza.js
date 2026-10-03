@@ -8,9 +8,9 @@ const dragonDeLaVida = {
   extra: { armor: .25, res: .25 },                 // parte fija de "Aspecto Carmesí"
   pasiva: {
     nombre: 'Aspecto Carmesí',
-    desc: '+25% de Armadura y Resistencia. Cada vez que un aliado recibe una curación, aplica Quemadura 5% (2 rondas) a un enemigo al azar.',
+    desc: '+25% de Armadura y Resistencia. Cada vez que un aliado recibe una curación, tiene 50% de probabilidad de aplicar Quemadura 5% (2 rondas) a un enemigo al azar.',
     gatillo: 'alCurarAliado',
-    accion: { tipo: 'efecto', id: 'burn', valor: .05, dur: 2, a: { azar: 1 } },
+    accion: { tipo: 'efecto', id: 'burn', valor: .05, dur: 2, prob: .50, a: { azar: 1 } },
   },
   movimientos: [
     {
@@ -69,10 +69,10 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Dragón de la Vida', objetivo: 'propio', estilo: 'support', color: 0xdc2626, cd: 5,
-      desc: 'Se transforma en el Dragón de la Vida (3 turnos). Aplica Quemadura 10% (3 rondas) a todos los enemigos y cura a todos los aliados 10% de su HP máx.',
+      desc: 'Se transforma en el Dragón de la Vida (3 turnos). 80% de probabilidad de aplicar Quemadura 10% (3 rondas) a cada enemigo y cura a todos los aliados 10% de su HP máx.',
       efectos: [
         { cuando: 'final', accion: { tipo: 'transformar', turnos: 3, a: 'propio' } },
-        { cuando: 'final', accion: { tipo: 'efecto', id: 'burn', valor: .10, dur: 3, a: 'todosEnemigos' } },
+        { cuando: 'final', accion: { tipo: 'efecto', id: 'burn', valor: .10, dur: 3, prob: .80, a: 'todosEnemigos' } },
         { cuando: 'final', accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .10, a: 'todosAliados' } },
       ],
     },

@@ -44,23 +44,23 @@ export const INVOCACIONES = {
   beru: {
     nombre: 'Beru', rareza: 'Épico', emoji: '🐜', color: 0xa855f7, imagen: 'assets/invocaciones/beru.webp', dur: 3,
     enfoque: [.37, .41],
-    desc: 'Golpea 2 veces (30%) a un enemigo al azar y aplica Sangrado o Veneno (50/50).',
-    acciones: [{ tipo: 'golpe', pct: .30, golpes: 2, elegir: 'azar', efectos: [{ accion: { tipo: 'efecto', idAzar: ['bleed', 'poison'] } }] }],
+    desc: 'Golpea 2 veces (30%) a un enemigo al azar. Cada golpe tiene 50% de probabilidad de aplicar Sangrado o Veneno (50/50).',
+    acciones: [{ tipo: 'golpe', pct: .30, golpes: 2, elegir: 'azar', efectos: [{ accion: { tipo: 'efecto', idAzar: ['bleed', 'poison'], prob: .50 } }] }],
   },
   bellion: {
     nombre: 'Bellion', rareza: 'Épico', emoji: '⚔️', color: 0x7c3aed, imagen: 'assets/invocaciones/bellion.webp', dur: 3,
     enfoque: [.585, .19],
-    desc: 'Golpea 35% al enemigo más fuerte. Al aparecer, intenta Aturdir a hasta 3 enemigos distintos (cada uno con su tirada).',
-    alAparecer: [{ tipo: 'efecto', id: 'stun', a: { distintos: 3 } }],
+    desc: 'Golpea 35% al enemigo más fuerte. Al aparecer, tiene 60% de probabilidad de Aturdir a cada uno de hasta 3 enemigos distintos (cada uno con su tirada).',
+    alAparecer: [{ tipo: 'efecto', id: 'stun', prob: .60, a: { distintos: 3 } }],
     acciones: [{ tipo: 'golpe', pct: .35, elegir: 'masFuerte' }],
   },
   kamish: {
     nombre: 'Kamish', rareza: 'Legendario', emoji: '🐲', color: 0x9333ea, imagen: 'assets/invocaciones/kamish.webp', dur: 2,
     enfoque: [.44, .16],
-    desc: 'Golpea 50% a todos los enemigos. Al aparecer, golpea 150% a todos y aplica Miedo (2 rondas).',
+    desc: 'Golpea 50% a todos los enemigos. Al aparecer, golpea 150% a todos y tiene 80% de probabilidad de aplicar Miedo (2 rondas) a cada uno.',
     alAparecer: [
       { tipo: 'golpe', pct: 1.50, elegir: 'todos' },
-      { tipo: 'efecto', id: 'fear', dur: 2, a: 'todosEnemigos' },
+      { tipo: 'efecto', id: 'fear', dur: 2, prob: .80, a: 'todosEnemigos' },
     ],
     acciones: [{ tipo: 'golpe', pct: .50, elegir: 'todos' }],
   },
@@ -86,8 +86,8 @@ export const INVOCACIONES = {
   rhaegal: {
     nombre: 'Rhaegal', rareza: 'Común', emoji: '🐉', color: 0x16a34a, imagen: 'assets/invocaciones/rhaegal.webp', dur: 3,
     enfoque: [.565, .37],
-    desc: 'Aplica Quemadura 2% (2 rondas) a todos los enemigos. Si es más débil que la Quemadura que ya tienen, no alarga su duración.',
-    acciones: [{ tipo: 'efecto', id: 'burn', valor: .02, dur: 2, noRenueva: true, a: 'todosEnemigos' }],
+    desc: '60% de probabilidad de aplicar Quemadura 2% (2 rondas) a cada enemigo. Si es más débil que la Quemadura que ya tienen, no alarga su duración.',
+    acciones: [{ tipo: 'efecto', id: 'burn', valor: .02, dur: 2, noRenueva: true, prob: .60, a: 'todosEnemigos' }],
   },
   viserion: {
     nombre: 'Viserion', rareza: 'Épico', emoji: '🐉', color: 0xfde68a, imagen: 'assets/invocaciones/viserion.webp', dur: 3,

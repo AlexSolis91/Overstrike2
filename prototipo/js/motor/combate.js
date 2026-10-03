@@ -3,7 +3,7 @@
 // - Ningún personaje tiene código propio: sus fichas solo combinan piezas (acciones, gatillos, condiciones, efectos).
 // - Todo el azar pasa por un generador con semilla (misma semilla + mismas decisiones = misma partida).
 
-import { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, CONTROL, DOT, BUFFS, DEBUFFS, probAplicar } from './reglas.js';
+import { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, CONTROL, DOT, BUFFS, DEBUFFS, PUNTERIA, probAplicar } from './reglas.js';
 import { EFECTOS, esDe } from './efectos.js';
 import { crearRng } from './rng.js';
 import { RELIQUIAS } from '../datos/reliquias.js';
@@ -400,7 +400,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const aura = get(t, 'fireAura');
     if (aura && !t.muerto && !a.muerto && t.lado !== a.lado) {
       emitir('auraFuego', { a: t.uid, de: a.uid });
-      intentarEfecto(t, a, { id: 'burn', valor: .05, dur: 1 });
+      intentarEfecto(t, a, { id: 'burn', valor: .05, dur: 1, prob: PUNTERIA.auraFuego });
     }
     if (critico) {
       const c = { objetivo: t, dano: aHp + aEsc };
@@ -516,7 +516,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const def = EFECTOS[acc.id];
     if (t.muerto) return;
     if (def.tipo === 'buff') { aplicarEfecto(a, t, acc); return; }       // los buffs a aliados siempre se aplican
-    const sa = stats(a), st = stats(t);
+    if (acc.prob != null && rng() >= acc.prob) return;                   // 1) probabilidad del movimiento (por defecto 100%): si falla, ni lo intenta
+    const sa = stats(a), st = stats(t);                                  // 2) Puntería vs Resistencia
     if (rng() >= probAplicar(sa.acc, st.res)) { emitir('resistido', { a: t.uid, id: acc.id }); return; }
     aplicarEfecto(a, t, acc);
   }
@@ -706,7 +707,6 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       switch (acc.tipo) {
         case 'efecto':
           for (let i = 0; i < (acc.veces || 1); i++) {
-            if (acc.prob !== undefined && rng() >= acc.prob) continue;     // prob: probabilidad de que el efecto se intente
             if (!acc.idAzar) { intentarEfecto(a, t, acc); continue; }
             const ids = acc.sinRepetir ? acc.idAzar.filter(id => !get(t, id)) : acc.idAzar;   // sinRepetir: no elige uno que ya tenga
             if (!ids.length) { emitir('sinEfecto', { a: t.uid, texto: 'Ya tiene todos' }); continue; }
@@ -992,13 +992,17 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (hostil && rng() < Math.min(stats(t).block, TOPES.block)) { emitir('bloqueo', { de: a.uid, a: t.uid }); return; }
     if (ctx.acum) for (const e of t.estados) ctx.acum.tenian.add(e.id);     // lo que tenía el objetivo al ser golpeado
     const hpObjetivoAntes = t.hp;
-    if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) golpear(a, t, mov, ctx);
-    if (t.muerto) return;
-    for (const ef of mov.efectos || []) {
-      if (ef.cuando && ef.cuando !== 'objetivo') continue;
-      const c = { objetivo: t, atacante: a, hpObjetivoAntes };
-      if (cumple(ef.condicion, c)) ejecutarAccion(a, ef.accion, c);
-    }
+    const efectosDelGolpe = () => {
+      if (t.muerto) return;
+      for (const ef of mov.efectos || []) {
+        if (ef.cuando && ef.cuando !== 'objetivo') continue;
+        const c = { objetivo: t, atacante: a, hpObjetivoAntes };
+        if (cumple(ef.condicion, c)) ejecutarAccion(a, ef.accion, c);
+      }
+    };
+    // cada golpe intenta sus efectos: 2 golpes al mismo objetivo = 2 tiradas
+    if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) { golpear(a, t, mov, ctx); efectosDelGolpe(); }
+    else efectosDelGolpe();
   }
 
   function ejecutarMovimiento(a, mov, objetivo, ctx = {}) {

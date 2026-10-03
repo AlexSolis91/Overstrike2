@@ -25,9 +25,9 @@ export default {
     {
       categoria: 'basico', nombre: 'Sol Ascendente', objetivo: 'enemigo', estilo: 'melee', color: 0xff7a2a,
       pct: .90, escala: 'hp', cd: 0,
-      desc: 'Causa 90% (escala por HP). Aplica Quemadura 5% (2 rondas). Rengoku gana Provocación (2 rondas).',
+      desc: 'Causa 90% (escala por HP). 30% de probabilidad de aplicar Quemadura 5% (2 rondas). Rengoku gana Provocación (2 rondas).',
       efectos: [
-        { accion: { tipo: 'efecto', id: 'burn', valor: .05, dur: 2 } },
+        { accion: { tipo: 'efecto', id: 'burn', valor: .05, dur: 2, prob: .30 } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'taunt', dur: 2, a: 'propio' } },
       ],
     },

@@ -38,9 +38,9 @@ export default {
     {
       categoria: 'over', nombre: 'Dracarys', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xff3d00,
       pct: 1.00, escala: 'dano', cd: 7,
-      desc: 'Causa 100% a todos los enemigos y aplica Quemadura 10% (3 rondas). Si tiene sus 3 dragones activos, cada dragón actúa de inmediato.',
+      desc: 'Causa 100% a todos los enemigos con 80% de probabilidad de aplicar Quemadura 10% (3 rondas) a cada uno. Si tiene sus 3 dragones activos, cada dragón actúa de inmediato.',
       efectos: [
-        { accion: { tipo: 'efecto', id: 'burn', valor: .10, dur: 3 } },
+        { accion: { tipo: 'efecto', id: 'burn', valor: .10, dur: 3, prob: .80 } },
         { cuando: 'final', condicion: { invocacionesMin: 3 }, accion: { tipo: 'potenciarInvocaciones', potencia: 1, a: 'propio' } },
       ],
     },
