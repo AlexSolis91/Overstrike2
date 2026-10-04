@@ -93,6 +93,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - Debuff a enemigo, en 2 filtros (estilo Raid):
     1. **Probabilidad del movimiento** (`prob` en la acción de la ficha; **100% si la ficha no la indica**). Si falla, no pasa nada (no se muestra "Resistido"). Guía para fichas: Básicos 10–30%, Especiales 30–60%, Overs 60–100%; cuanto más potente el debuff, más baja.
     2. **Tirada de Puntería**. Si la Puntería del atacante **≥** la Resistencia del objetivo, **entra siempre**. Si no, la probabilidad es `100% − (Resistencia − Puntería)`, con un **mínimo de 10%** (nadie es inmune solo por estadísticas). Si falla: "Resistido". Ej.: base contra base (50% vs 50%) = entra siempre (decide solo el % del movimiento); contra Protección (50% vs 80%) = 70%; con Ceguera contra base (0% vs 50%) = 50%.
+  - `probSiMasRapido`: probabilidad distinta contra objetivos **más rápidos** que quien lo aplica (p. ej. Deep Freeze: 75%, o 100% contra los más rápidos que Sub-Zero).
   - **Cada golpe tira por separado:** en ataques a varios, una tirada por objetivo; en multi-golpe al mismo objetivo, una tirada por golpe (2 golpes = 2 tiradas).
   - Las copias de **Propagar** solo hacen el filtro 2.
   - **Buffs a aliados (incluido uno mismo): siempre se aplican (100%).**
@@ -173,6 +174,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | `danoEfecto` | fraccion | Daño por efecto = fracción del daño que activó la acción |
 | `replicarDoT` | efecto, factor | Daño por efecto igual a factor × el DoT del objetivo, sobre el HP máx. de cada destino |
 | `detonar` | — | Explota ya todas las Bombas del objetivo |
+| `usarMovimiento` | categoria | Usa uno de sus propios movimientos sobre el destino, igual que el normal (puede aplicar efectos, activa Hemorragia, etc.), pero **no** gasta su turno ni cambia su cooldown. P. ej. Absolute Zero de Sub-Zero: Ice Blast a un enemigo al azar |
 | `propagar` | efecto | Copia un debuff del objetivo principal **en su estado actual** (intensidad, duración restante, acumulación, turnos, capas, reducción de Desgaste…) a los destinos. Cada copia hace su Tirada de Puntería y se apila con las reglas normales. Funciona aunque el objetivo muera. **Restricción:** si la ficha indica un debuff (`efecto: 'burn'`, como Purgatorio de Rengoku), solo propaga ese y, si el objetivo no lo tiene, no pasa nada. Sin restricción (`efecto: 'azar'`, como Bola de Fuerza de Reptile), elige uno al azar entre **cualquier** debuff que el objetivo **ya tenía antes** del movimiento. El Silencio copiado bloquea un movimiento al azar del nuevo objetivo |
 | `escudo` con `base: 'danoCausado'` | pct | Escudo igual a un % del daño total causado por el movimiento |
 | `efecto` con `idAzar: [ids]` | sinRepetir | Elige al azar uno de los efectos (por cada objetivo). Con `sinRepetir` no elige uno que el objetivo ya tenga activo |
@@ -185,8 +187,10 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 
 **Modificadores de un golpe (en la ficha del movimiento):**
 - `critExtra`: suma puntos de Prob. Crítico solo a ese ataque.
+- `critExtraSi { teniaAntes, pct }`: +pct de Prob. Crítico contra los objetivos que **ya tenían** ese efecto **antes** del movimiento (p. ej. Deep Freeze: +50% contra los ya congelados).
 - `criticoSiHpMin`: crítico garantizado si el objetivo tiene ese % de HP o más (se puede **bloquear**).
 - `ignoraArmadura`: resta **puntos** de Armadura al objetivo (0.10 = 40% → 30%; 1 = la ignora toda).
+- `ignoraArmaduraSi { efecto, puntos }`: igual, pero solo contra objetivos que tienen ese efecto en el momento del golpe (p. ej. Ice Blast: 25 puntos contra congelados).
 - `bonoPorAcumulacion { efecto, pct, max }`: +pct de daño por cada acumulación de ese efecto en el objetivo, hasta `max` acumulaciones (p. ej. Fatality de Reptile).
 - `bonoPorHpPerdido { cada, pct }`: +pct de daño por cada tramo completo de HP perdido del atacante.
 - `objetivo: 'azar'` + `golpes: N`: cada golpe va a un enemigo al azar (puede repetir; ignora Provocación; si el elegido ya cayó, va a otro vivo).
@@ -208,9 +212,11 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - `alGolpear`: cada vez que el dueño golpea (no bloqueado). Filtro opcional `objetivoTiene: <efecto>` (p. ej. Reptile: Sigilo al golpear a un envenenado).
   - `alTransformarse`: al transformarse. Usa la pasiva que tenía **antes** de transformarse (p. ej. Sangre Sayajin al pasar a Super Sayajin 3).
   - `alPerderEscudo`: cada vez que el dueño o un aliado pierde Escudo por un golpe o daño por efecto (los DoT no tocan escudos). `objetivo` = quien lo perdió.
+  - `alRomperCapa`: cada vez que un **golpe** (de cualquiera) rompe una capa de Congelación o Mega Congelación de un **enemigo** del dueño. No cuenta el hielo que se derrite al perder el turno. `objetivo` = el congelado.
 - **Daño contra un efecto:** una pasiva puede declarar `bonoContra { efecto, pct }`: sus golpes hacen +pct a enemigos con ese efecto.
 - **Robo de vida:** una pasiva puede declarar `roboVida: X`: cada golpe cura X × daño causado (incluye lo absorbido por escudos). Es curación normal.
 - **Inmunidades:** una pasiva puede declarar `inmuneA` con ids o etiquetas de efectos (p. ej. Sun Jin Woo: Veneno).
+- **Reacciones:** si una pasiva responde a la acción de otro con un movimiento propio (`usarMovimiento`), espera a que termine el movimiento en curso (o el ataque de la invocación) y se ejecuta después.
 - **Límite:** una pasiva puede declarar `maxPorRonda`. Con `soloSiCura: true`, una pasiva de curación no se activa ni gasta uso si ningún destino puede recibir curación (HP lleno).
 - **Quemadura débil (`noRenueva`):** una Quemadura es *débil* si su % final (con el Daño DoT de quien la aplica) es **menor** que el de la Quemadura activa. Se fusiona igual (+10% de la débil), pero si la acción tiene `noRenueva`, **no alarga la duración**. Hoy solo la usa Rhaegal.
 - **Condiciones:**
@@ -261,6 +267,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Piezas de líder disponibles:**
   - `reduccion { categoria, pct }`: reduce el daño recibido por los aliados.
   - `bonoPorEfecto { efecto, stat, valor }`: todo su equipo gana +valor a esa estadística por cada **enemigo** con ese efecto (p. ej. Daenerys: +4% Puntería por enemigo quemado).
+  - `bonoCriticoContra { efecto, critRate, critDmg }`: los aliados ganan esos puntos de Prob. y Daño Crítico al golpear a un enemigo con ese efecto (p. ej. Sub-Zero: +15%/+15% contra congelados).
   - `alIniciarRonda { acción }`: al empezar cada ronda ejecuta una acción universal (p. ej. Shaka: Escudo 12% de su HP máx. al aliado con menor % de HP).
   - `alAplicar { efecto, stat, valor }`: cada vez que su equipo **acierta** ese debuff en un enemigo, un aliado al azar (puede ser el líder) gana un bono **permanente e invisible** a esa estadística. No es un buff y no se puede disipar.
 

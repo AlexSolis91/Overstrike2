@@ -19,6 +19,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   const P = [];
   const S = { ronda: 0, actuaron: new Set(), orden: [], actual: null, esperando: null, fin: null };
   let EV = [];
+  // Reacciones: lo que una pasiva hace en respuesta a la acción de otro (p. ej. Sub-Zero lanza Ice Blast cuando le rompen
+  // el hielo a un enemigo) espera a que termine el movimiento en curso, para no mezclarse con él.
+  const reacciones = [];
+  let profundidad = 0;
+  function procesarReacciones() {
+    if (profundidad) return;
+    while (reacciones.length) reacciones.shift()();
+  }
 
   // ================================================================ personajes
   function crearPersonaje(def, lado, pos) {
@@ -381,8 +389,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       d *= 1 + Math.min(todos(t, b.efecto).length, b.max ?? 99) * b.pct;
     }
     const garantizado = mov.criticoSiHpMin !== undefined && t.hp / maxHp(t) >= mov.criticoSiHpMin;
-    const critico = ctx.forzarCritico || garantizado || rng() < sa.critRate + (mov.critExtra || 0);
-    if (critico) d *= 1 + sa.critDmg;
+    let probCrit = sa.critRate + (mov.critExtra || 0), danoCrit = sa.critDmg;
+    if (mov.critExtraSi && ctx.teniaAntes?.has(mov.critExtraSi.teniaAntes)) probCrit += mov.critExtraSi.pct;   // +crítico si ya tenía X antes del movimiento
+    for (const l of lideresDe(a)) {          // líder "bonoCriticoContra": +Prob. y +Daño Crítico al golpear a un enemigo con ese efecto
+      const b = l.lider?.bonoCriticoContra;
+      if (b && t.lado !== a.lado && get(t, b.efecto)) { probCrit += b.critRate || 0; danoCrit += b.critDmg || 0; }
+    }
+    const critico = ctx.forzarCritico || garantizado || rng() < probCrit;
+    if (critico) d *= 1 + danoCrit;
     if (get(a, 'fear')) d *= CONTROL.miedoDano;
     let quiebre = false;
     const hielo = get(t, 'freeze');
@@ -390,7 +404,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (hielo?.capas > 0 && !(mov.efectos || []).some(ef => ef.accion?.id === 'freeze')) {
       d *= 1 + CONTROL.quiebreCongelacion; quiebre = true; hielo.capas--;
     }
-    d *= 1 - Math.min(Math.max(0, st.armor - (mov.ignoraArmadura || 0)), TOPES.armor);   // ignorar Armadura: resta puntos
+    let ignora = mov.ignoraArmadura || 0;
+    if (mov.ignoraArmaduraSi && get(t, mov.ignoraArmaduraSi.efecto)) ignora += mov.ignoraArmaduraSi.puntos;   // solo si el objetivo tiene X
+    d *= 1 - Math.min(Math.max(0, st.armor - ignora), TOPES.armor);   // ignorar Armadura: resta puntos
     if (get(t, 'weaken')) d *= 1 + DEBUFFS.debilitar;
     d *= 1 - reduccion(t, 'golpe');
     const { aHp, aEsc } = repartir(t, d, sa.pen);
@@ -420,6 +436,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const hm = get(t, 'hemo');
       if (hm && !t.muerto) { danoDoT(t, hm.valor, 'hemo', fuentesDe([hm])); hm.valor += DOT.hemorragiaCrece; emitir('actualizar', {}, t); }
     }
+    // gatillo "al romperse una capa de hielo" de un ENEMIGO del dueño de la pasiva (solo por golpes)
+    if (quiebre) for (const p of P) if (!p.muerto && p.lado !== t.lado && p.pasiva?.gatillo === 'alRomperCapa')
+      reacciones.push(() => pasivas(p, 'alRomperCapa', { objetivo: t, rompio: a }));
   }
 
   // Daño por EFECTO: aplica Armadura y Escudo; no se bloquea, no es crítico y NO cuenta como golpe.
@@ -523,7 +542,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const def = EFECTOS[acc.id];
     if (t.muerto) return;
     if (def.tipo === 'buff') { aplicarEfecto(a, t, acc); return; }       // los buffs a aliados siempre se aplican
-    if (acc.prob != null && rng() >= acc.prob) return;                   // 1) probabilidad del movimiento (por defecto 100%): si falla, ni lo intenta
+    let prob = acc.prob;
+    if (acc.probSiMasRapido != null && stats(t).spd > stats(a).spd) prob = acc.probSiMasRapido;   // p. ej. Deep Freeze: 100% contra los más rápidos
+    if (prob != null && rng() >= prob) return;                          // 1) probabilidad del movimiento (por defecto 100%): si falla, ni lo intenta
     const sa = stats(a), st = stats(t);                                  // 2) Puntería vs Resistencia
     if (rng() >= probAplicar(sa.acc, st.res)) { emitir('resistido', { a: t.uid, id: acc.id }); return; }
     aplicarEfecto(a, t, acc);
@@ -801,6 +822,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         }
         case 'disipar': disipar(a, t, acc); break;
         case 'robarHP': robarHP(a, t, acc.pct); break;
+        case 'usarMovimiento': {            // usa uno de sus movimientos sobre el objetivo (funciona igual que el normal)
+          const mov = a.movimientos.find(m => m.categoria === acc.categoria);
+          if (mov && !a.muerto && get(a, 'silence')?.categoria !== acc.categoria) ejecutarMovimiento(a, mov, t, { reaccion: true });
+          break;
+        }
         case 'danoEfecto': danoEfecto(a, t, (ctx.dano || 0) * acc.fraccion, 0xc084fc); break;
         case 'replicarDoT': {
           const e = ctx.objetivo && get(ctx.objetivo, acc.efecto);
@@ -958,6 +984,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         resolverSobreObjetivo(a, t, { nombre: def.nombre, categoria: 'invocacion', pct: acc.pct * potencia, escala: acc.escala || 'dano',
           golpes: (acc.golpes || 1) + extra, color: def.color, efectos: acc.efectos }, { fuente: def.nombre });
         emitir('invocacionVuelve', { de: a.uid, key: e.key });
+        procesarReacciones();
       }
       return;
     }
@@ -1009,6 +1036,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (hostil && rng() < Math.min(stats(t).block, TOPES.block)) { emitir('bloqueo', { de: a.uid, a: t.uid }); return; }
     if (ctx.acum) for (const e of t.estados) ctx.acum.tenian.add(e.id);     // lo que tenía el objetivo al ser golpeado
     const hpObjetivoAntes = t.hp;
+    const ctxGolpe = { ...ctx, teniaAntes: new Set(t.estados.map(e => e.id)) };   // lo que tenía ESTE objetivo antes del movimiento
     const efectosDelGolpe = () => {
       if (t.muerto) return;
       for (const ef of mov.efectos || []) {
@@ -1018,11 +1046,18 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       }
     };
     // cada golpe intenta sus efectos: 2 golpes al mismo objetivo = 2 tiradas
-    if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) { golpear(a, t, mov, ctx); efectosDelGolpe(); }
+    if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) { golpear(a, t, mov, ctxGolpe); efectosDelGolpe(); }
     else efectosDelGolpe();
   }
 
   function ejecutarMovimiento(a, mov, objetivo, ctx = {}) {
+    profundidad++;
+    moverse(a, mov, objetivo, ctx);
+    profundidad--;
+    procesarReacciones();
+  }
+
+  function moverse(a, mov, objetivo, ctx) {
     // Confusión: los movimientos de un solo objetivo pueden cambiar de objetivo
     if (!ctx.forzado && get(a, 'confuse') && (mov.objetivo === 'enemigo' || mov.objetivo === 'aliado') && rng() < CONTROL.confusionProb) {
       const nuevo = rng.elegir(P.filter(x => !x.muerto && x !== a));
@@ -1038,7 +1073,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
 
     const hm = get(a, 'hemo');                       // Hemorragia: pierde HP al ejecutar un movimiento
     if (hm) danoDoT(a, hm.valor, 'hemo', fuentesDe([hm]));
-    if (!ctx.forzado) a.cds[mov.categoria] = mov.cd || 0;
+    if (!ctx.forzado && !ctx.reaccion) a.cds[mov.categoria] = mov.cd || 0;
 
     if (!a.muerto) {
       const principal = objetivo || objetivos[0] || null;
