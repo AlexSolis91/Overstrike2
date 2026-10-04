@@ -300,7 +300,8 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - Van en `prototipo/assets/originales/<personajes|invocaciones|transformaciones|reliquias>/`.
 - El nombre del archivo es el nombre de la ficha.
 - Se optimizan con `python herramientas/optimizar_imagenes.py`.
-- **Invocaciones con fondo negro u oscuro:** el fondo se conserva y la invocación lleva `luminosa: true`. Se dibuja en modo "pantalla": el negro se vuelve transparente y la figura brilla como un espíritu (p. ej. Shadow Ming Byung).
+- **Fondo negro u oscuro:** se recorta como cualquier color liso y la figura queda sólida (p. ej. Viserion).
+- **Espíritus** (opcional): si una invocación debe verse como un espíritu brillante, se agrega su nombre a `LUMINOSAS` en el optimizador (conserva el fondo negro) y lleva `luminosa: true` en su ficha: se dibuja en modo "pantalla", el negro desaparece y la figura brilla **translúcida**. Hoy ninguna lo usa.
 
 ## 13. Pantallas y construcción de equipos
 

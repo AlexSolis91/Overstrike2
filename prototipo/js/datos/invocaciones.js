@@ -91,7 +91,7 @@ export const INVOCACIONES = {
   },
   viserion: {
     nombre: 'Viserion', rareza: 'Épico', emoji: '🐉', color: 0xfde68a, imagen: 'assets/invocaciones/viserion.webp', dur: 2,
-    enfoque: [.29, .645], luminosa: true,   // fondo negro: se dibuja en modo pantalla
+    enfoque: [.28, .665],
     desc: 'Reduce 1 turno el cooldown del Especial y del Over de Daenerys.',
     acciones: [{ tipo: 'reducirCooldown', cantidad: 1, categorias: ['especial', 'over'], a: 'propio' }],
   },

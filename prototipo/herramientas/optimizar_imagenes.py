@@ -165,6 +165,11 @@ def desvanecer_cortes(rgba: Image.Image) -> Image.Image:
     return Image.fromarray(a.astype(np.uint8), 'RGBA')
 
 
+# Invocaciones/reliquias que son "espíritus": su fondo negro se conserva y el juego las dibuja en modo luminoso
+# ("luminosa: true" en su ficha). Las demás con fondo negro u oscuro se recortan como cualquier color liso.
+LUMINOSAS: set[str] = set()
+
+
 def recorte_transparente(src: Path, dst: Path, size: int) -> str:
     im = ImageOps.exif_transpose(Image.open(src))
     if im.mode in ('RGBA', 'LA', 'P') and np.asarray(im.convert('RGBA'))[..., 3].min() < 250:
@@ -173,8 +178,11 @@ def recorte_transparente(src: Path, dst: Path, size: int) -> str:
         rgb = np.asarray(im.convert('RGB')).astype(float)
         b = max(4, min(rgb.shape[:2]) // 100)
         borde = np.concatenate([rgb[:b].reshape(-1, 3), rgb[-b:].reshape(-1, 3), rgb[:, :b].reshape(-1, 3), rgb[:, -b:].reshape(-1, 3)])
-        oscuro = np.median(borde.mean(1)) < 45      # fondo negro/oscuro: se conserva y el juego la muestra en modo luminoso
+        oscuro = np.median(borde.mean(1)) < 45 and slug(src) in LUMINOSAS   # espíritu: se conserva el fondo negro
         f = None if oscuro else fondo_estimado(rgb)
+        if not oscuro and not f and np.median(borde.mean(1)) < 45:          # fondo negro/oscuro casi liso
+            c = np.median(borde, 0)
+            f = (c, c, 'fondo oscuro')
         res = quitar_cuadricula(rgb) if f and f[2] == 'cuadriculado falso' else None
         if oscuro:
             rgba, nota = im.convert('RGBA'), 'fondo oscuro conservado (usar "luminosa: true" en la invocación)'
