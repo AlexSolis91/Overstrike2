@@ -25,8 +25,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Ice Blast', objetivo: 'enemigo', golpes: 2, estilo: 'ranged', color: 0x7dd3fc,
-      pct: .80, escala: 'dano', cd: 0,
-      desc: 'Golpea 2 veces (80%) a un enemigo. Cada golpe tiene 15% de probabilidad de aplicar Congelación. Contra enemigos con Congelación ignora 25 puntos de Armadura.',
+      pct: .40, escala: 'dano', cd: 0,
+      desc: 'Golpea 2 veces (40% cada golpe) a un enemigo. Cada golpe tiene 15% de probabilidad de aplicar Congelación. Contra enemigos con Congelación ignora 25 puntos de Armadura.',
       ignoraArmaduraSi: { efecto: 'freeze', puntos: .25 },
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .15 } }],
     },
