@@ -92,7 +92,7 @@ function limpiarPartida() {
   const restos = [...G.cardLayer.children, ...G.fxLayer.children, ...G.textLayer.children, ...G.scene.children.filter(x => !base.includes(x))];
   for (const o of restos) { matarTweens(o); o.parent?.removeChild(o); if (!o.destroyed) o.destroy({ children: true }); }
   G.alTick = [];
-  combate = null; P = []; cartas = {}; vistas = {}; embestida = null; sprInvocacion = null; overEnCurso = null;
+  combate = null; P = []; cartas = {}; vistas = {}; embestida = null; enVuelo = []; overEnCurso = null;
   $('#log').innerHTML = ''; logLeido();
   $('#overlay').classList.add('hidden');
 }
@@ -113,7 +113,8 @@ function barra() {
 }
 
 // ---------------------------------------------------------------- reproducción de eventos
-let embestida = null, sprInvocacion = null;
+let embestida = null;
+let enVuelo = [];                  // invocaciones que salieron a atacar y aún no vuelven (puede haber varias: p. ej. Kamish aparece mientras Beru ataca)
 let overEnCurso = null;            // uid del que está ejecutando un Over (para el impacto de su primer golpe)
 const MOTIVO = { stun: '💫 PIERDE EL TURNO', freeze: '❄️ CONGELADO', silence: '🔇 SILENCIADO' };
 
@@ -295,9 +296,14 @@ async function manejar(e) {
     case 'invocacionExpira': FX.invocacionSeVa(c(e.de), e.key); log(`${INVOCACIONES[e.key].nombre} de ${nombre(e.de)} se desvanece`); break;
     case 'invocacionAtaca':
       log(`${INVOCACIONES[e.key].nombre} ataca a ${nombre(e.a)}`, 'fx');
-      sprInvocacion = await FX.invocacionSale(c(e.de), e.key, e.idx, c(e.a));
+      enVuelo.push({ key: e.key, de: e.de, spr: await FX.invocacionSale(c(e.de), e.key, e.idx, c(e.a)) });
       break;
-    case 'invocacionVuelve': await FX.invocacionVuelve(sprInvocacion); sprInvocacion = null; break;
+    case 'invocacionVuelve': {        // vuelve la última que salió de ese tipo (y de ese invocador)
+      const i = enVuelo.findLastIndex(v => v.key === e.key && v.de === e.de);
+      const [v] = i >= 0 ? enVuelo.splice(i, 1) : [];
+      await FX.invocacionVuelve(v?.spr);
+      break;
+    }
     case 'actualizar': case 'finRonda': aplicar(e); break;
     case 'transformacion':
       log(`🔥 ${nombre(e.id)} se transforma en ${e.nombre}`, 'sys');
@@ -370,8 +376,8 @@ async function procesar(res) {
 
 function terminar(fin) {
   ui.fin = fin; ui.miTurno = false; ui.actual = null; ui.ocupado = true; barra(); setHint('');
-  // la ventana de resultados aparece a los 0.7 s; la música del menú entra 1.5 s después de la ventana
-  finDePartida(fin.ganador === 'empate' ? null : fin.ganador === 'jugador', 700 + 1500);
+  // la ventana de resultados aparece a los 0.7 s; la música del menú entra 2 s después de la ventana
+  finDePartida(fin.ganador === 'empate' ? null : fin.ganador === 'jugador', 700 + 2000);
   const personajes = combate.estadisticas().map(e => {
     const p = por(e.uid), f = vistas[e.uid]?.forma;            // si terminó transformado, se muestra su forma
     return { ...e, nombre: f?.nombre || p.nombre, imagen: f?.imagen || p.imagen, emoji: f?.emoji || p.emoji, color: f?.color || p.color };
