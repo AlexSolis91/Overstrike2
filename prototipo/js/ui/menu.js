@@ -3,6 +3,7 @@ import { OFICIALES } from '../datos/personajes/index.js';
 import { BASE_COMUN } from '../motor/reglas.js';
 import { imgHtml } from './imagenes.js';
 import { sonar, musica } from './audio.js';
+import { FONDOS_MENU } from '../datos/fondos.js';
 
 const $ = s => document.querySelector(s);
 const TAM = 5;                                   // los equipos siempre son de 5
@@ -35,12 +36,31 @@ function mostrar(p) {
   document.body.dataset.pantalla = p;
   if (antes === 'partida' && p !== 'partida') alSalirDePartida?.();
   musica(p === 'partida' ? 'batalla' : 'menu');
+  fondoMenu(p === 'menu' && antes !== 'menu');
   if (p === 'equipo') renderEquipo();
 }
 addEventListener('popstate', () => {
   const p = location.hash.slice(1);
   mostrar(PANTALLAS.includes(p) && p !== 'partida' ? p : 'menu');
 });
+
+// ---------------------------------------------------------------- fondo animado del menú (uno al azar cada vez que se entra)
+let ultimoFondo = -1;
+function fondoMenu(entrar) {
+  const v = $('#menu-fondo video');
+  if (!v) return;
+  if (!entrar) { if (document.body.dataset.pantalla !== 'menu') v.pause(); return; }
+  if (!FONDOS_MENU.length) return;
+  let i = Math.floor(Math.random() * FONDOS_MENU.length);
+  if (FONDOS_MENU.length > 1 && i === ultimoFondo) i = (i + 1) % FONDOS_MENU.length;     // no repetir el anterior
+  const f = FONDOS_MENU[i];
+  v.classList.remove('listo', 'girado', 'girar-90', 'girar--90');
+  if (f.girar) v.classList.add('girado', `girar-${f.girar}`);
+  v.muted = true;                                        // en silencio: así el navegador lo deja reproducirse solo
+  if (i !== ultimoFondo) { v.src = f.archivo; ultimoFondo = i; }
+  v.onplaying = () => v.classList.add('listo');
+  v.play().catch(() => { /* sin permiso o sin archivo: queda el fondo normal */ });
+}
 
 // ---------------------------------------------------------------- lobby
 function renderMenu() {

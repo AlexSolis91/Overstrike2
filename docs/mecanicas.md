@@ -312,6 +312,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Galería:** solo personajes oficiales; los de prueba están ocultos. Filtros por rol. La "i" abre la ficha completa (estadísticas base sin reliquias, líder, pasiva, movimientos y transformaciones).
 - **Registro de personajes:** `js/datos/personajes/index.js` (`OFICIALES`). Toda ficha oficial nueva se agrega ahí y aparece sola en la galería.
 - **Técnica:** los menús son HTML (`js/ui/menu.js`, `menu.css`); la batalla sigue en Pixi. Una partida nueva después de otra **no recarga la página**: se limpia la anterior (cartas, efectos, textos, animaciones pendientes, registro y resultados). Así el audio sigue activo y no hay que volver a tocar la pantalla para que suene.
+- **Fondo animado del menú de inicio:** cada vez que se entra al menú se elige al azar uno de los videos de `js/datos/fondos.js` (sin repetir el anterior). Va en bucle, siempre en silencio, con un velo oscuro para que se lean el logo y los botones; se pausa al salir del menú. Para agregar uno: copiar el video (MP4) a `assets/menu/` y agregar su línea. Si el video viene "de lado" (contenido horizontal en un cuadro vertical), se indica `girar: 90` o `-90` y el juego lo endereza (con un pequeño acercamiento que oculta bordes negros).
 
 ## 14. Sonido
 

@@ -23,6 +23,16 @@ body:not([data-pantalla="partida"]) #app { visibility: hidden; }
   background-size: 420px 420px; animation: chispas 26s linear infinite;
 }
 @keyframes chispas { to { background-position: 0 -420px; } }
+/* fondo animado del menú: el video cubre toda la pantalla; un velo oscuro mantiene legibles el logo y los botones */
+#menu-fondo { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+#menu-fondo::after { content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 45%, rgba(5, 7, 12, .25) 0%, rgba(5, 7, 12, .55) 60%, rgba(5, 7, 12, .85) 100%); }
+#menu-fondo video { position: absolute; left: 50%; top: 50%; width: 100%; height: 100%; object-fit: cover;
+  transform: translate(-50%, -50%); opacity: 0; transition: opacity .9s ease; }
+#menu-fondo video.girado { width: 100dvh; height: 100dvw; }        /* antes de girar: alto y ancho intercambiados */
+#menu-fondo video.girar-90 { transform: translate(-50%, -50%) rotate(90deg) scale(1.05); }   /* scale: oculta bordes negros del video */
+#menu-fondo video.girar--90 { transform: translate(-50%, -50%) rotate(-90deg) scale(1.05); }
+#menu-fondo video.listo { opacity: 1; }
 .logo { position: relative; display: grid; place-items: center; margin-top: -10px; }
 .logo-espadas { position: absolute; width: 230px; height: 230px; opacity: .22; filter: drop-shadow(0 0 18px rgba(243, 213, 138, .5)); }
 .logo-titulo {
