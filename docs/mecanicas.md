@@ -230,7 +230,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Reglas generales (todos los invocadores):**
   - Máximo **3 activas**.
   - **Sin repetidas**: en invocaciones al azar, si sale una ya activa se vuelve a tirar. Invocar un tipo ya activo lo renueva, salvo que su `max` permita varias (Dragones ×3).
-  - **`renueva: true`** (en `invocarAzar`): si sale una ya activa, **se renueva** en vez de volver a tirar, para que se cumplan los pesos de la tabla. Lo usa Daenerys (sin esto, Drogon salía ~26% en vez de 5%).
+  - **`renueva: true`** (en `invocarAzar`): si sale una ya activa, **se renueva** en vez de volver a tirar, para que se cumplan los pesos de la tabla. Lo usa Daenerys (Rhaegal 40%, Viserion 35%, Drogon 25%).
   - Si ya hay 3, la nueva **reemplaza a la de menor duración restante**.
   - **Duración = veces que actúa:** "dura N" = actúa **N veces**. Sigue la regla general de duraciones: si se invoca (o se renueva) cuando su invocador ya actuó o está actuando en la ronda, no pierde duración al final de esa ronda.
 - **Cada invocación es un mini-personaje:**

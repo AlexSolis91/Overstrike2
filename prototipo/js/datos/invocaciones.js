@@ -100,9 +100,9 @@ export const INVOCACIONES = {
 // Tablas de invocación aleatoria (peso = probabilidad relativa)
 export const TABLAS_INVOCACION = {
   dragones: [
-    { key: 'rhaegal', peso: 80 },
-    { key: 'viserion', peso: 15 },
-    { key: 'drogon', peso: 5 },
+    { key: 'rhaegal', peso: 40 },
+    { key: 'viserion', peso: 35 },
+    { key: 'drogon', peso: 25 },
   ],
   sombras: [
     { key: 'iron', peso: 26 },

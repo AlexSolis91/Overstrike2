@@ -17,7 +17,7 @@ export default {
   },
   pasiva: {
     nombre: 'Madre de Dragones',
-    desc: 'Inmune a Quemadura. Al inicio de su turno invoca un dragón al azar (Rhaegal 80%, Viserion 15%, Drogon 5%); si ya lo tenía activo, lo renueva. Si pierde el turno, no invoca.',
+    desc: 'Inmune a Quemadura. Al inicio de su turno invoca un dragón al azar (Rhaegal 40%, Viserion 35%, Drogon 25%); si ya lo tenía activo, lo renueva. Si pierde el turno, no invoca.',
     inmuneA: ['burn'],
     gatillo: 'alIniciarTurno',
     accion: { tipo: 'invocarAzar', tabla: 'dragones', renueva: true, a: 'propio' },
