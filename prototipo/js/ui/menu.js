@@ -59,8 +59,15 @@ function fondoMenu(entrar) {
   v.muted = true;                                        // en silencio: así el navegador lo deja reproducirse solo
   if (i !== ultimoFondo) { v.src = f.archivo; ultimoFondo = i; }
   v.onplaying = () => v.classList.add('listo');
-  v.play().catch(() => { /* sin permiso o sin archivo: queda el fondo normal */ });
+  v.play().catch(() => { /* sin permiso todavía o sin archivo: se reintenta abajo */ });
 }
+// Si el navegador no lo dejó arrancar (ventana oculta, ahorro de energía…), se reintenta al volver a la ventana o al primer toque
+const reintentarFondo = () => {
+  const v = $('#menu-fondo video');
+  if (v?.src && v.paused && document.body.dataset.pantalla === 'menu' && document.visibilityState === 'visible') v.play().catch(() => {});
+};
+document.addEventListener('visibilitychange', reintentarFondo);
+for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, reintentarFondo, { capture: true, passive: true });
 
 // ---------------------------------------------------------------- lobby
 function renderMenu() {

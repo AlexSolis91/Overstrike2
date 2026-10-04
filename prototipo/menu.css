@@ -33,18 +33,25 @@ body:not([data-pantalla="partida"]) #app { visibility: hidden; }
 #menu-fondo video.girar-90 { transform: translate(-50%, -50%) rotate(90deg) scale(1.05); }   /* scale: oculta bordes negros del video */
 #menu-fondo video.girar--90 { transform: translate(-50%, -50%) rotate(-90deg) scale(1.05); }
 #menu-fondo video.listo { opacity: 1; }
-.logo { position: relative; display: grid; place-items: center; margin-top: -10px; }
-.logo-espadas { position: absolute; width: 230px; height: 230px; opacity: .22; filter: drop-shadow(0 0 18px rgba(243, 213, 138, .5)); }
+/* Título al estilo del logo de The Matrix: romanas delgadas y anchas, letras de tamaños mezclados, mismo dorado.
+   El "II" romano va detrás, centrado. Todo se mide en "em" del tamaño de .logo. */
+.logo { position: relative; display: grid; place-items: center; margin-top: -10px; font-size: clamp(38px, 8vw, 84px); }
 .logo-titulo {
-  position: relative; margin: 0; font: 900 clamp(38px, 8vw, 84px) Cinzel, serif; letter-spacing: .08em;
-  background: linear-gradient(180deg, #fff6d6 0%, #f3d58a 45%, #b07a1e 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  position: relative; margin: 0; font: 400 1em/1 Cinzel, serif; letter-spacing: .05em; white-space: nowrap;
   filter: drop-shadow(0 4px 0 #2a1d06) drop-shadow(0 0 26px rgba(243, 213, 138, .35));
 }
-.logo-num {
-  position: relative; margin-top: -6px; width: 58px; height: 58px; display: grid; place-items: center; transform: rotate(45deg);
-  border: 3px solid var(--gold); background: linear-gradient(135deg, #3a1d10, #0b0f18); box-shadow: 0 0 22px rgba(243, 213, 138, .45);
+.logo-titulo span, .logo-ii {
+  display: inline-block; background: linear-gradient(180deg, #fff6d6 0%, #f3d58a 45%, #b07a1e 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.logo-num span { transform: rotate(-45deg); font: 900 30px Cinzel, serif; color: var(--gold); text-shadow: 0 0 10px rgba(243, 213, 138, .6); }
+.logo-titulo .lg { font-size: 1.18em; }
+.logo-titulo .lm { font-size: .86em; transform: translateY(-.06em); }
+.logo-titulo .lp { font-size: .74em; transform: translateY(-.18em); }
+.logo-ii {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -53%); pointer-events: none;
+  font: 400 2.5em/1 Cinzel, serif; letter-spacing: -.02em; opacity: .42;
+  filter: drop-shadow(0 0 30px rgba(243, 213, 138, .3));
+}
 #menu-modos { position: relative; display: grid; gap: 8px; width: min(420px, 92vw); }
 .modo {
   display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; text-align: left; font-family: Inter, sans-serif; color: var(--text);
@@ -199,9 +206,6 @@ body.app-instalada #menu-full { visibility: hidden; }
 
 /* ---------- celular */
 @media (max-width: 900px), (max-height: 520px) {
-  .logo-espadas { width: 150px; height: 150px; }
-  .logo-num { width: 42px; height: 42px; }
-  .logo-num span { font-size: 22px; }
   #pantalla-menu { gap: 14px; }
   .modo { padding: 7px 12px; }
   .modo.activo { padding: 10px 14px; }
@@ -224,10 +228,7 @@ body.app-instalada #menu-full { visibility: hidden; }
 /* celular en horizontal (poca altura): todo más compacto y los dos equipos lado a lado */
 @media (max-height: 520px) {
   #pantalla-menu { justify-content: flex-start; padding-top: max(10px, env(safe-area-inset-top)); gap: 8px; }
-  .logo-titulo { font-size: 34px; }
-  .logo-espadas { width: 96px; height: 96px; }
-  .logo-num { width: 32px; height: 32px; margin-top: -2px; }
-  .logo-num span { font-size: 17px; }
+  .logo { font-size: 34px; margin-top: 4px; }
   #menu-modos { grid-template-columns: 1fr 1fr 1fr; width: min(700px, 94vw); gap: 6px; }
   #menu-modos .modo.activo { grid-column: 1 / -1; }
   .modo { padding: 5px 10px; gap: 8px; }
