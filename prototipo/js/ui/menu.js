@@ -74,7 +74,7 @@ function renderMenu() {
   $('#menu-modos').innerHTML = MODOS.map(m => `
     <button class="modo ${m.activo ? 'activo' : 'pronto'}" data-modo="${m.id}" ${m.activo ? '' : 'disabled'}>
       <span class="modo-ico">${m.icono}</span>
-      <span class="modo-txt"><b>${m.nombre}</b><small>${m.activo ? m.desc : 'Próximamente'}</small></span>
+      <span class="modo-txt"><b>${m.nombre}</b><small>${m.activo ? m.desc : 'Próximamente'}</small></span>${m.activo ? '' : '<span class="modo-candado" aria-hidden="true">🔒</span>'}
     </button>`).join('');
 }
 

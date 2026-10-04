@@ -57,17 +57,38 @@ body:not([data-pantalla="partida"]) #app { visibility: hidden; }
   display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; text-align: left; font-family: Inter, sans-serif; color: var(--text);
   background: rgba(8, 11, 18, .78); border: 1px solid rgba(255, 255, 255, .08);
 }
-.modo-ico { font-size: 22px; width: 32px; text-align: center; }
+.modo-ico { font-size: 22px; width: 32px; text-align: center; transition: transform .3s ease; }
 .modo-txt b { display: block; font: 800 15px Inter, sans-serif; }
 .modo-txt small { color: var(--muted); font-size: 11.5px; }
 .modo.activo {
   cursor: pointer; padding: 15px 16px; border: 1px solid var(--gold); background: linear-gradient(180deg, rgba(243, 213, 138, .18), rgba(8, 11, 18, .85));
-  box-shadow: 0 0 24px rgba(243, 213, 138, .2); animation: latido 2.4s ease-in-out infinite; transition: transform .15s;
+  box-shadow: 0 0 24px rgba(243, 213, 138, .2); animation: latido 2.4s ease-in-out infinite;
+  position: relative; overflow: hidden; transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
 }
 .modo.activo b { font-family: Cinzel, serif; font-size: 19px; color: var(--gold); letter-spacing: .04em; }
-.modo.activo:hover { transform: translateY(-1px); }
 @keyframes latido { 50% { box-shadow: 0 0 36px rgba(243, 213, 138, .34); } }
-.modo.pronto { opacity: .45; cursor: not-allowed; filter: grayscale(.6); }
+/* al pasar el cursor (o al llegar con el teclado): crece, se eleva, el contorno brilla, el ícono se mueve y cruza un destello */
+.modo.activo::after {
+  content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%; pointer-events: none; transform: skewX(-20deg);
+  background: linear-gradient(100deg, transparent, rgba(255, 240, 200, .35), transparent);
+}
+.modo.activo:hover, .modo.activo:focus-visible {
+  transform: translateY(-2px) scale(1.03); animation: none; outline: none; border-color: #fff1c9;
+  box-shadow: 0 0 0 1px var(--gold), 0 0 22px rgba(243, 213, 138, .5);
+}
+.modo.activo:hover .modo-ico, .modo.activo:focus-visible .modo-ico { transform: scale(1.15) rotate(-8deg); }
+.modo.activo:hover::after, .modo.activo:focus-visible::after { animation: destello .7s ease; }
+@keyframes destello { to { left: 130%; } }
+.modo.activo:active { transform: scale(.98); transition-duration: .08s; }      /* al tocar (celular): se hunde un poco */
+.modo.pronto { opacity: .45; cursor: not-allowed; filter: grayscale(.6); transition: opacity .2s ease, border-color .2s ease; }
+.modo-candado { margin-left: auto; font-size: 15px; opacity: 0; transition: opacity .2s ease; }
+.modo.pronto:hover { opacity: .65; border-color: rgba(243, 213, 138, .45); }
+.modo.pronto:hover .modo-candado { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {          /* "reducir movimiento": solo el brillo del contorno */
+  .modo.activo, .modo.activo:hover, .modo.activo:focus-visible, .modo.activo:active { transform: none; animation: none; }
+  .modo.activo:hover .modo-ico { transform: none; }
+  .modo.activo:hover::after, .modo.activo:focus-visible::after { animation: none; }
+}
 .menu-pie {
   position: absolute; bottom: max(12px, env(safe-area-inset-bottom)); left: 16px; right: 16px;
   display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 11px;
