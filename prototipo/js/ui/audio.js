@@ -103,10 +103,14 @@ export function musica(nombre) {
   p.el.play().then(() => desvanecer(p, 1, 1.2)).catch(() => { /* el navegador aún no deja: sonará al próximo toque */ });
   actual = { nombre, p };
 }
-// Fin de partida: la música de batalla da paso a la del menú y, al mismo tiempo, suena el tema de Victoria o Derrota
+// Fin de partida: se va la música de batalla y suena el tema de Victoria o Derrota; la del menú entra "retrasoMenu" ms
+// después (para que no se empalme con la de Victoria/Derrota).
 // gano: true = victoria, false = derrota, null = empate (por ahora sin pista propia: solo la del menú)
-export function finDePartida(gano) {
-  musica('menu');
+let menuPendiente = null;
+export function finDePartida(gano, retrasoMenu = 0) {
+  musica(null);
+  clearTimeout(menuPendiente);
+  menuPendiente = setTimeout(() => { menuPendiente = null; musica('menu'); }, retrasoMenu);
   if (!ctx || gano === null) return;
   const p = pista(gano ? 'victoria' : 'derrota');
   if (!p.ok) return;
@@ -115,6 +119,7 @@ export function finDePartida(gano) {
 }
 // Nueva partida: corta Victoria/Derrota si seguían sonando y elige otro tema de batalla al azar
 export function nuevaPartida() {
+  clearTimeout(menuPendiente); menuPendiente = null;          // si da Revancha antes de que entre la del menú, ya no entra
   for (const n of ['victoria', 'derrota']) { const p = pistas[n]; if (p && ctx) { desvanecer(p, 0, .4); setTimeout(() => p.el.pause(), 450); } }
   if (actual?.nombre === 'batalla') return;                 // (no debería pasar: la partida anterior ya terminó)
   const b = pistas.batalla;

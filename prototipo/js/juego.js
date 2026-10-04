@@ -370,7 +370,8 @@ async function procesar(res) {
 
 function terminar(fin) {
   ui.fin = fin; ui.miTurno = false; ui.actual = null; ui.ocupado = true; barra(); setHint('');
-  finDePartida(fin.ganador === 'empate' ? null : fin.ganador === 'jugador');
+  // la ventana de resultados aparece a los 0.7 s; la música del menú entra 1.5 s después de la ventana
+  finDePartida(fin.ganador === 'empate' ? null : fin.ganador === 'jugador', 700 + 1500);
   const personajes = combate.estadisticas().map(e => {
     const p = por(e.uid), f = vistas[e.uid]?.forma;            // si terminó transformado, se muestra su forma
     return { ...e, nombre: f?.nombre || p.nombre, imagen: f?.imagen || p.imagen, emoji: f?.emoji || p.emoji, color: f?.color || p.color };
