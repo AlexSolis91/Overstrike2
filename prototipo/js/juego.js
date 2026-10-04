@@ -10,7 +10,7 @@ import { OFICIALES, porId } from './datos/personajes/index.js';
 import { iniciarMenu, irA, presentarVS, cargarSeleccion } from './ui/menu.js';
 import { iniciarGuia, cerrarGuia, guiaAbierta } from './ui/guia.js';
 import { mostrarResultados, iniciarResultados } from './ui/resultados.js';
-import { sonar, finDePartida, iniciarAjustes, ajustesAbiertos, cerrarAjustes, ajustes } from './ui/audio.js';
+import { sonar, musica, finDePartida, nuevaPartida, iniciarAjustes, ajustesAbiertos, cerrarAjustes, ajustes } from './ui/audio.js';
 import { EFECTOS } from './motor/efectos.js';
 import { INVOCACIONES } from './datos/invocaciones.js';
 
@@ -72,15 +72,29 @@ async function iniciarPartida(eqJ, eqR) {
   await procesar(combate.iniciar());
 }
 
-// Empezar una partida desde el menú. La primera se arma en el momento; las siguientes recargan la página y entran
-// directo (así no quedan animaciones ni restos de la partida anterior).
+// Empezar una partida (Listo, Revancha). Sin recargar la página: se limpia la anterior, así el audio sigue activo.
+// La música de batalla (un tema al azar) empieza 2 segundos después.
 async function jugar(eqJ, eqR, rivalModo) {
   ultima = { jugador: eqJ.map(p => p.id), rival: eqR.map(p => p.id), rivalModo };
-  if (combate) {
-    try { sessionStorage.setItem('os2-partida', JSON.stringify(ultima)); location.reload(); return; } catch (e) { /* sin almacenamiento: sigue aquí */ }
-  }
+  if (combate) limpiarPartida();
+  nuevaPartida();
+  const esta = ++arranques;
+  setTimeout(() => { if (esta === arranques) musica('batalla'); }, 2000);
   await presentarVS(eqJ, eqR);
   await iniciarPartida(eqJ, eqR);
+}
+let arranques = 0;
+// Quita todo lo visual de la partida anterior: cartas, efectos, textos, animaciones pendientes, registro y resultados
+function matarTweens(o) { gsap.killTweensOf(o); if (o.scale) gsap.killTweensOf(o.scale); for (const h of o.children || []) matarTweens(h); }
+function limpiarPartida() {
+  partida++;
+  const base = [G.bgLayer, G.ambLayer, G.cardLayer, G.fxLayer, G.textLayer];
+  const restos = [...G.cardLayer.children, ...G.fxLayer.children, ...G.textLayer.children, ...G.scene.children.filter(x => !base.includes(x))];
+  for (const o of restos) { matarTweens(o); o.parent?.removeChild(o); if (!o.destroyed) o.destroy({ children: true }); }
+  G.alTick = [];
+  combate = null; P = []; cartas = {}; vistas = {}; embestida = null; sprInvocacion = null; overEnCurso = null;
+  $('#log').innerHTML = ''; logLeido();
+  $('#overlay').classList.add('hidden');
 }
 function salirDePartida() { partida++; ui.miTurno = false; ui.ocupado = true; $('#overlay').classList.add('hidden'); }
 
@@ -361,7 +375,8 @@ function terminar(fin) {
     const p = por(e.uid), f = vistas[e.uid]?.forma;            // si terminó transformado, se muestra su forma
     return { ...e, nombre: f?.nombre || p.nombre, imagen: f?.imagen || p.imagen, emoji: f?.emoji || p.emoji, color: f?.color || p.color };
   });
-  setTimeout(() => mostrarResultados({ gano: fin.ganador === 'jugador', empate: fin.ganador === 'empate', limite: !!fin.limite, ronda: fin.ronda, duracionMs: Date.now() - inicioPartida, personajes, recompensas: fin.recompensas || [] }), 700);
+  const esta = partida;
+  setTimeout(() => esta === partida && mostrarResultados({ gano: fin.ganador === 'jugador', empate: fin.ganador === 'empate', limite: !!fin.limite, ronda: fin.ronda, duracionMs: Date.now() - inicioPartida, personajes, recompensas: fin.recompensas || [] }), 700);
 }
 
 // ---------------------------------------------------------------- entrada del jugador

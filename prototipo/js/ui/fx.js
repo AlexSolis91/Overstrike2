@@ -383,7 +383,7 @@ export function cinematicaOver(carta, nombre, color, { velocidad = 1 } = {}) {
     function fin() {
       G.app.canvas.removeEventListener('pointerdown', acelerar);
       carta.c.alpha = 1;
-      setTimeout(() => { capa.destroy({ children: true }); foto?.destroy(true); }, 600);   // da tiempo a que terminen las partículas
+      setTimeout(() => { if (!capa.destroyed) capa.destroy({ children: true }); if (foto && !foto.destroyed) foto.destroy(true); }, 600);   // da tiempo a que terminen las partículas
       resolve();
     }
   });

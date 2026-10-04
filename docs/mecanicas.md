@@ -311,14 +311,14 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Rival:** *Aleatorio* (5 al azar entre los oficiales) o *Construir* (lo armas tú, útil para probar balance).
 - **Galería:** solo personajes oficiales; los de prueba están ocultos. Filtros por rol. La "i" abre la ficha completa (estadísticas base sin reliquias, líder, pasiva, movimientos y transformaciones).
 - **Registro de personajes:** `js/datos/personajes/index.js` (`OFICIALES`). Toda ficha oficial nueva se agrega ahí y aparece sola en la galería.
-- **Técnica:** los menús son HTML (`js/ui/menu.js`, `menu.css`); la batalla sigue en Pixi. Una partida nueva después de otra recarga la página y entra directo (equipos guardados en `sessionStorage`), para que no queden animaciones de la anterior.
+- **Técnica:** los menús son HTML (`js/ui/menu.js`, `menu.css`); la batalla sigue en Pixi. Una partida nueva después de otra **no recarga la página**: se limpia la anterior (cartas, efectos, textos, animaciones pendientes, registro y resultados). Así el audio sigue activo y no hay que volver a tocar la pantalla para que suene.
 
 ## 14. Sonido
 
 - **Registro universal:** `js/datos/sonidos.js`. Cada evento de la batalla y de la interfaz tiene un nombre (la lista completa está al inicio del archivo). Si el evento tiene **archivo**, suena; si no, queda en **silencio**. No hay sonidos sintetizados.
 - **Efectos con archivo** (`assets/audio/sfx/`): botones (incluidos los movimientos disponibles), golpes (normal, crítico más fuerte y golpe al escudo más suave), Curación, **Escudo de HP** (no confundir con el futuro buff Escudo Sagrado), Quemadura, Veneno, Congelación (al aplicarse y al perder el turno congelado), **Over** (al ejecutarlo, junto con su banner), transformación e invocaciones (la Legendaria más fuerte).
 - **Opciones por sonido:** `v` volumen, `dur` segundos máximos (con desvanecimiento), `var` variación de tono, `gap` tiempo mínimo entre repeticiones, `duck` baja la música mientras suena. Los archivos se precargan al primer toque.
-- **Música** (`assets/audio/`): `menu.mp3` (lobby y equipos, en bucle), `batalla-1/2/3.mp3` (uno al azar en cada partida, en bucle), `victoria.mp3` y `derrota.mp3` (al terminar). Transición suave entre pantallas.
+- **Música** (`assets/audio/`): `menu.mp3` (lobby y equipos, en bucle) y `batalla-1/2/3.mp3` (uno al azar en cada partida, en bucle). La de batalla empieza **2 segundos después** de tocar Listo o Revancha. Al terminar la partida vuelve la del **menú** y, **al mismo tiempo**, suena `victoria.mp3` o `derrota.mp3` (el empate solo tiene la del menú). Al empezar otra partida, Victoria/Derrota se cortan. Transición suave entre pistas.
 - **Ajustes (🔊):** volumen de Música y de Efectos y Silenciar todo, guardados por dispositivo. Los navegadores solo dejan sonar después del primer toque del jugador.
 
 ## 15. Cinemática de Over
