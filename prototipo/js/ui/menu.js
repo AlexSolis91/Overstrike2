@@ -3,7 +3,7 @@ import { OFICIALES } from '../datos/personajes/index.js';
 import { BASE_COMUN } from '../motor/reglas.js';
 import { imgHtml } from './imagenes.js';
 import { sonar, musica } from './audio.js';
-import { FONDOS_MENU } from '../datos/fondos.js';
+import { FONDOS } from '../datos/fondos.js';
 
 const $ = s => document.querySelector(s);
 const TAM = 5;                                   // los equipos siempre son de 5
@@ -36,7 +36,7 @@ function mostrar(p) {
   document.body.dataset.pantalla = p;
   if (antes === 'partida' && p !== 'partida') alSalirDePartida?.();
   musica(p === 'partida' ? 'batalla' : 'menu');
-  fondoMenu(p === 'menu' && antes !== 'menu');
+  fondo(p === 'menu' ? 'menu' : p === 'equipo' ? 'equipo' : null);
   if (p === 'equipo') renderEquipo();
 }
 addEventListener('popstate', () => {
@@ -44,27 +44,40 @@ addEventListener('popstate', () => {
   mostrar(PANTALLAS.includes(p) && p !== 'partida' ? p : 'menu');
 });
 
-// ---------------------------------------------------------------- fondo animado del menú (uno al azar cada vez que se entra)
-let ultimoFondo = -1;
-function fondoMenu(entrar) {
-  const v = $('#menu-fondo video');
+// ---------------------------------------------------------------- fondo animado (video) por grupo de pantallas
+// grupo: 'menu' | 'equipo' | null (sin video). Si el grupo no cambia, el video sigue sin reiniciarse (equipos → VS).
+let grupoFondo = null, apagado = null;
+const ultimoFondo = {};
+export function fondo(grupo) {
+  const capa = $('#fondo-video'), v = capa?.querySelector('video');
   if (!v) return;
-  if (!entrar) { if (document.body.dataset.pantalla !== 'menu') v.pause(); return; }
-  if (!FONDOS_MENU.length) return;
-  let i = Math.floor(Math.random() * FONDOS_MENU.length);
-  if (FONDOS_MENU.length > 1 && i === ultimoFondo) i = (i + 1) % FONDOS_MENU.length;     // no repetir el anterior
-  const f = FONDOS_MENU[i];
+  const lista = (grupo && FONDOS[grupo]) || [];
+  if (!lista.length) {                                   // sin video: se desvanece y se pausa
+    if (grupoFondo === null) return;
+    grupoFondo = null; v.classList.remove('listo');
+    clearTimeout(apagado);
+    apagado = setTimeout(() => { if (grupoFondo === null) { v.pause(); document.body.classList.remove('fondo-activo'); } }, 900);
+    return;
+  }
+  clearTimeout(apagado);
+  document.body.classList.add('fondo-activo');
+  if (grupo === grupoFondo) { if (v.paused) v.play().catch(() => {}); return; }
+  grupoFondo = grupo; capa.dataset.grupo = grupo;
+  let i = Math.floor(Math.random() * lista.length);
+  if (lista.length > 1 && i === ultimoFondo[grupo]) i = (i + 1) % lista.length;     // no repetir el anterior
+  ultimoFondo[grupo] = i;
+  const f = lista[i];
   v.classList.remove('listo', 'girado', 'girar-90', 'girar--90');
   if (f.girar) v.classList.add('girado', `girar-${f.girar}`);
   v.muted = true;                                        // en silencio: así el navegador lo deja reproducirse solo
-  if (i !== ultimoFondo) { v.src = f.archivo; ultimoFondo = i; }
-  v.onplaying = () => v.classList.add('listo');
+  if (!v.src.endsWith(f.archivo)) v.src = f.archivo;
+  v.onplaying = () => { if (grupoFondo) v.classList.add('listo'); };
   v.play().catch(() => { /* sin permiso todavía o sin archivo: se reintenta abajo */ });
 }
 // Si el navegador no lo dejó arrancar (ventana oculta, ahorro de energía…), se reintenta al volver a la ventana o al primer toque
 const reintentarFondo = () => {
-  const v = $('#menu-fondo video');
-  if (v?.src && v.paused && document.body.dataset.pantalla === 'menu' && document.visibilityState === 'visible') v.play().catch(() => {});
+  const v = $('#fondo-video video');
+  if (v?.src && v.paused && grupoFondo && document.visibilityState === 'visible') v.play().catch(() => {});
 };
 document.addEventListener('visibilitychange', reintentarFondo);
 for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, reintentarFondo, { capture: true, passive: true });
@@ -192,7 +205,8 @@ export function presentarVS(eqJ, eqR) {
   const lado = eq => eq.map((p, i) => `<div class="vs-p" style="--c:${p.color};--d:${i * .07}s">${retrato(p)}<span>${i === 0 ? '👑 ' : ''}${p.nombre}</span></div>`).join('');
   $('#vs-j').innerHTML = lado(eqJ); $('#vs-r').innerHTML = lado(eqR);
   const vs = $('#pantalla-vs'); vs.classList.remove('hidden', 'sale'); void vs.offsetWidth; vs.classList.add('entra');
-  return new Promise(r => setTimeout(() => { vs.classList.add('sale'); setTimeout(() => { vs.classList.add('hidden'); vs.classList.remove('entra', 'sale'); r(); }, 450); }, 1900));
+  fondo('equipo'); document.body.classList.add('vs-activo');
+  return new Promise(r => setTimeout(() => { vs.classList.add('sale'); setTimeout(() => { vs.classList.add('hidden'); vs.classList.remove('entra', 'sale'); document.body.classList.remove('vs-activo'); r(); }, 450); }, 1900));
 }
 
 // ---------------------------------------------------------------- arranque
