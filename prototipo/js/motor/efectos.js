@@ -41,6 +41,8 @@ export const EFECTOS = {
     desc: `No puede recibir curaciones y al final de cada uno de sus turnos pierde ${p(DEBUFFS.pesteNegra)} de su HP máx. original (mínimo ${p(DEBUFFS.pesteNegraPiso)}). Esa pérdida es permanente aunque la limpien.` },
   solarBurn: { nombre: 'Quemadura Solar', icono: '🔆', color: 0xfbbf24, tipo: 'debuff', tags: ['Quemadura Solar'],
     desc: `Toda curación que recibe le hace daño por el monto completo, ignorando Armadura y Escudo.` },
+  incite:  { nombre: 'Incitar',      icono: '🗣️', color: 0xfb923c, tipo: 'debuff', tags: ['Control'],
+    desc: `Solo puede usar su Básico y solo contra quien lo incitó (si ese enemigo muere, vuelve a actuar normal).` },
   fear:    { nombre: 'Miedo',        icono: '😱', color: 0x94a3b8, tipo: 'debuff', tags: ['Control'],
     desc: `Actúa al final de la ronda y hace −${p(1 - CONTROL.miedoDano)} de daño.` },
   // ---- Buffs

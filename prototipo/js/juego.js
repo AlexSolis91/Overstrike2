@@ -172,6 +172,11 @@ async function manejar(e) {
     case 'controlFin':
       aplicar(e); FX.textoSobre(c(e.id), 'Inmune a Control (1 turno)', '#e2e8f0', 13, -125);
       break;
+    case 'golpeExtra':
+      FX.textoSobre(c(e.id), '¡Golpe extra!', '#fbbf24', 15, -125);
+      log(`${nombre(e.id)} golpea una vez más a ${nombre(e.a)}`, 'fx');
+      await wait(250);
+      break;
     case 'confundido':
       FX.textoSobre(c(e.id), '🌀 ¡Confundido!', '#f0abfc', 16, -125);
       log(`${nombre(e.id)} está confundido: su movimiento va a ${nombre(e.a)}`, 'fx');
