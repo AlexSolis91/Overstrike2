@@ -49,9 +49,14 @@ body:not([data-pantalla="partida"]) #app { visibility: hidden; }
 .logo-titulo .lp { font-size: .74em; transform: translateY(-.18em); }
 .logo-ii {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -53%); pointer-events: none;
-  font: 400 2.5em/1 Cinzel, serif; letter-spacing: -.02em; opacity: .42;
-  filter: drop-shadow(0 0 30px rgba(243, 213, 138, .3));
+  font: 400 2.5em/1 Cinzel, serif; letter-spacing: -.02em; opacity: .5;
+  filter: drop-shadow(0 0 6px rgba(255, 222, 140, .7)) drop-shadow(0 0 22px rgba(243, 190, 80, .55));
+  animation: respira-ii 4s ease-in-out infinite;          /* resplandor dorado que "respira" */
 }
+@keyframes respira-ii {
+  50% { opacity: .62; filter: drop-shadow(0 0 10px rgba(255, 228, 155, .95)) drop-shadow(0 0 40px rgba(243, 190, 80, .8)); }
+}
+@media (prefers-reduced-motion: reduce) { .logo-ii { animation: none; } }
 #menu-modos { position: relative; display: grid; gap: 8px; width: min(420px, 92vw); }
 .modo {
   display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; text-align: left; font-family: Inter, sans-serif; color: var(--text);
