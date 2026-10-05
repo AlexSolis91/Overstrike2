@@ -126,6 +126,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'fear': texto = `Actúa al final de la ronda · −25% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'dmgUp': texto = `+${Math.round(e.valor * 100)}% Daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'taunt': texto = `Los enemigos deben atacarlo con sus movimientos de un objetivo · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'cargas': texto = `${e.valor} carga(s): su próximo movimiento que las consume hace más daño`; n = e.valor; break;
         case 'incite': texto = `Solo puede usar su Básico contra ${porUid(e.fuente)?.nombre || 'quien lo incitó'} · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'pierce': texto = `+${Math.round(BUFFS.perforacion * 100)}% Penetración de escudo · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'solarBurn': texto = `Las curaciones le hacen daño (ignora Armadura y Escudo) · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -189,7 +190,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   }
 
   function finRonda() {
-    const explotan = [];
+    const explotan = [], terminan = [];
     for (const p of P) {
       if (p.muerto) continue;
       for (const c of CATEGORIAS) if (p.cds[c] > 0) p.cds[c]--;
@@ -199,12 +200,15 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         const salta = e.nuevo; e.nuevo = false;
         if (salta) continue;
         if (e.dur !== undefined) e.dur--;
+        if (e.alTerminar && e.dur !== undefined && e.dur <= 0) terminan.push([p, e]);
         if (e.id === 'bomb') { e.contador--; if (e.contador <= 0) explotan.push([p, e]); }
       }
       todos(p, 'summon').filter(e => e.dur <= 0).forEach(e => emitir('invocacionExpira', { de: p.uid, key: e.key }));
       p.estados = p.estados.filter(e => (e.dur === undefined || e.dur > 0) && !(e.id === 'bomb' && e.contador <= 0));
     }
     for (const [p, b] of explotan) if (!p.muerto) explotarBomba(p, b, false);
+    // "alTerminar": al expirar el efecto (no si lo disipan o limpian), su dueño ejecuta la acción (p. ej. Gran Cuerno de Aldebarán)
+    for (const [p, e] of terminan) { const d = porUid(e.duenoTerminar) || p; if (!d.muerto && enemigosDe(d).length) ejecutarAccion(d, e.alTerminar, {}); }
     emitir('finRonda', {}, ...P);
   }
 
@@ -360,6 +364,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (s) { quitar(t, s); emitir('sigiloRoto', { a: t.uid }, t); }
   }
   const porUid = uid => uid && P.find(p => p.uid === uid);
+  // tiene un Control que le quita turnos (aturdido, poseído o con hielo sin romper)
+  const conControl = p => p.estados.some(e => CONTROL.pierdeTurno.includes(e.id) && (e.id !== 'freeze' || e.capas > 0));
+  function ganarCargas(p, n, max) {
+    let e = get(p, 'cargas');
+    if (!e) { e = { id: 'cargas', valor: 0 }; p.estados.push(e); }
+    const antes = e.valor; e.valor = Math.min(max, e.valor + n);
+    if (e.valor !== antes) emitir('actualizar', {}, p);
+  }
   // reparto del daño de un DoT entre quienes lo aplicaron (cada acumulación recuerda su "fuente")
   const fuentesDe = estados => { const tot = estados.reduce((s, e) => s + (e.valor || 0), 0) || 1; return estados.map(e => [porUid(e.fuente), (e.valor || 0) / tot]); };
   // Provocación: si algún candidato la tiene, los ataques de un solo objetivo solo pueden ir a ellos
@@ -372,6 +384,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   function reduccion(t, categoria) {
     let r = 0;
     for (const l of lideresDe(t)) if (l.lider?.reduccion?.categoria === categoria) r += l.lider.reduccion.pct;
+    const rp = t.pasiva?.reduccionPropia;                  // pasiva: reduce el daño que recibe él mismo (p. ej. Aldebarán)
+    if (rp?.categoria === categoria) r += rp.pct;
     return Math.min(r, .9);
   }
   function repartir(t, d, pen) {
@@ -391,6 +405,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const tramos = Math.floor((1 - a.hp / maxHp(a)) / mov.bonoPorHpPerdido.cada + 1e-9);
       d *= 1 + Math.max(0, tramos) * mov.bonoPorHpPerdido.pct;
     }
+    if (ctx.cargas && mov.consumeCargas) d *= 1 + ctx.cargas * mov.consumeCargas.pct;   // cargas consumidas por este movimiento
     const bc = a.pasiva?.bonoContra;          // pasiva: +X% de daño a enemigos con un efecto (p. ej. Reptile contra envenenados)
     if (bc && get(t, bc.efecto)) d *= 1 + bc.pct;
     if (mov.bonoPorAcumulacion) {             // movimiento: +X% por cada acumulación de un efecto en el objetivo (con tope)
@@ -426,6 +441,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (robo && !a.muerto && (get(a, 'solarBurn') || (a.hp < maxHp(a) && puedeCurarse(a)))) curar(a, a, (aHp + aEsc) * robo);
     emitir('golpe', { de: a.uid, a: t.uid, dano: aHp, escudo: aEsc, critico, quiebre, color: mov.color, fuente: ctx.fuente, multi: (mov.golpes || 1) > 1 }, t);
     recibioDano(t, aHp + aEsc, a);
+    // pasiva "cargasAlRecibirGolpe": cada golpe de un enemigo le da cargas (el doble si su Provocación lo indica); con Control no
+    const cg = t.pasiva?.cargasAlRecibirGolpe;
+    if (cg && !t.muerto && t.lado !== a.lado && !conControl(t)) ganarCargas(t, get(t, 'taunt')?.cargasX || 1, cg.max);
     pasivas(a, 'alGolpear', { objetivo: t });          // gatillo "cada vez que golpea" (filtro opcional: el objetivo tiene X)
     if (aEsc > 0) perdioEscudo(t);
     if (t.hp <= 0) morir(t, a);
@@ -673,8 +691,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         if (acc.id === 'taunt' && get(t, 'stealth')) { quitar(t, get(t, 'stealth')); emitir('sigiloRoto', { a: t.uid }, t); }
         if (acc.id === 'dmgUp') acc = { ...acc, valor: BUFFS.furia };      // Furia siempre +50%
         const e = get(t, acc.id);
-        if (e) { e.dur = Math.max(e.dur, acc.dur ?? 2); if (acc.valor) e.valor = Math.max(e.valor || 0, acc.valor); if (acc.id === 'incite') e.fuente = a.uid; }
-        else t.estados.push({ id: acc.id, dur: acc.dur ?? 2, valor: acc.valor, fuente: a.uid });
+        const extra = {};                     // alTerminar: acción al terminar el efecto por duración · cargasX: multiplica cargas ganadas
+        if (acc.alTerminar) { extra.alTerminar = acc.alTerminar; extra.duenoTerminar = a.uid; }
+        if (acc.cargasX) extra.cargasX = acc.cargasX;
+        if (e) { e.dur = Math.max(e.dur, acc.dur ?? 2); if (acc.valor) e.valor = Math.max(e.valor || 0, acc.valor); if (acc.id === 'incite') e.fuente = a.uid; Object.assign(e, extra); }
+        else t.estados.push({ id: acc.id, dur: acc.dur ?? 2, valor: acc.valor, fuente: a.uid, ...extra });
         if (acc.id === 'dmgUp') texto = `+${Math.round((acc.valor || 0) * 100)}% Daño`;
         break;
       }
@@ -710,7 +731,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   }
   function disipar(a, t, acc) {
     const sa = stats(a), st = stats(t);
-    let buf = t.estados.filter(e => EFECTOS[e.id].tipo === 'buff' && (!acc.etiqueta || esDe(e, acc.etiqueta)));
+    let buf = t.estados.filter(e => EFECTOS[e.id].tipo === 'buff' && !EFECTOS[e.id].noDisipable && (!acc.etiqueta || esDe(e, acc.etiqueta)));
     if (acc.cantidad && buf.length > acc.cantidad) buf = [...buf].sort(() => rng() - .5).slice(0, acc.cantidad);
     let n = 0;
     for (const b of buf) if (rng() < probAplicar(sa.acc, st.res)) { quitar(t, b); n++; }
@@ -721,6 +742,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   function objetivosAccion(a, spec, ctx) {
     if (!spec || spec === 'objetivo') return ctx.objetivo ? [ctx.objetivo] : [];
     if (spec === 'propio') return [a];
+    if (spec === 'ultimoAtacante') { const u = a.ultimoDanoDe; if (u && !u.muerto && u.lado !== a.lado) return [u]; const l = enemigosDe(a); return l.length ? [rng.elegir(l)] : []; }
     if (spec === 'atacante') return ctx.atacante && !ctx.atacante.muerto ? [ctx.atacante] : [];
     if (spec === 'todosEnemigos') return ctx.esMovimiento ? sinEsquiva(enemigosDe(a)) : enemigosDe(a);
     if (spec === 'otrosAliados') return aliadosDe(a).filter(x => x !== a);
@@ -883,6 +905,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   function cumple(cond, ctx) {
     if (!cond) return true;
     if (cond.objetivoTiene) return !!(ctx.objetivo && get(ctx.objetivo, cond.objetivoTiene));
+    if (cond.cargasConsumidasMin) return (ctx.cargas || 0) >= cond.cargasConsumidasMin;
     if (cond.algunGolpeadoTenia) return !!ctx.golpeadosTenian?.has(cond.algunGolpeadoTenia);
     if (cond.invocacionesMin) return (ctx.invocaciones || 0) >= cond.invocacionesMin;
     if (cond.objetivoEliminado) return !!ctx.objetivo?.muerto;
@@ -1060,7 +1083,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       if (t.muerto) return;
       for (const ef of mov.efectos || []) {
         if (ef.cuando && ef.cuando !== 'objetivo') continue;
-        const c = { objetivo: t, atacante: a, hpObjetivoAntes };
+        const c = { objetivo: t, atacante: a, hpObjetivoAntes, cargas: ctx.cargas };
         if (cumple(ef.condicion, c)) ejecutarAccion(a, ef.accion, c);
       }
     };
@@ -1102,6 +1125,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       objetivos: objetivos.map(t => t.uid), forzado: !!ctx.forzado });
     const atacanteTenia = new Set(a.estados.map(e => e.id));   // lo que tenía el atacante al empezar (para "atacado por un enemigo con X")
 
+    if (mov.consumeCargas) {                          // consume todas sus cargas: cada una suma daño a este movimiento
+      const e = get(a, 'cargas');
+      ctx = { ...ctx, cargas: e?.valor || 0 };
+      if (e) { quitar(a, e); emitir('bono', { id: a.uid, texto: `🐂 ×${ctx.cargas} cargas` }, a); }
+    }
     const hm = get(a, 'hemo');                       // Hemorragia: pierde HP al ejecutar un movimiento
     if (hm) danoDoT(a, hm.valor, 'hemo', fuentesDe([hm]));
     if (!ctx.forzado && !ctx.reaccion) a.cds[mov.categoria] = mov.cd || 0;

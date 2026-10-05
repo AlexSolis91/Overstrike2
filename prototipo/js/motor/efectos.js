@@ -46,6 +46,8 @@ export const EFECTOS = {
   fear:    { nombre: 'Miedo',        icono: '😱', color: 0x94a3b8, tipo: 'debuff', tags: ['Control'],
     desc: `Actúa al final de la ronda y hace −${p(1 - CONTROL.miedoDano)} de daño.` },
   // ---- Buffs
+  cargas:  { nombre: 'Furia Dorada', icono: '🐂', color: 0xfbbf24, tipo: 'buff', tags: ['Carga'], noDisipable: true,
+    desc: `Cargas que gana al recibir golpes; un movimiento que las consume hace más daño. No se pueden disipar.` },
   taunt:   { nombre: 'Provocación', icono: '🎯', color: 0xf97316, tipo: 'buff', tags: ['Provocación'],
     desc: `Los enemigos deben atacarlo con sus movimientos de un solo objetivo. No afecta ataques de área ni al azar.` },
   fireAura: { nombre: 'Aura de Fuego', icono: '♨️', color: 0xff6a3d, tipo: 'buff', tags: ['Fuego'],
