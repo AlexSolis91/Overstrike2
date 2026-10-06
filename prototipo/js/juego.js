@@ -11,6 +11,7 @@ import { iniciarMenu, irA, presentarVS, cargarSeleccion } from './ui/menu.js';
 import { iniciarGuia, cerrarGuia, guiaAbierta } from './ui/guia.js';
 import { mostrarResultados, iniciarResultados } from './ui/resultados.js';
 import { sonar, musica, finDePartida, nuevaPartida, iniciarAjustes, ajustesAbiertos, cerrarAjustes, ajustes } from './ui/audio.js';
+import { iniciarCuenta } from './ui/cuenta.js';
 import { EFECTOS } from './motor/efectos.js';
 import { INVOCACIONES } from './datos/invocaciones.js';
 
@@ -487,6 +488,7 @@ window.__os2.empezar = (j, r) => jugar(j.map(porId), r.map(porId), 'construir');
 iniciarGuia();
 iniciarResultados();
 iniciarAjustes();
+iniciarCuenta();
 // Clic de interfaz para todos los botones (los que tienen su propio sonido lo suman encima)
 document.addEventListener('click', e => { if (e.target.closest('button:not([disabled]):not(.act.off)')) sonar('clic'); }, true);
 

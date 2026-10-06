@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=9">
-  <link rel="stylesheet" href="menu.css?v=14">
+  <link rel="stylesheet" href="menu.css?v=15">
 </head>
 <body data-pantalla="cargando">
   <!-- ============================================================ LOBBY -->
@@ -28,7 +28,7 @@
       <h1 class="logo-titulo" aria-label="Overstrike 2"><span class="lg">O</span><span class="lp">V</span><span class="lp">E</span><span class="lp">R</span><span class="lp">S</span><span class="lp">T</span><span class="lp">R</span><span class="lp">I</span><span class="lp">K</span><span class="lg">E</span></h1>
     </div>
     <nav id="menu-modos"></nav>
-    <footer class="menu-pie"><div class="pie-botones"><button id="menu-full" class="eq-btn">⛶ Pantalla completa</button><button class="eq-btn" data-abre-ajustes title="Sonido">🔊</button></div><span>Prototipo · v0.10</span></footer>
+    <footer class="menu-pie"><div class="pie-botones"><button id="btn-cuenta" class="eq-btn">👤 Iniciar sesión</button><button id="menu-full" class="eq-btn">⛶ Pantalla completa</button><button class="eq-btn" data-abre-ajustes title="Sonido">🔊</button></div><span>Prototipo · v0.10</span></footer>
   </section>
 
   <!-- ============================================================ CONSTRUCCIÓN DE EQUIPOS -->
@@ -72,6 +72,12 @@
       <label class="aj-fila aj-mudo"><input id="aj-over" type="checkbox"> <span>🎬 Cinemática de Over rápida</span></label>
       <button id="aj-probar" class="eq-btn">▶ Probar efectos</button>
       <p class="aj-nota">Tus ajustes se guardan en este dispositivo. En celular, el sonido se activa al primer toque. Durante una cinemática de Over, toca la pantalla para acelerarla.</p>
+    </div>
+  </div>
+  <div id="cuenta" class="hidden">
+    <div class="aj-caja cu-caja">
+      <header class="gu-top"><h2>👤 Tu cuenta</h2><button id="cuenta-x" title="Cerrar">✕</button></header>
+      <div id="cuenta-cont"></div>
     </div>
   </div>
   <div id="ficha" class="hidden"><div class="ficha-caja"><button id="ficha-x" title="Cerrar">✕</button><div id="ficha-cont"></div></div></div>
