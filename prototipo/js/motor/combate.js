@@ -906,6 +906,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (!cond) return true;
     if (cond.objetivoTiene) return !!(ctx.objetivo && get(ctx.objetivo, cond.objetivoTiene));
     if (cond.cargasConsumidasMin) return (ctx.cargas || 0) >= cond.cargasConsumidasMin;
+    if (cond.objetivoEfectoDurMin) { const e = ctx.objetivo && get(ctx.objetivo, cond.objetivoEfectoDurMin.efecto); return !!e && (e.dur ?? 0) >= cond.objetivoEfectoDurMin.dur; }
     if (cond.algunGolpeadoTenia) return !!ctx.golpeadosTenian?.has(cond.algunGolpeadoTenia);
     if (cond.invocacionesMin) return (ctx.invocaciones || 0) >= cond.invocacionesMin;
     if (cond.objetivoEliminado) return !!ctx.objetivo?.muerto;
@@ -925,6 +926,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (pa.filtro?.categorias && !pa.filtro.categorias.includes(ctx.categoria)) return;
     if (pa.filtro?.objetivoTiene && !(ctx.objetivo && get(ctx.objetivo, pa.filtro.objetivoTiene))) return;
     if (pa.maxPorRonda && p.usosPasiva >= pa.maxPorRonda) return;
+    if (pa.unaVezPorMovimiento) { if (p.movPasiva === movId) return; p.movPasiva = movId; }   // un solo intento por movimiento
+    if (pa.prob != null && rng() >= pa.prob) return;      // probabilidad de la pasiva (si falla, no gasta el uso de la ronda)
     // soloSiCura: si nadie de los destinos puede recibir curación, no se activa ni gasta uso
     if (pa.soloSiCura && !objetivosAccion(p, pa.accion.a, ctx).some(t => !t.muerto && t.hp < maxHp(t) && puedeCurarse(t))) return;
     p.usosPasiva++;
@@ -1103,7 +1106,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     }
   }
 
+  let movId = 0;                       // cuenta los movimientos ejecutados (pasivas "una vez por movimiento")
   function ejecutarMovimiento(a, mov, objetivo, ctx = {}) {
+    movId++;
     profundidad++;
     moverse(a, mov, objetivo, ctx);
     profundidad--;

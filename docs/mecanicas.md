@@ -194,6 +194,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - `critExtraSi { teniaAntes, pct }`: +pct de Prob. Crítico contra los objetivos que **ya tenían** ese efecto **antes** del movimiento (p. ej. Deep Freeze: +50% contra los ya congelados).
 - `criticoSiHpMin`: crítico garantizado si el objetivo tiene ese % de HP o más (se puede **bloquear**).
 - `ignoraArmadura`: resta **puntos** de Armadura al objetivo (0.10 = 40% → 30%; 1 = la ignora toda).
+- Condición `objetivoEfectoDurMin { efecto, dur }`: el objetivo tiene ese efecto con `dur` rondas o más (p. ej. Llamarada de Meleys: aturde si la Quemadura dura 4+).
 - `ignoraArmaduraSi { efecto, puntos }`: igual, pero solo contra objetivos que tienen ese efecto en el momento del golpe (p. ej. Ice Blast: 25 puntos contra congelados).
 - `bonoPorAcumulacion { efecto, pct, max }`: +pct de daño por cada acumulación de ese efecto en el objetivo, hasta `max` acumulaciones (p. ej. Fatality de Reptile).
 - `bonoPorHpPerdido { cada, pct }`: +pct de daño por cada tramo completo de HP perdido del atacante.
@@ -226,6 +227,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Robo de vida:** una pasiva puede declarar `roboVida: X`: cada golpe cura X × daño causado (incluye lo absorbido por escudos). Es curación normal.
 - **Inmunidades:** una pasiva puede declarar `inmuneA` con ids o etiquetas de efectos (p. ej. Sun Jin Woo: Veneno).
 - **Reacciones:** si una pasiva responde a la acción de otro con un movimiento propio (`usarMovimiento`), espera a que termine el movimiento en curso (o el ataque de la invocación) y se ejecuta después.
+- **Probabilidad de una pasiva:** `prob` (p. ej. 0.5): si falla, no se activa ni gasta su uso de la ronda. Con `unaVezPorMovimiento: true` solo se intenta una vez por movimiento aunque golpee varias veces (p. ej. Rhaenys).
 - **Límite:** una pasiva puede declarar `maxPorRonda`. Con `soloSiCura: true`, una pasiva de curación no se activa ni gasta uso si ningún destino puede recibir curación (HP lleno).
 - **Quemadura débil (`noRenueva`):** una Quemadura es *débil* si su % final (con el Daño DoT de quien la aplica) es **menor** que el de la Quemadura activa. Se fusiona igual (+10% de la débil), pero si la acción tiene `noRenueva`, **no alarga la duración**. Hoy solo la usa Rhaegal.
 - **Condiciones:**

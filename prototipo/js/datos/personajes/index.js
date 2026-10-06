@@ -12,6 +12,7 @@ import reptile from './reptile.js';
 import subZero from './sub-zero.js';
 import scorpion from './scorpion.js';
 import aldebaran from './aldebaran.js';
+import rhaenys from './rhaenys-targaryen.js';
 
-export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, daenerys, batman, joker, reptile, subZero, scorpion, aldebaran];
+export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, daenerys, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys];
 export const porId = id => OFICIALES.find(p => p.id === id);
