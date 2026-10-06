@@ -6,6 +6,7 @@ export default {
   id: 'the-joker',
   nombre: 'The Joker',
   rol: 'DoTer', rolSecundario: 'Control',
+  starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🃏', color: '#7c3aed', imagen: 'assets/personajes/the-joker.webp',
   base: { hp: 540, dmg: 50, spd: 90 },
   extra: {},

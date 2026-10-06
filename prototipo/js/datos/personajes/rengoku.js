@@ -5,6 +5,7 @@ export default {
   id: 'rengoku',
   nombre: 'Rengoku',
   rol: 'Tanque', rolSecundario: 'DoTer',
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🔥', color: '#f97316', imagen: 'assets/personajes/rengoku.webp',
   base: { hp: 750, dmg: 50, spd: 72 },
   extra: {},

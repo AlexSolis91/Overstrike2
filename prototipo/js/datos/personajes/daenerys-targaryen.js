@@ -5,6 +5,7 @@ export default {
   id: 'daenerys-targaryen',
   nombre: 'Daenerys Targaryen',
   rol: 'Invoker', rolSecundario: 'DoTer',
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐉', color: '#b91c1c', imagen: 'assets/personajes/daenerys-targaryen.webp',
   base: { hp: 500, dmg: 85, spd: 77 },
   extra: {},

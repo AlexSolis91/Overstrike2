@@ -41,6 +41,7 @@ export default {
   id: 'alexstrasza',
   nombre: 'Alexstrasza',
   rol: 'Support', rolSecundario: 'DoTer',
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🌹', color: '#e11d48', imagen: 'assets/personajes/alexstrasza.webp',
   base: { hp: 600, dmg: 40, spd: 82 },
   extra: {},

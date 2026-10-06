@@ -7,6 +7,7 @@ export default {
   id: 'reptile',
   nombre: 'Reptile',
   rol: 'DoTer', rolSecundario: 'Daño',
+  starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦎', color: '#65a30d', imagen: 'assets/personajes/reptile.webp',
   base: { hp: 620, dmg: 80, spd: 98 },
   extra: { critRate: .05 },                       // Prob. Crítico 10%

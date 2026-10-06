@@ -357,3 +357,21 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Invocaciones** suman al personaje que las invocó.
 - El daño entre aliados (Confusión, Posesión) no cuenta como daño causado.
 - **MVP** 👑 por equipo: Daño + Escudo + Curación + ½ Daño recibido + 150 por eliminación.
+
+## 17. Starter Packs (clasificación de campeones)
+
+Todavía sin pantalla: se usará en el primer inicio de sesión y, más adelante, en sobres y packs.
+
+- Cada campeón puede declarar en su ficha `starter: '<id>'`: es **exclusivo** de ese pack temático. Sin `starter`, es **libre**.
+- Registro en `js/datos/starters.js`:
+  - 🔥 **Blazing Legion** (`blazing`): Quemadura.
+  - ❄️ **Frostborn Vanguard** (`frostborn`): Congelación y Mega Congelación.
+  - 🧪 **Noxious Alliance** (`noxious`): Veneno.
+- Un starter pack da **3 campeones de su tema** + **2 al azar** entre los libres y los de su propio tema. **Nunca** salen exclusivos de otro pack.
+- Funciones listas: `exclusivosDe(id)` y `elegiblesAleatorios(id)`.
+- Clasificación actual:
+  - **Blazing:** Alexstrasza, Rhaenys Targaryen, Rengoku, Daenerys Targaryen, Scorpion.
+  - **Frostborn:** Sub-Zero (necesita al menos 2 más antes de abrir los packs).
+  - **Noxious:** The Joker, Reptile, Loki.
+  - **Libres:** Goku, Sun Jin Woo, Shaka, Batman, Aldebarán, Thor, Madara Uchiha.
+- Al crear un campeón nuevo se decide si es exclusivo de algún pack.

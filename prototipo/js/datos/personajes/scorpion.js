@@ -6,6 +6,7 @@ export default {
   id: 'scorpion',
   nombre: 'Scorpion',
   rol: 'Daño', rolSecundario: 'DoTer',
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦂', color: '#f59e0b', imagen: 'assets/personajes/scorpion.webp',
   base: { hp: 715, dmg: 84, spd: 77 },
   extra: {},
