@@ -75,6 +75,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const b = l.lider?.bonoPorEfecto;
       if (b) sec[b.stat] = (sec[b.stat] || 0) + b.valor * enemigosDe(p).filter(x => get(x, b.efecto)).length;
       if (l.lider?.bonoDano) pct.dmg += l.lider.bonoDano;                                  // líder "bonoDano": +X% de Daño fijo
+      for (const [k, v] of Object.entries(l.lider?.bonoStat || {})) sec[k] = (sec[k] || 0) + v;   // líder "bonoStat": p. ej. +15% Armadura
       const ac = l.lider?.acumulaPorDoT;                                                   // líder "acumulaPorDoT": lo ganado hasta ahora
       if (ac && l.acumLider) sec[ac.stat] = (sec[ac.stat] || 0) + l.acumLider;
     }
@@ -408,6 +409,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (ctx.cargas && mov.consumeCargas) d *= 1 + ctx.cargas * mov.consumeCargas.pct;   // cargas consumidas por este movimiento
     const bc = a.pasiva?.bonoContra;          // pasiva: +X% de daño a enemigos con un efecto (p. ej. Reptile contra envenenados)
     if (bc && get(t, bc.efecto)) d *= 1 + bc.pct;
+    if (mov.bonoPorDebuffs) {                // +pct por cada tipo distinto de debuff del objetivo (3 Venenos = 1 tipo)
+      const tipos = new Set(t.estados.filter(e => EFECTOS[e.id]?.tipo === 'debuff').map(e => e.id));
+      d *= 1 + tipos.size * mov.bonoPorDebuffs.pct;
+    }
     if (mov.bonoPorAcumulacion) {             // movimiento: +X% por cada acumulación de un efecto en el objetivo (con tope)
       const b = mov.bonoPorAcumulacion;
       d *= 1 + Math.min(todos(t, b.efecto).length, b.max ?? 99) * b.pct;
@@ -779,7 +784,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           break;
         case 'curar': {
           const base = acc.base === 'hpMaxObjetivo' ? maxHp(t) : acc.base === 'curacion' ? (ctx.curacion || 0) : baseDe(a, acc.escala);
-          curar(a, t, base * acc.pct);
+          const veces = acc.porCada ? (ctx[acc.porCada] || 0) : 1;     // porCada: 'eliminados' = una vez por cada enemigo eliminado
+          if (veces > 0) curar(a, t, base * acc.pct * veces);
           break;
         }
         case 'bonoPermanente': {       // p. ej. +5% HP máx. por cada Quemadura activa en enemigos (permanente, sube también el HP actual)
@@ -1142,6 +1148,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (!a.muerto) {
       const principal = objetivo || objetivos[0] || null;
       const invocacionesAntes = todos(a, 'summon').length;    // invocaciones activas al ejecutar el movimiento
+      const vivosAlEmpezar = new Set(objetivos.filter(t => !t.muerto));
       const previos = principal ? clonar(principal.estados) : [];    // para Propagar aunque el objetivo muera
       const c = { ...ctx, acum: { dano: 0, tenian: new Set() } };
       if (mov.invocar) invocar(a, mov.invocar);
@@ -1153,8 +1160,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       else for (const t of objetivos) resolverSobreObjetivo(a, t, mov, c);
 
       const sobrevivientes = [...new Set(objetivos)].filter(t => !t.muerto && t.lado !== a.lado);
+      const eliminados = [...new Set(objetivos)].filter(t => t.muerto && t.lado !== a.lado && vivosAlEmpezar.has(t)).length;
       const final = {
-        sobrevivientes, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, invocaciones: invocacionesAntes, esMovimiento: true,
+        sobrevivientes, eliminados, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, invocaciones: invocacionesAntes, esMovimiento: true,
         estadoDe: id => (principal && !principal.muerto && get(principal, id)) || previos.find(e => e.id === id),
         debuffsPrevios: previos.filter(e => EFECTOS[e.id]?.tipo === 'debuff'),
       };
