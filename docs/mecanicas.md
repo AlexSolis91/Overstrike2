@@ -96,6 +96,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - `probSiMasRapido`: probabilidad distinta contra objetivos **más rápidos** que quien lo aplica (p. ej. Deep Freeze: 75%, o 100% contra los más rápidos que Sub-Zero).
   - **Cada golpe tira por separado:** en ataques a varios, una tirada por objetivo; en multi-golpe al mismo objetivo, una tirada por golpe (2 golpes = 2 tiradas).
   - Las copias de **Propagar** solo hacen el filtro 2.
+  - `irresistibleSi: <efecto>`: si el objetivo tiene ese efecto, se salta el filtro 2 (no se puede resistir). P. ej. el Miedo de Loki contra envenenados.
   - **Buffs a aliados (incluido uno mismo): siempre se aplican (100%).**
 - **Siempre se aplican (100%):** curaciones directas, **escudos**, limpiezas y buffs.
   - Escudo y Curación son conceptos **separados**, con etiquetas distintas.
@@ -154,6 +155,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | ☠️ Peste Negra | Peste | Igual que Peste y además, al final de cada turno del portador (también si lo perdió), pierde **5% del HP máx. original** (piso: 25%). No es daño: el HP actual solo baja si queda por encima del nuevo máximo. La pérdida es **permanente** aunque se limpie (solo la recuperan futuras mecánicas de aumento de HP máx.) |
 | 🔆 Quemadura Solar | Quemadura Solar | Toda curación que reciba (movimientos, Regeneración, robo de vida, Robar HP, pasivas) se vuelve **daño por el monto completo**, aunque tenga el HP lleno. Ignora Armadura y Escudo, no se bloquea ni es crítico, le afectan las reducciones de DoT, rompe Sigilo y nadie recibe crédito si mata. Gana a la Peste. **No** cuenta como Quemadura. Las pasivas "solo si cura" no se activan sobre él y la IA no lo cura con curaciones de un objetivo. Se puede limpiar |
 | 💔 Debilitar | Estadística | Recibe **+50% de daño** de golpes y daño por efecto, calculado **después** de la Armadura (no afecta DoT ni Robar HP) |
+| 🪞 Espejismo | Reflejo | Cada **golpe** que recibe de un enemigo le devuelve al atacante el **30%** del daño recibido (HP + Escudo), como **daño por efecto**: no es golpe (no rebota entre dos Espejismos ni activa Sangrado/contraataques), no es crítico ni se bloquea. El portador recibe el golpe completo. No refleja DoT ni daño por efecto. Se puede Disipar |
 | ♨️ Aura de Fuego | Fuego | Cuando el portador recibe un **golpe** de un enemigo, tiene **50%** de probabilidad de aplicarle al atacante Quemadura 5% (1 turno), con Tirada de Puntería del portador |
 | 🎯 Provocación | Provocación | Los enemigos deben dirigirle sus movimientos de **un objetivo** (incluidas invocaciones). No afecta AOE, objetivos al azar, movimientos a aliados, Confusión ni Posesión. Con varios, se elige entre ellos. Se puede Disipar |
 | ✦ Invocación | Invocación | Ver sección 9 |
@@ -185,6 +187,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | `bonoPermanente` con otra `stat` | stat, pct | P. ej. `critDmg` +5% por cada crítico (Teletransportación). Sin tope, se conserva entre formas |
 | `multiple` | acciones | Aplica varias acciones a **los mismos** objetivos elegidos (p. ej. Escudo + Furia a 3 aliados al azar) |
 | `curar` + `porCada: 'eliminados'` | pct, escala | Cura una vez por cada enemigo eliminado por ese movimiento (p. ej. Explosión Divina: 20% del HP máx. de Thor por cada uno) |
+| `robarBuffs` | cantidad | Quita buffs al azar al objetivo y se los pasa al ejecutor (no roba invocaciones ni lo no disipable). P. ej. Truco de la Serpiente de Loki |
 | `danoSegunEnemigos` | efecto, pct | Daño por efecto al objetivo = suma de pct × HP máx. de **cada enemigo** con ese efecto (p. ej. Spear: 2% por cada enemigo quemado) |
 | `danoRepartido` | base `'escudosEquipo'`, pct, paquetes | Total = pct × suma de los Escudos de todo el equipo del ejecutor (incluido él; no los consume). Se divide en N paquetes (10 por defecto) que caen al azar sobre enemigos → reparto desigual. Es daño por **efecto** (aplica Armadura y Escudo, sin bloqueo ni crítico) |
 
@@ -223,6 +226,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - **Al terminar un efecto:** un buff/debuff puede llevar `alTerminar: <acción>`: cuando **expira por duración** (no si lo disipan o limpian), quien lo aplicó ejecuta esa acción. Destino `a: 'ultimoAtacante'` = el último enemigo que le hizo daño (o uno al azar). Una Provocación puede llevar `cargasX: N` (mientras dure, cada golpe da N cargas). P. ej. Orgullo del Toro Dorado: al terminar su Provocación, Aldebarán lanza Gran Cuerno.
   - `alRomperCapa`: cada vez que un **golpe** (de cualquiera) rompe una capa de Congelación o Mega Congelación de un **enemigo** del dueño. No cuenta el hielo que se derrite al perder el turno. `objetivo` = el congelado.
 - **Daño contra un efecto:** una pasiva puede declarar `bonoContra { efecto, pct }`: sus golpes hacen +pct a enemigos con ese efecto.
+- **Reducción para el equipo:** una pasiva puede declarar `reduccionAliados { pct, salvoSi }`: todo su equipo (incluido él) recibe −pct de **todo** el daño mientras viva y no tenga el efecto `salvoSi` (p. ej. Loki: −10% salvo con Desgaste).
 - **Reducción propia:** una pasiva puede declarar `reduccionPropia { categoria, pct }`: reduce el daño de esa categoría que recibe **él mismo** (p. ej. Aldebarán: −15% de golpes). Se suma a la de líderes (tope 90%).
 - **Cargas:** una pasiva puede declarar `cargasAlRecibirGolpe { max }`: cada golpe de un enemigo le da 1 carga (Furia Dorada 🐂, se ve en su carta con el número), hasta `max`. Con un Control que le quite turnos no gana cargas. Las cargas **no se pueden disipar** (`noDisipable`).
 - **Robo contra un efecto:** una pasiva puede declarar `roboSiObjetivoTiene { efecto, pct }`: al atacar a un enemigo que **ya tenía** ese efecto, le roba pct de su HP máx. (una vez por movimiento y objetivo, aunque haya golpe extra).

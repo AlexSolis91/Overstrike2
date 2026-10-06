@@ -127,6 +127,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'fear': texto = `Actúa al final de la ronda · −25% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'dmgUp': texto = `+${Math.round(e.valor * 100)}% Daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'taunt': texto = `Los enemigos deben atacarlo con sus movimientos de un objetivo · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'mirror': texto = `Devuelve el ${Math.round(BUFFS.espejismo * 100)}% del daño de cada golpe recibido · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'cargas': texto = `${e.valor} carga(s): su próximo movimiento que las consume hace más daño`; n = e.valor; break;
         case 'incite': texto = `Solo puede usar su Básico contra ${porUid(e.fuente)?.nombre || 'quien lo incitó'} · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'pierce': texto = `+${Math.round(BUFFS.perforacion * 100)}% Penetración de escudo · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -385,6 +386,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   function reduccion(t, categoria) {
     let r = 0;
     for (const l of lideresDe(t)) if (l.lider?.reduccion?.categoria === categoria) r += l.lider.reduccion.pct;
+    for (const p of aliadosDe(t)) {                      // pasiva "reduccionAliados": todo su equipo recibe menos daño mientras no tenga X
+      const ra = p.pasiva?.reduccionAliados;
+      if (ra && !(ra.salvoSi && get(p, ra.salvoSi))) r += ra.pct;
+    }
     const rp = t.pasiva?.reduccionPropia;                  // pasiva: reduce el daño que recibe él mismo (p. ej. Aldebarán)
     if (rp?.categoria === categoria) r += rp.pct;
     return Math.min(r, .9);
@@ -452,6 +457,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     pasivas(a, 'alGolpear', { objetivo: t });          // gatillo "cada vez que golpea" (filtro opcional: el objetivo tiene X)
     if (aEsc > 0) perdioEscudo(t);
     if (t.hp <= 0) morir(t, a);
+    if (get(t, 'mirror') && t.lado !== a.lado && !a.muerto && aHp + aEsc > 0)   // Espejismo: devuelve parte del golpe (daño por efecto, no es golpe)
+      danoEfecto(t, a, (aHp + aEsc) * BUFFS.espejismo, 0x67e8f9);
     const aura = get(t, 'fireAura');
     if (aura && !t.muerto && !a.muerto && t.lado !== a.lado) {
       emitir('auraFuego', { a: t.uid, de: a.uid });
@@ -582,7 +589,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (acc.probSiMasRapido != null && stats(t).spd > stats(a).spd) prob = acc.probSiMasRapido;   // p. ej. Deep Freeze: 100% contra los más rápidos
     if (prob != null && rng() >= prob) return;                          // 1) probabilidad del movimiento (por defecto 100%): si falla, ni lo intenta
     const sa = stats(a), st = stats(t);                                  // 2) Puntería vs Resistencia
-    if (rng() >= probAplicar(sa.acc, st.res)) { emitir('resistido', { a: t.uid, id: acc.id }); return; }
+    const irresistible = acc.irresistibleSi && get(t, acc.irresistibleSi);   // p. ej. Miedo de Loki contra envenenados
+    if (!irresistible && rng() >= probAplicar(sa.acc, st.res)) { emitir('resistido', { a: t.uid, id: acc.id }); return; }
     aplicarEfecto(a, t, acc);
   }
 
@@ -691,7 +699,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         break;
       }
       case 'confuse': case 'fear': case 'dmgUp': case 'taunt': case 'fireAura': case 'protect': case 'regen':
-      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': case 'incite': {
+      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': case 'incite': case 'mirror': {
         if (acc.id === 'stealth' && get(t, 'taunt')) { emitir('sinEfecto', { a: t.uid, texto: 'Con Provocación no puede tener Sigilo' }); return; }
         if (acc.id === 'taunt' && get(t, 'stealth')) { quitar(t, get(t, 'stealth')); emitir('sigiloRoto', { a: t.uid }, t); }
         if (acc.id === 'dmgUp') acc = { ...acc, valor: BUFFS.furia };      // Furia siempre +50%
@@ -864,6 +872,17 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         }
         case 'disipar': disipar(a, t, acc); break;
         case 'robarHP': robarHP(a, t, acc.pct); break;
+        case 'robarBuffs': {                 // quita buffs al azar al objetivo y se los pasa al ejecutor (no invocaciones ni lo no disipable)
+          const lista = t.estados.filter(e => EFECTOS[e.id]?.tipo === 'buff' && !EFECTOS[e.id].noDisipable && e.id !== 'summon');
+          for (const e of [...lista].sort(() => rng() - .5).slice(0, acc.cantidad || 1)) {
+            quitar(t, e);
+            const mio = get(a, e.id);
+            if (mio) { mio.dur = Math.max(mio.dur ?? 0, e.dur ?? 0); if (e.valor) mio.valor = Math.max(mio.valor || 0, e.valor); }
+            else a.estados.push({ ...e, nuevo: true, fuente: a.uid });
+            emitir('extension', { a: a.uid, texto: `🪄 Roba ${EFECTOS[e.id].nombre}` }, a, t);
+          }
+          break;
+        }
         case 'danoSegunEnemigos': {          // daño por efecto = suma de pct × HP máx. de cada enemigo con ese efecto (p. ej. Spear)
           const total = enemigosDe(a).filter(x => get(x, acc.efecto)).reduce((s, x) => s + maxHp(x) * acc.pct, 0);
           danoEfecto(a, t, total, 0xf59e0b);

@@ -46,6 +46,8 @@ export const EFECTOS = {
   fear:    { nombre: 'Miedo',        icono: '😱', color: 0x94a3b8, tipo: 'debuff', tags: ['Control'],
     desc: `Actúa al final de la ronda y hace −${p(1 - CONTROL.miedoDano)} de daño.` },
   // ---- Buffs
+  mirror:  { nombre: 'Espejismo', icono: '🪞', color: 0x67e8f9, tipo: 'buff', tags: ['Reflejo'],
+    desc: `Cada golpe que recibe de un enemigo le devuelve al atacante el ${p(BUFFS.espejismo)} del daño (daño por efecto). Igual recibe el golpe completo.` },
   cargas:  { nombre: 'Furia Dorada', icono: '🐂', color: 0xfbbf24, tipo: 'buff', tags: ['Carga'], noDisipable: true,
     desc: `Cargas que gana al recibir golpes; un movimiento que las consume hace más daño. No se pueden disipar.` },
   taunt:   { nombre: 'Provocación', icono: '🎯', color: 0xf97316, tipo: 'buff', tags: ['Provocación'],
