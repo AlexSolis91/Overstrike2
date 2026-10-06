@@ -375,3 +375,18 @@ Todavía sin pantalla: se usará en el primer inicio de sesión y, más adelante
   - **Noxious:** The Joker, Reptile, Loki.
   - **Libres:** Goku, Sun Jin Woo, Shaka, Batman, Aldebarán, Thor, Madara Uchiha.
 - Al crear un campeón nuevo se decide si es exclusivo de algún pack.
+
+## 18. Sobres de la tienda
+
+Todavía sin pantalla ni cuentas. Registro y lógica en `js/datos/sobres.js`.
+
+- Cada campeón declara en su ficha `sobres: [...]`: puede estar en **varios**. Los campeones de los Starter Packs **también** están en sobres; el Starter Pack es un arranque único, no se compra.
+- **Sobres actuales** (`activo: true/false` = si se ven en la tienda; por temporada):
+  - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Goku, Scorpion.
+  - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki.
+  - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki.
+  - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema.
+  - Sin sobre temático por ahora (salen en Unbreakable Force y en los aleatorios): Daenerys, Rhaenys, Rengoku, Sub-Zero. Llegarán sobres de Quemadura, Congelación, etc.
+- **Apertura** (`abrirSobre(id)`): 3 campeones, sin repetir dentro del mismo sobre. 1 o 2 (50/50) del tema y el resto al azar entre **todos** (a veces también caen del tema). Unbreakable: los 3 al azar entre todos.
+- **Starter Pack** (`abrirStarter(id)` en `js/datos/starters.js`): 3 al azar de sus exclusivos + 2 al azar entre los elegibles, sin repetir.
+- **Activar/desactivar sobres:** hoy, el campo `activo` en el archivo. Con cuentas y base de datos, lo controlará el administrador con casillas (ver `docs/plan-cuentas-y-tienda.md`).

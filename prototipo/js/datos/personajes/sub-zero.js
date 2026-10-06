@@ -6,6 +6,7 @@ export default {
   id: 'sub-zero',
   nombre: 'Sub-Zero',
   rol: 'Control', rolSecundario: 'Daño',
+  sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🥶', color: '#38bdf8', imagen: 'assets/personajes/sub-zero.webp',
   base: { hp: 620, dmg: 55, spd: 79 },

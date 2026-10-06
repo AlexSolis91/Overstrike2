@@ -5,6 +5,7 @@ export default {
   id: 'shaka',
   nombre: 'Shaka',
   rol: 'Tanque', rolSecundario: 'Support',
+  sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🪷', color: '#facc15', imagen: 'assets/personajes/shaka.webp',
   base: { hp: 730, dmg: 65, spd: 75 },
   extra: {},

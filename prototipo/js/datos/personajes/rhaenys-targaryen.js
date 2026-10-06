@@ -7,6 +7,7 @@ export default {
   id: 'rhaenys-targaryen',
   nombre: 'Rhaenys Targaryen',
   rol: 'Daño', rolSecundario: 'Control',
+  sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐉', color: '#dc2626', imagen: 'assets/personajes/rhaenys-targaryen.webp',
   base: { hp: 620, dmg: 85, spd: 82 },

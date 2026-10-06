@@ -7,6 +7,7 @@ export default {
   id: 'reptile',
   nombre: 'Reptile',
   rol: 'DoTer', rolSecundario: 'Daño',
+  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦎', color: '#65a30d', imagen: 'assets/personajes/reptile.webp',
   base: { hp: 620, dmg: 80, spd: 98 },

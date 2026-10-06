@@ -5,6 +5,7 @@ export default {
   id: 'batman',
   nombre: 'Batman',
   rol: 'Control', rolSecundario: 'Support',
+  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🦇', color: '#334155', imagen: 'assets/personajes/batman.webp',
   base: { hp: 600, dmg: 45, spd: 78 },
   extra: {},

@@ -7,6 +7,7 @@ export default {
   id: 'thor',
   nombre: 'Thor',
   rol: 'Daño', rolSecundario: 'Support',
+  sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '⚡', color: '#3b82f6', imagen: 'assets/personajes/thor.webp',
   base: { hp: 690, dmg: 86, spd: 91 },
   extra: {},

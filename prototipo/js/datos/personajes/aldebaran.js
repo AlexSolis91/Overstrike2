@@ -7,6 +7,7 @@ export default {
   id: 'aldebaran',
   nombre: 'Aldebarán',
   rol: 'Tanque', rolSecundario: 'Daño',
+  sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🐂', color: '#eab308', imagen: 'assets/personajes/aldebaran.webp',
   base: { hp: 810, dmg: 45, spd: 70 },
   extra: { armor: .15 },                              // su armadura dorada

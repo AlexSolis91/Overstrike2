@@ -5,6 +5,7 @@ export default {
   id: 'sun-jin-woo',
   nombre: 'Sun Jin Woo',
   rol: 'Daño', rolSecundario: 'Invocador',
+  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🌑', color: '#8b5cf6', imagen: 'assets/personajes/sun-jin-woo.webp',
   base: { hp: 650, dmg: 70, spd: 88 },
   extra: {},

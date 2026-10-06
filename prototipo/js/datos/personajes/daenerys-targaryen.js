@@ -5,6 +5,7 @@ export default {
   id: 'daenerys-targaryen',
   nombre: 'Daenerys Targaryen',
   rol: 'Invoker', rolSecundario: 'DoTer',
+  sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐉', color: '#b91c1c', imagen: 'assets/personajes/daenerys-targaryen.webp',
   base: { hp: 500, dmg: 85, spd: 77 },

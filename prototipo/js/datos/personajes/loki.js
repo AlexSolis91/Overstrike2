@@ -7,6 +7,7 @@ export default {
   id: 'loki',
   nombre: 'Loki',
   rol: 'Tanque', rolSecundario: 'Control',
+  sobres: ['phantom', 'sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐍', color: '#16a34a', imagen: 'assets/personajes/loki.webp',
   base: { hp: 760, dmg: 50, spd: 92 },
