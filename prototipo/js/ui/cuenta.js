@@ -1,9 +1,11 @@
 // Cuenta del jugador: registro, inicio de sesión, perfil y cierre de sesión (Supabase).
 // Por ahora la cuenta es OPCIONAL: se puede jugar sin ella. Más adelante guardará la colección y la progresión.
 import { supabase } from '../servicios/supabase.js';
+import { configSobres, adminGuardarSobre, adminDarOro, mensajeError } from '../servicios/datos.js';
+import { SOBRES } from '../datos/sobres.js';
 
 const $ = s => document.querySelector(s);
-let perfil = null;                 // { nombre, rol } del jugador conectado
+let perfil = null;                 // { nombre, rol, starter_elegido } del jugador conectado
 let modo = 'entrar';               // 'entrar' | 'crear'
 
 export const perfilActual = () => perfil;
@@ -34,8 +36,10 @@ function pintar(mensaje = '', tipo = '') {
   if (perfil) {
     caja.innerHTML = `
       <p class="cu-hola">Hola, <b>${perfil.nombre}</b>${perfil.rol === 'admin' ? ' <span class="cu-admin">Administrador</span>' : ''}</p>
-      <p class="cu-nota">Tu cuenta guardará tu colección y tu progreso cuando activemos los sobres y la tienda.</p>
-      <button id="cu-salir" class="eq-btn">Cerrar sesión</button>`;
+      <p class="cu-nota">Tu colección, tu oro y tus sobres se guardan en tu cuenta.</p>
+      <button id="cu-salir" class="eq-btn">Cerrar sesión</button>
+      ${perfil.rol === 'admin' ? '<section id="cu-adm" class="cu-adm"><h3>🛠️ Administrador</h3><p class="cu-nota">Cargando…</p></section>' : ''}`;
+    if (perfil.rol === 'admin') pintarAdmin();
   } else {
     const crear = modo === 'crear';
     caja.innerHTML = `
@@ -55,10 +59,47 @@ async function cargarPerfil(sesion) {
   if (!sesion) { perfil = null; pintarBoton(); return; }
   try {
     const sb = await supabase();
-    const { data, error } = await sb.from('jugadores').select('nombre, rol').eq('id', sesion.user.id).single();
-    perfil = error ? { nombre: sesion.user.email, rol: 'jugador' } : data;
-  } catch { perfil = { nombre: sesion.user.email, rol: 'jugador' }; }
+    const { data, error } = await sb.from('jugadores').select('nombre, rol, starter_elegido').eq('id', sesion.user.id).single();
+    perfil = error ? { nombre: sesion.user.email, rol: 'jugador', starter_elegido: null } : data;
+  } catch { perfil = { nombre: sesion.user.email, rol: 'jugador', starter_elegido: null }; }
   pintarBoton();
+}
+// Avisa a las demás pantallas (Tienda, Colección, Starter Pack) que entró o salió alguien
+const avisarSesion = () => dispatchEvent(new CustomEvent('cuenta:cambio', { detail: perfil }));
+
+// ---------------------------------------------------------------- panel de administrador
+// Sobres de la tienda (activar / desactivar y precio) y dar oro a un jugador. El servidor vuelve a verificar que eres admin.
+async function pintarAdmin(msg = '', tipo = '') {
+  const caja = $('#cu-adm');
+  if (!caja) return;
+  let cfg = [];
+  try { cfg = await configSobres(); } catch (e) { msg = mensajeError(e); tipo = 'error'; }
+  if (!$('#cu-adm')) return;
+  caja.innerHTML = `<h3>🛠️ Administrador</h3>
+    <p class="cu-nota">Sobres visibles en la tienda (por temporada):</p>
+    ${cfg.map(c => { const s = SOBRES[c.id] || { nombre: c.id, icono: '🎁' };
+      return `<div class="adm-sobre" data-id="${c.id}"><label><input type="checkbox" class="adm-activo" ${c.activo ? 'checked' : ''}> ${s.icono} ${s.nombre}</label>
+        <input type="number" class="adm-precio" min="0" step="100" value="${c.precio}" title="Precio en oro"><span>oro</span></div>`; }).join('')}
+    <button id="adm-guardar" class="eq-btn">Guardar sobres</button>
+    <p class="cu-nota">Dar oro a un jugador:</p>
+    <form id="adm-oro" class="adm-oro"><input id="adm-nombre" placeholder="Nombre del jugador" required><input id="adm-cant" type="number" min="1" step="1" value="10000" required title="Oro a dar"><button class="eq-btn">Dar</button></form>
+    ${msg ? `<p class="cu-msg ${tipo}">${msg}</p>` : ''}`;
+}
+async function guardarSobres() {
+  const btn = $('#adm-guardar'); btn.disabled = true; btn.textContent = 'Guardando…';
+  try {
+    for (const fila of document.querySelectorAll('.adm-sobre')) {
+      const precio = Math.max(0, Math.floor(Number(fila.querySelector('.adm-precio').value) || 0));
+      await adminGuardarSobre(fila.dataset.id, { activo: fila.querySelector('.adm-activo').checked, precio });
+    }
+    pintarAdmin('Sobres guardados. Los jugadores los verán al abrir la tienda.', 'ok');
+  } catch (e) { pintarAdmin(mensajeError(e), 'error'); }
+}
+async function darOro(e) {
+  e.preventDefault();
+  const nombre = $('#adm-nombre').value.trim(), oro = Math.floor(Number($('#adm-cant').value));
+  try { const total = await adminDarOro(nombre, oro); pintarAdmin(`Listo: ${nombre} ahora tiene ${Number(total).toLocaleString('es-MX')} de oro.`, 'ok'); dispatchEvent(new Event('inventario:cambio')); }
+  catch (err) { pintarAdmin(mensajeError(err), 'error'); }
 }
 
 async function enviar(e) {
@@ -88,6 +129,7 @@ export function iniciarCuenta() {
     if (e.target.id === 'cuenta' || e.target.closest('#cuenta-x')) return $('#cuenta').classList.add('hidden');
     const tab = e.target.closest('.cu-tabs button'); if (tab) { modo = tab.dataset.modo; return pintar(); }
     if (e.target.closest('#cu-salir')) { (await supabase()).auth.signOut(); return; }
+    if (e.target.closest('#adm-guardar')) return guardarSobres();
     if (e.target.closest('#cu-olvide')) {
       const correo = $('#cu-correo')?.value.trim();
       if (!correo) return pintar('Escribe tu correo arriba y vuelve a tocar "¿Olvidaste tu contraseña?".', 'error');
@@ -95,12 +137,17 @@ export function iniciarCuenta() {
         pintar('Te enviamos un correo para cambiar tu contraseña.', 'ok'); } catch (err) { pintar(traducir(err), 'error'); }
     }
   });
-  $('#cuenta').addEventListener('submit', e => { if (e.target.id === 'cu-form') enviar(e); });
+  $('#cuenta').addEventListener('submit', e => { if (e.target.id === 'cu-form') enviar(e); else if (e.target.id === 'adm-oro') darOro(e); });
   pintarBoton();
   // Sesión guardada y cambios de sesión (entrar / salir / confirmar correo)
   supabase().then(async sb => {
-    sb.auth.onAuthStateChange((_ev, sesion) => { setTimeout(async () => { await cargarPerfil(sesion); if (!$('#cuenta').classList.contains('hidden')) pintar(); }, 0); });
-    const { data } = await sb.auth.getSession();
-    await cargarPerfil(data.session);
+    let ultimoId;   // onAuthStateChange también avisa al renovar el token: solo reaccionamos si cambió el jugador
+    sb.auth.onAuthStateChange((_ev, sesion) => { setTimeout(async () => {
+      const id = sesion?.user.id ?? null;
+      if (id === ultimoId) return;
+      ultimoId = id;
+      await cargarPerfil(sesion); avisarSesion();
+      if (!$('#cuenta').classList.contains('hidden')) pintar();
+    }, 0); });
   }).catch(() => { /* sin conexión: se juega sin cuenta */ });
 }

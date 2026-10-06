@@ -5,9 +5,9 @@
 import { OFICIALES } from './personajes/index.js';
 
 export const STARTERS = {
-  blazing:   { nombre: 'Blazing Legion',     tema: 'Quemadura',                  icono: '🔥' },
-  frostborn: { nombre: 'Frostborn Vanguard', tema: 'Congelación y Mega Congelación', icono: '❄️' },
-  noxious:   { nombre: 'Noxious Alliance',   tema: 'Veneno',                     icono: '🧪' },
+  blazing:   { nombre: 'Blazing Legion',     tema: 'Quemadura',                  icono: '🔥', color: '#f97316' },
+  frostborn: { nombre: 'Frostborn Vanguard', tema: 'Congelación y Mega Congelación', icono: '❄️', color: '#38bdf8' },
+  noxious:   { nombre: 'Noxious Alliance',   tema: 'Veneno',                     icono: '🧪', color: '#22c55e' },
 };
 
 // Campeones exclusivos del pack (los de su tema)

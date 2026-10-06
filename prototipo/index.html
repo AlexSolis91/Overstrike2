@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=9">
-  <link rel="stylesheet" href="menu.css?v=15">
+  <link rel="stylesheet" href="menu.css?v=16">
 </head>
 <body data-pantalla="cargando">
   <!-- ============================================================ LOBBY -->
@@ -28,7 +28,7 @@
       <h1 class="logo-titulo" aria-label="Overstrike 2"><span class="lg">O</span><span class="lp">V</span><span class="lp">E</span><span class="lp">R</span><span class="lp">S</span><span class="lp">T</span><span class="lp">R</span><span class="lp">I</span><span class="lp">K</span><span class="lg">E</span></h1>
     </div>
     <nav id="menu-modos"></nav>
-    <footer class="menu-pie"><div class="pie-botones"><button id="btn-cuenta" class="eq-btn">👤 Iniciar sesión</button><button id="menu-full" class="eq-btn">⛶ Pantalla completa</button><button class="eq-btn" data-abre-ajustes title="Sonido">🔊</button></div><span>Prototipo · v0.10</span></footer>
+    <footer class="menu-pie"><div class="pie-botones"><button id="btn-tienda" class="eq-btn hidden">🛒 Tienda</button><button id="btn-coleccion" class="eq-btn hidden">📚 Colección</button><button id="btn-cuenta" class="eq-btn">👤 Iniciar sesión</button><button id="menu-full" class="eq-btn">⛶ Pantalla completa</button><button class="eq-btn" data-abre-ajustes title="Sonido">🔊</button></div><span>Prototipo · v0.10</span></footer>
   </section>
 
   <!-- ============================================================ CONSTRUCCIÓN DE EQUIPOS -->
@@ -78,6 +78,22 @@
     <div class="aj-caja cu-caja">
       <header class="gu-top"><h2>👤 Tu cuenta</h2><button id="cuenta-x" title="Cerrar">✕</button></header>
       <div id="cuenta-cont"></div>
+    </div>
+  </div>
+  <div id="tc" class="hidden">
+    <div class="tc-caja">
+      <header class="gu-top"><nav class="tc-tabs"><button data-tab="tienda">🛒 Tienda</button><button data-tab="coleccion">📚 Colección</button><button data-tab="portal">🔮 Portal</button></nav><button id="tc-x" title="Cerrar">✕</button></header>
+      <div id="tc-inv" class="tc-inv"></div>
+      <div id="tc-cont"></div>
+    </div>
+  </div>
+  <div id="starter" class="hidden">
+    <div class="st-caja">
+      <button id="starter-x" title="Más tarde">✕</button>
+      <h2>Elige tu Starter Pack</h2>
+      <p>Solo puedes elegir uno. Te da <b>5 campeones</b>: 3 de su tema y 2 al azar.</p>
+      <div id="starter-cont" class="st-packs"></div>
+      <button id="starter-ir" class="eq-listo" disabled>Elige un pack</button>
     </div>
   </div>
   <div id="ficha" class="hidden"><div class="ficha-caja"><button id="ficha-x" title="Cerrar">✕</button><div id="ficha-cont"></div></div></div>

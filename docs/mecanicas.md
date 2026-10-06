@@ -360,7 +360,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 
 ## 17. Starter Packs (clasificación de campeones)
 
-Todavía sin pantalla: se usará en el primer inicio de sesión y, más adelante, en sobres y packs.
+Pantalla: al iniciar sesión por primera vez (ver sección 19).
 
 - Cada campeón puede declarar en su ficha `starter: '<id>'`: es **exclusivo** de ese pack temático. Sin `starter`, es **libre**.
 - Registro en `js/datos/starters.js`:
@@ -378,7 +378,7 @@ Todavía sin pantalla: se usará en el primer inicio de sesión y, más adelante
 
 ## 18. Sobres de la tienda
 
-Todavía sin pantalla ni cuentas. Registro y lógica en `js/datos/sobres.js`.
+Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura real la hace el servidor (`abrir_sobre`); la función local queda para pruebas.
 
 - Cada campeón declara en su ficha `sobres: [...]`: puede estar en **varios**. Los campeones de los Starter Packs **también** están en sobres; el Starter Pack es un arranque único, no se compra.
 - **Sobres actuales** (`activo: true/false` = si se ven en la tienda; por temporada):
@@ -389,4 +389,20 @@ Todavía sin pantalla ni cuentas. Registro y lógica en `js/datos/sobres.js`.
   - Sin sobre temático por ahora (salen en Unbreakable Force y en los aleatorios): Daenerys, Rhaenys, Rengoku, Sub-Zero. Llegarán sobres de Quemadura, Congelación, etc.
 - **Apertura** (`abrirSobre(id)`): 3 campeones, sin repetir dentro del mismo sobre. 1 o 2 (50/50) del tema y el resto al azar entre **todos** (a veces también caen del tema). Unbreakable: los 3 al azar entre todos.
 - **Starter Pack** (`abrirStarter(id)` en `js/datos/starters.js`): 3 al azar de sus exclusivos + 2 al azar entre los elegibles, sin repetir.
-- **Activar/desactivar sobres:** hoy, el campo `activo` en el archivo. Con cuentas y base de datos, lo controlará el administrador con casillas (ver `docs/plan-cuentas-y-tienda.md`).
+- **Activar/desactivar sobres y precio:** en el servidor (`sobres_config`), con las casillas del panel de administrador. El `activo` del archivo ya no manda.
+
+## 19. Cuenta: Starter Pack, Tienda, Colección y Portal
+
+Solo con sesión iniciada. Todo cambio lo valida el **servidor** (funciones de `docs/sql/002_coleccion.sql`); la pantalla solo muestra y pide.
+
+- **Starter Pack** (`js/ui/coleccion.js`): si la cuenta aún no eligió, al entrar al menú aparece *Elige tu Starter Pack* con los 3 packs y las caras de sus exclusivos. Se elige **una sola vez**. Se puede cerrar ("más tarde"); Tienda y Colección lo vuelven a mostrar hasta elegir.
+- **Botones del menú:** 🛒 Tienda y 📚 Colección (solo con sesión). Abren la misma ventana con 3 pestañas. Arriba siempre: 🪙 oro, 🔮 runas, 🧩 fragmentos de runa x/20 (con barra) y 💠 otros fragmentos.
+- **Tienda:** los sobres activos (y dentro de sus fechas `desde`/`hasta`) con su precio. Sin oro suficiente, el botón queda gris.
+- **Colección:** los campeones (los que no tienes en gris). Cada carta: estrellas y copias (×N). Al tocar uno:
+  - ⭐ **Ascender:** la estrella N cuesta N copias (máximo 5★). Cada estrella: +3% a sus estadísticas.
+  - 💎 **Espacios de reliquias:** el 1.º, 2.º y 3.º cuestan 1 / 3 / 5 copias **o** 100,000 / 500,000 / 1,000,000 de oro.
+  - 🧩 **Desfragmentar:** cada copia = 3 fragmentos (1 o 2 de Runa de Invocación, el resto de otros tipos). Pide confirmación.
+- **Portal:** *Combinar* 20 fragmentos = 1 Runa. Elegir cualquier campeón y gastar 1 Runa para invocarlo (si ya lo tenía, suma copia).
+- **Animación de apertura** (`js/ui/apertura.js`, la misma para sobres, Starter Pack y Portal): el sobre flota y brilla → al tocarlo (o a los 5 s) tiembla cada vez más → estalla en un destello con chispas → las cartas salen boca abajo → se voltean **una por una** con rayos de luz del color del campeón y la etiqueta **¡NUEVO!** o **+1 copia**. Tocar acelera la revelación. Botón *Continuar* al final.
+- **Panel de administrador** (en 👤 Tu cuenta, solo rol admin): casilla de activo y precio de cada sobre (*Guardar sobres*) y *Dar oro* a un jugador por su nombre.
+- **Al agregar un campeón nuevo:** declarar `starter` y `sobres` en su ficha, correr `node herramientas/generar_catalogo.mjs` (desde `prototipo`) y ejecutar `docs/sql/catalogo.sql` en Supabase. Sin ese paso el servidor no lo puede dar en sobres.
