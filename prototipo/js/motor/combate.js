@@ -77,7 +77,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const b = l.lider?.bonoPorEfecto;
       if (b) sec[b.stat] = (sec[b.stat] || 0) + b.valor * enemigosDe(p).filter(x => get(x, b.efecto)).length;
       if (l.lider?.bonoDano) pct.dmg += l.lider.bonoDano;                                  // líder "bonoDano": +X% de Daño fijo
-      for (const [k, v] of Object.entries(l.lider?.bonoStat || {})) sec[k] = (sec[k] || 0) + v;   // líder "bonoStat": p. ej. +15% Armadura
+      for (const [k, v] of Object.entries(l.lider?.bonoStat || {})) {   // líder "bonoStat": p. ej. +15% Armadura o hpPct: +15% HP máx.
+        if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
+      }
       const ac = l.lider?.acumulaPorDoT;                                                   // líder "acumulaPorDoT": lo ganado hasta ahora
       if (ac && l.acumLider) sec[ac.stat] = (sec[ac.stat] || 0) + l.acumLider;
     }
@@ -418,6 +420,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       d *= 1 + Math.max(0, tramos) * mov.bonoPorHpPerdido.pct;
     }
     if (ctx.cargas && mov.consumeCargas) d *= 1 + ctx.cargas * mov.consumeCargas.pct;   // cargas consumidas por este movimiento
+    if (mov.bonoPorEscudoPropio) d += a.escudo * mov.bonoPorEscudoPropio;   // + % de su propio Escudo (no lo gasta)
     const bc = a.pasiva?.bonoContra;          // pasiva: +X% de daño a enemigos con un efecto (p. ej. Reptile contra envenenados)
     if (bc && get(t, bc.efecto)) d *= 1 + bc.pct;
     if (mov.bonoPorDebuffs) {                // +pct por cada tipo distinto de debuff del objetivo (3 Venenos = 1 tipo)
@@ -476,6 +479,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const cg = t.pasiva?.cargasAlRecibirGolpe;
     if (cg && !t.muerto && t.lado !== a.lado && !conControl(t)) ganarCargas(t, get(t, 'taunt')?.cargasX || 1, cg.max);
     pasivas(a, 'alGolpear', { objetivo: t });          // gatillo "cada vez que golpea" (filtro opcional: el objetivo tiene X)
+    if (t.lado !== a.lado && aHp + aEsc > 0) pasivas(t, 'alRecibirGolpe', { atacante: a, recibido: aHp + aEsc });   // p. ej. Doom
     if (aEsc > 0) perdioEscudo(t);
     if (t.hp <= 0) morir(t, a);
     if (get(t, 'mirror') && t.lado !== a.lado && !a.muerto && aHp + aEsc > 0)   // Espejismo: devuelve parte del golpe (daño por efecto, no es golpe)
@@ -581,6 +585,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (t.ultimoDanoDe && t.ultimoDanoDe.lado !== t.lado) t.ultimoDanoDe.est.elim++;   // la eliminación es de quien hizo el último daño
     t.muerto = true; t.hp = 0; t.escudo = 0; t.estados = [];
     emitir('muerte', { a: t.uid, invocaciones, lider: t.esLider && !!t.lider }, t);
+    if (t.esLider && t.lider) for (const x of aliadosDe(t)) if (x.hp > maxHp(x)) { x.hp = maxHp(x); emitir('actualizar', {}, x); }
     for (const b of bombas) explotarBomba(t, b, true);
     if (asesino && asesino.lado !== t.lado) pasivas(asesino, 'alEliminar', { objetivo: t });
   }
@@ -828,10 +833,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'bonoPermanente': {       // p. ej. +5% HP máx. por cada Quemadura activa en enemigos (permanente, sube también el HP actual)
           const n = acc.por === 'quemadurasEnemigas' ? enemigosDe(a).filter(x => get(x, 'burn')).length : 1;
           if (!n) { emitir('sinEfecto', { a: t.uid, texto: 'Sin quemaduras enemigas' }); break; }
-          const antes = maxHp(t);
-          t.permanente[acc.stat] = (t.permanente[acc.stat] || 0) + acc.pct * n;
+          const antes = maxHp(t), actual = t.permanente[acc.stat] || 0;
+          const suma = acc.tope != null ? Math.min(acc.pct * n, acc.tope - actual) : acc.pct * n;   // tope: máximo acumulado
+          if (suma <= 1e-9) { emitir('sinEfecto', { a: t.uid, texto: `Máximo de ${NOMBRE_STAT[acc.stat] || acc.stat} alcanzado` }); break; }
+          t.permanente[acc.stat] = actual + suma;
           t.hp += maxHp(t) - antes;
-          emitir('bonoVisible', { a: t.uid, texto: `+${Math.round(acc.pct * n * 100)}% ${NOMBRE_STAT[acc.stat] || acc.stat}` }, t);
+          emitir('bonoVisible', { a: t.uid, texto: `+${Math.round(suma * 100)}% ${NOMBRE_STAT[acc.stat] || acc.stat}` }, t);
           break;
         }
         case 'activarDoT': {           // hace el daño de un DoT al instante sin consumirlo (cuenta como daño DoT)
@@ -876,7 +883,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'invocarAzar': invocarAzar(t, acc.tabla, acc.rarezas, acc.renueva); break;
         case 'potenciarInvocaciones': potenciarInvocaciones(t, acc.potencia || 1, acc.renovar, acc.veces || 1); break;
         case 'escudo': {
-          const c = (acc.base === 'danoCausado' ? (ctx.danoCausado || 0) : baseDe(a, acc.escala)) * acc.pct;
+          const c = (acc.base === 'danoCausado' ? (ctx.danoCausado || 0) : acc.base === 'recibido' ? (ctx.recibido || 0) : baseDe(a, acc.escala)) * acc.pct;
           if (c <= 0) break;
           t.escudo += c;
           a.est.escudo += c;
@@ -904,6 +911,28 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'danoPorDebuffs': {       // p. ej. Apocalipsis: 10% del HP máx. por Congelación (o Mega) y por Posesión; ignora Armadura
           const n = acc.efectos.filter(id => ctx.teniaAntes?.has(id)).length;
           if (n) danoEfecto(a, t, n * acc.pct * maxHp(t), acc.color, { sinArmadura: true });
+          break;
+        }
+        case 'transferirBuffs': {            // quita TODOS los buffs disipables del objetivo y se los da al aliado del ejecutor en su misma posición
+          const lista = t.estados.filter(e => EFECTOS[e.id]?.tipo === 'buff' && !EFECTOS[e.id].noDisipable && !e.permanente && e.id !== 'summon');
+          if (!lista.length) break;
+          const vivos = aliadosDe(a), para = vivos.find(x => x.pos === t.pos) || rng.elegir(vivos);   // si el de enfrente cayó: uno al azar
+          if (!para) break;
+          for (const e of lista) {
+            quitar(t, e);
+            const mio = get(para, e.id);
+            if (mio) { if (!mio.permanente) mio.dur = Math.max(mio.dur ?? 0, e.dur ?? 0); if (e.valor) mio.valor = Math.max(mio.valor || 0, e.valor); }
+            else para.estados.push({ ...e, nuevo: true, fuente: a.uid });
+          }
+          emitir('extension', { a: para.uid, texto: `🪄 +${lista.length} buff(s) de ${t.nombre}` }, para, t);
+          break;
+        }
+        case 'activarCooldown': {            // pone el movimiento del objetivo en su cooldown COMPLETO (si era menor)
+          if (acc.prob != null && rng() >= acc.prob) break;
+          const m = t.movimientos.find(x => x.categoria === acc.categoria);
+          if (!m || (t.cds[acc.categoria] || 0) >= (m.cd || 0)) break;
+          t.cds[acc.categoria] = m.cd || 0;
+          emitir('extension', { a: t.uid, texto: `⏳ ${NOMBRE_CAT[acc.categoria]} en cooldown (${m.cd})` }, t);
           break;
         }
         case 'robarBuffs': {                 // quita buffs al azar al objetivo y se los pasa al ejecutor (no invocaciones ni lo no disipable)
@@ -1258,6 +1287,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
 
   equipoJugador.forEach((d, i) => P.push(crearPersonaje(d, 'jugador', i)));
   equipoRival.forEach((d, i) => P.push(crearPersonaje(d, 'rival', i)));
+  for (const p of P) p.hp = stats(p).hp;      // con todos creados: incluye bonos de líder al HP máx. (el líder se crea antes que su equipo)
 
   return {
     personajes: P,
