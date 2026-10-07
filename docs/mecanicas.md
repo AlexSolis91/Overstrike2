@@ -395,9 +395,9 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
 
 Solo con sesión iniciada. Todo cambio lo valida el **servidor** (funciones de `docs/sql/002_coleccion.sql`); la pantalla solo muestra y pide.
 
-- **Starter Pack** (`js/ui/coleccion.js`): si la cuenta aún no eligió, al entrar al menú aparece *Elige tu Starter Pack* con los 3 packs y las caras de sus exclusivos. Se elige **una sola vez**. Se puede cerrar ("más tarde"); Tienda y Colección lo vuelven a mostrar hasta elegir.
+- **Starter Pack** (`js/ui/coleccion.js`): si la cuenta aún no eligió, al entrar al menú aparece *Elige tu Starter Pack* con los 3 packs. **Solo se muestra la imagen y el nombre** de cada sobre (sin tema, contenido ni cantidad): el jugador elige por el arte. Se elige **una sola vez**. Se puede cerrar ("más tarde"); Tienda y Colección lo vuelven a mostrar hasta elegir.
 - **Botones del menú:** 🛒 Tienda y 📚 Colección (solo con sesión). Abren la misma ventana con 3 pestañas. Arriba siempre: 🪙 oro, 🔮 runas, 🧩 fragmentos de runa x/20 (con barra) y 💠 otros fragmentos.
-- **Tienda:** los sobres activos (y dentro de sus fechas `desde`/`hasta`) con su precio. Sin oro suficiente, el botón queda gris.
+- **Tienda:** los sobres activos (y dentro de sus fechas `desde`/`hasta`): solo imagen (o ícono), nombre y precio; sin tema ni contenido. Sin oro suficiente, el botón queda gris.
 - **Colección:** los campeones (los que no tienes en gris). Cada carta: estrellas y copias (×N). Al tocar uno:
   - ⭐ **Ascender:** la estrella N cuesta N copias (máximo 5★). Cada estrella: +3% a sus estadísticas.
   - 💎 **Espacios de reliquias:** el 1.º, 2.º y 3.º cuestan 1 / 3 / 5 copias **o** 100,000 / 500,000 / 1,000,000 de oro.

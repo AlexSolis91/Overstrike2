@@ -1,8 +1,8 @@
 // Tienda, Colección, Portal de Invocación y elección del Starter Pack. Todo lo que cambia la colección o el inventario lo
 // hace el SERVIDOR (datos.js); aquí solo se muestra y se piden las acciones. Las aperturas usan la animación de apertura.js.
 import { OFICIALES, porId } from '../datos/personajes/index.js';
-import { STARTERS, exclusivosDe } from '../datos/starters.js';
-import { SOBRES, CAMPEONES_POR_SOBRE } from '../datos/sobres.js';
+import { STARTERS } from '../datos/starters.js';
+import { SOBRES } from '../datos/sobres.js';
 import { perfilActual } from './cuenta.js';
 import { revelarCartas } from './apertura.js';
 import * as D from '../servicios/datos.js';
@@ -64,11 +64,10 @@ function sobresVisibles() {
 function htmlTienda() {
   const lista = sobresVisibles();
   if (!lista.length) return '<p class="tc-vacio">No hay sobres disponibles en este momento. ¡Vuelve pronto!</p>';
-  return `<p class="tc-nota">Cada sobre trae <b>${CAMPEONES_POR_SOBRE} campeones</b>. Los temáticos traen 1 o 2 de su tema y el resto de cualquier campeón. Si ya lo tienes, ganas una copia.</p>
-    <div class="tc-sobres">${lista.map(c => { const s = SOBRES[c.id], alcanza = inv.oro >= c.precio;
+  return `<div class="tc-sobres">${lista.map(c => { const s = SOBRES[c.id], alcanza = inv.oro >= c.precio;
       return `<div class="tc-sobre" style="--c:${s.color}">
         <div class="tc-sobre-arte"><span>${s.icono}</span></div>
-        <b>${s.nombre}</b><small>${s.tema || 'Puede salir cualquier campeón'}</small>
+        <b>${s.nombre}</b>
         <button class="eq-listo tc-abrir" data-sobre="${c.id}" ${alcanza ? '' : 'disabled'}>${c.precio > 0 ? `🪙 ${num(c.precio)}` : 'Gratis'}</button>
         ${alcanza ? '' : '<em>Te falta oro</em>'}
       </div>`; }).join('')}</div>`;
@@ -202,9 +201,7 @@ let starterSel = null;
 function pintarStarter() {
   $('#starter-cont').innerHTML = Object.entries(STARTERS).map(([id, s]) => `
     <button class="st-pack ${starterSel === id ? 'elegido' : ''}" data-st="${id}" style="--c:${s.color}">
-      ${s.imagen ? `<img class="st-arte" src="${s.imagen}" alt="${s.nombre}">` : `<span class="st-ico">${s.icono}</span>`}<b>${s.nombre}</b><small>Tema: ${s.tema}</small>
-      <div class="st-caras">${exclusivosDe(id).map(p => `<span title="${p.nombre}">${retrato(p)}</span>`).join('')}</div>
-      <em>3 de su tema + 2 al azar</em>
+      ${s.imagen ? `<img class="st-arte" src="${s.imagen}" alt="${s.nombre}">` : `<span class="st-ico">${s.icono}</span>`}<b>${s.nombre}</b>
     </button>`).join('');
   const b = $('#starter-ir');
   b.disabled = !starterSel;
