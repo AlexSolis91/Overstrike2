@@ -176,6 +176,8 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | `disipar` | cantidad, etiqueta | Quita buffs (tirada por buff) |
 | `escudo` con `base: 'recibido'` | pct | Escudo = pct del daño del golpe que activó la pasiva `alRecibirGolpe` |
 | `bonoPermanente` con `tope` | stat, pct, tope | Igual, pero sin pasar de `tope` acumulado (p. ej. Doom: +10% HP máx., hasta +50%) |
+| `hemorragia` | — | Convierte el Sangrado del objetivo en Hemorragia (garantizado, sin tirada; conserva su %) |
+| `golpeDirecto` | pct, nombre | Un golpe más (mismo cálculo que un golpe normal) a cada destino. Destino `a: { enemigosCon: [efectos] }` = enemigos con alguno de esos efectos, sin el objetivo principal (p. ej. Lanza de Draupnir) |
 | `robarHP` | pct | Roba % del HP máx. y cura al ladrón |
 | `danoEfecto` | fraccion | Daño por efecto = fracción del daño que activó la acción |
 | `replicarDoT` | efecto, factor | Daño por efecto igual a factor × el DoT del objetivo, sobre el HP máx. de cada destino |
@@ -202,6 +204,8 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - `critExtra`: suma puntos de Prob. Crítico solo a ese ataque.
 - `bonoPorDebuffs { pct }`: +pct de daño contra cada objetivo por cada **tipo distinto** de debuff que tenga (3 Venenos cuentan como 1; sin tope). P. ej. Explosión Divina de Thor: +30%.
 - `consumeCargas { pct }`: al usarlo consume **todas** las cargas del personaje; cada una suma +pct de daño a ese movimiento (p. ej. Gran Cuerno: +15% por carga). Condición para sus efectos: `cargasConsumidasMin: N`.
+- **Según el equipo equipado** (`conEquipo { equipo: { tipo | categoria, min }, cambios }`): si el personaje lleva esas reliquias (cuenta los espacios **no bloqueados** por **tipo** — Espada, Arco, Lanza, Yelmo, Pechera, Botas, Anillo, Amuleto — o por **categoría** — Arma, Equipación, Accesorio), el movimiento cambia al empezar la partida (el equipo no cambia en batalla). P. ej. Espadas del Caos de Kratos: con 2 Espadas, 2 golpes de 60%. Mientras no exista el inventario de reliquias, cuenta el equipo de la ficha.
+- `bonoSiObjetivoMasHp`: +pct de daño si el objetivo tiene más HP actual que el atacante (p. ej. Asesino de Dioses de Kratos: +30%).
 - `bonoPorEscudoPropio`: suma al golpe ese % del Escudo actual del atacante (no lo gasta; puede ser crítico). P. ej. Fervor Místico de Doom: 30%.
 - `golpeExtraContra { efecto, prob }`: prob de **un** golpe más (mismo %) a **otro** enemigo que tenga ese efecto (nunca al mismo objetivo; si no hay otro, nada). Ese golpe no provoca otro. P. ej. Descarga de Escarcha de Jaina: 20% contra otro congelado.
 - `golpeExtraSiCritico`: si algún golpe fue crítico, **un** golpe más (máximo uno) al mismo objetivo; si murió, a un enemigo al azar (p. ej. Venganza Eterna de Scorpion).
@@ -233,10 +237,11 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - `alPerderEscudo`: cada vez que el dueño o un aliado pierde Escudo por un golpe o daño por efecto (los DoT no tocan escudos). `objetivo` = quien lo perdió.
   - `alSerAtacado`: una vez por cada **movimiento** enemigo que lo tuvo de objetivo (incluye área). Filtro `atacanteTiene: <efecto>` (el atacante ya lo tenía **al empezar** su movimiento; no cuenta si lo recibe durante el ataque, p. ej. por Aura de Fuego). Con `usarMovimiento` + `contraataque: true` es un **contraataque**: va después del movimiento enemigo, **un contraataque no provoca otro**, y no contraataca si tiene un Control que le quita turnos. Destino `a: 'atacante'`.
   - **Al terminar un efecto:** un buff/debuff puede llevar `alTerminar: <acción>`: cuando **expira por duración** (no si lo disipan o limpian), quien lo aplicó ejecuta esa acción. Destino `a: 'ultimoAtacante'` = el último enemigo que le hizo daño (o uno al azar). Una Provocación puede llevar `cargasX: N` (mientras dure, cada golpe da N cargas). P. ej. Orgullo del Toro Dorado: al terminar su Provocación, Aldebarán lanza Gran Cuerno.
+  - `alMorirEnemigo`: cuando muere **cualquier** enemigo (lo mate quien lo mate). Filtro `teniaAlMorir: <efecto>` = lo que tenía al morir. P. ej. Kratos: se cura 10% si muere un enemigo con Hemorragia.
   - `alRecibirGolpe`: cada **golpe** enemigo que le hace daño (incluye lo absorbido por Escudo). `ctx.recibido` = ese daño. P. ej. Soberano de Latveria de Doom (máx. 2 por ronda).
   - `alRecibirDebuff`: cada vez que **le entra** un debuff (después de pasar Puntería vs Resistencia) aplicado por otro: **una tirada por debuff** (un área con 2 debuffs = 2 tiradas). Lo resistido o sin efecto no cuenta. Se ejecuta como reacción, después de la acción en curso. P. ej. El Príncipe Caído de Lich King: 50% de Congelar a un enemigo al azar (esa Congelación también tira Puntería vs Resistencia).
   - `alRomperCapa`: cada vez que un **golpe** (de cualquiera) rompe una capa de Congelación o Mega Congelación de un **enemigo** del dueño. No cuenta el hielo que se derrite al perder el turno. `objetivo` = el congelado.
-- **Daño contra un efecto:** una pasiva puede declarar `bonoContra { efecto, pct }`: sus golpes hacen +pct a enemigos con ese efecto.
+- **Daño contra un efecto:** una pasiva puede declarar `bonoContra { efecto | [efectos], pct }`: sus golpes hacen +pct a enemigos con ese efecto.
 - **Crítico acumulable:** una pasiva puede declarar `acumulaCriticoContra { efecto, valor, valorMega, tope }`: cada golpe a un enemigo con ese efecto suma `valor` (o `valorMega` si es Mega) a Prob. Crítico **y** a Daño Crítico, **para toda la partida**, hasta `tope` cada uno. Se aplica ya en ese golpe. Cuenta el **debuff**, aunque el hielo esté roto. P. ej. Jaina: +5% / +10% con Mega, tope +50%.
 - **Efectos permanentes:** una pasiva puede declarar `efectosPermanentes: [ids]`: el personaje empieza con ese efecto **toda la partida** (sin duración, se ve con ∞). No se puede disipar ni robar, y otra aplicación del mismo efecto no lo cambia. P. ej. Lich King: Provocación permanente.
 - **Reducción para el equipo:** una pasiva puede declarar `reduccionAliados { pct, salvoSi }`: todo su equipo (incluido él) recibe −pct de **todo** el daño mientras viva y no tenga el efecto `salvoSi` (p. ej. Loki: −10% salvo con Desgaste).
@@ -252,6 +257,8 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Condiciones:**
   - `objetivoTiene: <efecto>`.
   - `rompioMega: true` (en efectos `final`): algún golpe del movimiento rompió una capa de **Mega** Congelación. P. ej. Anillo de Hielo de Jaina.
+  - `equipo: { tipo | categoria, min }`: el ejecutor lleva esas reliquias (p. ej. Over de Kratos con Lanza).
+  - `enemigosCon: { efectos, min }`: al menos `min` enemigos tienen alguno de esos efectos (p. ej. Furia Espartana: Letalidad si 2+ sangran).
   - `objetivoTeniaAntes: <efecto>` o `[efectos]`: el objetivo tenía ese efecto (o **alguno** de la lista) **antes** del movimiento. Importa con Congelación, porque el golpe rompe la capa. P. ej. Agonía de Escarcha: Posesión solo si ya estaba congelado.
   - `algunGolpeadoTenia: <efecto>`: al menos un objetivo golpeado (no bloqueado) lo tenía.
   - `objetivoEliminado`: el objetivo principal del movimiento murió (p. ej. turno extra de la Fatality).
@@ -399,9 +406,9 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
 
 - Cada campeón declara en su ficha `sobres: [...]`: puede estar en **varios**. Los campeones de los Starter Packs **también** están en sobres; el Starter Pack es un arranque único, no se compra.
 - **Sobres actuales** (`activo: true/false` = si se ven en la tienda; por temporada):
-  - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Goku, Scorpion.
+  - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Goku, Scorpion, Kratos.
   - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King, Doctor Doom.
-  - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki.
+  - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki, Kratos.
   - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema.
   - Sin sobre temático por ahora (salen en Unbreakable Force y en los aleatorios): Daenerys, Rhaenys, Rengoku, Sub-Zero. Llegarán sobres de Quemadura, Congelación, etc.
 - **Apertura** (`abrirSobre(id)`): 3 campeones, sin repetir dentro del mismo sobre. 1 o 2 (50/50) del tema y el resto al azar entre **todos** (a veces también caen del tema). Unbreakable: los 3 al azar entre todos.
