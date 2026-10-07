@@ -406,6 +406,13 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
   - Sin sobre temático por ahora (salen en Unbreakable Force y en los aleatorios): Daenerys, Rhaenys, Rengoku, Sub-Zero. Llegarán sobres de Quemadura, Congelación, etc.
 - **Apertura** (`abrirSobre(id)`): 3 campeones, sin repetir dentro del mismo sobre. 1 o 2 (50/50) del tema y el resto al azar entre **todos** (a veces también caen del tema). Unbreakable: los 3 al azar entre todos.
 - **Starter Pack** (`abrirStarter(id)` en `js/datos/starters.js`): 3 al azar de sus exclusivos + 2 al azar entre los elegibles, sin repetir.
+- **Probabilidad de salida según la fuerza** (`docs/sql/003_probabilidades.sql`): cada campeón tiene un **nivel** invisible para el jugador que pesa en **todos** los sorteos (tema y relleno de sobres, Unbreakable Force y los campeones del Starter Pack). Se asigna según su % de victorias en la simulación:
+  - Normal (peso 1): menos de 60% · Baja (0.75): 60–69% · Muy baja (0.5): 70–79% · Mínima (0.25): 80% o más.
+  - Peso 0.5 = sale la mitad de veces que uno Normal en el mismo sorteo. Sin repetir dentro del mismo sobre (sorteo con pesos Efraimidis–Spirakis).
+  - **Solo su sobre:** el campeón no sale de **relleno** en sobres temáticos ajenos (sí en el suyo, en Unbreakable Force y en el Portal).
+  - El Portal no cambia: cualquier campeón cuesta 1 Runa.
+  - Se cambian desde el panel de Administrador. Inicial (2026-10-07): Thor Muy baja, Doctor Doom Baja, Lich King Normal + Solo su sobre.
+  - Las funciones locales `abrirSobre`/`abrirStarter` (pruebas) no usan pesos; la apertura real la hace el servidor.
 - **Activar/desactivar sobres y precio:** en el servidor (`sobres_config`), con las casillas del panel de administrador. El `activo` del archivo ya no manda.
 
 ## 19. Cuenta: Starter Pack, Tienda, Colección y Portal

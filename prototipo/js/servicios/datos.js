@@ -28,6 +28,9 @@ export async function adminGuardarSobre(id, cambios) {
   return filas[0];
 }
 export const adminDarOro = (nombre, oro) => rpc('admin_dar_oro', { p_nombre: nombre, p_oro: oro });
+// Probabilidad de salida por campeón (nivel según su fuerza) y "solo en su sobre"
+export const catalogoProbabilidades = () => q(sb => sb.from('campeones').select('id, nombre, nivel, solo_su_sobre').order('nombre'));
+export const adminProbabilidad = (id, nivel, solo) => rpc('admin_probabilidad_campeon', { p_campeon: id, p_nivel: nivel, p_solo: solo });
 
 // Mensajes del servidor → español
 export function mensajeError(e) {

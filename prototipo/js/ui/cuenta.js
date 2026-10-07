@@ -1,7 +1,7 @@
 // Cuenta del jugador: registro, inicio de sesión, perfil y cierre de sesión (Supabase).
 // Por ahora la cuenta es OPCIONAL: se puede jugar sin ella. Más adelante guardará la colección y la progresión.
 import { supabase } from '../servicios/supabase.js';
-import { configSobres, adminGuardarSobre, adminDarOro, mensajeError } from '../servicios/datos.js';
+import { configSobres, adminGuardarSobre, adminDarOro, catalogoProbabilidades, adminProbabilidad, mensajeError } from '../servicios/datos.js';
 import { SOBRES } from '../datos/sobres.js';
 
 const $ = s => document.querySelector(s);
@@ -72,8 +72,9 @@ const avisarSesion = () => dispatchEvent(new CustomEvent('cuenta:cambio', { deta
 async function pintarAdmin(msg = '', tipo = '') {
   const caja = $('#cu-adm');
   if (!caja) return;
-  let cfg = [];
+  let cfg = [], cat = null;
   try { cfg = await configSobres(); } catch (e) { msg = mensajeError(e); tipo = 'error'; }
+  try { cat = await catalogoProbabilidades(); } catch { /* falta ejecutar docs/sql/003_probabilidades.sql */ }
   if (!$('#cu-adm')) return;
   caja.innerHTML = `<h3>🛠️ Administrador</h3>
     <p class="cu-nota">Sobres visibles en la tienda (por temporada):</p>
@@ -81,9 +82,30 @@ async function pintarAdmin(msg = '', tipo = '') {
       return `<div class="adm-sobre" data-id="${c.id}"><label><input type="checkbox" class="adm-activo" ${c.activo ? 'checked' : ''}> ${s.icono} ${s.nombre}</label>
         <input type="number" class="adm-precio" min="0" step="100" value="${c.precio}" title="Precio en oro"><span>oro</span></div>`; }).join('')}
     <button id="adm-guardar" class="eq-btn">Guardar sobres</button>
+    <p class="cu-nota">Probabilidad de salida en sobres y Starter Packs (según la fuerza del campeón):<br>
+      <small>Normal: menos de 60% de victorias · Baja: 60–69% · Muy baja: 70–79% · Mínima: 80% o más. «Solo su sobre»: no sale de relleno en sobres temáticos ajenos.</small></p>
+    ${!cat ? '<p class="cu-msg error">Falta ejecutar en Supabase el archivo docs/sql/003_probabilidades.sql.</p>' : `<div class="adm-probs">${cat.map(c => `<div class="adm-prob" data-id="${c.id}" data-nivel="${c.nivel}" data-solo="${c.solo_su_sobre}">
+      <span>${c.nombre}</span>
+      <select class="adm-nivel">${NIVELES.map(([v, t]) => `<option value="${v}" ${v === c.nivel ? 'selected' : ''}>${t}</option>`).join('')}</select>
+      <label title="Solo sale en su sobre temático (y en Unbreakable Force)"><input type="checkbox" class="adm-solo" ${c.solo_su_sobre ? 'checked' : ''}> Solo su sobre</label>
+    </div>`).join('')}</div>
+    <button id="adm-probs" class="eq-btn">Guardar probabilidades</button>`}
     <p class="cu-nota">Dar oro a un jugador:</p>
     <form id="adm-oro" class="adm-oro"><input id="adm-nombre" placeholder="Nombre del jugador" required><input id="adm-cant" type="number" min="1" step="1" value="10000" required title="Oro a dar"><button class="eq-btn">Dar</button></form>
     ${msg ? `<p class="cu-msg ${tipo}">${msg}</p>` : ''}`;
+}
+const NIVELES = [['normal', 'Normal (1)'], ['baja', 'Baja (0.75)'], ['muy_baja', 'Muy baja (0.5)'], ['minima', 'Mínima (0.25)']];
+async function guardarProbabilidades() {
+  const btn = $('#adm-probs'); btn.disabled = true; btn.textContent = 'Guardando…';
+  let n = 0;
+  try {
+    for (const fila of document.querySelectorAll('.adm-prob')) {
+      const nivel = fila.querySelector('.adm-nivel').value, solo = fila.querySelector('.adm-solo').checked;
+      if (nivel === fila.dataset.nivel && String(solo) === fila.dataset.solo) continue;   // solo los que cambiaron
+      await adminProbabilidad(fila.dataset.id, nivel, solo); n++;
+    }
+    pintarAdmin(n ? `Probabilidades guardadas (${n} campeón/es). Se usan desde el siguiente sobre.` : 'No había cambios.', 'ok');
+  } catch (e) { pintarAdmin(mensajeError(e), 'error'); }
 }
 async function guardarSobres() {
   const btn = $('#adm-guardar'); btn.disabled = true; btn.textContent = 'Guardando…';
@@ -130,6 +152,7 @@ export function iniciarCuenta() {
     const tab = e.target.closest('.cu-tabs button'); if (tab) { modo = tab.dataset.modo; return pintar(); }
     if (e.target.closest('#cu-salir')) { (await supabase()).auth.signOut(); return; }
     if (e.target.closest('#adm-guardar')) return guardarSobres();
+    if (e.target.closest('#adm-probs')) return guardarProbabilidades();
     if (e.target.closest('#cu-olvide')) {
       const correo = $('#cu-correo')?.value.trim();
       if (!correo) return pintar('Escribe tu correo arriba y vuelve a tocar "¿Olvidaste tu contraseña?".', 'error');
