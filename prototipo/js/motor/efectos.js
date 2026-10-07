@@ -52,6 +52,8 @@ export const EFECTOS = {
     desc: `Cargas que gana al recibir golpes; un movimiento que las consume hace más daño. No se pueden disipar.` },
   taunt:   { nombre: 'Provocación', icono: '🎯', color: 0xf97316, tipo: 'buff', tags: ['Provocación'],
     desc: `Los enemigos deben atacarlo con sus movimientos de un solo objetivo. No afecta ataques de área ni al azar.` },
+  frostAura: { nombre: 'Aura Gélida', icono: '🧊', color: 0x7dd3fc, tipo: 'buff', tags: ['Hielo'],
+    desc: `Recibe −${p(BUFFS.auraGelida)} de daño de los golpes enemigos. Quien lo golpee tiene ${p(PUNTERIA.auraGelida)} de probabilidad de recibir Congelación. 2 rondas.` },
   fireAura: { nombre: 'Aura de Fuego', icono: '♨️', color: 0xff6a3d, tipo: 'buff', tags: ['Fuego'],
     desc: `Quien lo golpee tiene ${p(PUNTERIA.auraFuego)} de probabilidad de recibir Quemadura 5% (1 turno).` },
   aoeDodge: { nombre: 'Esquiva Área', icono: '💨', color: 0x93c5fd, tipo: 'buff', tags: ['Esquiva'],

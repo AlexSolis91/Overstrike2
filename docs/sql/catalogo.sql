@@ -17,6 +17,7 @@ insert into public.campeones (id, nombre, starter, sobres, activo) values
   ('rhaenys-targaryen', 'Rhaenys Targaryen', 'blazing', array[]::text[], true),
   ('thor', 'Thor', null, array['sacred']::text[], true),
   ('loki', 'Loki', 'noxious', array['phantom', 'sacred']::text[], true),
-  ('lich-king', 'Lich King', 'frostborn', array['phantom']::text[], true)
+  ('lich-king', 'Lich King', 'frostborn', array['phantom']::text[], true),
+  ('jaina-proudmoore', 'Jaina Proudmoore', 'frostborn', array[]::text[], true)
 on conflict (id) do update set nombre = excluded.nombre, starter = excluded.starter, sobres = excluded.sobres, activo = excluded.activo;
--- 17 campeones
+-- 18 campeones

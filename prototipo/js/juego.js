@@ -335,6 +335,11 @@ async function manejar(e) {
       await FX.revertir(c(e.id), () => c(e.id).cambiarForma(null));
       aplicar(e);
       break;
+    case 'auraGelida':
+      FX.textoSobre(c(e.a), '🧊 Aura Gélida', '#7dd3fc', 13, -125);
+      log(`Aura Gélida de ${nombre(e.a)} contraataca a ${nombre(e.de)}`, 'fx');
+      await wait(150);
+      break;
     case 'auraFuego':
       FX.textoSobre(c(e.a), '♨️ Aura de Fuego', '#ff8a5c', 13, -125);
       log(`Aura de Fuego de ${nombre(e.a)} contraataca a ${nombre(e.de)}`, 'fx');
