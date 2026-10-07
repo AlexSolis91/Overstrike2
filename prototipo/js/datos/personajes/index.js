@@ -18,6 +18,7 @@ import loki from './loki.js';
 import lichKing from './lich-king.js';
 import jaina from './jaina-proudmoore.js';
 import doom from './doctor-doom.js';
+import kratos from './kratos.js';
 
-export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, daenerys, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom];
+export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, daenerys, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos];
 export const porId = id => OFICIALES.find(p => p.id === id);

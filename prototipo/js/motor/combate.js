@@ -40,11 +40,21 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       est: { dano: 0, escudo: 0, curacion: 0, recibido: 0, elim: 0 },   // estadísticas de la partida (pantalla de resultados)
       ultimoDanoDe: null,    // quién le hizo daño por última vez (para acreditar la eliminación)
     });
-    for (const m of p.movimientos) p.cds[m.categoria] = CD_INICIAL[m.categoria] ?? 0;
+    for (const m of p.movimientos) {                     // conEquipo: el movimiento cambia si lleva cierto equipo (p. ej. 2 Espadas)
+      if (m.conEquipo && tieneEquipo(p, m.conEquipo.equipo)) { Object.assign(m, m.conEquipo.cambios); m.equipoActivo = true; }
+      p.cds[m.categoria] = CD_INICIAL[m.categoria] ?? 0;
+    }
     // efectosPermanentes: la pasiva da ese efecto toda la partida (sin duración, no se disipa ni se roba)
     for (const id of def.pasiva?.efectosPermanentes || []) p.estados.push({ id, permanente: true });
     p.hp = stats(p).hp;
     return p;
+  }
+
+  // Equipo: cuenta las reliquias equipadas (espacios no bloqueados) por tipo (Espada, Lanza…) o categoría (Arma, Accesorio…)
+  function tieneEquipo(p, { tipo, categoria, min = 1 }) {
+    const n = (p.slots || []).filter(sl => !sl.locked && sl.relic && RELIQUIAS[sl.relic]
+      && (!tipo || RELIQUIAS[sl.relic].type === tipo) && (!categoria || RELIQUIAS[sl.relic].category === categoria)).length;
+    return n >= min;
   }
 
   function stats(p) {
@@ -420,9 +430,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       d *= 1 + Math.max(0, tramos) * mov.bonoPorHpPerdido.pct;
     }
     if (ctx.cargas && mov.consumeCargas) d *= 1 + ctx.cargas * mov.consumeCargas.pct;   // cargas consumidas por este movimiento
+    if (mov.bonoSiObjetivoMasHp && t.hp > a.hp) d *= 1 + mov.bonoSiObjetivoMasHp;   // p. ej. Asesino de Dioses
     if (mov.bonoPorEscudoPropio) d += a.escudo * mov.bonoPorEscudoPropio;   // + % de su propio Escudo (no lo gasta)
     const bc = a.pasiva?.bonoContra;          // pasiva: +X% de daño a enemigos con un efecto (p. ej. Reptile contra envenenados)
-    if (bc && get(t, bc.efecto)) d *= 1 + bc.pct;
+    if (bc && [].concat(bc.efecto).some(id => get(t, id))) d *= 1 + bc.pct;
     if (mov.bonoPorDebuffs) {                // +pct por cada tipo distinto de debuff del objetivo (3 Venenos = 1 tipo)
       const tipos = new Set(t.estados.filter(e => EFECTOS[e.id]?.tipo === 'debuff').map(e => e.id));
       d *= 1 + tipos.size * mov.bonoPorDebuffs.pct;
@@ -583,11 +594,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const bombas = todos(t, 'bomb');
     const invocaciones = todos(t, 'summon').length;
     if (t.ultimoDanoDe && t.ultimoDanoDe.lado !== t.lado) t.ultimoDanoDe.est.elim++;   // la eliminación es de quien hizo el último daño
+    const teniaAlMorir = new Set(t.estados.map(e => e.id));
     t.muerto = true; t.hp = 0; t.escudo = 0; t.estados = [];
     emitir('muerte', { a: t.uid, invocaciones, lider: t.esLider && !!t.lider }, t);
     if (t.esLider && t.lider) for (const x of aliadosDe(t)) if (x.hp > maxHp(x)) { x.hp = maxHp(x); emitir('actualizar', {}, x); }
     for (const b of bombas) explotarBomba(t, b, true);
     if (asesino && asesino.lado !== t.lado) pasivas(asesino, 'alEliminar', { objetivo: t });
+    for (const p of P.filter(x => x.lado !== t.lado && !x.muerto)) pasivas(p, 'alMorirEnemigo', { objetivo: t, teniaAlMorir });
   }
 
   function explotarBomba(t, b, soloSalpicadura) {
@@ -797,6 +810,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (spec === 'otrosEnemigos') return enemigosDe(a).filter(x => x !== ctx.objetivo);
     if (spec === 'otroEnemigoAzar') { const l = enemigosDe(a).filter(x => x !== ctx.objetivo); return l.length ? [rng.elegir(l)] : []; }
     if (spec === 'todosAliados') return aliadosDe(a);
+    if (spec.enemigosCon) return enemigosDe(a).filter(x => x !== ctx.objetivo && [].concat(spec.enemigosCon).some(id => get(x, id)));
     if (spec.aliadosDistintos) return [...aliadosDe(a)].sort(() => rng() - .5).slice(0, spec.aliadosDistintos);
     if (spec === 'sobrevivientes') return (ctx.sobrevivientes || []).filter(x => !x.muerto);
     if (spec.aliadosAzar) return Array.from({ length: spec.aliadosAzar }, () => aliadosDe(a)).filter(l => l.length).map(l => rng.elegir(l));
@@ -908,6 +922,16 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         }
         case 'disipar': disipar(a, t, acc); break;
         case 'robarHP': robarHP(a, t, acc.pct); break;
+        case 'hemorragia': {           // convierte el Sangrado del objetivo en Hemorragia (garantizado, sin tirada)
+          const b = get(t, 'bleed');
+          if (!b || get(t, 'hemo')) break;
+          quitar(t, b); t.estados.push({ id: 'hemo', valor: b.valor, fuente: a.uid });
+          emitir('efecto', { a: t.uid, id: 'hemo', texto: '¡HEMORRAGIA!' }, t);
+          break;
+        }
+        case 'golpeDirecto':           // un golpe más a cada destino (p. ej. la Lanza de Draupnir explota sobre los que sangran)
+          resolverSobreObjetivo(a, t, { nombre: acc.nombre || 'Golpe', categoria: 'efecto', pct: acc.pct, escala: acc.escala || 'dano', golpes: 1, color: acc.color }, {});
+          break;
         case 'danoPorDebuffs': {       // p. ej. Apocalipsis: 10% del HP máx. por Congelación (o Mega) y por Posesión; ignora Armadura
           const n = acc.efectos.filter(id => ctx.teniaAntes?.has(id)).length;
           if (n) danoEfecto(a, t, n * acc.pct * maxHp(t), acc.color, { sinArmadura: true });
@@ -997,7 +1021,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (!cond) return true;
     if (cond.objetivoTiene) return !!(ctx.objetivo && get(ctx.objetivo, cond.objetivoTiene));
     if (cond.objetivoTeniaAntes) return [].concat(cond.objetivoTeniaAntes).some(id => ctx.teniaAntes?.has(id));
-    if (cond.rompioMega) return !!ctx.rompioMega;      // algún golpe del movimiento rompió una capa de Mega Congelación
+    if (cond.rompioMega) return !!ctx.rompioMega;
+    if (cond.equipo) return !!ctx.ejecutor && tieneEquipo(ctx.ejecutor, cond.equipo);
+    if (cond.enemigosCon) { const { efectos, min = 1 } = cond.enemigosCon; return !!ctx.ejecutor && enemigosDe(ctx.ejecutor).filter(x => [].concat(efectos).some(id => get(x, id))).length >= min; }      // algún golpe del movimiento rompió una capa de Mega Congelación
     if (cond.cargasConsumidasMin) return (ctx.cargas || 0) >= cond.cargasConsumidasMin;
     if (cond.objetivoEfectoDurMin) { const e = ctx.objetivo && get(ctx.objetivo, cond.objetivoEfectoDurMin.efecto); return !!e && (e.dur ?? 0) >= cond.objetivoEfectoDurMin.dur; }
     if (cond.algunGolpeadoTenia) return !!ctx.golpeadosTenian?.has(cond.algunGolpeadoTenia);
@@ -1018,6 +1044,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (pa.filtro?.en === 'enemigos' && (!ctx.objetivo || ctx.objetivo.lado === p.lado)) return;
     if (pa.filtro?.categorias && !pa.filtro.categorias.includes(ctx.categoria)) return;
     if (pa.filtro?.objetivoTiene && !(ctx.objetivo && get(ctx.objetivo, pa.filtro.objetivoTiene))) return;
+    if (pa.filtro?.teniaAlMorir && !ctx.teniaAlMorir?.has(pa.filtro.teniaAlMorir)) return;
     if (pa.maxPorRonda && p.usosPasiva >= pa.maxPorRonda) return;
     if (pa.unaVezPorMovimiento) { if (p.movPasiva === movId) return; p.movPasiva = movId; }   // un solo intento por movimiento
     if (pa.prob != null && rng() >= pa.prob) return;      // probabilidad de la pasiva (si falla, no gasta el uso de la ronda)
@@ -1179,7 +1206,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       if (t.muerto) return;
       for (const ef of mov.efectos || []) {
         if (ef.cuando && ef.cuando !== 'objetivo') continue;
-        const c = { objetivo: t, atacante: a, hpObjetivoAntes, cargas: ctx.cargas, teniaAntes: ctxGolpe.teniaAntes };
+        const c = { objetivo: t, atacante: a, ejecutor: a, hpObjetivoAntes, cargas: ctx.cargas, teniaAntes: ctxGolpe.teniaAntes };
         if (cumple(ef.condicion, c)) ejecutarAccion(a, ef.accion, c);
       }
     };
@@ -1255,7 +1282,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const sobrevivientes = [...new Set(objetivos)].filter(t => !t.muerto && t.lado !== a.lado);
       const eliminados = [...new Set(objetivos)].filter(t => t.muerto && t.lado !== a.lado && vivosAlEmpezar.has(t)).length;
       const final = {
-        sobrevivientes, eliminados, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, rompioMega: !!c.acum.rompioMega, invocaciones: invocacionesAntes, esMovimiento: true,
+        ejecutor: a, sobrevivientes, eliminados, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, rompioMega: !!c.acum.rompioMega, invocaciones: invocacionesAntes, esMovimiento: true,
         estadoDe: id => (principal && !principal.muerto && get(principal, id)) || previos.find(e => e.id === id),
         debuffsPrevios: previos.filter(e => EFECTOS[e.id]?.tipo === 'debuff'),
       };
