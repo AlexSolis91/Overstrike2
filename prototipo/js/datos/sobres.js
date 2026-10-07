@@ -6,10 +6,10 @@
 import { OFICIALES } from './personajes/index.js';
 
 export const SOBRES = {
-  bloodline:   { nombre: 'Bloodline Awakening', tema: 'Sangrado y robo de vida',          icono: '🩸', color: '#dc2626', activo: true },
-  phantom:     { nombre: 'Phantom of Chaos',    tema: 'Personajes sombríos y caóticos',   icono: '🌑', color: '#8b5cf6', activo: true },
-  sacred:      { nombre: 'Sacred Aegis',        tema: 'Divinos, sagrados y mitológicos',  icono: '✨', color: '#facc15', activo: true },
-  unbreakable: { nombre: 'Unbreakable Force',   tema: null,                               icono: '💪', color: '#f97316', activo: true },   // de todo
+  bloodline:   { nombre: 'Bloodline Awakening', tema: 'Sangrado y robo de vida',          icono: '🩸', color: '#dc2626', imagen: 'assets/sobres/bloodline.webp', activo: true },
+  phantom:     { nombre: 'Phantom of Chaos',    tema: 'Personajes sombríos y caóticos',   icono: '🌑', color: '#8b5cf6', imagen: 'assets/sobres/phantom.webp', activo: true },
+  sacred:      { nombre: 'Sacred Aegis',        tema: 'Divinos, sagrados y mitológicos',  icono: '✨', color: '#facc15', imagen: 'assets/sobres/sacred.webp', activo: true },
+  unbreakable: { nombre: 'Unbreakable Force',   tema: null,                               icono: '💪', color: '#f97316', imagen: 'assets/sobres/unbreakable.webp', activo: true },   // de todo
 };
 export const CAMPEONES_POR_SOBRE = 3;
 

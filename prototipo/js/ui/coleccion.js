@@ -66,7 +66,7 @@ function htmlTienda() {
   if (!lista.length) return '<p class="tc-vacio">No hay sobres disponibles en este momento. ¡Vuelve pronto!</p>';
   return `<div class="tc-sobres">${lista.map(c => { const s = SOBRES[c.id], alcanza = inv.oro >= c.precio;
       return `<div class="tc-sobre" style="--c:${s.color}">
-        <div class="tc-sobre-arte"><span>${s.icono}</span></div>
+        ${s.imagen ? `<div class="tc-sobre-arte con-arte" style="--arte:url('${s.imagen}')"><img src="${s.imagen}" alt="${s.nombre}"></div>` : `<div class="tc-sobre-arte"><span>${s.icono}</span></div>`}
         <b>${s.nombre}</b>
         <button class="eq-listo tc-abrir" data-sobre="${c.id}" ${alcanza ? '' : 'disabled'}>${c.precio > 0 ? `🪙 ${num(c.precio)}` : 'Gratis'}</button>
         ${alcanza ? '' : '<em>Te falta oro</em>'}
