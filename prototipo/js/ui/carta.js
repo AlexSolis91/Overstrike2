@@ -226,7 +226,7 @@ export class Carta {
     lista.forEach((st, i) => {
       const b = new PIXI.Container();
       b.x = (i - (lista.length - 1) / 2) * 27;
-      b.addChild(new PIXI.Graphics().circle(0, 0, 12).fill({ color: 0x0b0f18, alpha: .95 }).stroke({ width: 2.5, color: st.tipo === 'debuff' ? 0xef4444 : 0x22c55e }));   // verde = buff, rojo = debuff
+      b.addChild(new PIXI.Graphics().circle(0, 0, 12).fill({ color: 0x0b0f18, alpha: .95 }).stroke({ width: 2.5, color: st.tipo === 'debuff' ? 0xef4444 : st.tipo === 'marca' ? 0xfbbf24 : 0x22c55e }));   // verde = buff, rojo = debuff, dorado = marca
       b.addChild(txt(st.icono, { size: 12, stroke: 0, font: EMOJI_FONT }));
       if (st.n !== '' && st.n !== undefined) { const n = txt(String(st.n), { size: 9, weight: '900', stroke: 3 }); n.position.set(9, 8); b.addChild(n); }
       this.statusRow.addChild(b);

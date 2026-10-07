@@ -48,6 +48,10 @@ export const EFECTOS = {
   // ---- Buffs
   mirror:  { nombre: 'Espejismo', icono: '🪞', color: 0x67e8f9, tipo: 'buff', tags: ['Reflejo'],
     desc: `Cada golpe que recibe de un enemigo le devuelve al atacante el ${p(BUFFS.espejismo)} del daño (daño por efecto). Igual recibe el golpe completo.` },
+  orgullo: { nombre: 'Orgullo Sayajin', icono: '⚜️', color: 0x60a5fa, tipo: 'buff', tags: ['Carga'], noDisipable: true,
+    desc: 'Cargas de Vegeta (máx. 5): las gana cuando su Rival usa un movimiento y con sus críticos. Al llegar a 5 se transforma; Final Flash las consume para hacer más daño. No se puede disipar.' },
+  rival:   { nombre: 'Rival', icono: '👑', color: 0xfbbf24, tipo: 'marca', tags: ['Marca'], noDisipable: true,
+    desc: 'Marca de Vegeta: recibe más daño de él y cada movimiento que usa le da Orgullo. No es un debuff: no se limpia ni cuenta como debuff.' },
   cargas:  { nombre: 'Furia Dorada', icono: '🐂', color: 0xfbbf24, tipo: 'buff', tags: ['Carga'], noDisipable: true,
     desc: `Cargas que gana al recibir golpes; un movimiento que las consume hace más daño. No se pueden disipar.` },
   taunt:   { nombre: 'Provocación', icono: '🎯', color: 0xf97316, tipo: 'buff', tags: ['Provocación'],

@@ -74,7 +74,7 @@ export default {
   id: 'goku',
   nombre: 'Goku',
   rol: 'Daño', rolSecundario: '',
-  sobres: ['bloodline'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
   emoji: '🥋', color: '#f97316', imagen: 'assets/personajes/goku.webp',
   base: { hp: 620, dmg: 85, spd: 92 },
   extra: {},

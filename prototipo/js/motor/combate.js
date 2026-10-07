@@ -143,6 +143,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'taunt': texto = `Los enemigos deben atacarlo con sus movimientos de un objetivo · ${e.permanente ? 'permanente' : `${e.dur} ronda(s)`}`; n = e.permanente ? '∞' : e.dur; break;
         case 'frostAura': texto = `−${Math.round(BUFFS.auraGelida * 100)}% daño de golpes · ${Math.round(PUNTERIA.auraGelida * 100)}% de Congelar a quien lo golpee · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'mirror': texto = `Devuelve el ${Math.round(BUFFS.espejismo * 100)}% del daño de cada golpe recibido · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'orgullo': texto = `${e.valor} de Orgullo (máx. 5): Final Flash +15% por cada uno`; n = e.valor; break;
+        case 'rival': texto = `Rival de ${porUid(e.fuente)?.nombre || 'Vegeta'}: recibe más daño de él`; break;
         case 'cargas': texto = `${e.valor} carga(s): su próximo movimiento que las consume hace más daño`; n = e.valor; break;
         case 'incite': texto = `Solo puede usar su Básico contra ${porUid(e.fuente)?.nombre || 'quien lo incitó'} · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'pierce': texto = `+${Math.round(BUFFS.perforacion * 100)}% Penetración de escudo · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -379,17 +381,43 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     for (const [f, frac] of reparto) if (f && f.lado !== t.lado) f.est.dano += real * frac;
     const ultimo = reparto.filter(([f]) => f && f.lado !== t.lado).sort((x, y) => y[1] - x[1])[0];
     if (ultimo) t.ultimoDanoDe = ultimo[0];
+    if (t.pasiva?.rival && cantidad > 0 && !t.muerto) revisarTransformacion(t);
     const s = cantidad > 0 && !t.muerto && get(t, 'stealth');
     if (s) { quitar(t, s); emitir('sigiloRoto', { a: t.uid }, t); }
   }
   const porUid = uid => uid && P.find(p => p.uid === uid);
   // tiene un Control que le quita turnos (aturdido, poseído o con hielo sin romper)
   const conControl = p => p.estados.some(e => CONTROL.pierdeTurno.includes(e.id) && (e.id !== 'freeze' || e.capas > 0));
-  function ganarCargas(p, n, max) {
-    let e = get(p, 'cargas');
-    if (!e) { e = { id: 'cargas', valor: 0 }; p.estados.push(e); }
+  function ganarCargas(p, n, max, id = 'cargas') {          // id: tipo de carga ('cargas' = Furia Dorada, 'orgullo' = Orgullo Sayajin…)
+    let e = get(p, id);
+    if (!e) { e = { id, valor: 0 }; p.estados.push(e); }
     const antes = e.valor; e.valor = Math.min(max, e.valor + n);
     if (e.valor !== antes) emitir('actualizar', {}, p);
+  }
+  // ---------------------------------------------------------------- Rivalidad (pasiva "rival"): marca a un enemigo como su Rival
+  // Rival = Goku si está en el equipo enemigo; si no, el enemigo con más Daño. Si el Rival muere, bono permanente y nuevo Rival.
+  const esRival = (v, t) => t.estados.some(e => e.id === 'rival' && e.fuente === v.uid);
+  function elegirRival(v, avisar = true) {
+    const l = enemigosDe(v);
+    if (!l.length) return;
+    const r = l.find(x => x.id === 'goku') || l.reduce((x, y) => stats(y).dmg > stats(x).dmg ? y : x);
+    r.estados.push({ id: 'rival', fuente: v.uid, permanente: true });
+    if (avisar) emitir('efecto', { a: r.uid, id: 'rival', texto: `👑 Nuevo Rival de ${v.nombre}` }, r);
+  }
+  function ganarOrgullo(p, n) {
+    const rv = p.pasiva?.rival;
+    if (!rv || p.muerto) return;
+    ganarCargas(p, n, rv.max || 5, 'orgullo');
+    revisarTransformacion(p);
+  }
+  // transformación automática: al llegar a N de Orgullo o al bajar de cierto % de HP (una vez; se hace al terminar la acción en curso)
+  function revisarTransformacion(p) {
+    const tc = p.pasiva?.rival?.transformar;
+    if (!tc || p.forma || p.muerto || !p.transformacion || p.transformando) return;
+    if ((get(p, 'orgullo')?.valor || 0) >= tc.cargas || p.hp / maxHp(p) < tc.hp) {
+      p.transformando = true;
+      reacciones.push(() => { p.transformando = false; if (!p.forma && !p.muerto) transformar(p); });
+    }
   }
   // reparto del daño de un DoT entre quienes lo aplicaron (cada acumulación recuerda su "fuente")
   const fuentesDe = estados => { const tot = estados.reduce((s, e) => s + (e.valor || 0), 0) || 1; return estados.map(e => [porUid(e.fuente), (e.valor || 0) / tot]); };
@@ -430,6 +458,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       d *= 1 + Math.max(0, tramos) * mov.bonoPorHpPerdido.pct;
     }
     if (ctx.cargas && mov.consumeCargas) d *= 1 + ctx.cargas * mov.consumeCargas.pct;   // cargas consumidas por este movimiento
+    if (a.pasiva?.rival && esRival(a, t)) d *= 1 + a.pasiva.rival.bono;      // Rivalidad: más daño a su Rival
     if (mov.bonoSiObjetivoMasHp && t.hp > a.hp) d *= 1 + mov.bonoSiObjetivoMasHp;   // p. ej. Asesino de Dioses
     if (mov.bonoPorEscudoPropio) d += a.escudo * mov.bonoPorEscudoPropio;   // + % de su propio Escudo (no lo gasta)
     const bc = a.pasiva?.bonoContra;          // pasiva: +X% de daño a enemigos con un efecto (p. ej. Reptile contra envenenados)
@@ -464,6 +493,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       }
     }
     const critico = ctx.forzarCritico || garantizado || rng() < probCrit;
+    if (critico && a.pasiva?.rival?.orgulloAlCritico) ganarOrgullo(a, 1);
+    if (critico && t.pasiva?.rival?.orgulloAlRecibirCritico && t.lado !== a.lado) ganarOrgullo(t, 1);
     if (critico) d *= 1 + danoCrit;
     if (get(a, 'fear')) d *= CONTROL.miedoDano;
     let quiebre = false;
@@ -595,11 +626,17 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const invocaciones = todos(t, 'summon').length;
     if (t.ultimoDanoDe && t.ultimoDanoDe.lado !== t.lado) t.ultimoDanoDe.est.elim++;   // la eliminación es de quien hizo el último daño
     const teniaAlMorir = new Set(t.estados.map(e => e.id));
+    const rivalDe = P.filter(v => v.lado !== t.lado && !v.muerto && v.pasiva?.rival && esRival(v, t));
     t.muerto = true; t.hp = 0; t.escudo = 0; t.estados = [];
     emitir('muerte', { a: t.uid, invocaciones, lider: t.esLider && !!t.lider }, t);
     if (t.esLider && t.lider) for (const x of aliadosDe(t)) if (x.hp > maxHp(x)) { x.hp = maxHp(x); emitir('actualizar', {}, x); }
     for (const b of bombas) explotarBomba(t, b, true);
     if (asesino && asesino.lado !== t.lado) pasivas(asesino, 'alEliminar', { objetivo: t });
+    for (const v of rivalDe) {
+      const b = v.pasiva.rival.alMorirRival || 0;
+      if (b) { v.permanente.dmgPct = (v.permanente.dmgPct || 0) + b; emitir('bonoVisible', { a: v.uid, texto: `+${Math.round(b * 100)}% Daño permanente` }, v); }
+      elegirRival(v);
+    }
     for (const p of P.filter(x => x.lado !== t.lado && !x.muerto)) pasivas(p, 'alMorirEnemigo', { objetivo: t, teniaAlMorir });
   }
 
@@ -1256,10 +1293,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       objetivos: objetivos.map(t => t.uid), forzado: !!ctx.forzado });
     const atacanteTenia = new Set(a.estados.map(e => e.id));   // lo que tenía el atacante al empezar (para "atacado por un enemigo con X")
 
-    if (mov.consumeCargas) {                          // consume todas sus cargas: cada una suma daño a este movimiento
-      const e = get(a, 'cargas');
+    if (mov.consumeCargas) {                          // consume todas sus cargas (de ese tipo): cada una suma daño a este movimiento
+      const idc = mov.consumeCargas.efecto || 'cargas', e = get(a, idc);
       ctx = { ...ctx, cargas: e?.valor || 0 };
-      if (e) { quitar(a, e); emitir('bono', { id: a.uid, texto: `🐂 ×${ctx.cargas} cargas` }, a); }
+      if (e) { quitar(a, e); emitir('bono', { id: a.uid, texto: `${EFECTOS[idc].icono} ×${ctx.cargas} cargas` }, a); }
     }
     const hm = get(a, 'hemo');                       // Hemorragia: pierde HP al ejecutar un movimiento
     if (hm) danoDoT(a, hm.valor, 'hemo', fuentesDe([hm]));
@@ -1303,6 +1340,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       });
     }
     if (!ctx.forzado && !a.muerto) for (const p of enemigosDe(a)) pasivas(p, 'alUsarMovimientoEnemigo', { objetivo: a, categoria: mov.categoria });
+    if (!ctx.forzado) for (const p of enemigosDe(a)) if (p.pasiva?.rival && esRival(p, a)) ganarOrgullo(p, 1);
   }
 
   // ================================================================ API pública
@@ -1314,6 +1352,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
 
   equipoJugador.forEach((d, i) => P.push(crearPersonaje(d, 'jugador', i)));
   equipoRival.forEach((d, i) => P.push(crearPersonaje(d, 'rival', i)));
+  for (const p of P) if (p.pasiva?.rival) elegirRival(p, false);
   for (const p of P) p.hp = stats(p).hp;      // con todos creados: incluye bonos de líder al HP máx. (el líder se crea antes que su equipo)
 
   return {

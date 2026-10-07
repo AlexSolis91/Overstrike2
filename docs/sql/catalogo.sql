@@ -6,7 +6,7 @@ insert into public.campeones (id, nombre, starter, sobres, activo) values
   ('alexstrasza', 'Alexstrasza', 'blazing', array['sacred']::text[], true),
   ('sun-jin-woo', 'Sun Jin Woo', null, array['phantom']::text[], true),
   ('shaka', 'Shaka', null, array['sacred']::text[], true),
-  ('goku', 'Goku', null, array['bloodline']::text[], true),
+  ('goku', 'Goku', null, array[]::text[], true),
   ('daenerys-targaryen', 'Daenerys Targaryen', 'blazing', array[]::text[], true),
   ('batman', 'Batman', null, array['phantom']::text[], true),
   ('the-joker', 'The Joker', 'noxious', array['phantom']::text[], true),
@@ -20,6 +20,7 @@ insert into public.campeones (id, nombre, starter, sobres, activo) values
   ('lich-king', 'Lich King', 'frostborn', array['phantom']::text[], true),
   ('jaina-proudmoore', 'Jaina Proudmoore', 'frostborn', array[]::text[], true),
   ('doctor-doom', 'Doctor Doom', null, array['phantom']::text[], true),
-  ('kratos', 'Kratos', null, array['bloodline', 'sacred']::text[], true)
+  ('kratos', 'Kratos', null, array['bloodline', 'sacred']::text[], true),
+  ('vegeta', 'Vegeta', null, array[]::text[], true)
 on conflict (id) do update set nombre = excluded.nombre, starter = excluded.starter, sobres = excluded.sobres, activo = excluded.activo;
--- 20 campeones
+-- 21 campeones

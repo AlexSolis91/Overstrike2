@@ -203,7 +203,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 **Modificadores de un golpe (en la ficha del movimiento):**
 - `critExtra`: suma puntos de Prob. Crítico solo a ese ataque.
 - `bonoPorDebuffs { pct }`: +pct de daño contra cada objetivo por cada **tipo distinto** de debuff que tenga (3 Venenos cuentan como 1; sin tope). P. ej. Explosión Divina de Thor: +30%.
-- `consumeCargas { pct }`: al usarlo consume **todas** las cargas del personaje; cada una suma +pct de daño a ese movimiento (p. ej. Gran Cuerno: +15% por carga). Condición para sus efectos: `cargasConsumidasMin: N`.
+- `consumeCargas { pct, efecto }`: al usarlo consume **todas** las cargas de ese tipo (`efecto`: 'cargas' = Furia Dorada por defecto, 'orgullo' = Orgullo Sayajin); cada una suma +pct de daño a ese movimiento (p. ej. Gran Cuerno: +15% por carga; Final Flash: +15% por Orgullo). Condición para sus efectos: `cargasConsumidasMin: N`.
 - **Según el equipo equipado** (`conEquipo { equipo: { tipo | categoria, min }, cambios }`): si el personaje lleva esas reliquias (cuenta los espacios **no bloqueados** por **tipo** — Espada, Arco, Lanza, Yelmo, Pechera, Botas, Anillo, Amuleto — o por **categoría** — Arma, Equipación, Accesorio), el movimiento cambia al empezar la partida (el equipo no cambia en batalla). P. ej. Espadas del Caos de Kratos: con 2 Espadas, 2 golpes de 60%. Mientras no exista el inventario de reliquias, cuenta el equipo de la ficha.
 - `bonoSiObjetivoMasHp`: +pct de daño si el objetivo tiene más HP actual que el atacante (p. ej. Asesino de Dioses de Kratos: +30%).
 - `bonoPorEscudoPropio`: suma al golpe ese % del Escudo actual del atacante (no lo gasta; puede ser crítico). P. ej. Fervor Místico de Doom: 30%.
@@ -243,6 +243,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - `alRomperCapa`: cada vez que un **golpe** (de cualquiera) rompe una capa de Congelación o Mega Congelación de un **enemigo** del dueño. No cuenta el hielo que se derrite al perder el turno. `objetivo` = el congelado.
 - **Daño contra un efecto:** una pasiva puede declarar `bonoContra { efecto | [efectos], pct }`: sus golpes hacen +pct a enemigos con ese efecto.
 - **Crítico acumulable:** una pasiva puede declarar `acumulaCriticoContra { efecto, valor, valorMega, tope }`: cada golpe a un enemigo con ese efecto suma `valor` (o `valorMega` si es Mega) a Prob. Crítico **y** a Daño Crítico, **para toda la partida**, hasta `tope` cada uno. Se aplica ya en ese golpe. Cuenta el **debuff**, aunque el hielo esté roto. P. ej. Jaina: +5% / +10% con Mega, tope +50%.
+- **Rivalidad** (pasiva `rival { bono, max, orgulloAlCritico, orgulloAlRecibirCritico, alMorirRival, transformar: { cargas, hp } }`): al empezar marca a un enemigo como **Rival 👑** (Goku si está en el equipo enemigo; si no, el de más Daño). La marca es de tipo **marca**: no es buff ni debuff (no se limpia, no se disipa, no cuenta para efectos que cuentan debuffs) y se ve con borde dorado. Le hace +`bono` de daño. Gana cargas de **Orgullo Sayajin ⚜️** (máx. `max`, no disipables) cuando su Rival usa un movimiento y con sus críticos (y, si lo indica, al recibir un crítico). Si el Rival muere: +`alMorirRival` de Daño permanente y elige otro Rival. Con `transformar`: se transforma **solo** (una vez) al llegar a esas cargas o al bajar de ese % de HP, al terminar la acción en curso. P. ej. Vegeta.
 - **Efectos permanentes:** una pasiva puede declarar `efectosPermanentes: [ids]`: el personaje empieza con ese efecto **toda la partida** (sin duración, se ve con ∞). No se puede disipar ni robar, y otra aplicación del mismo efecto no lo cambia. P. ej. Lich King: Provocación permanente.
 - **Reducción para el equipo:** una pasiva puede declarar `reduccionAliados { pct, salvoSi }`: todo su equipo (incluido él) recibe −pct de **todo** el daño mientras viva y no tenga el efecto `salvoSi` (p. ej. Loki: −10% salvo con Desgaste).
 - **Reducción propia:** una pasiva puede declarar `reduccionPropia { categoria, pct }`: reduce el daño de esa categoría que recibe **él mismo** (p. ej. Aldebarán: −15% de golpes). Se suma a la de líderes (tope 90%).
@@ -406,10 +407,10 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
 
 - Cada campeón declara en su ficha `sobres: [...]`: puede estar en **varios**. Los campeones de los Starter Packs **también** están en sobres; el Starter Pack es un arranque único, no se compra.
 - **Sobres actuales** (`activo: true/false` = si se ven en la tienda; por temporada):
-  - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Goku, Scorpion, Kratos.
+  - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Scorpion, Kratos.
   - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King, Doctor Doom.
   - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki, Kratos.
-  - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema.
+  - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema. **Goku y Vegeta salen solo aquí** (sin sobre temático + «Solo su sobre»).
   - Sin sobre temático por ahora (salen en Unbreakable Force y en los aleatorios): Daenerys, Rhaenys, Rengoku, Sub-Zero. Llegarán sobres de Quemadura, Congelación, etc.
 - **Apertura** (`abrirSobre(id)`): 3 campeones, sin repetir dentro del mismo sobre. 1 o 2 (50/50) del tema y el resto al azar entre **todos** (a veces también caen del tema). Unbreakable: los 3 al azar entre todos.
 - **Starter Pack** (`abrirStarter(id)` en `js/datos/starters.js`): 3 al azar de sus exclusivos + 2 al azar entre los elegibles, sin repetir.
