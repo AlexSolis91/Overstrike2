@@ -5,7 +5,7 @@
 import { OFICIALES } from './personajes/index.js';
 
 export const STARTERS = {
-  blazing:   { nombre: 'Blazing Legion',     tema: 'Quemadura',                  icono: '🔥', color: '#f97316', imagen: 'assets/sobres/blazing.webp' },
+  blazing:   { nombre: 'Blazing Legion',     tema: 'Quemadura',                  icono: '🔥', color: '#f97316', imagen: 'assets/sobres/blazing.webp?v=2' },
   frostborn: { nombre: 'Frostborn Vanguard', tema: 'Congelación y Mega Congelación', icono: '❄️', color: '#38bdf8', imagen: 'assets/sobres/frostborn.webp' },
   noxious:   { nombre: 'Noxious Alliance',   tema: 'Veneno',                     icono: '🧪', color: '#22c55e', imagen: 'assets/sobres/noxious.webp' },
 };
