@@ -41,6 +41,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       ultimoDanoDe: null,    // quién le hizo daño por última vez (para acreditar la eliminación)
     });
     for (const m of p.movimientos) p.cds[m.categoria] = CD_INICIAL[m.categoria] ?? 0;
+    // efectosPermanentes: la pasiva da ese efecto toda la partida (sin duración, no se disipa ni se roba)
+    for (const id of def.pasiva?.efectosPermanentes || []) p.estados.push({ id, permanente: true });
     p.hp = stats(p).hp;
     return p;
   }
@@ -126,7 +128,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'confuse': texto = `50% de cambiar de objetivo · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'fear': texto = `Actúa al final de la ronda · −25% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'dmgUp': texto = `+${Math.round(e.valor * 100)}% Daño · ${e.dur} ronda(s)`; n = e.dur; break;
-        case 'taunt': texto = `Los enemigos deben atacarlo con sus movimientos de un objetivo · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'taunt': texto = `Los enemigos deben atacarlo con sus movimientos de un objetivo · ${e.permanente ? 'permanente' : `${e.dur} ronda(s)`}`; n = e.permanente ? '∞' : e.dur; break;
         case 'mirror': texto = `Devuelve el ${Math.round(BUFFS.espejismo * 100)}% del daño de cada golpe recibido · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'cargas': texto = `${e.valor} carga(s): su próximo movimiento que las consume hace más daño`; n = e.valor; break;
         case 'incite': texto = `Solo puede usar su Básico contra ${porUid(e.fuente)?.nombre || 'quien lo incitó'} · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -189,6 +191,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       emitir('liderActua', { id: l.uid, nombre: l.lider.nombre });
       ejecutarAccion(l, l.lider.alIniciarRonda, {});
     }
+    procesarReacciones();
   }
 
   function finRonda() {
@@ -211,6 +214,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     for (const [p, b] of explotan) if (!p.muerto) explotarBomba(p, b, false);
     // "alTerminar": al expirar el efecto (no si lo disipan o limpian), su dueño ejecuta la acción (p. ej. Gran Cuerno de Aldebarán)
     for (const [p, e] of terminan) { const d = porUid(e.duenoTerminar) || p; if (!d.muerto && enemigosDe(d).length) ejecutarAccion(d, e.alTerminar, {}); }
+    procesarReacciones();
     emitir('finRonda', {}, ...P);
   }
 
@@ -482,11 +486,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   }
 
   // Daño por EFECTO: aplica Armadura y Escudo; no se bloquea, no es crítico y NO cuenta como golpe.
-  function danoEfecto(a, t, cantidad, color) {
+  function danoEfecto(a, t, cantidad, color, { sinArmadura = false } = {}) {
     if (t.muerto || cantidad <= 0) return;
     let d = cantidad;
     if (get(a, 'fear')) d *= CONTROL.miedoDano;
-    d *= 1 - Math.min(stats(t).armor, TOPES.armor);
+    if (!sinArmadura) d *= 1 - Math.min(stats(t).armor, TOPES.armor);
     if (get(t, 'weaken')) d *= 1 + DEBUFFS.debilitar;
     d *= 1 - reduccion(t, 'efecto');
     const { aHp, aEsc } = repartir(t, d, stats(a).pen);
@@ -704,6 +708,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         if (acc.id === 'taunt' && get(t, 'stealth')) { quitar(t, get(t, 'stealth')); emitir('sigiloRoto', { a: t.uid }, t); }
         if (acc.id === 'dmgUp') acc = { ...acc, valor: BUFFS.furia };      // Furia siempre +50%
         const e = get(t, acc.id);
+        if (e?.permanente) { emitir('sinEfecto', { a: t.uid, texto: `Ya tiene ${def.nombre} permanente` }); return; }
         const extra = {};                     // alTerminar: acción al terminar el efecto por duración · cargasX: multiplica cargas ganadas
         if (acc.alTerminar) { extra.alTerminar = acc.alTerminar; extra.duenoTerminar = a.uid; }
         if (acc.cargasX) extra.cargasX = acc.cargasX;
@@ -720,6 +725,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     for (const e of t.estados) delete e.tocado;
     emitir('efecto', { a: t.uid, id, texto }, t);
     if (t.lado !== a.lado) liderAlAplicar(a, t, id);
+    if (def.tipo === 'debuff' && a !== t) reacciones.push(() => pasivas(t, 'alRecibirDebuff', { atacante: a, efecto: id }));
   }
 
   // Líder con pieza "alAplicar": cada vez que su equipo acierta ese debuff en un enemigo, un aliado al azar gana un bono permanente
@@ -727,6 +733,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     for (const l of lideresDe(a)) {
       const reg = l.lider?.alAplicar;
       if (!reg || reg.efecto !== id) continue;
+      if (reg.accion) { ejecutarAccion(a, reg.accion, { objetivo: t }); continue; }
       const aliados = aliadosDe(l);
       if (!aliados.length) continue;
       const x = rng.elegir(aliados);
@@ -744,7 +751,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   }
   function disipar(a, t, acc) {
     const sa = stats(a), st = stats(t);
-    let buf = t.estados.filter(e => EFECTOS[e.id].tipo === 'buff' && !EFECTOS[e.id].noDisipable && (!acc.etiqueta || esDe(e, acc.etiqueta)));
+    let buf = t.estados.filter(e => EFECTOS[e.id].tipo === 'buff' && !EFECTOS[e.id].noDisipable && !e.permanente && (!acc.etiqueta || esDe(e, acc.etiqueta)));
     if (acc.cantidad && buf.length > acc.cantidad) buf = [...buf].sort(() => rng() - .5).slice(0, acc.cantidad);
     let n = 0;
     for (const b of buf) if (rng() < probAplicar(sa.acc, st.res)) { quitar(t, b); n++; }
@@ -872,8 +879,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         }
         case 'disipar': disipar(a, t, acc); break;
         case 'robarHP': robarHP(a, t, acc.pct); break;
+        case 'danoPorDebuffs': {       // p. ej. Apocalipsis: 10% del HP máx. por Congelación (o Mega) y por Posesión; ignora Armadura
+          const n = acc.efectos.filter(id => ctx.teniaAntes?.has(id)).length;
+          if (n) danoEfecto(a, t, n * acc.pct * maxHp(t), acc.color, { sinArmadura: true });
+          break;
+        }
         case 'robarBuffs': {                 // quita buffs al azar al objetivo y se los pasa al ejecutor (no invocaciones ni lo no disipable)
-          const lista = t.estados.filter(e => EFECTOS[e.id]?.tipo === 'buff' && !EFECTOS[e.id].noDisipable && e.id !== 'summon');
+          const lista = t.estados.filter(e => EFECTOS[e.id]?.tipo === 'buff' && !EFECTOS[e.id].noDisipable && !e.permanente && e.id !== 'summon');
           for (const e of [...lista].sort(() => rng() - .5).slice(0, acc.cantidad || 1)) {
             quitar(t, e);
             const mio = get(a, e.id);
@@ -930,6 +942,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   function cumple(cond, ctx) {
     if (!cond) return true;
     if (cond.objetivoTiene) return !!(ctx.objetivo && get(ctx.objetivo, cond.objetivoTiene));
+    if (cond.objetivoTeniaAntes) return [].concat(cond.objetivoTeniaAntes).some(id => ctx.teniaAntes?.has(id));
     if (cond.cargasConsumidasMin) return (ctx.cargas || 0) >= cond.cargasConsumidasMin;
     if (cond.objetivoEfectoDurMin) { const e = ctx.objetivo && get(ctx.objetivo, cond.objetivoEfectoDurMin.efecto); return !!e && (e.dur ?? 0) >= cond.objetivoEfectoDurMin.dur; }
     if (cond.algunGolpeadoTenia) return !!ctx.golpeadosTenian?.has(cond.algunGolpeadoTenia);
@@ -1111,7 +1124,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       if (t.muerto) return;
       for (const ef of mov.efectos || []) {
         if (ef.cuando && ef.cuando !== 'objetivo') continue;
-        const c = { objetivo: t, atacante: a, hpObjetivoAntes, cargas: ctx.cargas };
+        const c = { objetivo: t, atacante: a, hpObjetivoAntes, cargas: ctx.cargas, teniaAntes: ctxGolpe.teniaAntes };
         if (cumple(ef.condicion, c)) ejecutarAccion(a, ef.accion, c);
       }
     };

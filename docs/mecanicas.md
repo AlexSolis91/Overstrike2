@@ -188,6 +188,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | `multiple` | acciones | Aplica varias acciones a **los mismos** objetivos elegidos (p. ej. Escudo + Furia a 3 aliados al azar) |
 | `curar` + `porCada: 'eliminados'` | pct, escala | Cura una vez por cada enemigo eliminado por ese movimiento (p. ej. Explosión Divina: 20% del HP máx. de Thor por cada uno) |
 | `robarBuffs` | cantidad | Quita buffs al azar al objetivo y se los pasa al ejecutor (no roba invocaciones ni lo no disipable). P. ej. Truco de la Serpiente de Loki |
+| `danoPorDebuffs` | efectos, pct | Daño por efecto = pct × HP máx. del objetivo **por cada** efecto de la lista que tenía **antes** del movimiento (Mega Congelación cuenta como Congelación). **Ignora Armadura**; el Escudo sí absorbe. P. ej. Apocalipsis de Lich King: 10% por Congelación y 10% por Posesión (máx. 20%) |
 | `danoSegunEnemigos` | efecto, pct | Daño por efecto al objetivo = suma de pct × HP máx. de **cada enemigo** con ese efecto (p. ej. Spear: 2% por cada enemigo quemado) |
 | `danoRepartido` | base `'escudosEquipo'`, pct, paquetes | Total = pct × suma de los Escudos de todo el equipo del ejecutor (incluido él; no los consume). Se divide en N paquetes (10 por defecto) que caen al azar sobre enemigos → reparto desigual. Es daño por **efecto** (aplica Armadura y Escudo, sin bloqueo ni crítico) |
 
@@ -224,8 +225,10 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - `alPerderEscudo`: cada vez que el dueño o un aliado pierde Escudo por un golpe o daño por efecto (los DoT no tocan escudos). `objetivo` = quien lo perdió.
   - `alSerAtacado`: una vez por cada **movimiento** enemigo que lo tuvo de objetivo (incluye área). Filtro `atacanteTiene: <efecto>` (el atacante ya lo tenía **al empezar** su movimiento; no cuenta si lo recibe durante el ataque, p. ej. por Aura de Fuego). Con `usarMovimiento` + `contraataque: true` es un **contraataque**: va después del movimiento enemigo, **un contraataque no provoca otro**, y no contraataca si tiene un Control que le quita turnos. Destino `a: 'atacante'`.
   - **Al terminar un efecto:** un buff/debuff puede llevar `alTerminar: <acción>`: cuando **expira por duración** (no si lo disipan o limpian), quien lo aplicó ejecuta esa acción. Destino `a: 'ultimoAtacante'` = el último enemigo que le hizo daño (o uno al azar). Una Provocación puede llevar `cargasX: N` (mientras dure, cada golpe da N cargas). P. ej. Orgullo del Toro Dorado: al terminar su Provocación, Aldebarán lanza Gran Cuerno.
+  - `alRecibirDebuff`: cada vez que **le entra** un debuff (después de pasar Puntería vs Resistencia) aplicado por otro: **una tirada por debuff** (un área con 2 debuffs = 2 tiradas). Lo resistido o sin efecto no cuenta. Se ejecuta como reacción, después de la acción en curso. P. ej. El Príncipe Caído de Lich King: 50% de Congelar a un enemigo al azar (esa Congelación también tira Puntería vs Resistencia).
   - `alRomperCapa`: cada vez que un **golpe** (de cualquiera) rompe una capa de Congelación o Mega Congelación de un **enemigo** del dueño. No cuenta el hielo que se derrite al perder el turno. `objetivo` = el congelado.
 - **Daño contra un efecto:** una pasiva puede declarar `bonoContra { efecto, pct }`: sus golpes hacen +pct a enemigos con ese efecto.
+- **Efectos permanentes:** una pasiva puede declarar `efectosPermanentes: [ids]`: el personaje empieza con ese efecto **toda la partida** (sin duración, se ve con ∞). No se puede disipar ni robar, y otra aplicación del mismo efecto no lo cambia. P. ej. Lich King: Provocación permanente.
 - **Reducción para el equipo:** una pasiva puede declarar `reduccionAliados { pct, salvoSi }`: todo su equipo (incluido él) recibe −pct de **todo** el daño mientras viva y no tenga el efecto `salvoSi` (p. ej. Loki: −10% salvo con Desgaste).
 - **Reducción propia:** una pasiva puede declarar `reduccionPropia { categoria, pct }`: reduce el daño de esa categoría que recibe **él mismo** (p. ej. Aldebarán: −15% de golpes). Se suma a la de líderes (tope 90%).
 - **Cargas:** una pasiva puede declarar `cargasAlRecibirGolpe { max }`: cada golpe de un enemigo le da 1 carga (Furia Dorada 🐂, se ve en su carta con el número), hasta `max`. Con un Control que le quite turnos no gana cargas. Las cargas **no se pueden disipar** (`noDisipable`).
@@ -238,6 +241,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Quemadura débil (`noRenueva`):** una Quemadura es *débil* si su % final (con el Daño DoT de quien la aplica) es **menor** que el de la Quemadura activa. Se fusiona igual (+10% de la débil), pero si la acción tiene `noRenueva`, **no alarga la duración**. Hoy solo la usa Rhaegal.
 - **Condiciones:**
   - `objetivoTiene: <efecto>`.
+  - `objetivoTeniaAntes: <efecto>` o `[efectos]`: el objetivo tenía ese efecto (o **alguno** de la lista) **antes** del movimiento. Importa con Congelación, porque el golpe rompe la capa. P. ej. Agonía de Escarcha: Posesión solo si ya estaba congelado.
   - `algunGolpeadoTenia: <efecto>`: al menos un objetivo golpeado (no bloqueado) lo tenía.
   - `objetivoEliminado`: el objetivo principal del movimiento murió (p. ej. turno extra de la Fatality).
   - `objetivoMasHpQueYo`: el objetivo tenía **más HP actual** que el atacante (se mide antes del golpe).
@@ -289,6 +293,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - `acumulaPorDoT { tipo, stat, valor }`: cada vez que un **enemigo** recibe daño de ese DoT, los aliados ganan +valor en esa estadística, **sin tope**. Se pierde si el líder muere (p. ej. Scorpion: +2% Daño Crítico por cada daño de Quemadura).
   - `bonoCriticoContra { efecto, critRate, critDmg }`: los aliados ganan esos puntos de Prob. y Daño Crítico al golpear a un enemigo con ese efecto (p. ej. Sub-Zero: +15%/+15% contra congelados).
   - `alIniciarRonda { acción }`: al empezar cada ronda ejecuta una acción universal (p. ej. Shaka: Escudo 12% de su HP máx. al aliado con menor % de HP).
+  - `alAplicar { efecto, accion }`: cada vez que su equipo **acierta** ese debuff en un enemigo (incluye pasar a Mega), **quien lo aplicó** ejecuta la acción sobre ese enemigo. P. ej. Carcelero de los Malditos de Lich King: robar 5% del HP máx. al congelado.
   - `alAplicar { efecto, stat, valor }`: cada vez que su equipo **acierta** ese debuff en un enemigo, un aliado al azar (puede ser el líder) gana un bono **permanente e invisible** a esa estadística. No es un buff y no se puede disipar.
 
 ## 12. Transformaciones
@@ -371,7 +376,7 @@ Pantalla: al iniciar sesión por primera vez (ver sección 19).
 - Funciones listas: `exclusivosDe(id)` y `elegiblesAleatorios(id)`.
 - Clasificación actual:
   - **Blazing:** Alexstrasza, Rhaenys Targaryen, Rengoku, Daenerys Targaryen, Scorpion.
-  - **Frostborn:** Sub-Zero (necesita al menos 2 más antes de abrir los packs).
+  - **Frostborn:** Sub-Zero, Lich King (necesita al menos 1 más antes de abrir los packs).
   - **Noxious:** The Joker, Reptile, Loki.
   - **Libres:** Goku, Sun Jin Woo, Shaka, Batman, Aldebarán, Thor, Madara Uchiha.
 - Al crear un campeón nuevo se decide si es exclusivo de algún pack.
@@ -383,7 +388,7 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
 - Cada campeón declara en su ficha `sobres: [...]`: puede estar en **varios**. Los campeones de los Starter Packs **también** están en sobres; el Starter Pack es un arranque único, no se compra.
 - **Sobres actuales** (`activo: true/false` = si se ven en la tienda; por temporada):
   - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Goku, Scorpion.
-  - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki.
+  - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King.
   - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki.
   - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema.
   - Sin sobre temático por ahora (salen en Unbreakable Force y en los aleatorios): Daenerys, Rhaenys, Rengoku, Sub-Zero. Llegarán sobres de Quemadura, Congelación, etc.
