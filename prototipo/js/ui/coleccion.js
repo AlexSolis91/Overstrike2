@@ -202,7 +202,7 @@ let starterSel = null;
 function pintarStarter() {
   $('#starter-cont').innerHTML = Object.entries(STARTERS).map(([id, s]) => `
     <button class="st-pack ${starterSel === id ? 'elegido' : ''}" data-st="${id}" style="--c:${s.color}">
-      <span class="st-ico">${s.icono}</span><b>${s.nombre}</b><small>Tema: ${s.tema}</small>
+      ${s.imagen ? `<img class="st-arte" src="${s.imagen}" alt="${s.nombre}">` : `<span class="st-ico">${s.icono}</span>`}<b>${s.nombre}</b><small>Tema: ${s.tema}</small>
       <div class="st-caras">${exclusivosDe(id).map(p => `<span title="${p.nombre}">${retrato(p)}</span>`).join('')}</div>
       <em>3 de su tema + 2 al azar</em>
     </button>`).join('');

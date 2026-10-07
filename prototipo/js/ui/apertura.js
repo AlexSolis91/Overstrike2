@@ -18,7 +18,7 @@ function cartaHtml(p, nuevo, i) {
   </div>`;
 }
 
-// sobre: { nombre, icono, color } · campeones: fichas · nuevos: Set de ids que el jugador no tenía
+// sobre: { nombre, icono, color, imagen? } (con imagen se muestra el arte del sobre) · campeones: fichas · nuevos: Set de ids que el jugador no tenía
 export function revelarCartas({ sobre, campeones, nuevos = new Set() }) {
   return new Promise(async resolve => {
     document.querySelector('#apertura')?.remove();
@@ -27,7 +27,9 @@ export function revelarCartas({ sobre, campeones, nuevos = new Set() }) {
     capa.style.setProperty('--c', sobre.color || '#f3d58a');
     capa.innerHTML = `
       <div class="ap-destello"></div>
-      <div class="ap-sobre"><div class="ap-sobre-brillo"></div><span class="ap-sobre-ico">${sobre.icono || '🎁'}</span><b>${sobre.nombre}</b><small>Toca para abrir</small></div>
+      ${sobre.imagen
+        ? `<div class="ap-sobre con-arte"><img src="${sobre.imagen}" alt="${sobre.nombre}"><div class="ap-sobre-brillo" style="--arte:url('${sobre.imagen}')"></div><small>Toca para abrir</small></div>`
+        : `<div class="ap-sobre"><div class="ap-sobre-brillo"></div><span class="ap-sobre-ico">${sobre.icono || '🎁'}</span><b>${sobre.nombre}</b><small>Toca para abrir</small></div>`}
       <div class="ap-chispas"></div>
       <div class="ap-cartas">${campeones.map((p, i) => cartaHtml(p, nuevos.has(p.id), i)).join('')}</div>
       <p class="ap-ayuda">Toca para revelar más rápido</p>
