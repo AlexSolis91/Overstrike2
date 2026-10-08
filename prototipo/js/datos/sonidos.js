@@ -13,7 +13,7 @@
 //   Daño por turno: quemadura · veneno · sangrado · solar (Quemadura Solar) · explosion (Bomba)
 //   Efectos:      buff · debuff · resistido · limpiar · disipar · aturdir · congelar · silenciar
 //   Turnos:       pierdeTurno · pierdeTurnoHielo · turnoExtra · ronda
-//   Momentos:     transformacion · invocacion · invocacionLegendaria · pasiva · lider · sigiloRoto
+//   Momentos:     transformacion · revivir · invocacion · invocacionLegendaria · pasiva · lider · sigiloRoto
 
 // Música de fondo (assets/audio/)
 export const MUSICA = {
@@ -31,7 +31,7 @@ const sfx = n => `assets/audio/sfx/${n}.mp3`;
 export const SONIDOS = {
   clic:                 { archivo: sfx('boton'), v: .8, gap: 30 },
   golpe:                { archivo: sfx('golpe'), v: .85, var: .05, gap: 35 },
-  critico:              { archivo: sfx('golpe'), v: 1, var: .03 },
+  critico:              { archivo: sfx('critico'), v: 1, var: .03, gap: 150 },  // bate de home run (2.1 s)
   escudoGolpe:          { archivo: sfx('golpe'), v: .55, var: .05, gap: 35 },
   curacion:             { archivo: sfx('curacion'), v: .85, gap: 120 },
   escudo:               { archivo: sfx('escudo'), v: .9, gap: 120 },
@@ -41,6 +41,7 @@ export const SONIDOS = {
   pierdeTurnoHielo:     { archivo: sfx('hielo'), v: .9 },
   over:                 { archivo: sfx('over'), v: 1, duck: 2.4 },
   transformacion:       { archivo: sfx('transformacion'), v: 1, duck: 2.6 },
+  revivir:              { archivo: sfx('revivir'), v: 1, duck: 3.4 },          // invocación de luz (Yu-Gi-Oh! Master Duel, 3.7 s)
   invocacion:           { archivo: sfx('invocacion'), v: .85 },
   invocacionLegendaria: { archivo: sfx('invocacion'), v: 1, duck: 1.6 },
 };

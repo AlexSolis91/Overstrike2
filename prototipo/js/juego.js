@@ -149,7 +149,8 @@ function sonidoDe(e) {
     case 'liderActua': return 'lider';
     case 'invocacion': return e.rareza === 'Legendario' ? 'invocacionLegendaria' : 'invocacion';
     case 'invocacionAtaca': return 'lanzar';
-    case 'transformacion': case 'revivir': return 'transformacion';
+    case 'transformacion': return 'transformacion';
+    case 'revivir': return 'revivir';
     case 'turnoExtra': return 'turnoExtra';
     case 'esquiva': return 'esquiva';
     case 'sigiloRoto': return 'sigiloRoto';
