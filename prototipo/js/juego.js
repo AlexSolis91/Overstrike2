@@ -149,7 +149,7 @@ function sonidoDe(e) {
     case 'liderActua': return 'lider';
     case 'invocacion': return e.rareza === 'Legendario' ? 'invocacionLegendaria' : 'invocacion';
     case 'invocacionAtaca': return 'lanzar';
-    case 'transformacion': return 'transformacion';
+    case 'transformacion': case 'revivir': return 'transformacion';
     case 'turnoExtra': return 'turnoExtra';
     case 'esquiva': return 'esquiva';
     case 'sigiloRoto': return 'sigiloRoto';
@@ -264,6 +264,10 @@ async function manejar(e) {
       aplicar(e); log(`☠️ ${nombre(e.a)} ha sido derrotado`, 'sys');
       if (e.lider) log(`👑 Se pierde la habilidad de líder de ${nombre(e.a)}`, 'sys');
       await FX.muerte(c(e.a));
+      break;
+    case 'revivir':
+      aplicar(e); log(`🐒 ${nombre(e.a)} vuelve a la vida${e.nombre ? ` (${e.nombre})` : ''}`, 'sys');
+      await FX.revivir(c(e.a));
       break;
     case 'pasiva':
       FX.textoSobre(c(e.id), `✦ ${e.nombre}`, '#e9d5ff', 14, -125);

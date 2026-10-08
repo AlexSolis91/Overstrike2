@@ -176,6 +176,18 @@ export async function muerte(carta) {
   await wait(500);
 }
 
+export async function revivir(carta) {
+  const { x, y } = pos(carta);
+  carta.body.filters = []; carta.cracks.clear();
+  flash(carta, 1, 0xffd36b);
+  burst(x, y, { n: 34, colors: [0xffd36b, 0xff7a2a, 0xffffff], speed: 8, size: .4 });
+  ringWave(x, y, 0xffd36b, { scale: 4 });
+  gsap.to(carta.body.scale, { x: 1, y: 1, duration: .45, ease: 'back.out(2)' });
+  gsap.to(carta.body, { alpha: 1, duration: .4 });
+  floatText(x, y - 30, '¡REVIVE!', { color: '#ffd36b', size: 28 });
+  await wait(600);
+}
+
 export function limpieza(carta) {
   const { x, y } = pos(carta);
   flash(carta, .5, 0xe0f7ff);

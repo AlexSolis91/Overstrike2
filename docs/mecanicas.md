@@ -157,6 +157,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | 💔 Debilitar | Estadística | Recibe **+50% de daño** de golpes y daño por efecto, calculado **después** de la Armadura (no afecta DoT ni Robar HP) |
 | 🪞 Espejismo | Reflejo | Cada **golpe** que recibe de un enemigo le devuelve al atacante el **30%** del daño recibido (HP + Escudo), como **daño por efecto**: no es golpe (no rebota entre dos Espejismos ni activa Sangrado/contraataques), no es crítico ni se bloquea. El portador recibe el golpe completo. No refleja DoT ni daño por efecto. Se puede Disipar |
 | 🧊 Aura Gélida | Hielo | El portador recibe **−20%** de daño de los **golpes** enemigos y, cuando lo golpean, tiene **50%** de probabilidad de aplicarle Congelación al atacante (con Tirada de Puntería del portador). Siempre dura 2 rondas. **Se puede disipar** |
+| 🚫 Bloquear Buffs | Bloqueo | (debuff) No puede recibir buffs **nuevos** mientras dure. No afecta a los que ya tiene, a los permanentes ni a las cargas |
 | ♨️ Aura de Fuego | Fuego | Cuando el portador recibe un **golpe** de un enemigo, tiene **50%** de probabilidad de aplicarle al atacante Quemadura 5% (1 turno), con Tirada de Puntería del portador |
 | 🎯 Provocación | Provocación | Los enemigos deben dirigirle sus movimientos de **un objetivo** (incluidas invocaciones). No afecta AOE, objetivos al azar, movimientos a aliados, Confusión ni Posesión. Con varios, se elige entre ellos. Se puede Disipar |
 | ✦ Invocación | Invocación | Ver sección 9 |
@@ -207,6 +208,10 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Según el equipo equipado** (`conEquipo { equipo: { tipo | categoria, min }, cambios }`): si el personaje lleva esas reliquias (cuenta los espacios **no bloqueados** por **tipo** — Espada, Arco, Lanza, Yelmo, Pechera, Botas, Anillo, Amuleto — o por **categoría** — Arma, Equipación, Accesorio), el movimiento cambia al empezar la partida (el equipo no cambia en batalla). P. ej. Espadas del Caos de Kratos: con 2 Espadas, 2 golpes de 60%. Mientras no exista el inventario de reliquias, cuenta el equipo de la ficha.
 - `bonoSiObjetivoMasHp`: +pct de daño si el objetivo tiene más HP actual que el atacante (p. ej. Asesino de Dioses de Kratos: +30%).
 - `bonoPorEscudoPropio`: suma al golpe ese % del Escudo actual del atacante (no lo gasta; puede ser crítico). P. ej. Fervor Místico de Doom: 30%.
+- `sinCritico`: ese ataque no puede ser crítico.
+- `sobrante`: si el golpe mata al objetivo, el daño que sobró (ya mitigado) pasa a otro enemigo al azar como daño por efecto (una sola vez). P. ej. Bastón Prodigioso de Wukong.
+- **Efectos `cuando: 'antes'`:** se aplican a cada objetivo **antes** de golpear (p. ej. Ahora Nos Ves: robar todos los buffs y después atacar).
+- **Acción `efecto`:** `probSiConBuff` (otra probabilidad si el objetivo tiene algún buff, sin contar invocaciones) e `irresistible: true` (siempre entra: sin tirada de Puntería vs Resistencia).
 - `golpeExtraContra { efecto, prob }`: prob de **un** golpe más (mismo %) a **otro** enemigo que tenga ese efecto (nunca al mismo objetivo; si no hay otro, nada). Ese golpe no provoca otro. P. ej. Descarga de Escarcha de Jaina: 20% contra otro congelado.
 - `golpeExtraSiCritico`: si algún golpe fue crítico, **un** golpe más (máximo uno) al mismo objetivo; si murió, a un enemigo al azar (p. ej. Venganza Eterna de Scorpion).
 - `critExtraSi { teniaAntes, pct }`: +pct de Prob. Crítico contra los objetivos que **ya tenían** ese efecto **antes** del movimiento (p. ej. Deep Freeze: +50% contra los ya congelados).
@@ -244,6 +249,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Daño contra un efecto:** una pasiva puede declarar `bonoContra { efecto | [efectos], pct }`: sus golpes hacen +pct a enemigos con ese efecto.
 - **Crítico acumulable:** una pasiva puede declarar `acumulaCriticoContra { efecto, valor, valorMega, tope }`: cada golpe a un enemigo con ese efecto suma `valor` (o `valorMega` si es Mega) a Prob. Crítico **y** a Daño Crítico, **para toda la partida**, hasta `tope` cada uno. Se aplica ya en ese golpe. Cuenta el **debuff**, aunque el hielo esté roto. P. ej. Jaina: +5% / +10% con Mega, tope +50%.
 - **Rivalidad** (pasiva `rival { bono, max, orgulloAlCritico, orgulloAlRecibirCritico, alMorirRival, transformar: { cargas, hp } }`): al empezar marca a un enemigo como **Rival 👑** (Goku si está en el equipo enemigo; si no, el de más Daño). La marca es de tipo **marca**: no es buff ni debuff (no se limpia, no se disipa, no cuenta para efectos que cuentan debuffs) y se ve con borde dorado. Le hace +`bono` de daño. Gana cargas de **Orgullo Sayajin ⚜️** (máx. `max`, no disipables) cuando su Rival usa un movimiento y con sus críticos (y, si lo indica, al recibir un crítico). Si el Rival muere: +`alMorirRival` de Daño permanente y elige otro Rival. Con `transformar`: se transforma **solo** (una vez) al llegar a esas cargas o al bajar de ese % de HP, al terminar la acción en curso. P. ej. Vegeta.
+- **Revivir** (pasiva `revivir { turnos, hp }`): al morir, vuelve a la vida **N turnos después** (cuentan los turnos de cualquier personaje; el turno en que muere no cuenta) con `hp` × su HP máx., sin buffs ni debuffs. **Una vez por partida**. Si su equipo cae entero antes, la partida termina igual. P. ej. Wukong Invencible: 3 turnos, 100% HP.
 - **Efectos permanentes:** una pasiva puede declarar `efectosPermanentes: [ids]`: el personaje empieza con ese efecto **toda la partida** (sin duración, se ve con ∞). No se puede disipar ni robar, y otra aplicación del mismo efecto no lo cambia. P. ej. Lich King: Provocación permanente.
 - **Reducción para el equipo:** una pasiva puede declarar `reduccionAliados { pct, salvoSi }`: todo su equipo (incluido él) recibe −pct de **todo** el daño mientras viva y no tenga el efecto `salvoSi` (p. ej. Loki: −10% salvo con Desgaste).
 - **Reducción propia:** una pasiva puede declarar `reduccionPropia { categoria, pct }`: reduce el daño de esa categoría que recibe **él mismo** (p. ej. Aldebarán: −15% de golpes). Se suma a la de líderes (tope 90%).
@@ -258,6 +264,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Condiciones:**
   - `objetivoTiene: <efecto>`.
   - `rompioMega: true` (en efectos `final`): algún golpe del movimiento rompió una capa de **Mega** Congelación. P. ej. Anillo de Hielo de Jaina.
+  - `objetivoConBuff: true`: el objetivo tiene algún buff activo (sin contar invocaciones).
   - `equipo: { tipo | categoria, min }`: el ejecutor lleva esas reliquias (p. ej. Over de Kratos con Lanza).
   - `enemigosCon: { efectos, min }`: al menos `min` enemigos tienen alguno de esos efectos (p. ej. Furia Espartana: Letalidad si 2+ sangran).
   - `objetivoTeniaAntes: <efecto>` o `[efectos]`: el objetivo tenía ese efecto (o **alguno** de la lista) **antes** del movimiento. Importa con Congelación, porque el golpe rompe la capa. P. ej. Agonía de Escarcha: Posesión solo si ya estaba congelado.
@@ -409,7 +416,7 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
 - **Sobres actuales** (`activo: true/false` = si se ven en la tienda; por temporada):
   - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Scorpion, Kratos.
   - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King, Doctor Doom.
-  - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki, Kratos.
+  - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki, Kratos, Wukong.
   - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema. **Goku y Vegeta salen solo aquí** (sin sobre temático + «Solo su sobre»).
   - Sin sobre temático por ahora (salen en Unbreakable Force y en los aleatorios): Daenerys, Rhaenys, Rengoku, Sub-Zero. Llegarán sobres de Quemadura, Congelación, etc.
 - **Apertura** (`abrirSobre(id)`): 3 campeones, sin repetir dentro del mismo sobre. 1 o 2 (50/50) del tema y el resto al azar entre **todos** (a veces también caen del tema). Unbreakable: los 3 al azar entre todos.
