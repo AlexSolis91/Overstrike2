@@ -13,6 +13,13 @@
 // luminosa: true para imágenes con fondo negro (se dibujan en modo "pantalla": solo brilla lo claro)
 
 export const INVOCACIONES = {
+  // ---------------------------------------------------------------- Naruto
+  clonSombra: {
+    nombre: 'Clon de Sombra', rareza: 'Común', emoji: '🥷', color: 0xf97316, imagen: 'assets/invocaciones/clon-de-sombra.webp', dur: 2, max: 3,
+    enfoque: [.40, .30],
+    desc: 'Golpea 60% a un enemigo al azar.',
+    acciones: [{ tipo: 'golpe', pct: .60, elegir: 'azar' }],
+  },
   // ---------------------------------------------------------------- Sombras de Sun Jin Woo
   iron: {
     nombre: 'Iron', rareza: 'Común', emoji: '🛡️', color: 0x94a3b8, imagen: 'assets/invocaciones/iron.webp', dur: 2,

@@ -207,6 +207,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       emitir('liderActua', { id: l.uid, nombre: l.lider.nombre });
       ejecutarAccion(l, l.lider.alIniciarRonda, {});
     }
+    for (const p of P) pasivas(p, 'alIniciarRonda', {});      // pasivas "al inicio de cada ronda" (p. ej. Modo Rikudo)
     procesarReacciones();
   }
 
@@ -277,6 +278,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   function terminarTurno(p) {
     if (get(p, 'blackPlague') && !p.muerto) pesteNegra(p);
     S.actuaron.add(p); S.orden.push(p.uid);
+    const dren = p.pasiva?.drenajePropio;                  // p. ej. Modo Barión: quema su propia vida (nunca baja de 1 HP)
+    if (dren && !p.muerto) {
+      const d = Math.min(p.hp - 1, dren * maxHp(p));
+      if (d > 0) { p.hp -= d; emitir('danoEfecto', { de: p.uid, a: p.uid, dano: d, escudo: 0, color: 0xf97316 }, p); }
+    }
     for (const x of P) if (x.muerto && x.reviveEn > 0 && --x.reviveEn === 0) revivir(x);
     if (p.inmune && !p.recienLiberado) p.inmune = false;
     p.recienLiberado = false;
@@ -351,7 +357,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const inc = incitadoPor(p);
     return p.movimientos.map(m => ({
       categoria: m.categoria,
-      disponible: (p.cds[m.categoria] || 0) === 0 && get(p, 'silence')?.categoria !== m.categoria && (!inc || m.categoria === 'basico'),
+      agotado: !!(m.unaVez && p.usados?.has(m.nombre)),     // unaVez: solo se puede usar una vez por partida
+      disponible: (p.cds[m.categoria] || 0) === 0 && get(p, 'silence')?.categoria !== m.categoria && (!inc || m.categoria === 'basico')
+        && !(m.unaVez && p.usados?.has(m.nombre)),
       cd: p.cds[m.categoria] || 0,
       objetivos: objetivosValidos(p, m).map(t => t.uid),
     }));
@@ -538,7 +546,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (t.hp <= 0) {
       morir(t, a);
       // "sobrante": el daño que excedió al matar pasa a otro enemigo al azar (ya mitigado; sin crítico; una sola vez)
-      const exceso = aHp - hpAntesGolpe, otros = mov.sobrante && t.lado !== a.lado ? enemigosDe(a) : [];
+      const exceso = aHp - hpAntesGolpe, otros = mov.sobrante && t.muerto && t.lado !== a.lado ? enemigosDe(a) : [];
       if (exceso > 0 && otros.length && !a.muerto) {
         const d2 = rng.elegir(otros);
         emitir('golpeExtra', { id: a.uid, a: d2.uid });
@@ -643,6 +651,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
 
   function morir(t, asesino = null) {
     if (t.muerto) return;
+    const ua = t.pasiva?.ultimoAliento;               // la primera vez que muere: queda con 1 HP (y puede transformarse)
+    if (ua && !t.usoUltimoAliento) {
+      t.usoUltimoAliento = true; t.hp = Math.max(1, (ua.hp || 0) * maxHp(t));   // hp: % de su HP máx. con el que queda (1 HP si no se indica)
+      emitir('pasiva', { id: t.uid, nombre: t.pasiva.nombre });
+      emitir('actualizar', {}, t);
+      if (ua.transformar && t.transformacion && !t.forma) reacciones.push(() => { if (!t.muerto && !t.forma) transformar(t); });
+      return;
+    }
     const bombas = todos(t, 'bomb');
     const invocaciones = todos(t, 'summon').length;
     if (t.ultimoDanoDe && t.ultimoDanoDe.lado !== t.lado) t.ultimoDanoDe.est.elim++;   // la eliminación es de quien hizo el último daño
@@ -984,6 +1000,16 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         }
         case 'disipar': disipar(a, t, acc); break;
         case 'robarHP': robarHP(a, t, acc.pct); break;
+        case 'invocar': if (acc.prob == null || rng() < acc.prob) invocar(t, acc.key); break;   // p. ej. Clon de Sombra
+        case 'reducirHpMax': {         // baja el HP máx. del objetivo para el resto de la partida (con tope); p. ej. Modo Barión
+          const baja = Math.min(acc.pct, (acc.tope ?? 1) - (t.hpMaxReducido || 0));
+          if (baja <= 1e-9) break;
+          t.hpMaxReducido = (t.hpMaxReducido || 0) + baja;
+          t.permanente.hpPct = (t.permanente.hpPct || 0) - baja;
+          if (t.hp > maxHp(t)) t.hp = maxHp(t);
+          emitir('bonoVisible', { a: t.uid, texto: `−${Math.round(baja * 100)}% HP máx.` }, t);
+          break;
+        }
         case 'hemorragia': {           // convierte el Sangrado del objetivo en Hemorragia (garantizado, sin tirada)
           const b = get(t, 'bleed');
           if (!b || get(t, 'hemo')) break;
@@ -1327,6 +1353,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const hm = get(a, 'hemo');                       // Hemorragia: pierde HP al ejecutar un movimiento
     if (hm) danoDoT(a, hm.valor, 'hemo', fuentesDe([hm]));
     if (!ctx.forzado && !ctx.reaccion) a.cds[mov.categoria] = mov.cd || 0;
+    if (mov.unaVez) (a.usados ||= new Set()).add(mov.nombre);
 
     if (!a.muerto) {
       const principal = objetivo || objetivos[0] || null;
