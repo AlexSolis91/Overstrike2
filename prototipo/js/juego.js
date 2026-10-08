@@ -91,6 +91,7 @@ function matarTweens(o) { gsap.killTweensOf(o); if (o.scale) gsap.killTweensOf(o
 function limpiarPartida() {
   partida++;
   const base = [G.bgLayer, G.ambLayer, G.cardLayer, G.fxLayer, G.textLayer];
+  for (const c of Object.values(cartas)) if (c.face?.texture && !c.face.texture.destroyed) c.face.texture.destroy(true);   // imágenes de las cartas (memoria gráfica)
   const restos = [...G.cardLayer.children, ...G.fxLayer.children, ...G.textLayer.children, ...G.scene.children.filter(x => !base.includes(x))];
   for (const o of restos) { matarTweens(o); o.parent?.removeChild(o); if (!o.destroyed) o.destroy({ children: true }); }
   G.alTick = [];

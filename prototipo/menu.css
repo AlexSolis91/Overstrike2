@@ -663,3 +663,7 @@ body.tc-ocupado #tc-cont, body.tc-ocupado .st-packs { opacity: .6; }
 .adm-prob select { font: 600 12px Inter, sans-serif; color: var(--text); padding: 5px 6px; border-radius: 8px; background: rgba(5, 8, 14, .9); border: 1px solid rgba(255, 255, 255, .14); }
 .adm-prob label { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); cursor: pointer; white-space: nowrap; }
 .adm-prob input[type=checkbox] { width: 16px; height: 16px; accent-color: #f3d58a; }
+
+/* ---------- aviso: el dispositivo perdió el dibujo (sin memoria gráfica) */
+#aviso-graficos { position: fixed; inset: 0; z-index: 90; display: grid; place-content: center; gap: 14px; padding: 20px; text-align: center;
+  background: rgba(5, 7, 12, .92); color: var(--text); font: 700 15px Inter, sans-serif; }

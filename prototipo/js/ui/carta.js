@@ -1,8 +1,16 @@
 // Carta de personaje en el campo. Se dibuja a partir de la ficha (estática) y de la "vista" que manda el motor.
-import { G, CW, CH, EMOJI_FONT, canvasTex, rr, shade, txt, spawn, rand, pick, hpVisible } from './graficos.js';
+import { G, CW, CH, EMOJI_FONT, canvasTex, rr, shade, txt, spawn, rand, pick, hpVisible, texturaDesenfocada } from './graficos.js';
 import { IMG, TEX_INVOCACION, drawCover } from './imagenes.js';
 import { INVOCACIONES } from '../datos/invocaciones.js';
 const { PIXI, gsap } = window;
+
+// Sombra y resplandores ya desenfocados (se crean una vez y los comparten todas las cartas)
+let TEX_SOMBRA, TEX_LIDER, TEX_FORMA;
+function texturasCompartidas() {
+  TEX_SOMBRA ||= texturaDesenfocada(CW, CH, 14, 10, { color: '#000000', alpha: .5 });
+  TEX_LIDER ||= texturaDesenfocada(CW + 6, CH + 6, 14, 6, { forma: 'borde', grosor: 7, color: '#f7c948', alpha: .35 });
+  TEX_FORMA ||= texturaDesenfocada(CW + 8, CH + 8, 15, 3, { forma: 'borde', grosor: 6, color: '#ffffff', alpha: .9 });   // se tiñe del color de la forma
+}
 
 function textura(p) {
   return canvasTex(CW, CH, (g, w, h) => {
@@ -99,8 +107,8 @@ export class Carta {
 
     this.aura = new PIXI.Graphics(); c.addChild(this.aura);          // brillo de Over listo
     this.ring = new PIXI.Graphics(); c.addChild(this.ring);
-    this.shadow = new PIXI.Graphics().roundRect(-CW / 2 + 4, -CH / 2 + 12, CW, CH, 14).fill({ color: 0x000000, alpha: .5 });
-    this.shadow.filters = [new PIXI.BlurFilter({ strength: 10 })]; c.addChild(this.shadow);
+    texturasCompartidas();
+    this.shadow = new PIXI.Sprite(TEX_SOMBRA); this.shadow.anchor.set(.5); this.shadow.position.set(4, 12); c.addChild(this.shadow);
 
     const body = this.body = new PIXI.Container(); c.addChild(body);
     this.face = new PIXI.Sprite(textura(p)); this.face.anchor.set(.5); this.face.scale.set(.5); body.addChild(this.face);
@@ -116,14 +124,12 @@ export class Carta {
     this.summonRow = new PIXI.Container(); this.summonRow.position.set(-CW / 2 + 4, -CH / 2 + 8); body.addChild(this.summonRow);
 
     if (p.esLider) {                                                   // casilla de líder: resplandor dorado
-      this.liderGlow = new PIXI.Graphics().roundRect(-CW / 2 - 3, -CH / 2 - 3, CW + 6, CH + 6, 14).stroke({ width: 7, color: 0xf7c948, alpha: .35 });
-      this.liderGlow.filters = [new PIXI.BlurFilter({ strength: 6 })];
+      this.liderGlow = new PIXI.Sprite(TEX_LIDER); this.liderGlow.anchor.set(.5);
       c.addChildAt(this.liderGlow, c.getChildIndex(this.shadow) + 1);
       this.liderT = 0;
     }
     // Transformación: marco de energía del color de la forma + contador de turnos restantes
-    this.formaG = new PIXI.Graphics(); this.formaG.visible = false;
-    this.formaG.filters = [new PIXI.BlurFilter({ strength: 3 })];
+    this.formaG = new PIXI.Sprite(TEX_FORMA); this.formaG.anchor.set(.5); this.formaG.visible = false;
     c.addChildAt(this.formaG, c.getChildIndex(this.shadow) + 1);
     this.formaBadge = new PIXI.Container(); this.formaBadge.position.set(CW / 2 + 2, -CH / 2 + 40); this.formaBadge.visible = false;
     c.addChild(this.formaBadge);
@@ -182,7 +188,9 @@ export class Carta {
   // Cambia la ilustración/nombre de la carta a la forma (o de vuelta a la base si forma = null)
   cambiarForma(forma) {
     const p = forma ? { ...this.p, nombre: forma.nombre, imagen: forma.imagen || '', emoji: forma.emoji || this.p.emoji, color: forma.color || this.p.color } : this.p;
+    const vieja = this.face.texture;
     this.face.texture = textura(p);
+    setTimeout(() => { if (!vieja.destroyed) vieja.destroy(true); }, 5000);   // libera la imagen anterior (memoria gráfica) cuando ya nadie la muestra
     this.formaKey = null;
   }
   dibujarForma() {
@@ -192,11 +200,10 @@ export class Carta {
     this.formaKey = key;
     this.formaG.visible = this.formaBadge.visible = !!key;
     for (const ch of this.formaBadge.removeChildren()) ch.destroy({ children: true });
-    this.formaG.clear();
     if (!key) return;
     const col = parseInt(f.color.slice(1), 16);
     this.formaCol = col;
-    this.formaG.roundRect(-CW / 2 - 4, -CH / 2 - 4, CW + 8, CH + 8, 15).stroke({ width: 6, color: col, alpha: .9 });
+    this.formaG.tint = col;
     const g = new PIXI.Graphics().circle(0, 0, 14).fill({ color: 0x0b0f18, alpha: .95 }).stroke({ width: 2, color: col });
     if (f.permanente) {                               // forma permanente: anillo completo con ∞
       g.circle(0, 0, 18).stroke({ width: 3, color: 0xffd36b });

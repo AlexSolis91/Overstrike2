@@ -163,8 +163,7 @@ export async function muerte(carta) {
   const { x, y } = pos(carta);
   flash(carta, .9, 0xff2244);
   burst(x, y, { n: 26, colors: [0x2a2f3a, 0x555b68, 0xff2244], speed: 6, size: .5, blend: 'normal', grow: .5, life: 50 });
-  const cm = new PIXI.ColorMatrixFilter(); cm.desaturate();
-  carta.body.filters = [cm];
+  carta.face.tint = 0x6b6b6b;                          // gris oscuro (más barato que un filtro de color)
   const g = carta.cracks.clear();
   g.moveTo(-10, -100).lineTo(8, -40).lineTo(-12, 10).lineTo(14, 60).lineTo(-4, 100).stroke({ width: 2, color: 0x000000, alpha: .8 });
   g.moveTo(8, -40).lineTo(50, -20).moveTo(-12, 10).lineTo(-55, 30).stroke({ width: 1.5, color: 0x000000, alpha: .7 });
@@ -178,7 +177,7 @@ export async function muerte(carta) {
 
 export async function revivir(carta) {
   const { x, y } = pos(carta);
-  carta.body.filters = []; carta.cracks.clear();
+  carta.face.tint = 0xffffff; carta.cracks.clear();
   flash(carta, 1, 0xffd36b);
   burst(x, y, { n: 34, colors: [0xffd36b, 0xff7a2a, 0xffffff], speed: 8, size: .4 });
   ringWave(x, y, 0xffd36b, { scale: 4 });

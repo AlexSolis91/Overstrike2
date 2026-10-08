@@ -14,11 +14,17 @@ export const cssHex = n => '#' + n.toString(16).padStart(6, '0');
 gsap.ticker.lagSmoothing(0);
 
 export const G = {};
+// Celular / tableta (pantalla táctil): menos carga gráfica para que no se trabe ni pierda el dibujo
+export const MOVIL = window.matchMedia?.('(pointer: coarse)').matches ?? false;
+const MAX_PARTICULAS = MOVIL ? 160 : 400;
 
 export async function iniciarEscena(contenedor) {
   const app = new PIXI.Application();
-  await app.init({ resizeTo: contenedor, backgroundAlpha: 0, antialias: true, resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true });
+  await app.init({ resizeTo: contenedor, backgroundAlpha: 0, antialias: !MOVIL, resolution: Math.min(window.devicePixelRatio || 1, MOVIL ? 1.5 : 2), autoDensity: true });
   contenedor.prepend(app.canvas);
+  // Si el teléfono se queda sin memoria gráfica, el navegador "pierde" el dibujo (pantalla negra): avisamos con opción de recargar
+  app.canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); avisoGraficos(true); });
+  app.canvas.addEventListener('webglcontextrestored', () => avisoGraficos(false));
   try {
     await Promise.all(['700 26px Cinzel', '900 26px Cinzel', '600 14px Inter', '800 14px Inter', '900 14px Inter'].map(f => document.fonts.load(f)));
   } catch (e) { /* fuentes opcionales */ }
@@ -60,6 +66,28 @@ export async function iniciarEscena(contenedor) {
     for (const f of G.alTick || []) f(dt, G.T);
   });
   return G;
+}
+
+function avisoGraficos(mostrar) {
+  let a = document.getElementById('aviso-graficos');
+  if (!mostrar) { a?.remove(); return; }
+  if (a) return;
+  a = document.createElement('div'); a.id = 'aviso-graficos';
+  a.innerHTML = '<p>El dispositivo se quedó sin memoria gráfica.</p><button class="eq-listo">Recargar el juego</button>';
+  a.querySelector('button').onclick = () => location.reload();
+  document.body.appendChild(a);
+}
+
+// Textura con un contorno desenfocado, dibujada UNA vez (los filtros de desenfoque en vivo se recalculan en cada cuadro y
+// saturan los celulares). forma: 'relleno' | 'borde'. Se usa sombra de canvas (compatible con todos los navegadores).
+export function texturaDesenfocada(w, h, radio, desenfoque, { forma = 'relleno', grosor = 6, color = '#ffffff', alpha = 1 } = {}) {
+  const pad = Math.ceil(desenfoque * 2.5 + grosor);
+  return canvasTex(w + pad * 2, h + pad * 2, g => {
+    const lejos = 10000;                                  // la figura se dibuja fuera del lienzo: solo su sombra cae dentro
+    g.shadowColor = color; g.shadowBlur = desenfoque * 2; g.shadowOffsetX = lejos; g.globalAlpha = alpha;
+    rr(g, pad - lejos, pad, w, h, radio);
+    if (forma === 'relleno') { g.fillStyle = color; g.fill(); } else { g.strokeStyle = color; g.lineWidth = grosor; g.stroke(); }
+  }, 1);
 }
 
 export function relayout() {            // tras cambiar de modo (celular/PC): ajusta el lienzo y la escala
@@ -155,6 +183,7 @@ function fondo() {
 // ---------------------------------------------------------------- partículas y textos
 const parts = [];
 export function spawn(o) {
+  if (parts.length >= MAX_PARTICULAS) return;              // tope de partículas (más bajo en celular)
   const s = new PIXI.Sprite(o.tex || G.dotTex);
   s.anchor.set(.5); s.tint = o.color ?? 0xffffff; s.blendMode = o.blend || 'add';
   s.position.set(o.x, o.y); s.alpha = o.alpha ?? 1;
@@ -191,7 +220,7 @@ export function txt(text, { size = 14, weight = '800', fill = '#ffffff', font = 
   return t;
 }
 export function floatText(x, y, str, { color = '#ffffff', size = 28, pop = false, font = 'Cinzel', rise = 58, hold = .55 } = {}) {
-  const t = txt(str, { size, weight: '900', fill: color, font, stroke: Math.max(4, size / 6), shadow: true });
+  const t = txt(str, { size, weight: '900', fill: color, font, stroke: Math.max(4, size / 6), shadow: !MOVIL });   // la sombra borrosa es cara en celular
   t.position.set(x, y); G.textLayer.addChild(t);
   t.scale.set(pop ? .3 : .6);
   gsap.to(t.scale, { x: 1, y: 1, duration: pop ? .35 : .2, ease: pop ? 'back.out(3)' : 'back.out(2)' });
