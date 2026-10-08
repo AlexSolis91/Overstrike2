@@ -196,6 +196,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | `bonoPermanente` con otra `stat` | stat, pct | P. ej. `critDmg` +5% por cada crítico (Teletransportación). Sin tope, se conserva entre formas |
 | `multiple` | acciones | Aplica varias acciones a **los mismos** objetivos elegidos (p. ej. Escudo + Furia a 3 aliados al azar) |
 | `curar` + `porCada: 'eliminados'` | pct, escala | Cura una vez por cada enemigo eliminado por ese movimiento (p. ej. Explosión Divina: 20% del HP máx. de Thor por cada uno) |
+| `disipar` + `sinTirada: true` | cantidad | Quita los buffs sin tirada de Puntería (sin `cantidad` = todos). P. ej. Poder de Grayskull |
 | `transferirBuffs` | — | Quita **todos** los buffs disipables del objetivo (no invocaciones, no permanentes) y se los da al aliado del ejecutor en la **misma posición** (o a uno al azar si cayó). Sin tirada. P. ej. Voluntad de Hierro de Doom |
 | `activarCooldown` | categoria, prob | Pone ese movimiento del objetivo en su cooldown **completo** (si era menor). Sin tirada de Puntería; `prob` opcional. P. ej. Voluntad de Hierro: 60% al Over |
 | `robarBuffs` | cantidad | Quita buffs al azar al objetivo y se los pasa al ejecutor (no roba invocaciones ni lo no disipable). P. ej. Truco de la Serpiente de Loki |
@@ -258,6 +259,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Quema su propia vida** (`drenajePropio` en la pasiva): al final de cada turno propio pierde ese % de su HP máx., sin bajar de 1 HP. P. ej. Modo Barión: 3%.
 - **Movimiento de una sola vez** (`unaVez: true`): después de usarlo queda bloqueado el resto de la partida (el panel muestra «✔ Ya usado»), aunque vuelva a esa forma. P. ej. Modo Barión.
 - **Revivir** (pasiva `revivir { turnos, hp }`): al morir, vuelve a la vida **N turnos después** (cuentan los turnos de cualquier personaje; el turno en que muere no cuenta) con `hp` × su HP máx., sin buffs ni debuffs. **Una vez por partida**. Si su equipo cae entero antes, la partida termina igual. P. ej. Wukong Invencible: 3 turnos, 100% HP.
+- **Castigador de buffs** (pasiva): `cargasPorBuffEnemigo { efecto, max }` = cada buff que **recibe** un enemigo (por la vía normal; no los robados ni transferidos) le da 1 carga de ese tipo (p. ej. Poder Robado 💀 de Skeletor, máx. 10). `bonoPorBuffsObjetivo { pct, max }` = +pct de daño por cada buff activo del objetivo (sin contar invocaciones), hasta `max`.
 - **Efectos permanentes:** una pasiva puede declarar `efectosPermanentes: [ids]`: el personaje empieza con ese efecto **toda la partida** (sin duración, se ve con ∞). No se puede disipar ni robar, y otra aplicación del mismo efecto no lo cambia. P. ej. Lich King: Provocación permanente.
 - **Reducción para el equipo:** una pasiva puede declarar `reduccionAliados { pct, salvoSi }`: todo su equipo (incluido él) recibe −pct de **todo** el daño mientras viva y no tenga el efecto `salvoSi` (p. ej. Loki: −10% salvo con Desgaste).
 - **Reducción propia:** una pasiva puede declarar `reduccionPropia { categoria, pct }`: reduce el daño de esa categoría que recibe **él mismo** (p. ej. Aldebarán: −15% de golpes). Se suma a la de líderes (tope 90%).
@@ -327,6 +329,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - `acumulaPorDoT { tipo, stat, valor }`: cada vez que un **enemigo** recibe daño de ese DoT, los aliados ganan +valor en esa estadística, **sin tope**. Se pierde si el líder muere (p. ej. Scorpion: +2% Daño Crítico por cada daño de Quemadura).
   - `bonoCriticoContra { efecto, critRate, critDmg }`: los aliados ganan esos puntos de Prob. y Daño Crítico al golpear a un enemigo con ese efecto (p. ej. Sub-Zero: +15%/+15% contra congelados).
   - `alIniciarRonda { acción }`: al empezar cada ronda ejecuta una acción universal (p. ej. Shaka: Escudo 12% de su HP máx. al aliado con menor % de HP).
+  - `bonoContraConBuff: X`: los aliados hacen +X de daño a enemigos con algún buff (p. ej. Señor de la Montaña de la Serpiente de Skeletor: +10%).
   - `bonoStat` con `hpPct` (u otra estadística con `Pct`): % sobre la estadística base (p. ej. Dios Emperador Doom: +15% HP máx. a todo el equipo, incluido el líder). Si el líder muere, el bono se pierde y nadie queda con más HP que su nuevo máximo.
   - `alAplicar { efecto, accion }`: cada vez que su equipo **acierta** ese debuff en un enemigo (incluye pasar a Mega), **quien lo aplicó** ejecuta la acción sobre ese enemigo. P. ej. Carcelero de los Malditos de Lich King: robar 5% del HP máx. al congelado.
   - `alAplicar { efecto, stat, valor }`: cada vez que su equipo **acierta** ese debuff en un enemigo, un aliado al azar (puede ser el líder) gana un bono **permanente e invisible** a esa estadística. No es un buff y no se puede disipar.
@@ -423,7 +426,7 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
 - Cada campeón declara en su ficha `sobres: [...]`: puede estar en **varios**. Los campeones de los Starter Packs **también** están en sobres; el Starter Pack es un arranque único, no se compra.
 - **Sobres actuales** (`activo: true/false` = si se ven en la tienda; por temporada):
   - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Scorpion, Kratos, Sasuke Uchiha.
-  - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King, Doctor Doom.
+  - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King, Doctor Doom, Skeletor.
   - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki, Kratos, Wukong.
   - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema. **Goku, Vegeta y Naruto salen solo aquí** (sin sobre temático + «Solo su sobre»).
   - Sin sobre temático por ahora (salen en Unbreakable Force y en los aleatorios): Daenerys, Rhaenys, Rengoku, Sub-Zero. Llegarán sobres de Quemadura, Congelación, etc.

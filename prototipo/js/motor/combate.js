@@ -144,6 +144,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'frostAura': texto = `−${Math.round(BUFFS.auraGelida * 100)}% daño de golpes · ${Math.round(PUNTERIA.auraGelida * 100)}% de Congelar a quien lo golpee · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'mirror': texto = `Devuelve el ${Math.round(BUFFS.espejismo * 100)}% del daño de cada golpe recibido · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'blockBuffs': texto = `No puede recibir buffs nuevos · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'poderRobado': texto = `${e.valor} de Poder Robado (máx. 10): Poder de Grayskull +20% por cada uno`; n = e.valor; break;
         case 'orgullo': texto = `${e.valor} de Orgullo (máx. 5): Final Flash +15% por cada uno`; n = e.valor; break;
         case 'rival': texto = `Rival de ${porUid(e.fuente)?.nombre || 'Vegeta'}: recibe más daño de él`; break;
         case 'cargas': texto = `${e.valor} carga(s): su próximo movimiento que las consume hace más daño`; n = e.valor; break;
@@ -481,6 +482,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (mov.bonoContra && [].concat(mov.bonoContra.efecto).some(id => get(t, id))) d *= 1 + mov.bonoContra.pct;   // p. ej. Kirin contra quemados
     if (mov.bonoSiObjetivoMasHp && t.hp > a.hp) d *= 1 + mov.bonoSiObjetivoMasHp;   // p. ej. Asesino de Dioses
     if (mov.bonoPorEscudoPropio) d += a.escudo * mov.bonoPorEscudoPropio;   // + % de su propio Escudo (no lo gasta)
+    const bb = a.pasiva?.bonoPorBuffsObjetivo;   // pasiva: +X% de daño por cada buff activo del objetivo (sin contar invocaciones), con tope
+    if (bb && t.lado !== a.lado) d *= 1 + Math.min(t.estados.filter(e => EFECTOS[e.id]?.tipo === 'buff' && e.id !== 'summon').length * bb.pct, bb.max ?? 9);
+    for (const l of lideresDe(a)) if (l.lider?.bonoContraConBuff && t.lado !== a.lado && tieneBuff(t)) d *= 1 + l.lider.bonoContraConBuff;   // líder: +X% a enemigos con buffs
     const bc = a.pasiva?.bonoContra;          // pasiva: +X% de daño a enemigos con un efecto (p. ej. Reptile contra envenenados)
     if (bc && [].concat(bc.efecto).some(id => get(t, id))) d *= 1 + bc.pct;
     if (mov.bonoPorDebuffs) {                // +pct por cada tipo distinto de debuff del objetivo (3 Venenos = 1 tipo)
@@ -845,6 +849,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     emitir('efecto', { a: t.uid, id, texto }, t);
     if (t.lado !== a.lado) liderAlAplicar(a, t, id);
     if (def.tipo === 'debuff' && a !== t) reacciones.push(() => pasivas(t, 'alRecibirDebuff', { atacante: a, efecto: id }));
+    if (def.tipo === 'buff') for (const p of enemigosDe(t)) {      // pasiva "cargasPorBuffEnemigo": cada buff que recibe un enemigo le da 1 carga
+      const cb = p.pasiva?.cargasPorBuffEnemigo;
+      if (cb) ganarCargas(p, 1, cb.max, cb.efecto);
+    }
   }
 
   // Líder con pieza "alAplicar": cada vez que su equipo acierta ese debuff en un enemigo, un aliado al azar gana un bono permanente
@@ -873,7 +881,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     let buf = t.estados.filter(e => EFECTOS[e.id].tipo === 'buff' && !EFECTOS[e.id].noDisipable && !e.permanente && (!acc.etiqueta || esDe(e, acc.etiqueta)));
     if (acc.cantidad && buf.length > acc.cantidad) buf = [...buf].sort(() => rng() - .5).slice(0, acc.cantidad);
     let n = 0;
-    for (const b of buf) if (rng() < probAplicar(sa.acc, st.res)) { quitar(t, b); n++; }
+    for (const b of buf) if (acc.sinTirada || rng() < probAplicar(sa.acc, st.res)) { quitar(t, b); n++; }   // sinTirada: quita sin tirar Puntería
     emitir('disipar', { de: a.uid, a: t.uid, n }, t);
   }
 
