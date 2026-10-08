@@ -123,7 +123,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const nombre = e.mega ? def.mega : def.nombre;
       let texto = '', n = '';
       switch (e.id) {
-        case 'burn': texto = `${pctTxt(e.valor)} HP máx. al inicio del turno · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'burn': texto = `${pctTxt(e.valor)} HP máx. al inicio del turno · ${e.dur} ronda(s)${e.inextinguible ? ' · Amaterasu: no se puede limpiar' : ''}`; n = e.dur; break;
         case 'bleed': texto = `${pctTxt(e.valor)} HP máx. por golpe recibido · hasta limpiarlo`; break;
         case 'hemo': texto = `${pctTxt(e.valor)} por golpe y por movimiento · +1 por golpe`; n = Math.round(e.valor * 100); break;
         case 'stun': case 'possess':
@@ -478,6 +478,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     }
     if (ctx.cargas && mov.consumeCargas) d *= 1 + ctx.cargas * mov.consumeCargas.pct;   // cargas consumidas por este movimiento
     if (a.pasiva?.rival && esRival(a, t)) d *= 1 + a.pasiva.rival.bono;      // Rivalidad: más daño a su Rival
+    if (mov.bonoContra && [].concat(mov.bonoContra.efecto).some(id => get(t, id))) d *= 1 + mov.bonoContra.pct;   // p. ej. Kirin contra quemados
     if (mov.bonoSiObjetivoMasHp && t.hp > a.hp) d *= 1 + mov.bonoSiObjetivoMasHp;   // p. ej. Asesino de Dioses
     if (mov.bonoPorEscudoPropio) d += a.escudo * mov.bonoPorEscudoPropio;   // + % de su propio Escudo (no lo gasta)
     const bc = a.pasiva?.bonoContra;          // pasiva: +X% de daño a enemigos con un efecto (p. ej. Reptile contra envenenados)
@@ -733,9 +734,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           if (!debil) e.fuente = a.uid;           // la Quemadura es de quien aplicó la más fuerte
           const f = Math.max(e.valor, v), d = Math.min(e.valor, v); e.valor = f + d * DOT.quemaduraSuma;
           if (!(debil && acc.noRenueva)) e.dur = Math.max(e.dur, acc.dur ?? 2);   // noRenueva: la débil no alarga la duración
+          if (acc.inextinguible) e.inextinguible = true;
         }
-        else t.estados.push({ id: 'burn', valor: v, dur: acc.dur ?? 2, fuente: a.uid });
-        texto = `🔥 Quemadura ${Math.round(get(t, 'burn').valor * 1000) / 10}%`;
+        else t.estados.push({ id: 'burn', valor: v, dur: acc.dur ?? 2, fuente: a.uid, ...(acc.inextinguible ? { inextinguible: true } : {}) });
+        texto = `${get(t, 'burn').inextinguible ? '⚫🔥 Amaterasu' : '🔥 Quemadura'} ${Math.round(get(t, 'burn').valor * 1000) / 10}%`;
         break;
       }
       case 'poison': {
@@ -860,7 +862,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   }
 
   function limpiar(a, t, acc) {
-    let deb = t.estados.filter(e => EFECTOS[e.id].tipo === 'debuff' && (!acc.etiqueta || esDe(e, acc.etiqueta)));
+    let deb = t.estados.filter(e => EFECTOS[e.id].tipo === 'debuff' && !e.inextinguible && (!acc.etiqueta || esDe(e, acc.etiqueta)));   // inextinguible: no se limpia
     if (acc.cantidad && deb.length > acc.cantidad) deb = [...deb].sort(() => rng() - .5).slice(0, acc.cantidad);
     t.estados = t.estados.filter(e => !deb.includes(e));
     emitir('limpieza', { de: a.uid, a: t.uid, n: deb.length }, t);

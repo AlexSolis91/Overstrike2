@@ -208,11 +208,13 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - `bonoPorDebuffs { pct }`: +pct de daño contra cada objetivo por cada **tipo distinto** de debuff que tenga (3 Venenos cuentan como 1; sin tope). P. ej. Explosión Divina de Thor: +30%.
 - `consumeCargas { pct, efecto }`: al usarlo consume **todas** las cargas de ese tipo (`efecto`: 'cargas' = Furia Dorada por defecto, 'orgullo' = Orgullo Sayajin); cada una suma +pct de daño a ese movimiento (p. ej. Gran Cuerno: +15% por carga; Final Flash: +15% por Orgullo). Condición para sus efectos: `cargasConsumidasMin: N`.
 - **Según el equipo equipado** (`conEquipo { equipo: { tipo | categoria, min }, cambios }`): si el personaje lleva esas reliquias (cuenta los espacios **no bloqueados** por **tipo** — Espada, Arco, Lanza, Yelmo, Pechera, Botas, Anillo, Amuleto — o por **categoría** — Arma, Equipación, Accesorio), el movimiento cambia al empezar la partida (el equipo no cambia en batalla). P. ej. Espadas del Caos de Kratos: con 2 Espadas, 2 golpes de 60%. Mientras no exista el inventario de reliquias, cuenta el equipo de la ficha.
+- `bonoContra { efecto | [efectos], pct }` (en un **movimiento**): +pct de daño de ese movimiento contra objetivos con ese efecto (p. ej. Kirin de Sasuke: +50% contra quemados).
 - `bonoSiObjetivoMasHp`: +pct de daño si el objetivo tiene más HP actual que el atacante (p. ej. Asesino de Dioses de Kratos: +30%).
 - `bonoPorEscudoPropio`: suma al golpe ese % del Escudo actual del atacante (no lo gasta; puede ser crítico). P. ej. Fervor Místico de Doom: 30%.
 - `sinCritico`: ese ataque no puede ser crítico.
 - `sobrante`: si el golpe mata al objetivo, el daño que sobró (ya mitigado) pasa a otro enemigo al azar como daño por efecto (una sola vez). P. ej. Bastón Prodigioso de Wukong.
 - **Efectos `cuando: 'antes'`:** se aplican a cada objetivo **antes** de golpear (p. ej. Ahora Nos Ves: robar todos los buffs y después atacar).
+- **Quemadura inextinguible** (`inextinguible: true` en la acción de Quemadura): **no se puede limpiar** (solo termina por duración). Si se fusiona con otra Quemadura, la fusionada queda inextinguible. Se muestra como ⚫🔥 Amaterasu. P. ej. Amaterasu de Sasuke.
 - **Acción `efecto`:** `probSiConBuff` (otra probabilidad si el objetivo tiene algún buff, sin contar invocaciones) e `irresistible: true` (siempre entra: sin tirada de Puntería vs Resistencia).
 - `golpeExtraContra { efecto, prob }`: prob de **un** golpe más (mismo %) a **otro** enemigo que tenga ese efecto (nunca al mismo objetivo; si no hay otro, nada). Ese golpe no provoca otro. P. ej. Descarga de Escarcha de Jaina: 20% contra otro congelado.
 - `golpeExtraSiCritico`: si algún golpe fue crítico, **un** golpe más (máximo uno) al mismo objetivo; si murió, a un enemigo al azar (p. ej. Venganza Eterna de Scorpion).
@@ -420,7 +422,7 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
 
 - Cada campeón declara en su ficha `sobres: [...]`: puede estar en **varios**. Los campeones de los Starter Packs **también** están en sobres; el Starter Pack es un arranque único, no se compra.
 - **Sobres actuales** (`activo: true/false` = si se ven en la tienda; por temporada):
-  - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Scorpion, Kratos.
+  - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Scorpion, Kratos, Sasuke Uchiha.
   - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King, Doctor Doom.
   - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki, Kratos, Wukong.
   - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema. **Goku, Vegeta y Naruto salen solo aquí** (sin sobre temático + «Solo su sobre»).

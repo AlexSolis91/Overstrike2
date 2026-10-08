@@ -22,6 +22,7 @@ import kratos from './kratos.js';
 import vegeta from './vegeta.js';
 import wukong from './wukong.js';
 import naruto from './naruto.js';
+import sasuke from './sasuke-uchiha.js';
 
-export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, daenerys, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, vegeta, wukong, naruto];
+export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, daenerys, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, vegeta, wukong, naruto, sasuke];
 export const porId = id => OFICIALES.find(p => p.id === id);
