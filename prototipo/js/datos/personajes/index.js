@@ -25,6 +25,7 @@ import naruto from './naruto.js';
 import sasuke from './sasuke-uchiha.js';
 import skeletor from './skeletor.js';
 import heMan from './he-man.js';
+import saga from './saga.js';
 
-export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, daenerys, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, vegeta, wukong, naruto, sasuke, skeletor, heMan];
+export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, daenerys, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, vegeta, wukong, naruto, sasuke, skeletor, heMan, saga];
 export const porId = id => OFICIALES.find(p => p.id === id);

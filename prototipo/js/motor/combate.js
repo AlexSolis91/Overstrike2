@@ -42,7 +42,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     });
     for (const m of p.movimientos) {                     // conEquipo: el movimiento cambia si lleva cierto equipo (p. ej. 2 Espadas)
       if (m.conEquipo && tieneEquipo(p, m.conEquipo.equipo)) { Object.assign(m, m.conEquipo.cambios); m.equipoActivo = true; }
-      p.cds[m.categoria] = CD_INICIAL[m.categoria] ?? 0;
+      p.cds[m.categoria] = m.cdInicial ?? CD_INICIAL[m.categoria] ?? 0;   // cdInicial: con qué cooldown empieza (p. ej. Explosión de Galaxias: 6)
     }
     // efectosPermanentes: la pasiva da ese efecto toda la partida (sin duración, no se disipa ni se roba)
     for (const id of def.pasiva?.efectosPermanentes || []) p.estados.push({ id, permanente: true });
@@ -160,6 +160,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'frostAura': texto = `−${Math.round(BUFFS.auraGelida * 100)}% daño de golpes · ${Math.round(PUNTERIA.auraGelida * 100)}% de Congelar a quien lo golpee · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'mirror': texto = `Devuelve el ${Math.round(BUFFS.espejismo * 100)}% del daño de cada golpe recibido · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'blockBuffs': texto = `No puede recibir buffs nuevos · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'oscuridad': texto = `${e.valor} de Oscuridad (máx. 3): con 3 se transforma en Saga Oscuro`; n = e.valor; break;
         case 'grayskull': texto = `${e.valor} de Poder de Grayskull (máx. 5): Golpe de Grayskull +15% por cada uno`; n = e.valor; break;
         case 'poderRobado': texto = `${e.valor} de Poder Robado (máx. 10): Poder de Grayskull +20% por cada uno`; n = e.valor; break;
         case 'orgullo': texto = `${e.valor} de Orgullo (máx. 5): Final Flash +15% por cada uno`; n = e.valor; break;
@@ -234,7 +235,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     for (const p of P) {
       if (p.muerto) continue;
       for (const c of CATEGORIAS) if (p.cds[c] > 0) p.cds[c]--;
-      if (p.formaBase) for (const c of CATEGORIAS) if (p.formaBase.cds[c] > 0) p.formaBase.cds[c]--;
+      if (p.formaBase && p.formaBase.cds !== p.cds) for (const c of CATEGORIAS) if (p.formaBase.cds[c] > 0) p.formaBase.cds[c]--;
       for (const e of p.estados) {
         // Regla general: un efecto aplicado a alguien que YA actuó en esta ronda no pierde duración al final de ella
         const salta = e.nuevo; e.nuevo = false;
@@ -421,6 +422,16 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (!e) { e = { id, valor: 0 }; p.estados.push(e); }
     const antes = e.valor; e.valor = Math.min(max, e.valor + n);
     if (e.valor !== antes) emitir('actualizar', {}, p);
+    const tc = p.pasiva?.transformarConCargas;       // al juntar N cargas: se transforma (consume las cargas); p. ej. Saga → Saga Oscuro
+    if (tc && tc.efecto === id && e.valor >= tc.cargas && !p.forma && p.transformacion && !p.transformando) {
+      p.transformando = true;
+      reacciones.push(() => {
+        p.transformando = false;
+        if (p.muerto || p.forma) return;
+        quitar(p, get(p, id));
+        transformar(p, tc.turnos);
+      });
+    }
   }
   // ---------------------------------------------------------------- Rivalidad (pasiva "rival"): marca a un enemigo como su Rival
   // Rival = Goku si está en el equipo enemigo; si no, el enemigo con más Daño. Si el Rival muere, bono permanente y nuevo Rival.
@@ -503,6 +514,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (bb && t.lado !== a.lado) d *= 1 + Math.min(t.estados.filter(e => EFECTOS[e.id]?.tipo === 'buff' && e.id !== 'summon').length * bb.pct, bb.max ?? 9);
     for (const l of lideresDe(a)) if (l.lider?.bonoContraConBuff && t.lado !== a.lado && tieneBuff(t)) d *= 1 + l.lider.bonoContraConBuff;   // líder: +X% a enemigos con buffs
     for (const l of lideresDe(a)) if (l.lider?.bonoDanoConEscudo && a.escudo > 0) d *= 1 + l.lider.bonoDanoConEscudo;   // líder: +X% de daño a los aliados con Escudo
+    for (const p of aliadosDe(a)) {          // pasiva "auraContra": TODO su equipo (incluido él) hace +X% a enemigos con esos efectos
+      const ac = p.pasiva?.auraContra;
+      if (ac && t.lado !== a.lado && [].concat(ac.efecto).some(id => get(t, id))) d *= 1 + ac.pct;
+    }
     const bc = a.pasiva?.bonoContra;          // pasiva: +X% de daño a enemigos con un efecto (p. ej. Reptile contra envenenados)
     if (bc && [].concat(bc.efecto).some(id => get(t, id))) d *= 1 + bc.pct;
     if (mov.bonoPorDebuffs) {                // +pct por cada tipo distinto de debuff del objetivo (3 Venenos = 1 tipo)
@@ -880,6 +895,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     emitir('efecto', { a: t.uid, id, texto }, t);
     if (t.lado !== a.lado) liderAlAplicar(a, t, id);
     if (def.tipo === 'debuff' && a !== t) reacciones.push(() => pasivas(t, 'alRecibirDebuff', { atacante: a, efecto: id }));
+    const ca = a.pasiva?.cargasAlAplicar;          // pasiva "cargasAlAplicar": gana cargas al aplicar esos debuffs a enemigos (p. ej. Saga)
+    if (ca && t.lado !== a.lado && ca.efectos.includes(acc.id)) ganarCargas(a, 1, ca.max, ca.efecto);
     if (def.tipo === 'buff') for (const p of enemigosDe(t)) {      // pasiva "cargasPorBuffEnemigo": cada buff que recibe un enemigo le da 1 carga
       const cb = p.pasiva?.cargasPorBuffEnemigo;
       if (cb) ganarCargas(p, 1, cb.max, cb.efecto);
@@ -1198,7 +1215,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (!p.formaBase) p.formaBase = { base: p.base, extra: p.extra, pasiva: p.pasiva, movimientos: p.movimientos, cds: p.cds, transformacion: p.transformacion };
     p.base = f.base; p.extra = f.extra || {}; p.pasiva = f.pasiva || null; p.movimientos = clonar(f.movimientos);
     p.transformacion = f.transformacion || null;
-    p.cds = { basico: 0, especial: 0, over: p.movimientos.find(m => m.categoria === 'over')?.cd || 0 };   // el Over empieza con su cooldown completo
+    if (!f.compartirCooldowns) p.cds = { basico: 0, especial: 0, over: p.movimientos.find(m => m.categoria === 'over')?.cd || 0 };   // el Over empieza con su cooldown completo (salvo formas que comparten cooldowns)
     const permanente = !turnos;
     p.forma = { nombre: f.nombre, imagen: f.imagen, emoji: f.emoji, color: f.color, turnos: turnos || 0, total: turnos || 0, permanente, recien: true };
     if (permanente) p.formaBase = null;              // ya no hay vuelta atrás
