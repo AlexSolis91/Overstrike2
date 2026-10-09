@@ -52,6 +52,8 @@ export const EFECTOS = {
     desc: 'Cargas de Vegeta (máx. 5): las gana cuando su Rival usa un movimiento y con sus críticos. Al llegar a 5 se transforma; Final Flash las consume para hacer más daño. No se puede disipar.' },
   blockBuffs: { nombre: 'Bloquear Buffs', icono: '🚫', color: 0x94a3b8, tipo: 'debuff', tags: ['Bloqueo'],
     desc: 'No puede recibir buffs nuevos mientras dure (los que ya tiene, los permanentes y las cargas no se ven afectados).' },
+  grayskull: { nombre: 'Poder de Grayskull', icono: '⚡', color: 0xfacc15, tipo: 'buff', tags: ['Carga'], noDisipable: true,
+    desc: 'Cargas de He-Man (máx. 5): las gana al proteger a un aliado y con su Básico. Golpe de Grayskull las consume. No se puede disipar.' },
   poderRobado: { nombre: 'Poder Robado', icono: '💀', color: 0x8b5cf6, tipo: 'buff', tags: ['Carga'], noDisipable: true,
     desc: 'Cargas de Skeletor (máx. 10): gana 1 cada vez que un enemigo recibe un buff. Poder de Grayskull las consume. No se puede disipar.' },
   rival:   { nombre: 'Rival', icono: '👑', color: 0xfbbf24, tipo: 'marca', tags: ['Marca'], noDisipable: true,

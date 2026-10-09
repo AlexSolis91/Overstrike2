@@ -181,6 +181,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | `reducirHpMax` | pct, tope | Baja el HP máx. del objetivo para el resto de la partida (acumulable hasta `tope`); su HP actual no puede quedar por encima. P. ej. Fusión con Kurama: 5% por golpe, hasta −30% |
 | `hemorragia` | — | Convierte el Sangrado del objetivo en Hemorragia (garantizado, sin tirada; conserva su %) |
 | `golpeDirecto` | pct, nombre | Un golpe más (mismo cálculo que un golpe normal) a cada destino. Destino `a: { enemigosCon: [efectos] }` = enemigos con alguno de esos efectos, sin el objetivo principal (p. ej. Lanza de Draupnir) |
+| `ganarCargas` | efecto, max, cantidad | Gana cargas de ese tipo (p. ej. Espada del Poder: 1 de Poder de Grayskull) |
 | `robarHP` | pct | Roba % del HP máx. y cura al ladrón |
 | `danoEfecto` | fraccion | Daño por efecto = fracción del daño que activó la acción |
 | `replicarDoT` | efecto, factor | Daño por efecto igual a factor × el DoT del objetivo, sobre el HP máx. de cada destino |
@@ -259,6 +260,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Quema su propia vida** (`drenajePropio` en la pasiva): al final de cada turno propio pierde ese % de su HP máx., sin bajar de 1 HP. P. ej. Modo Barión: 3%.
 - **Movimiento de una sola vez** (`unaVez: true`): después de usarlo queda bloqueado el resto de la partida (el panel muestra «✔ Ya usado»), aunque vuelva a esa forma. P. ej. Modo Barión.
 - **Revivir** (pasiva `revivir { turnos, hp }`): al morir, vuelve a la vida **N turnos después** (cuentan los turnos de cualquier personaje; el turno en que muere no cuenta) con `hp` × su HP máx., sin buffs ni debuffs. **Una vez por partida**. Si su equipo cae entero antes, la partida termina igual. P. ej. Wukong Invencible: 3 turnos, 100% HP.
+- **Protector** (pasiva `protector { pct, cargas: { efecto, max } }`): mientras no tenga un Control que le quite el turno, recibe **en lugar** de su aliado ese % de cada **golpe** enemigo (ya mitigado por el aliado; luego aplica su propia Armadura y reducciones; se ve como daño amarillo). Cada vez gana 1 carga de ese tipo. P. ej. Protector de Eternia de He-Man: 25%, Poder de Grayskull ⚡ (máx. 5).
 - **Castigador de buffs** (pasiva): `cargasPorBuffEnemigo { efecto, max }` = cada buff que **recibe** un enemigo (por la vía normal; no los robados ni transferidos) le da 1 carga de ese tipo (p. ej. Poder Robado 💀 de Skeletor, máx. 10). `bonoPorBuffsObjetivo { pct, max }` = +pct de daño por cada buff activo del objetivo (sin contar invocaciones), hasta `max`.
 - **Efectos permanentes:** una pasiva puede declarar `efectosPermanentes: [ids]`: el personaje empieza con ese efecto **toda la partida** (sin duración, se ve con ∞). No se puede disipar ni robar, y otra aplicación del mismo efecto no lo cambia. P. ej. Lich King: Provocación permanente.
 - **Reducción para el equipo:** una pasiva puede declarar `reduccionAliados { pct, salvoSi }`: todo su equipo (incluido él) recibe −pct de **todo** el daño mientras viva y no tenga el efecto `salvoSi` (p. ej. Loki: −10% salvo con Desgaste).
@@ -428,7 +430,7 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
   - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Scorpion, Kratos, Sasuke Uchiha.
   - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King, Doctor Doom, Skeletor.
   - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki, Kratos, Wukong.
-  - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema. **Goku, Vegeta y Naruto salen solo aquí** (sin sobre temático + «Solo su sobre»).
+  - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema. **Goku, Vegeta, Naruto y He-Man salen solo aquí** (sin sobre temático + «Solo su sobre»).
   - Sin sobre temático por ahora (salen en Unbreakable Force y en los aleatorios): Daenerys, Rhaenys, Rengoku, Sub-Zero. Llegarán sobres de Quemadura, Congelación, etc.
 - **Apertura** (`abrirSobre(id)`): 3 campeones, sin repetir dentro del mismo sobre. 1 o 2 (50/50) del tema y el resto al azar entre **todos** (a veces también caen del tema). Unbreakable: los 3 al azar entre todos.
 - **Starter Pack** (`abrirStarter(id)` en `js/datos/starters.js`): 3 al azar de sus exclusivos + 2 al azar entre los elegibles, sin repetir.

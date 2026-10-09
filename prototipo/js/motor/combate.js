@@ -144,6 +144,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'frostAura': texto = `−${Math.round(BUFFS.auraGelida * 100)}% daño de golpes · ${Math.round(PUNTERIA.auraGelida * 100)}% de Congelar a quien lo golpee · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'mirror': texto = `Devuelve el ${Math.round(BUFFS.espejismo * 100)}% del daño de cada golpe recibido · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'blockBuffs': texto = `No puede recibir buffs nuevos · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'grayskull': texto = `${e.valor} de Poder de Grayskull (máx. 5): Golpe de Grayskull +15% por cada uno`; n = e.valor; break;
         case 'poderRobado': texto = `${e.valor} de Poder Robado (máx. 10): Poder de Grayskull +20% por cada uno`; n = e.valor; break;
         case 'orgullo': texto = `${e.valor} de Orgullo (máx. 5): Final Flash +15% por cada uno`; n = e.valor; break;
         case 'rival': texto = `Rival de ${porUid(e.fuente)?.nombre || 'Vegeta'}: recibe más daño de él`; break;
@@ -533,6 +534,19 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     d *= 1 - Math.min(Math.max(0, st.armor - ignora), TOPES.armor);   // ignorar Armadura: resta puntos
     if (get(t, 'weaken')) d *= 1 + DEBUFFS.debilitar;
     d *= 1 - reduccion(t, 'golpe');
+    // pasiva "protector": un aliado de t recibe en su lugar un % del golpe (con su propia Armadura y reducciones)
+    const prot = t.lado !== a.lado && aliadosDe(t).find(x => x !== t && x.pasiva?.protector && !conControl(x));
+    if (prot && d > 0) {
+      const pr = prot.pasiva.protector, parte = d * pr.pct;
+      d -= parte;
+      let d2 = parte * (1 - Math.min(stats(prot).armor, TOPES.armor)) * (1 - reduccion(prot, 'golpe'));
+      const r2 = repartir(prot, d2, sa.pen);
+      emitir('danoEfecto', { de: a.uid, a: prot.uid, dano: r2.aHp, escudo: r2.aEsc, color: 0xfacc15 }, prot);
+      recibioDano(prot, r2.aHp + r2.aEsc, a);
+      if (r2.aEsc > 0) perdioEscudo(prot);
+      if (pr.cargas && !prot.muerto) ganarCargas(prot, 1, pr.cargas.max, pr.cargas.efecto);
+      if (prot.hp <= 0) morir(prot, a);
+    }
     const hpAntesGolpe = t.hp;
     const { aHp, aEsc } = repartir(t, d, sa.pen);
     if (ctx.acum) ctx.acum.dano += aHp + aEsc;
@@ -1010,6 +1024,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         }
         case 'disipar': disipar(a, t, acc); break;
         case 'robarHP': robarHP(a, t, acc.pct); break;
+        case 'ganarCargas': ganarCargas(t, acc.cantidad || 1, acc.max || 5, acc.efecto); break;   // p. ej. Espada del Poder
         case 'invocar': if (acc.prob == null || rng() < acc.prob) invocar(t, acc.key); break;   // p. ej. Clon de Sombra
         case 'reducirHpMax': {         // baja el HP máx. del objetivo para el resto de la partida (con tope); p. ej. Modo Barión
           const baja = Math.min(acc.pct, (acc.tope ?? 1) - (t.hpMaxReducido || 0));
