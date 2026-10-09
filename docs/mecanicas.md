@@ -421,7 +421,7 @@ Pantalla: al iniciar sesión por primera vez (ver sección 19).
 - Funciones listas: `exclusivosDe(id)` y `elegiblesAleatorios(id)`.
 - Clasificación actual:
   - **Blazing:** Alexstrasza, Rhaenys Targaryen, Rengoku, Daenerys Targaryen, Scorpion.
-  - **Frostborn:** Sub-Zero, Lich King, Jaina Proudmoore. ⚠️ Con solo 3 exclusivos, **todos** los que lo eligen reciben el trío completo (simulación 2026-10-07: 72.9% contra equipos al azar; Blazing 49.4%, Noxious 55.8%). Antes de abrir el juego, Frostborn necesita 5 exclusivos o un ajuste.
+  - **Frostborn:** Sub-Zero, Lich King, Jaina Proudmoore, Camus (4 exclusivos: el pack saca 3 al azar). ⚠️ Simulación 2026-10-09: Frostborn 67.7% contra equipos al azar; Blazing 33.5% y Noxious 39.0% (sus exclusivos son de los campeones más débiles). Revisar en el pase de balance antes de abrir el juego.
   - **Noxious:** The Joker, Reptile, Loki.
   - **Libres:** Goku, Sun Jin Woo, Shaka, Batman, Aldebarán, Thor, Madara Uchiha.
 - Al crear un campeón nuevo se decide si es exclusivo de algún pack.

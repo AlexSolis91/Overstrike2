@@ -27,6 +27,7 @@ insert into public.campeones (id, nombre, starter, sobres, activo) values
   ('sasuke-uchiha', 'Sasuke Uchiha', null, array['bloodline']::text[], true),
   ('skeletor', 'Skeletor', null, array['phantom']::text[], true),
   ('he-man', 'He-Man', null, array[]::text[], true),
-  ('saga', 'Saga', null, array['phantom']::text[], true)
+  ('saga', 'Saga', null, array['phantom']::text[], true),
+  ('camus', 'Camus', 'frostborn', array[]::text[], true)
 on conflict (id) do update set nombre = excluded.nombre, starter = excluded.starter, sobres = excluded.sobres, activo = excluded.activo;
--- 27 campeones
+-- 28 campeones
