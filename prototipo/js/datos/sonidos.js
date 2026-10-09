@@ -36,6 +36,7 @@ export const SONIDOS = {
   escudoGolpe:          { archivo: sfx('golpe'), v: .55, var: .05, gap: 35 },
   curacion:             { archivo: sfx('curacion'), v: .85, gap: 120 },
   escudo:               { archivo: sfx('escudo'), v: .9, gap: 120 },
+  limpiar:              { archivo: sfx('limpiar'), v: .9, gap: 150 },              // luz (spell-basic-light): al limpiar a un personaje
   quemadura:            { archivo: sfx('quemadura'), v: .9, gap: 60 },
   fuego:                { archivo: sfx('fuego'), v: .9, gap: 120 },                // bola de fuego (spell-fireball, 2.7 s)
   disparo:              { archivo: sfx('disparo'), v: .85, var: .04, gap: 120 },   // swoosh (swoosh-of-fireball-3, 2 s)
