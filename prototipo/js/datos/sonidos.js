@@ -7,7 +7,8 @@
 //
 // EVENTOS DISPONIBLES
 //   Interfaz:     clic (cualquier botón) · elegir · quitar (galería) · listo · abrir · cerrar (paneles)
-//   Movimientos:  melee · lanzar · magia (apoyo) · area · over · fuego (golpe que aplica Quemadura: suena al salir el disparo)
+//   Movimientos:  melee · lanzar · magia (apoyo) · area · over · fuego (golpe que aplica Quemadura) · disparo (cualquier otro golpe a distancia)
+//                 (fuego y disparo suenan cuando sale el efecto visual del disparo)
 //   Impactos:     golpe · critico · escudoGolpe (golpe que solo da al Escudo) · efectoDano (daño por efecto) · bloqueo · quiebre (hielo) · esquiva · muerte
 //   Curación:     curacion · escudo (Escudo de HP) · robo (robo de HP)
 //   Daño por turno: quemadura · veneno · sangrado · solar (Quemadura Solar) · explosion (Bomba)
@@ -37,6 +38,7 @@ export const SONIDOS = {
   escudo:               { archivo: sfx('escudo'), v: .9, gap: 120 },
   quemadura:            { archivo: sfx('quemadura'), v: .9, gap: 60 },
   fuego:                { archivo: sfx('fuego'), v: .9, gap: 120 },                // bola de fuego (spell-fireball, 2.7 s)
+  disparo:              { archivo: sfx('disparo'), v: .85, var: .04, gap: 120 },   // swoosh (swoosh-of-fireball-3, 2 s)
   veneno:               { archivo: sfx('veneno'), v: .9, dur: 1.6, gap: 60 },
   congelar:             { archivo: sfx('hielo'), v: .9 },
   pierdeTurnoHielo:     { archivo: sfx('hielo'), v: .9 },

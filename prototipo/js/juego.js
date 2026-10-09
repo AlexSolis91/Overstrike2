@@ -124,9 +124,11 @@ const MOTIVO = { stun: '💫 PIERDE EL TURNO', freeze: '❄️ CONGELADO', silen
 // Sonido de cada evento (todo pasa por el registro universal de sonidos)
 const SONIDO_DOT = { burn: 'quemadura', poison: 'veneno', bleed: 'sangrado', hemo: 'sangrado', bomb: 'explosion', solarBurn: 'solar' };
 const SONIDO_CONTROL = { stun: 'aturdir', freeze: 'congelar', silence: 'silenciar' };
-// Sonido del disparo según lo que aplica un golpe (suena cuando sale el efecto visual del disparo, en lugar del sonido normal)
+// Sonido del disparo (suena cuando sale el efecto visual del disparo, en lugar del sonido normal del movimiento):
+// un golpe que aplica Quemadura suena a bola de fuego (también cuerpo a cuerpo); cualquier otro golpe a distancia, a 'disparo'
 const SONIDO_DISPARO = { burn: 'fuego' };
-const sonidoDisparo = e => e.golpea ? (e.aplica || []).map(id => SONIDO_DISPARO[id]).find(Boolean) || null : null;
+const sonidoDisparo = e => !e.golpea ? null
+  : (e.aplica || []).map(id => SONIDO_DISPARO[id]).find(Boolean) || (e.estilo === 'ranged' ? 'disparo' : null);
 function sonidoDe(e) {
   switch (e.t) {
     case 'ronda': return 'ronda';
