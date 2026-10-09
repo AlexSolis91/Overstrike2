@@ -28,7 +28,7 @@ export default {
   },
   movimientos: [
     {
-      categoria: 'basico', nombre: 'Agonía de Escarcha', objetivo: 'enemigo', estilo: 'melee', color: 0x93c5fd,
+      categoria: 'basico', nombre: 'Agonía de Escarcha', objetivo: 'enemigo', estilo: 'melee', color: 0x93c5fd, elemento: 'hielo',
       pct: .30, escala: 'hp', cd: 0,
       desc: 'Causa 30% (escala por HP) y roba 5% del HP máx. del objetivo. Si tenía Congelación antes del ataque, 80% de probabilidad de aplicar Posesión.',
       efectos: [
@@ -37,13 +37,13 @@ export default {
       ],
     },
     {
-      categoria: 'especial', nombre: 'Profanación de Vida', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x60a5fa,
+      categoria: 'especial', nombre: 'Profanación de Vida', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x60a5fa, elemento: 'hielo',
       pct: .15, escala: 'hp', cd: 2,
       desc: 'Causa 15% (escala por HP) a todos los enemigos y roba 5% del HP máx. de cada uno que tenía Congelación, Mega Congelación o Posesión antes del ataque.',
       efectos: [{ condicion: { objetivoTeniaAntes: ['freeze', 'possess'] }, accion: { tipo: 'robarHP', pct: .05 } }],
     },
     {
-      categoria: 'over', nombre: 'Apocalipsis', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xbfdbfe,
+      categoria: 'over', nombre: 'Apocalipsis', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xbfdbfe, elemento: 'hielo',
       pct: .10, escala: 'hp', cd: 5,
       desc: 'Causa 10% (escala por HP) a todos los enemigos. Cada uno recibe además 10% de su HP máx. por Congelación (o Mega Congelación) y 10% por Posesión que tuviera antes del ataque (máx. 20%). Ese daño ignora Armadura.',
       efectos: [{ accion: { tipo: 'danoPorDebuffs', efectos: ['freeze', 'possess'], pct: .10, color: 0xbfdbfe } }],
