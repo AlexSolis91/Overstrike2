@@ -175,7 +175,7 @@ async function manejar(e) {
       break;
     case 'dot':
       aplicar(e); FX.dot(c(e.a), e.dano, e.tipo);
-      log(`${nombre(e.a)} pierde ${Math.round(e.dano)} (${{ burn: 'Quemadura', poison: 'Veneno', bleed: 'Sangrado', hemo: 'Hemorragia', bomb: 'Bomba', solarBurn: 'Quemadura Solar' }[e.tipo]})`, 'dmg');
+      log(`${nombre(e.a)} pierde ${Math.round(e.dano)} (${{ burn: 'Quemadura', poison: 'Veneno', bleed: 'Sangrado', hemo: 'Hemorragia', bomb: 'Bomba', solarBurn: 'Quemadura Solar', aguja: 'Agujas Escarlata' }[e.tipo]})`, 'dmg');
       await wait(320);
       break;
     case 'pierdeTurno':

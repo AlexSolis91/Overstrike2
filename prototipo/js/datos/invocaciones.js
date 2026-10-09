@@ -102,6 +102,48 @@ export const INVOCACIONES = {
     desc: 'Reduce 1 turno el cooldown del Especial y del Over de Daenerys.',
     acciones: [{ tipo: 'reducirCooldown', cantidad: 1, categorias: ['especial', 'over'], a: 'propio' }],
   },
+  // ---------------------------------------------------------------- Camino Animal de Pain
+  ciempiesGigante: {
+    nombre: 'Ciempiés Gigante', rareza: 'Común', emoji: '🐛', color: 0xf97316, imagen: 'assets/invocaciones/ciempies-gigante.webp', dur: 2,
+    enfoque: [.55, .55],
+    desc: 'Se enrosca sobre un enemigo al azar: golpea 40% con 35% de probabilidad de Aturdirlo.',
+    acciones: [{ tipo: 'golpe', pct: .40, elegir: 'azar', efectos: [{ accion: { tipo: 'efecto', id: 'stun', prob: .35 } }] }],
+  },
+  camaleonGigante: {
+    nombre: 'Camaleón Gigante', rareza: 'Común', emoji: '🦎', color: 0x4d7c0f, imagen: 'assets/invocaciones/camaleon-gigante.webp', dur: 2,
+    enfoque: [.40, .45],
+    desc: 'Al aparecer, oculta a Pain: gana Sigilo (2 rondas). Ataca invisible al enemigo con menos HP: 45%.',
+    alAparecer: [{ tipo: 'efecto', id: 'stealth', dur: 2, a: 'propio' }],
+    acciones: [{ tipo: 'golpe', pct: .45, elegir: 'menorHp' }],
+  },
+  bueyGigante: {
+    nombre: 'Buey Gigante', rareza: 'Raro', emoji: '🐂', color: 0x78350f, imagen: 'assets/invocaciones/buey-gigante.webp', dur: 2,
+    enfoque: [.45, .35],
+    desc: 'Embiste al enemigo más fuerte: 70%.',
+    acciones: [{ tipo: 'golpe', pct: .70, elegir: 'masFuerte' }],
+  },
+  rinoceronteGigante: {
+    nombre: 'Rinoceronte Gigante', rareza: 'Raro', emoji: '🦏', color: 0x52525b, imagen: 'assets/invocaciones/rinoceronte-gigante.webp', dur: 2,
+    enfoque: [.50, .35],
+    desc: 'Arrasa el campo: golpea 30% a todos los enemigos. Al aparecer, da a Pain un Escudo del 10% de su HP máx.',
+    alAparecer: [{ tipo: 'escudo', pct: .10, escala: 'hpMax', a: 'propio' }],
+    acciones: [{ tipo: 'golpe', pct: .30, elegir: 'todos' }],
+  },
+  pajaroGigante: {
+    nombre: 'Pájaro Taladro', rareza: 'Épico', emoji: '🦅', color: 0xeab308, imagen: 'assets/invocaciones/pajaro-gigante.webp', dur: 2,
+    enfoque: [.35, .55],
+    desc: 'Cae en picada con su pico taladro sobre un enemigo al azar: 55% con 40% de probabilidad de Debilitarlo (2 rondas).',
+    acciones: [{ tipo: 'golpe', pct: .55, elegir: 'azar', efectos: [{ accion: { tipo: 'efecto', id: 'weaken', dur: 2, prob: .40 } }] }],
+  },
+  perroCerbero: {
+    nombre: 'Perro Cerbero', rareza: 'Épico', emoji: '🐕', color: 0xc2410c, imagen: 'assets/invocaciones/perro-cerbero.webp', dur: 2, max: 3,
+    enfoque: [.65, .35],
+    desc: 'Muerde a un enemigo al azar: 35%. Después tiene 50% de probabilidad de dividirse: aparece otro Perro Cerbero (máx. 3).',
+    acciones: [
+      { tipo: 'golpe', pct: .35, elegir: 'azar' },
+      { tipo: 'invocar', key: 'perroCerbero', prob: .50, a: 'propio' },
+    ],
+  },
 };
 
 // Tablas de invocación aleatoria (peso = probabilidad relativa)
@@ -110,6 +152,14 @@ export const TABLAS_INVOCACION = {
     { key: 'rhaegal', peso: 40 },
     { key: 'viserion', peso: 35 },
     { key: 'drogon', peso: 25 },
+  ],
+  animalesPain: [
+    { key: 'ciempiesGigante', peso: 22 },
+    { key: 'camaleonGigante', peso: 22 },
+    { key: 'bueyGigante', peso: 18 },
+    { key: 'rinoceronteGigante', peso: 16 },
+    { key: 'pajaroGigante', peso: 12 },
+    { key: 'perroCerbero', peso: 10 },
   ],
   sombras: [
     { key: 'iron', peso: 26 },

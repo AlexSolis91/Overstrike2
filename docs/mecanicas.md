@@ -155,6 +155,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | ☠️ Peste Negra | Peste | Igual que Peste y además, al final de cada turno del portador (también si lo perdió), pierde **5% del HP máx. original** (piso: 25%). No es daño: el HP actual solo baja si queda por encima del nuevo máximo. La pérdida es **permanente** aunque se limpie (solo la recuperan futuras mecánicas de aumento de HP máx.) |
 | 🔆 Quemadura Solar | Quemadura Solar | Toda curación que reciba (movimientos, Regeneración, robo de vida, Robar HP, pasivas) se vuelve **daño por el monto completo**, aunque tenga el HP lleno. Ignora Armadura y Escudo, no se bloquea ni es crítico, le afectan las reducciones de DoT, rompe Sigilo y nadie recibe crédito si mata. Gana a la Peste. **No** cuenta como Quemadura. Las pasivas "solo si cura" no se activan sobre él y la IA no lo cura con curaciones de un objetivo. Se puede limpiar |
 | 💔 Debilitar | Estadística | Recibe **+50% de daño** de golpes y daño por efecto, calculado **después** de la Armadura (no afecta DoT ni Robar HP) |
+| 🎯 Expuesto | Estadística | Recibe **+25% de daño** de golpes y daño por efecto, después de la Armadura (como Debilitar, pero menor; se suman si tiene los dos). P. ej. Shinra Tensei: Pain queda Expuesto 1 ronda (aplicado con `irresistible` sobre sí mismo) |
 | 🪞 Espejismo | Reflejo | Cada **golpe** que recibe de un enemigo le devuelve al atacante el **30%** del daño recibido (HP + Escudo), como **daño por efecto**: no es golpe (no rebota entre dos Espejismos ni activa Sangrado/contraataques), no es crítico ni se bloquea. El portador recibe el golpe completo. No refleja DoT ni daño por efecto. Se puede Disipar |
 | 🧊 Aura Gélida | Hielo | El portador recibe **−20%** de daño de los **golpes** enemigos y, cuando lo golpean, tiene **50%** de probabilidad de aplicarle Congelación al atacante (con Tirada de Puntería del portador). Siempre dura 2 rondas. **Se puede disipar** |
 | 📍 Aguja Escarlata | Aguja | (debuff, contador hasta 14) Cada aguja le quita **0.5%** del HP máx. al inicio de su turno y le hace recibir **+3%** de daño de Veneno, Sangrado y Hemorragia. Se clavan sin tirada (acción `clavarAgujas { n }`). Se puede limpiar. Un movimiento con `consumeAgujas { pct }` hace +pct por aguja del objetivo y las consume (Antares de Milo); la IA lo apunta al enemigo con más agujas |
@@ -270,6 +271,12 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Aura contra efectos** (pasiva `auraContra { efecto | [efectos], pct }`): **todo su equipo** (incluido él) hace +pct de daño a enemigos con esos efectos. P. ej. Saga: +40% contra confundidos o poseídos.
 - **Cargas al aplicar** (pasiva `cargasAlAplicar { efectos, efecto, max }`): gana 1 carga cada vez que **le entra** a un enemigo alguno de esos debuffs. Con `transformarConCargas { efecto, cargas, turnos }` se transforma (temporal) al juntarlas, las consume y puede **repetirse** en la partida. P. ej. Dualidad de Géminis: 3 de Oscuridad 🌑 → Saga Oscuro 4 turnos.
 - **Formas que comparten cooldowns** (`compartirCooldowns: true` en la forma): al transformarse no se reinician los cooldowns (siguen corriendo los mismos). P. ej. la Explosión de Galaxias de Saga.
+- **Ciclo de fases** (pasiva `ciclo { efecto, fases: [...] }`, p. ej. los Seis Caminos de Pain): al inicio de cada turno en que **actúa** (no si pierde el turno) pasa a la siguiente fase, en orden fijo y empezando por la primera. La fase activa se ve en la carta como una marca (`camino`, tipo marca: no es buff, no se disipa) con el icono y nombre de la fase. Cada fase puede tener:
+  - `alIniciar`: acción al activarse (p. ej. Deva: Espejismo; Animal: `invocarAzar`; Naraka: curar + limpiar).
+  - `bonoDano`: +X de daño a sus golpes durante ese turno (no a sus invocaciones). P. ej. Asura +30%.
+  - `alFinal`: acción al terminar su movimiento sobre el objetivo principal; en movimientos de área, sobre un enemigo golpeado al azar que siga vivo (p. ej. Humano: robar 1 buff; Preta: robar 5% HP).
+  - Movimiento `recorreCiclo: true` (objetivo `azar`): el golpe *i* usa la fase *i* (su `bonoDano`, `alIniciar` y `alFinal` sobre ese objetivo) sin cambiar la fase activa. P. ej. Seis Caminos del Dolor.
+- **Ignorar Provocación** (movimiento `ignoraProvocacion: true`): puede elegir a cualquier enemigo, aunque haya Provocación o Sigilo. P. ej. Bansho Ten'in de Pain.
 - **Cooldown inicial propio** (`cdInicial` en un movimiento): con cuánto empieza la partida en vez del general (Over = 2). P. ej. Explosión de Galaxias: empieza en 6.
 - **Protector** (pasiva `protector { pct, cargas: { efecto, max } }`): mientras no tenga un Control que le quite el turno, recibe **en lugar** de su aliado ese % de cada **golpe** enemigo (ya mitigado por el aliado; luego aplica su propia Armadura y reducciones; se ve como daño amarillo). Cada vez gana 1 carga de ese tipo. P. ej. Protector de Eternia de He-Man: 25%, Poder de Grayskull ⚡ (máx. 5).
 - **Castigador de buffs** (pasiva): `cargasPorBuffEnemigo { efecto, max }` = cada buff que **recibe** un enemigo (por la vía normal; no los robados ni transferidos) le da 1 carga de ese tipo (p. ej. Poder Robado 💀 de Skeletor, máx. 10). `bonoPorBuffsObjetivo { pct, max }` = +pct de daño por cada buff activo del objetivo (sin contar invocaciones), hasta `max`.
@@ -329,6 +336,16 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | Bellion | Épico | 5 | 2 | 35% al enemigo más fuerte · al aparecer: Aturdimiento a hasta 3 enemigos distintos |
 | Kamish | Legendario | 1 | 1 | 50% a todos · al aparecer: 150% a todos + Miedo |
 
+### Criaturas del Camino Animal de Pain (tabla `animalesPain`)
+| Criatura | Rareza | Peso | Dura | Rol |
+|---|---|---|---|---|
+| Ciempiés Gigante | Común | 22 | 2 | 40% a un enemigo al azar + 35% de Aturdir |
+| Camaleón Gigante | Común | 22 | 2 | 45% al enemigo con menos HP · al aparecer: Pain gana Sigilo (2 rondas) |
+| Buey Gigante | Raro | 18 | 2 | 70% al enemigo más fuerte |
+| Rinoceronte Gigante | Raro | 16 | 2 | 30% a todos · al aparecer: Escudo 10% del HP máx. de Pain |
+| Pájaro Taladro | Épico | 12 | 2 | 55% a un enemigo al azar + 40% de Debilitar (2 rondas) |
+| Perro Cerbero | Épico | 10 | 2 | 35% a un enemigo al azar · 50% de dividirse cada turno (otro Perro, máx. 3) |
+
 ## 10. Líder
 
 - La casilla de líder es la **primera de izquierda a derecha** y hay **un líder por equipo**.
@@ -344,6 +361,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - `alIniciarRonda { acción }`: al empezar cada ronda ejecuta una acción universal (p. ej. Shaka: Escudo 12% de su HP máx. al aliado con menor % de HP).
   - `bonoDanoConEscudo: X`: los aliados que tengan Escudo hacen +X de daño (p. ej. Dios Emperador Doom: +15%, junto con +10% de HP máx.).
   - `bonoContraConBuff: X`: los aliados hacen +X de daño a enemigos con algún buff (p. ej. Señor de la Montaña de la Serpiente de Skeletor: +10%).
+  - `alRecibirCritico { acción }`: cada vez que un aliado recibe un golpe crítico de un enemigo y sobrevive, el líder ejecuta la acción sobre ese aliado (p. ej. Conocer el Dolor de Pain: `bonoPermanente dmgPct .05, tope .25`).
   - `bonoStat` con `hpPct` (u otra estadística con `Pct`): % sobre la estadística base (p. ej. Dios Emperador Doom: +15% HP máx. a todo el equipo, incluido el líder). Si el líder muere, el bono se pierde y nadie queda con más HP que su nuevo máximo.
   - `alAplicar { efecto, accion }`: cada vez que su equipo **acierta** ese debuff en un enemigo (incluye pasar a Mega), **quien lo aplicó** ejecuta la acción sobre ese enemigo. P. ej. Carcelero de los Malditos de Lich King: robar 5% del HP máx. al congelado.
   - `alAplicar { efecto, stat, valor }`: cada vez que su equipo **acierta** ese debuff en un enemigo, un aliado al azar (puede ser el líder) gana un bono **permanente e invisible** a esa estadística. No es un buff y no se puede disipar.

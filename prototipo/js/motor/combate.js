@@ -11,7 +11,7 @@ import { INVOCACIONES, TABLAS_INVOCACION } from '../datos/invocaciones.js';
 
 const CATEGORIAS = ['basico', 'especial', 'over'];
 const NOMBRE_CAT = { basico: 'Básico', especial: 'Especial', over: 'Over' };
-const NOMBRE_STAT = { hpPct: 'HP máx.', critDmg: 'Daño Crítico', critRate: 'Prob. Crítico', armor: 'Armadura', res: 'Resistencia', acc: 'Puntería', pen: 'Penetración de escudo' };
+const NOMBRE_STAT = { hpPct: 'HP máx.', dmgPct: 'Daño', critDmg: 'Daño Crítico', critRate: 'Prob. Crítico', armor: 'Armadura', res: 'Resistencia', acc: 'Puntería', pen: 'Penetración de escudo' };
 const clonar = o => JSON.parse(JSON.stringify(o));
 
 export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() }) {
@@ -178,10 +178,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'bloodlust': texto = `+${Math.round(BUFFS.letalidad * 100)}% Daño Crítico · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'keen': texto = `+${Math.round(BUFFS.agudeza * 100)}% Puntería · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'weaken': texto = `Recibe +${Math.round(DEBUFFS.debilitar * 100)}% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'expuesto': texto = `Recibe +${Math.round(DEBUFFS.expuesto * 100)}% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'camino': { const f = p.pasiva?.ciclo?.fases?.[e.valor]; texto = f ? `${f.nombre}: ${f.desc}` : ''; break; }
         case 'regen': texto = `Cura ${Math.round(BUFFS.regeneracion * 100)}% del HP máx. al inicio de su turno · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'fireAura': texto = `Quema (5%, 1 turno) al enemigo que lo golpee · ${e.dur} ronda(s)`; n = e.dur; break;
       }
-      out.push(grupo(e.id, { nombre, texto, n }));
+      const fase = e.id === 'camino' && p.pasiva?.ciclo?.fases?.[e.valor];      // ciclo: se ve el icono y el nombre de la fase activa
+      out.push(grupo(e.id, { nombre, texto, n, ...(fase ? { nombre: fase.nombre, icono: fase.icono } : {}) }));
     }
     const ven = todos(p, 'poison');
     if (ven.length) out.push(grupo('poison', { nombre: `Veneno ×${ven.length}`, n: ven.length,
@@ -306,6 +309,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       if (d > 0) { p.hp -= d; emitir('danoEfecto', { de: p.uid, a: p.uid, dano: d, escudo: 0, color: 0xf97316 }, p); }
     }
     for (const x of P) if (x.muerto && x.reviveEn > 0 && --x.reviveEn === 0) revivir(x);
+    p.faseActiva = null;
     if (p.inmune && !p.recienLiberado) p.inmune = false;
     p.recienLiberado = false;
     for (const e of todos(p, 'summon')) e.fresca = false;
@@ -327,6 +331,22 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     p.permanente.hpPct = (p.permanente.hpPct || 0) - quita;
     p.hp = Math.min(p.hp, maxHp(p));
     emitir('bonoVisible', { a: p.uid, texto: `☠️ −${Math.round(quita * 100)}% HP máx.` }, p);
+  }
+
+  // pasiva "ciclo": al inicio de cada turno en que actúa pasa a la siguiente fase (empieza en la primera) y ejecuta su "alIniciar".
+  // La fase activa da "bonoDano" a sus golpes y "alFinal" al terminar su movimiento (objetivo principal; en área, uno golpeado al azar).
+  function avanzarCiclo(p) {
+    const ci = p.pasiva?.ciclo;
+    if (!ci || p.muerto) return;
+    p.cicloIdx = p.cicloIdx == null ? 0 : (p.cicloIdx + 1) % ci.fases.length;
+    const f = ci.fases[p.cicloIdx];
+    p.faseActiva = f;
+    let e = get(p, ci.efecto);
+    if (!e) { e = { id: ci.efecto, permanente: true }; p.estados.push(e); }
+    e.valor = p.cicloIdx;
+    emitir('bonoVisible', { a: p.uid, texto: `${f.icono} ${f.nombre}` }, p);
+    if (f.alIniciar) ejecutarAccion(p, f.alIniciar, { objetivo: p });
+    procesarReacciones();
   }
 
   function comprobarFin() {
@@ -366,6 +386,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         n.inmune = true; n.recienLiberado = true;
         terminarTurno(n); continue;
       }
+      avanzarCiclo(n);
+      if (comprobarFin()) return;
       pasivas(n, 'alIniciarTurno', { objetivo: n });
       if (comprobarFin()) return;
       S.esperando = { id: n.uid, opciones: opciones(n) };
@@ -389,7 +411,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   function objetivosValidos(p, m) {
     const inc = incitadoPor(p);
     if (inc && m.categoria === 'basico' && m.objetivo === 'enemigo') return [inc];
-    if (m.objetivo === 'enemigo') return conSigilo(conProvocacion(enemigosDe(p)));
+    if (m.objetivo === 'enemigo') return m.ignoraProvocacion ? enemigosDe(p) : conSigilo(conProvocacion(enemigosDe(p)));   // ignoraProvocacion: también ignora Sigilo
     if (m.objetivo === 'aliado') return aliadosDe(p);
     return [];
   }
@@ -527,6 +549,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     }
     const bc = a.pasiva?.bonoContra;          // pasiva: +X% de daño a enemigos con un efecto (p. ej. Reptile contra envenenados)
     if (bc && [].concat(bc.efecto).some(id => get(t, id))) d *= 1 + bc.pct;
+    const fz = ctx.fase !== undefined ? ctx.fase : (S.actual === a && mov.categoria !== 'invocacion' ? a.faseActiva : null);   // ciclo: bono de la fase (p. ej. Camino Asura)
+    if (fz?.bonoDano && t.lado !== a.lado) d *= 1 + fz.bonoDano;
     if (mov.bonoPorDebuffs) {                // +pct por cada tipo distinto de debuff del objetivo (3 Venenos = 1 tipo)
       const tipos = new Set(t.estados.filter(e => EFECTOS[e.id]?.tipo === 'debuff').map(e => e.id));
       d *= 1 + tipos.size * mov.bonoPorDebuffs.pct;
@@ -573,6 +597,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (mov.ignoraArmaduraSi && get(t, mov.ignoraArmaduraSi.efecto)) ignora += mov.ignoraArmaduraSi.puntos;   // solo si el objetivo tiene X
     d *= 1 - Math.min(Math.max(0, st.armor - ignora), TOPES.armor);   // ignorar Armadura: resta puntos
     if (get(t, 'weaken')) d *= 1 + DEBUFFS.debilitar;
+    if (get(t, 'expuesto')) d *= 1 + DEBUFFS.expuesto;
     d *= 1 - reduccion(t, 'golpe');
     // pasiva "protector": un aliado de t recibe en su lugar un % del golpe (con su propia Armadura y reducciones)
     const prot = t.lado !== a.lado && aliadosDe(t).find(x => x !== t && x.pasiva?.protector && !conControl(x));
@@ -596,6 +621,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (robo && !a.muerto && (get(a, 'solarBurn') || (a.hp < maxHp(a) && puedeCurarse(a)))) curar(a, a, (aHp + aEsc) * robo);
     emitir('golpe', { de: a.uid, a: t.uid, dano: aHp, escudo: aEsc, critico, quiebre, color: mov.color, fuente: ctx.fuente, multi: (mov.golpes || 1) > 1 }, t);
     recibioDano(t, aHp + aEsc, a);
+    if (critico && t.lado !== a.lado && t.hp > 0) for (const l of lideresDe(t)) if (l.lider?.alRecibirCritico) ejecutarAccion(l, l.lider.alRecibirCritico, { objetivo: t });   // líder: p. ej. Conocer el Dolor
     // pasiva "cargasAlRecibirGolpe": cada golpe de un enemigo le da cargas (el doble si su Provocación lo indica); con Control no
     const cg = t.pasiva?.cargasAlRecibirGolpe;
     if (cg && !t.muerto && t.lado !== a.lado && !conControl(t)) ganarCargas(t, get(t, 'taunt')?.cargasX || 1, cg.max);
@@ -647,6 +673,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (get(a, 'fear')) d *= CONTROL.miedoDano;
     if (!sinArmadura) d *= 1 - Math.min(stats(t).armor, TOPES.armor);
     if (get(t, 'weaken')) d *= 1 + DEBUFFS.debilitar;
+    if (get(t, 'expuesto')) d *= 1 + DEBUFFS.expuesto;
     d *= 1 - reduccion(t, 'efecto');
     const { aHp, aEsc } = repartir(t, d, stats(a).pen);
     emitir('danoEfecto', { de: a.uid, a: t.uid, dano: aHp, escudo: aEsc, color }, t);
@@ -882,7 +909,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         break;
       }
       case 'confuse': case 'fear': case 'dmgUp': case 'taunt': case 'fireAura': case 'frostAura': case 'blockBuffs': case 'protect': case 'regen':
-      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': case 'incite': case 'mirror': {
+      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'expuesto': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': case 'incite': case 'mirror': {
         if (acc.id === 'stealth' && get(t, 'taunt')) { emitir('sinEfecto', { a: t.uid, texto: 'Con Provocación no puede tener Sigilo' }); return; }
         if (acc.id === 'taunt' && get(t, 'stealth')) { quitar(t, get(t, 'stealth')); emitir('sigiloRoto', { a: t.uid }, t); }
         if (acc.id === 'dmgUp') acc = { ...acc, valor: BUFFS.furia };      // Furia siempre +50%
@@ -1449,10 +1476,15 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const c = { ...ctx, acum: { dano: 0, tenian: new Set() } };
       if (mov.invocar) invocar(a, mov.invocar);
       else if (mov.desatar) desatar(a, mov);
-      else if (azar) for (let t of azar) {
+      else if (azar) azar.forEach((t, i) => {
         if (t.muerto) t = rng.elegir(enemigosDe(a));        // si el elegido ya cayó, el golpe va a otro enemigo vivo
-        if (t) resolverSobreObjetivo(a, t, { ...mov, golpes: 1 }, c);
-      }
+        if (!t || a.muerto) return;
+        // recorreCiclo: el golpe i usa la fase i del ciclo (su bono de daño y sus efectos), sin cambiar la fase activa
+        const f = mov.recorreCiclo ? a.pasiva?.ciclo?.fases?.[i % a.pasiva.ciclo.fases.length] || null : undefined;
+        resolverSobreObjetivo(a, t, { ...mov, golpes: 1 }, f !== undefined ? { ...c, fase: f } : c);
+        if (f?.alIniciar && !a.muerto) ejecutarAccion(a, f.alIniciar, { objetivo: a });
+        if (f?.alFinal && !a.muerto && !t.muerto) ejecutarAccion(a, f.alFinal, { objetivo: t, ejecutor: a });
+      });
       else {
         for (const ef of mov.efectos || []) if (ef.cuando === 'antes')     // "antes": se aplican a cada objetivo ANTES de golpear
           for (const t of objetivos) if (!t.muerto) ejecutarAccion(a, ef.accion, { objetivo: t, ejecutor: a });
@@ -1467,6 +1499,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         debuffsPrevios: previos.filter(e => EFECTOS[e.id]?.tipo === 'debuff'),
       };
       for (const ef of mov.efectos || []) if (ef.cuando === 'final' && cumple(ef.condicion, final)) ejecutarAccion(a, ef.accion, final);
+      const fa = a.faseActiva;                         // ciclo: efecto final de la fase activa (solo en su turno, con su propio movimiento)
+      if (fa?.alFinal && S.actual === a && !ctx.forzado && !ctx.reaccion && !mov.recorreCiclo && !a.muerto) {
+        const dest = mov.objetivo === 'enemigo' && principal && !principal.muerto && principal.lado !== a.lado ? principal : rng.elegir(sobrevivientes);
+        if (dest) ejecutarAccion(a, fa.alFinal, { objetivo: dest, ejecutor: a });
+      }
       if (mov.bonoPorSobreviviente && sobrevivientes.length) {
         a.bonos[mov.categoria] = (a.bonos[mov.categoria] || 0) + mov.bonoPorSobreviviente * sobrevivientes.length;
         emitir('bono', { id: a.uid, texto: `${mov.nombre} +${Math.round(a.bonos[mov.categoria] * 100)}%` }, a);
