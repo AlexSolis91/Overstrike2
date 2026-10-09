@@ -63,10 +63,10 @@ section h3 {
 }
 section h3::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(243, 213, 138, .35), transparent); }
 
-.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.stats { display: grid; grid-template-columns: 1fr; gap: 3px; }   /* una columna, como en Raid: base + diferencia completas */
 .stat { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 6px; background: var(--panel-2); font-size: 12px; }
 .stat .i { width: 16px; text-align: center; font-size: 12px; }
-.stat .l { color: var(--muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat .l { color: var(--muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stat .v { font-weight: 800; font-variant-numeric: tabular-nums; }
 .stat .v.up { color: var(--buff); }
 .stat .v.cap { color: #fbbf24; }
@@ -363,3 +363,9 @@ body.movil-v #girar:not(.cerrado) {
 
 .act.mudo { border-color: rgba(167, 139, 250, .6); }
 .act.mudo .act-cd { color: #c4b5fd; }
+
+/* estadísticas al estilo Raid: base en blanco + diferencia en verde (sube) o rojo (baja) */
+.stat .v, .stat .d { flex: none; white-space: nowrap; }
+.stat .d { font-weight: 800; font-size: 11px; font-variant-numeric: tabular-nums; min-width: 52px; }
+.stat .d.mas { color: #4ade80; }
+.stat .d.menos { color: #f87171; }

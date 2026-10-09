@@ -57,6 +57,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     return n >= min;
   }
 
+  // Estadísticas base del personaje (de su forma actual): sin reliquias, buffs, debuffs, líder ni bonos permanentes
+  function statsBase(p) {
+    const sec = { ...BASE_COMUN };
+    for (const [k, v] of Object.entries(p.extra || {})) sec[k] = (sec[k] || 0) + v;
+    return { hp: p.base.hp, dmg: p.base.dmg, spd: p.base.spd, ...sec };
+  }
+
   function stats(p) {
     const b = p.base;
     const flat = { hp: 0, dmg: 0, spd: 0 }, pct = { hp: 0, dmg: 0, spd: 0 };
@@ -176,7 +183,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   function vista(p) {
     return {
       hp: Math.max(0, p.hp), maxHp: maxHp(p), escudo: p.escudo, muerto: p.muerto, esLider: p.esLider,
-      stats: stats(p), estados: vistaEstados(p), cds: { ...p.cds }, silenciado: get(p, 'silence')?.categoria || null, bonos: { ...p.bonos }, inmune: p.inmune,
+      stats: stats(p), base: statsBase(p), estados: vistaEstados(p), cds: { ...p.cds }, silenciado: get(p, 'silence')?.categoria || null, bonos: { ...p.bonos }, inmune: p.inmune,
       invocaciones: todos(p, 'summon').map(e => ({ key: e.key, dur: e.dur, fresca: !!e.fresca, max: INVOCACIONES[e.key].dur })),
       forma: p.forma ? { nombre: p.forma.nombre, imagen: p.forma.imagen, emoji: p.forma.emoji, color: p.forma.color, turnos: p.forma.turnos, total: p.forma.total, permanente: !!p.forma.permanente } : null,
       transformacion: p.transformacion ? { nombre: p.transformacion.nombre, pasiva: p.transformacion.pasiva?.nombre, movimientos: p.transformacion.movimientos.map(m => m.nombre) } : null,

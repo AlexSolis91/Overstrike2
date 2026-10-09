@@ -43,11 +43,16 @@ export function renderPanel(p, v, ui) {
   const s = v.stats, max = v.maxHp;
   const r = v.hp / max, total = Math.max(max, v.hp + v.escudo);
 
+  // Como en Raid: en blanco la estadística base; al lado, en verde lo que suman reliquias, buffs, líder, etc., y en rojo lo que restan
   const statRows = ['hp', 'spd', 'dmg', 'critRate', 'critDmg', 'armor', 'acc', 'res', 'block', 'dot', 'pen'].map(k => {
+    const total = k === 'hp' ? max : s[k], base = v.base?.[k] ?? total;
     const capped = (k === 'block' && s.block > .5) || (k === 'armor' && s.armor > .75);
-    const up = k === 'dmg' && v.estados.some(e => e.id === 'dmgUp');
-    return `<div class="stat"${capped ? ` title="Tope: ${k === 'block' ? '50%' : '75%'}"` : ''}><span class="i">${STAT_META[k].icon}</span><span class="l">${STAT_META[k].label}</span>
-      <span class="v ${up ? 'up' : ''} ${capped ? 'cap' : ''}">${fmt(k, k === 'hp' ? max : s[k])}</span></div>`;
+    const plano = k === 'hp' || k === 'dmg' || k === 'spd';
+    const dif = plano ? Math.round(total) - Math.round(base) : Math.round(total * 1000) / 10 - Math.round(base * 1000) / 10;
+    const delta = Math.abs(dif) < (plano ? 1 : .05) ? '' : `<span class="d ${dif > 0 ? 'mas' : 'menos'}">${dif > 0 ? '+' : '−'}${fmt(k, plano ? Math.abs(dif) : Math.abs(dif) / 100)}</span>`;
+    const titulo = `Total: ${fmt(k, total)}${capped ? ` · Tope: ${k === 'block' ? '50%' : '75%'}` : ''}`;
+    return `<div class="stat" title="${titulo}"><span class="i">${STAT_META[k].icon}</span><span class="l">${STAT_META[k].label}</span>
+      <span class="v ${capped ? 'cap' : ''}">${fmt(k, base)}</span>${delta}</div>`;
   }).join('');
 
   const efectos = [
