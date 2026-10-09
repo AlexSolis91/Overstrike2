@@ -331,6 +331,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - `acumulaPorDoT { tipo, stat, valor }`: cada vez que un **enemigo** recibe daño de ese DoT, los aliados ganan +valor en esa estadística, **sin tope**. Se pierde si el líder muere (p. ej. Scorpion: +2% Daño Crítico por cada daño de Quemadura).
   - `bonoCriticoContra { efecto, critRate, critDmg }`: los aliados ganan esos puntos de Prob. y Daño Crítico al golpear a un enemigo con ese efecto (p. ej. Sub-Zero: +15%/+15% contra congelados).
   - `alIniciarRonda { acción }`: al empezar cada ronda ejecuta una acción universal (p. ej. Shaka: Escudo 12% de su HP máx. al aliado con menor % de HP).
+  - `bonoDanoConEscudo: X`: los aliados que tengan Escudo hacen +X de daño (p. ej. Dios Emperador Doom: +15%, junto con +10% de HP máx.).
   - `bonoContraConBuff: X`: los aliados hacen +X de daño a enemigos con algún buff (p. ej. Señor de la Montaña de la Serpiente de Skeletor: +10%).
   - `bonoStat` con `hpPct` (u otra estadística con `Pct`): % sobre la estadística base (p. ej. Dios Emperador Doom: +15% HP máx. a todo el equipo, incluido el líder). Si el líder muere, el bono se pierde y nadie queda con más HP que su nuevo máximo.
   - `alAplicar { efecto, accion }`: cada vez que su equipo **acierta** ese debuff en un enemigo (incluye pasar a Mega), **quien lo aplicó** ejecuta la acción sobre ese enemigo. P. ej. Carcelero de los Malditos de Lich King: robar 5% del HP máx. al congelado.

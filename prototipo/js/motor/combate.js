@@ -502,6 +502,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const bb = a.pasiva?.bonoPorBuffsObjetivo;   // pasiva: +X% de daño por cada buff activo del objetivo (sin contar invocaciones), con tope
     if (bb && t.lado !== a.lado) d *= 1 + Math.min(t.estados.filter(e => EFECTOS[e.id]?.tipo === 'buff' && e.id !== 'summon').length * bb.pct, bb.max ?? 9);
     for (const l of lideresDe(a)) if (l.lider?.bonoContraConBuff && t.lado !== a.lado && tieneBuff(t)) d *= 1 + l.lider.bonoContraConBuff;   // líder: +X% a enemigos con buffs
+    for (const l of lideresDe(a)) if (l.lider?.bonoDanoConEscudo && a.escudo > 0) d *= 1 + l.lider.bonoDanoConEscudo;   // líder: +X% de daño a los aliados con Escudo
     const bc = a.pasiva?.bonoContra;          // pasiva: +X% de daño a enemigos con un efecto (p. ej. Reptile contra envenenados)
     if (bc && [].concat(bc.efecto).some(id => get(t, id))) d *= 1 + bc.pct;
     if (mov.bonoPorDebuffs) {                // +pct por cada tipo distinto de debuff del objetivo (3 Venenos = 1 tipo)

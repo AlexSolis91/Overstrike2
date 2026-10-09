@@ -15,8 +15,9 @@ export default {
 
   lider: {
     nombre: 'Dios Emperador Doom',
-    desc: 'Todos los aliados tienen +15% de HP máx.',
-    bonoStat: { hpPct: .15 },
+    desc: 'Todos los aliados tienen +10% de HP máx., y los que tengan Escudo hacen +15% de daño.',
+    bonoStat: { hpPct: .10 },
+    bonoDanoConEscudo: .15,
   },
   pasiva: {
     nombre: 'Soberano de Latveria',
