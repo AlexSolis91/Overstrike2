@@ -157,6 +157,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | 💔 Debilitar | Estadística | Recibe **+50% de daño** de golpes y daño por efecto, calculado **después** de la Armadura (no afecta DoT ni Robar HP) |
 | 🪞 Espejismo | Reflejo | Cada **golpe** que recibe de un enemigo le devuelve al atacante el **30%** del daño recibido (HP + Escudo), como **daño por efecto**: no es golpe (no rebota entre dos Espejismos ni activa Sangrado/contraataques), no es crítico ni se bloquea. El portador recibe el golpe completo. No refleja DoT ni daño por efecto. Se puede Disipar |
 | 🧊 Aura Gélida | Hielo | El portador recibe **−20%** de daño de los **golpes** enemigos y, cuando lo golpean, tiene **50%** de probabilidad de aplicarle Congelación al atacante (con Tirada de Puntería del portador). Siempre dura 2 rondas. **Se puede disipar** |
+| 📍 Aguja Escarlata | Aguja | (debuff, contador hasta 14) Cada aguja le quita **0.5%** del HP máx. al inicio de su turno y le hace recibir **+3%** de daño de Veneno, Sangrado y Hemorragia. Se clavan sin tirada (acción `clavarAgujas { n }`). Se puede limpiar. Un movimiento con `consumeAgujas { pct }` hace +pct por aguja del objetivo y las consume (Antares de Milo); la IA lo apunta al enemigo con más agujas |
 | 🚫 Bloquear Buffs | Bloqueo | (debuff) No puede recibir buffs **nuevos** mientras dure. No afecta a los que ya tiene, a los permanentes ni a las cargas |
 | ♨️ Aura de Fuego | Fuego | Cuando el portador recibe un **golpe** de un enemigo, tiene **50%** de probabilidad de aplicarle al atacante Quemadura 5% (1 turno), con Tirada de Puntería del portador |
 | 🎯 Provocación | Provocación | Los enemigos deben dirigirle sus movimientos de **un objetivo** (incluidas invocaciones). No afecta AOE, objetivos al azar, movimientos a aliados, Confusión ni Posesión. Con varios, se elige entre ellos. Se puede Disipar |
@@ -422,7 +423,7 @@ Pantalla: al iniciar sesión por primera vez (ver sección 19).
 - Clasificación actual:
   - **Blazing:** Alexstrasza, Rhaenys Targaryen, Rengoku, Daenerys Targaryen, Scorpion.
   - **Frostborn:** Sub-Zero, Lich King, Jaina Proudmoore, Camus (4 exclusivos: el pack saca 3 al azar). ⚠️ Simulación 2026-10-09: Frostborn 67.7% contra equipos al azar; Blazing 33.5% y Noxious 39.0% (sus exclusivos son de los campeones más débiles). Revisar en el pase de balance antes de abrir el juego.
-  - **Noxious:** The Joker, Reptile, Loki.
+  - **Noxious:** The Joker, Reptile, Loki, Milo.
   - **Libres:** Goku, Sun Jin Woo, Shaka, Batman, Aldebarán, Thor, Madara Uchiha.
 - Al crear un campeón nuevo se decide si es exclusivo de algún pack.
 
@@ -432,7 +433,7 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
 
 - Cada campeón declara en su ficha `sobres: [...]`: puede estar en **varios**. Los campeones de los Starter Packs **también** están en sobres; el Starter Pack es un arranque único, no se compra.
 - **Sobres actuales** (`activo: true/false` = si se ven en la tienda; por temporada):
-  - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Scorpion, Kratos, Sasuke Uchiha.
+  - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Scorpion, Kratos, Sasuke Uchiha, Milo.
   - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King, Doctor Doom, Skeletor, Saga.
   - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki, Kratos, Wukong.
   - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema. **Goku, Vegeta, Naruto y He-Man salen solo aquí** (sin sobre temático + «Solo su sobre»).

@@ -25,7 +25,9 @@ export function elegirIA(combate) {
       if (invocaciones(mov.desatar) < 2) continue;
     } else if (mov.objetivo === 'enemigo') {
       const cands = op.objetivos.map(por);
-      objetivo = Math.random() < .4 ? cands.reduce((x, y) => ratio(x) < ratio(y) ? x : y) : pick(cands);
+      const marcas = p => p.estados.find(e => e.id === 'aguja')?.valor || 0;
+      if (mov.consumeAgujas && cands.some(marcas)) objetivo = cands.reduce((x, y) => marcas(y) > marcas(x) ? y : x);   // consume marcas: al que más tenga
+      else objetivo = Math.random() < .4 ? cands.reduce((x, y) => ratio(x) < ratio(y) ? x : y) : pick(cands);
     } else if (mov.objetivo === 'aliado') {
       const cands = op.objetivos.map(por);
       if (acciones.includes('limpiar')) {

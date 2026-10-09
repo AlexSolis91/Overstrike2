@@ -50,6 +50,8 @@ export const EFECTOS = {
     desc: `Cada golpe que recibe de un enemigo le devuelve al atacante el ${p(BUFFS.espejismo)} del daño (daño por efecto). Igual recibe el golpe completo.` },
   orgullo: { nombre: 'Orgullo Sayajin', icono: '⚜️', color: 0x60a5fa, tipo: 'buff', tags: ['Carga'], noDisipable: true,
     desc: 'Cargas de Vegeta (máx. 5): las gana cuando su Rival usa un movimiento y con sus críticos. Al llegar a 5 se transforma; Final Flash las consume para hacer más daño. No se puede disipar.' },
+  aguja: { nombre: 'Aguja Escarlata', icono: '📍', color: 0xdc2626, tipo: 'debuff', tags: ['Aguja'],
+    desc: `Cada aguja clavada le quita ${Math.round(DEBUFFS.agujaTurno * 1000) / 10}% del HP máx. al inicio de su turno y le hace recibir +${p(DEBUFFS.aguja)} de daño de Veneno y Sangrado (máx. ${DEBUFFS.agujaMax} agujas). Se puede limpiar.` },
   blockBuffs: { nombre: 'Bloquear Buffs', icono: '🚫', color: 0x94a3b8, tipo: 'debuff', tags: ['Bloqueo'],
     desc: 'No puede recibir buffs nuevos mientras dure (los que ya tiene, los permanentes y las cargas no se ven afectados).' },
   oscuridad: { nombre: 'Oscuridad', icono: '🌑', color: 0x7c3aed, tipo: 'buff', tags: ['Carga'], noDisipable: true,

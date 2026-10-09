@@ -45,6 +45,9 @@ export const BUFFS = {
 
 // Valores fijos de debuffs universales
 export const DEBUFFS = {
+  aguja: .03,          // Aguja Escarlata: +3% de daño de Veneno y Sangrado por cada aguja clavada...
+  agujaTurno: .005,     // ...y cada aguja quita 0.5% del HP máx. al inicio de su turno (14 agujas = 7%)
+  agujaMax: 14,        // ...hasta 14 (las 14 estrellas de Escorpio; la 15.ª es Antares)
   debilitar: .50,      // Debilitar: +50% de daño recibido (después de la Armadura)
   ceguera: .50,        // Ceguera: −50 puntos de Puntería
   desgaste: .05,       // Desgaste: −5 puntos de Armadura al aplicarse y por cada golpe recibido...

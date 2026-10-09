@@ -159,6 +159,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'taunt': texto = `Los enemigos deben atacarlo con sus movimientos de un objetivo · ${e.permanente ? 'permanente' : `${e.dur} ronda(s)`}`; n = e.permanente ? '∞' : e.dur; break;
         case 'frostAura': texto = `−${Math.round(BUFFS.auraGelida * 100)}% daño de golpes · ${Math.round(PUNTERIA.auraGelida * 100)}% de Congelar a quien lo golpee · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'mirror': texto = `Devuelve el ${Math.round(BUFFS.espejismo * 100)}% del daño de cada golpe recibido · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'aguja': texto = `${e.valor} aguja(s): pierde ${Math.round(e.valor * DEBUFFS.agujaTurno * 1000) / 10}% del HP máx. al inicio de su turno y recibe +${Math.round(e.valor * DEBUFFS.aguja * 100)}% de daño de Veneno y Sangrado`; n = e.valor; break;
         case 'blockBuffs': texto = `No puede recibir buffs nuevos · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'oscuridad': texto = `${e.valor} de Oscuridad (máx. 3): con 3 se transforma en Saga Oscuro`; n = e.valor; break;
         case 'grayskull': texto = `${e.valor} de Poder de Grayskull (máx. 5): Golpe de Grayskull +15% por cada uno`; n = e.valor; break;
@@ -260,6 +261,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (q) danoDoT(p, q.valor, 'burn', fuentesDe([q]));
     const v = todos(p, 'poison');
     if (v.length && !p.muerto) danoDoT(p, v.reduce((s, x) => s + x.valor, 0), 'poison', fuentesDe(v));
+    const ag = get(p, 'aguja');                                   // Agujas Escarlata: la agonía crece con cada aguja
+    if (ag && !p.muerto) danoDoT(p, ag.valor * DEBUFFS.agujaTurno, 'aguja', fuentesDe([ag]));
   }
 
   // Devuelve true si el personaje no puede elegir su acción este turno (perdió el turno o está poseído)
@@ -508,6 +511,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (ctx.cargas && mov.consumeCargas) d *= 1 + ctx.cargas * mov.consumeCargas.pct;   // cargas consumidas por este movimiento
     if (a.pasiva?.rival && esRival(a, t)) d *= 1 + a.pasiva.rival.bono;      // Rivalidad: más daño a su Rival
     if (mov.bonoContra && [].concat(mov.bonoContra.efecto).some(id => get(t, id))) d *= 1 + mov.bonoContra.pct;   // p. ej. Kirin contra quemados
+    const agujas = mov.consumeAgujas && get(t, 'aguja');     // Antares: +X% por cada aguja del objetivo (y las consume)
+    if (agujas) { d *= 1 + agujas.valor * mov.consumeAgujas.pct; quitar(t, agujas); emitir('bono', { id: a.uid, texto: `📍 Antares ×${agujas.valor}` }, a, t); }
     if (mov.bonoSiObjetivoMasHp && t.hp > a.hp) d *= 1 + mov.bonoSiObjetivoMasHp;   // p. ej. Asesino de Dioses
     if (mov.bonoPorEscudoPropio) d += a.escudo * mov.bonoPorEscudoPropio;   // + % de su propio Escudo (no lo gasta)
     const bb = a.pasiva?.bonoPorBuffsObjetivo;   // pasiva: +X% de daño por cada buff activo del objetivo (sin contar invocaciones), con tope
@@ -655,7 +660,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   // Daño DoT: % del HP máx.; ignora Armadura, Escudo y Bloqueo.
   function danoDoT(t, valor, tipo, fuente = null) {
     if (t.muerto) return;
-    const d = valor * maxHp(t) * (1 - reduccion(t, 'dot'));
+    const ag = (tipo === 'poison' || tipo === 'bleed' || tipo === 'hemo') && get(t, 'aguja');   // Agujas Escarlata: +3% por aguja
+    const d = valor * maxHp(t) * (1 - reduccion(t, 'dot')) * (ag ? 1 + ag.valor * DEBUFFS.aguja : 1);
     t.hp -= d;
     emitir('dot', { a: t.uid, tipo, dano: d }, t);
     recibioDano(t, d, fuente);
@@ -1058,6 +1064,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         }
         case 'disipar': disipar(a, t, acc); break;
         case 'robarHP': robarHP(a, t, acc.pct); break;
+        case 'clavarAgujas': {         // clava N Agujas Escarlata (sin tirada: las clava el golpe), hasta el máximo
+          let e = get(t, 'aguja');
+          if (!e) { e = { id: 'aguja', valor: 0, fuente: a.uid }; t.estados.push(e); }
+          const antes = e.valor; e.valor = Math.min(DEBUFFS.agujaMax, e.valor + (acc.n || 1));
+          if (e.valor !== antes) emitir('efecto', { a: t.uid, id: 'aguja', texto: `📍 ${e.valor} aguja(s)` }, t);
+          break;
+        }
         case 'ganarCargas': ganarCargas(t, acc.cantidad || 1, acc.max || 5, acc.efecto); break;   // p. ej. Espada del Poder
         case 'invocar': if (acc.prob == null || rng() < acc.prob) invocar(t, acc.key); break;   // p. ej. Clon de Sombra
         case 'reducirHpMax': {         // baja el HP máx. del objetivo para el resto de la partida (con tope); p. ej. Modo Barión
