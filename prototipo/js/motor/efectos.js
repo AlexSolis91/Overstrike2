@@ -60,6 +60,8 @@ export const EFECTOS = {
     desc: 'Cargas de He-Man (máx. 5): las gana al proteger a un aliado y con su Básico. Golpe de Grayskull las consume. No se puede disipar.' },
   poderRobado: { nombre: 'Poder Robado', icono: '💀', color: 0x8b5cf6, tipo: 'buff', tags: ['Carga'], noDisipable: true,
     desc: 'Cargas de Skeletor (máx. 10): gana 1 cada vez que un enemigo recibe un buff. Poder de Grayskull las consume. No se puede disipar.' },
+  sello:   { nombre: 'Sellado', icono: '🔒', color: 0xfbbf24, tipo: 'marca', tags: ['Sello'], noDisipable: true,
+    desc: 'Uno de sus movimientos está sellado hasta que se cumpla una condición de su pasiva (p. ej. la Arrogancia de Gilgamesh). No se puede disipar.' },
   camino:  { nombre: 'Camino', icono: '☯️', color: 0xa855f7, tipo: 'marca', tags: ['Postura'], noDisipable: true,
     desc: 'Postura activa de un ciclo (p. ej. los Seis Caminos de Pain): cambia al inicio de cada uno de sus turnos y le da un efecto distinto. No se puede disipar.' },
   expuesto: { nombre: 'Expuesto', icono: '🎯', color: 0xfca5a5, tipo: 'debuff', tags: ['Estadística'],

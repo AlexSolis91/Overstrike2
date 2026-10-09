@@ -30,6 +30,7 @@ import camus from './camus.js';
 import milo from './milo.js';
 import itachi from './itachi-uchiha.js';
 import pain from './pain.js';
+import gilgamesh from './gilgamesh.js';
 
-export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain];
+export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh];
 export const porId = id => OFICIALES.find(p => p.id === id);

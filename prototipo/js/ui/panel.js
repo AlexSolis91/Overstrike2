@@ -130,7 +130,7 @@ export function renderAccion(p, v, ui) {
     // bloqueado por otra regla del motor (p. ej. Incitar: solo el Básico)
     const op = ui.opciones?.find(o => o.categoria === m.categoria);
     const bloq = !cd && !mudo && op?.disponible === false;
-    const motivo = mudo ? '🔇 Silenciado' : bloq ? (op?.agotado ? '✔ Ya usado' : v.estados.some(e => e.id === 'incite') ? '🗣️ Incitado' : 'No disponible') : cd ? '' : 'Listo';
+    const motivo = mudo ? '🔇 Silenciado' : bloq ? (op?.agotado ? '✔ Ya usado' : op?.sellado ? '🔒 Sellado' : v.estados.some(e => e.id === 'incite') ? '🗣️ Incitado' : 'No disponible') : cd ? '' : 'Listo';
     const calc = calculoTexto(m, v);
     return `<button class="act ${m.categoria} ${cd || mudo || bloq || ui.ocupado ? 'off' : ''} ${mudo || bloq ? 'mudo' : ''} ${ui.movSel === m.categoria ? 'sel' : ''}" data-cat="${m.categoria}">
       <div class="act-top"><span class="act-cat">${CAT[m.categoria]}</span><span class="act-cd ${cd || mudo || bloq ? '' : 'ok'}">${motivo}</span></div>

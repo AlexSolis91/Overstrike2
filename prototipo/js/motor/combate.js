@@ -46,6 +46,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     }
     // efectosPermanentes: la pasiva da ese efecto toda la partida (sin duración, no se disipa ni se roba)
     for (const id of def.pasiva?.efectosPermanentes || []) p.estados.push({ id, permanente: true });
+    if (def.pasiva?.sello) { p.sellado = true; p.estados.push({ id: 'sello', permanente: true }); }   // sello: un movimiento bloqueado hasta romperlo
     p.hp = stats(p).hp;
     return p;
   }
@@ -165,6 +166,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'grayskull': texto = `${e.valor} de Poder de Grayskull (máx. 5): Golpe de Grayskull +15% por cada uno`; n = e.valor; break;
         case 'poderRobado': texto = `${e.valor} de Poder Robado (máx. 10): Poder de Grayskull +20% por cada uno`; n = e.valor; break;
         case 'orgullo': texto = `${e.valor} de Orgullo (máx. 5): Final Flash +15% por cada uno`; n = e.valor; break;
+        case 'sello': { const se = p.pasiva?.sello; texto = se ? `${se.nombre}: ${se.desc}` : ''; break; }
         case 'rival': texto = `Rival de ${porUid(e.fuente)?.nombre || 'Vegeta'}: recibe más daño de él`; break;
         case 'cargas': texto = `${e.valor} carga(s): su próximo movimiento que las consume hace más daño`; n = e.valor; break;
         case 'incite': texto = `Solo puede usar su Básico contra ${porUid(e.fuente)?.nombre || 'quien lo incitó'} · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -183,7 +185,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'regen': texto = `Cura ${Math.round(BUFFS.regeneracion * 100)}% del HP máx. al inicio de su turno · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'fireAura': texto = `Quema (5%, 1 turno) al enemigo que lo golpee · ${e.dur} ronda(s)`; n = e.dur; break;
       }
-      const fase = e.id === 'camino' && p.pasiva?.ciclo?.fases?.[e.valor];      // ciclo: se ve el icono y el nombre de la fase activa
+      const fase = e.id === 'camino' ? p.pasiva?.ciclo?.fases?.[e.valor] : e.id === 'sello' ? p.pasiva?.sello : null;      // ciclo: se ve el icono y el nombre de la fase activa
       out.push(grupo(e.id, { nombre, texto, n, ...(fase ? { nombre: fase.nombre, icono: fase.icono } : {}) }));
     }
     const ven = todos(p, 'poison');
@@ -349,6 +351,19 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     procesarReacciones();
   }
 
+  // pasiva "sello": rompe el sello (para siempre): el movimiento sellado queda listo al instante y ejecuta "alRomper"
+  function romperSello(p) {
+    if (!p.sellado || p.muerto) return;
+    const se = p.pasiva.sello;
+    p.sellado = false;
+    quitar(p, get(p, 'sello'));
+    p.cds[se.categoria] = 0;
+    emitir('pasiva', { id: p.uid, nombre: p.pasiva.nombre });
+    emitir('bonoVisible', { a: p.uid, texto: se.textoRomper || '🔓 ¡Sello roto!' }, p);
+    if (se.alRomper) ejecutarAccion(p, se.alRomper, { objetivo: p });
+    emitir('actualizar', {}, p);
+  }
+
   function comprobarFin() {
     if (S.fin) return true;
     const gj = vivos('jugador').length, gr = vivos('rival').length;
@@ -402,7 +417,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     return p.movimientos.map(m => ({
       categoria: m.categoria,
       agotado: !!(m.unaVez && p.usados?.has(m.nombre)),     // unaVez: solo se puede usar una vez por partida
-      disponible: (p.cds[m.categoria] || 0) === 0 && get(p, 'silence')?.categoria !== m.categoria && (!inc || m.categoria === 'basico')
+      sellado: !!(p.sellado && p.pasiva.sello.categoria === m.categoria),
+      disponible: !(p.sellado && p.pasiva.sello.categoria === m.categoria) && (p.cds[m.categoria] || 0) === 0 && get(p, 'silence')?.categoria !== m.categoria && (!inc || m.categoria === 'basico')
         && !(m.unaVez && p.usados?.has(m.nombre)),
       cd: p.cds[m.categoria] || 0,
       objetivos: objetivosValidos(p, m).map(t => t.uid),
@@ -436,6 +452,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const ultimo = reparto.filter(([f]) => f && f.lado !== t.lado).sort((x, y) => y[1] - x[1])[0];
     if (ultimo) t.ultimoDanoDe = ultimo[0];
     if (t.pasiva?.rival && cantidad > 0 && !t.muerto) revisarTransformacion(t);
+    const rs = t.sellado && t.pasiva.sello.romper;
+    if (rs?.hpMenor && t.hp > 0 && t.hp < rs.hpMenor * maxHp(t)) romperSello(t);
     const s = cantidad > 0 && !t.muerto && get(t, 'stealth');
     if (s) { quitar(t, s); emitir('sigiloRoto', { a: t.uid }, t); }
   }
@@ -585,6 +603,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (critico && a.pasiva?.rival?.orgulloAlCritico) ganarOrgullo(a, 1);
     if (critico && t.pasiva?.rival?.orgulloAlRecibirCritico && t.lado !== a.lado) ganarOrgullo(t, 1);
     if (critico) d *= 1 + danoCrit;
+    if (a.sellado && a.pasiva.sello.dano) d *= 1 + a.pasiva.sello.dano;   // sello: p. ej. Arrogante = −10% de daño
     if (get(a, 'fear')) d *= CONTROL.miedoDano;
     let quiebre = false;
     const hielo = get(t, 'freeze');
@@ -621,6 +640,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (robo && !a.muerto && (get(a, 'solarBurn') || (a.hp < maxHp(a) && puedeCurarse(a)))) curar(a, a, (aHp + aEsc) * robo);
     emitir('golpe', { de: a.uid, a: t.uid, dano: aHp, escudo: aEsc, critico, quiebre, color: mov.color, fuente: ctx.fuente, multi: (mov.golpes || 1) > 1 }, t);
     recibioDano(t, aHp + aEsc, a);
+    if (critico && t.lado !== a.lado && t.hp > 0 && t.sellado && t.pasiva.sello.romper.recibeCritico) romperSello(t);
     if (critico && t.lado !== a.lado && t.hp > 0) for (const l of lideresDe(t)) if (l.lider?.alRecibirCritico) ejecutarAccion(l, l.lider.alRecibirCritico, { objetivo: t });   // líder: p. ej. Conocer el Dolor
     // pasiva "cargasAlRecibirGolpe": cada golpe de un enemigo le da cargas (el doble si su Provocación lo indica); con Control no
     const cg = t.pasiva?.cargasAlRecibirGolpe;
@@ -764,6 +784,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       elegirRival(v);
     }
     for (const p of P.filter(x => x.lado !== t.lado && !x.muerto)) pasivas(p, 'alMorirEnemigo', { objetivo: t, teniaAlMorir });
+    for (const p of aliadosDe(t)) if (p.sellado && p.pasiva.sello.romper.muereAliado) romperSello(p);
+    for (const l of P.filter(x => x.lado !== t.lado && x.esLider && !x.muerto && x.lider?.alMorirEnemigo)) ejecutarAccion(l, l.lider.alMorirEnemigo, { objetivo: t });   // líder: p. ej. Tesoro del Rey
   }
 
   function explotarBomba(t, b, soloSalpicadura) {
@@ -1220,6 +1242,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
 
   function cumple(cond, ctx) {
     if (!cond) return true;
+    if (cond.sellado !== undefined) return !!ctx.ejecutor && !!ctx.ejecutor.sellado === cond.sellado;   // p. ej. Enkidu: Mega Aturdimiento si ya va en serio
     if (cond.objetivoTiene) return !!(ctx.objetivo && get(ctx.objetivo, cond.objetivoTiene));
     if (cond.objetivoTeniaAntes) return [].concat(cond.objetivoTeniaAntes).some(id => ctx.teniaAntes?.has(id));
     if (cond.rompioMega) return !!ctx.rompioMega;
@@ -1401,6 +1424,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (t.muerto) return;
     const hostil = t.lado !== a.lado || ctx.forzado;
     if (hostil && rng() < Math.min(stats(t).block, TOPES.block)) { emitir('bloqueo', { de: a.uid, a: t.uid }); return; }
+    if (mov.rompeEscudo && hostil && t.escudo > 0) {     // rompeEscudo: destruye todo el Escudo del objetivo antes de golpear (p. ej. Enuma Elish)
+      t.escudo = 0;
+      emitir('bonoVisible', { a: t.uid, texto: '💥 ¡Escudo destruido!' }, t);
+      emitir('actualizar', {}, t);
+      perdioEscudo(t);
+    }
     if (ctx.acum) for (const e of t.estados) ctx.acum.tenian.add(e.id);     // lo que tenía el objetivo al ser golpeado
     const hpObjetivoAntes = t.hp;
     const ctxGolpe = { ...ctx, teniaAntes: new Set(t.estados.map(e => e.id)) };   // lo que tenía ESTE objetivo antes del movimiento
@@ -1439,7 +1468,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const ids = new Set();
     const ver = acc => {
       if (!acc) return;
-      if (acc.tipo === 'efecto') { if (acc.id) ids.add(acc.id); (acc.idAzar || []).forEach(x => ids.add(x)); }
+      if (acc.tipo === 'efecto' && acc.id) ids.add(acc.id);       // los efectos al azar (idAzar) no cuentan
       if (acc.tipo === 'propagar' && acc.efecto) ids.add(acc.efecto);
       (acc.acciones || []).forEach(ver);
     };
