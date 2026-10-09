@@ -124,11 +124,15 @@ const MOTIVO = { stun: '💫 PIERDE EL TURNO', freeze: '❄️ CONGELADO', silen
 // Sonido de cada evento (todo pasa por el registro universal de sonidos)
 const SONIDO_DOT = { burn: 'quemadura', poison: 'veneno', bleed: 'sangrado', hemo: 'sangrado', bomb: 'explosion', solarBurn: 'solar' };
 const SONIDO_CONTROL = { stun: 'aturdir', freeze: 'congelar', silence: 'silenciar' };
+// Sonido del disparo según lo que aplica un golpe (suena cuando sale el efecto visual del disparo, en lugar del sonido normal)
+const SONIDO_DISPARO = { burn: 'fuego' };
+const sonidoDisparo = e => e.golpea ? (e.aplica || []).map(id => SONIDO_DISPARO[id]).find(Boolean) || null : null;
 function sonidoDe(e) {
   switch (e.t) {
     case 'ronda': return 'ronda';
     case 'movimiento':
       if (e.categoria === 'over') sonar('over');
+      if (sonidoDisparo(e)) return null;            // su sonido suena al salir el disparo (ver 'movimiento' en manejar)
       return e.estilo === 'melee' ? 'melee' : e.estilo === 'support' ? 'magia' : e.objetivos?.length > 1 ? 'area' : 'lanzar';
     case 'golpe':
       if (e.quiebre) sonar('quiebre');
@@ -209,11 +213,13 @@ async function manejar(e) {
         await FX.cinematicaOver(a, e.nombre, e.color, { velocidad: vel });
         overEnCurso = e.id;
       }
-      if (e.estilo === 'melee' && objetivos[0] && objetivos[0] !== a) { await FX.embestir(a, objetivos[0]); embestida = a; }
+      const disparo = sonidoDisparo(e);
+      if (e.estilo === 'melee' && objetivos[0] && objetivos[0] !== a) { if (disparo) sonar(disparo); await FX.embestir(a, objetivos[0]); embestida = a; }
       else {
         FX.lanzar(a, e.color);
         const lejos = objetivos.filter(t => t !== a);
-        if (lejos.length) { await wait(150); await Promise.all(lejos.map((t, i) => wait(i * 90).then(() => FX.proyectilA(a, t, e.color, e.estilo === 'support' ? .5 : .42)))); }
+        if (disparo && !lejos.length) sonar(disparo);
+        if (lejos.length) { await wait(150); if (disparo) sonar(disparo); await Promise.all(lejos.map((t, i) => wait(i * 90).then(() => FX.proyectilA(a, t, e.color, e.estilo === 'support' ? .5 : .42)))); }
         else await wait(250);
       }
       break;

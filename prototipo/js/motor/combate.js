@@ -1434,6 +1434,19 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     }
   }
 
+  // Efectos que un movimiento puede aplicar o propagar (la interfaz los usa, p. ej. para el sonido de un golpe de fuego)
+  function efectosQueAplica(mov) {
+    const ids = new Set();
+    const ver = acc => {
+      if (!acc) return;
+      if (acc.tipo === 'efecto') { if (acc.id) ids.add(acc.id); (acc.idAzar || []).forEach(x => ids.add(x)); }
+      if (acc.tipo === 'propagar' && acc.efecto) ids.add(acc.efecto);
+      (acc.acciones || []).forEach(ver);
+    };
+    for (const ef of mov.efectos || []) ver(ef.accion);
+    return [...ids];
+  }
+
   let movId = 0;                       // cuenta los movimientos ejecutados (pasivas "una vez por movimiento")
   function ejecutarMovimiento(a, mov, objetivo, ctx = {}) {
     movId++;
@@ -1455,7 +1468,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       : mov.objetivo === 'todosAliados' ? aliadosDe(a)
         : mov.objetivo === 'propio' ? [a] : [objetivo].filter(Boolean);
     emitir('movimiento', { id: a.uid, categoria: mov.categoria, nombre: mov.nombre, estilo: mov.estilo, color: mov.color,
-      objetivos: objetivos.map(t => t.uid), forzado: !!ctx.forzado });
+      objetivos: objetivos.map(t => t.uid), forzado: !!ctx.forzado, golpea: !!mov.pct, aplica: efectosQueAplica(mov) });
     const atacanteTenia = new Set(a.estados.map(e => e.id));   // lo que tenía el atacante al empezar (para "atacado por un enemigo con X")
 
     if (mov.consumeCargas) {                          // consume todas sus cargas (de ese tipo): cada una suma daño a este movimiento
