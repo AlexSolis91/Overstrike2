@@ -515,6 +515,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (agujas) { d *= 1 + agujas.valor * mov.consumeAgujas.pct; quitar(t, agujas); emitir('bono', { id: a.uid, texto: `📍 Antares ×${agujas.valor}` }, a, t); }
     if (mov.bonoSiObjetivoMasHp && t.hp > a.hp) d *= 1 + mov.bonoSiObjetivoMasHp;   // p. ej. Asesino de Dioses
     if (mov.bonoPorEscudoPropio) d += a.escudo * mov.bonoPorEscudoPropio;   // + % de su propio Escudo (no lo gasta)
+    const dv = a.pasiva?.danoPorVelocidad;     // pasiva: +X% de daño por cada punto de Velocidad que le saca al objetivo (con tope)
+    if (dv && t.lado !== a.lado) { const dif = stats(a).spd - stats(t).spd; if (dif > 0) d *= 1 + Math.min(dif * dv.pct, dv.max); }
     const bb = a.pasiva?.bonoPorBuffsObjetivo;   // pasiva: +X% de daño por cada buff activo del objetivo (sin contar invocaciones), con tope
     if (bb && t.lado !== a.lado) d *= 1 + Math.min(t.estados.filter(e => EFECTOS[e.id]?.tipo === 'buff' && e.id !== 'summon').length * bb.pct, bb.max ?? 9);
     for (const l of lideresDe(a)) if (l.lider?.bonoContraConBuff && t.lado !== a.lado && tieneBuff(t)) d *= 1 + l.lider.bonoContraConBuff;   // líder: +X% a enemigos con buffs
@@ -533,7 +535,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const b = mov.bonoPorAcumulacion;
       d *= 1 + Math.min(todos(t, b.efecto).length, b.max ?? 99) * b.pct;
     }
-    const garantizado = mov.criticoSiHpMin !== undefined && t.hp / maxHp(t) >= mov.criticoSiHpMin;
+    const garantizado = (mov.criticoSiHpMin !== undefined && t.hp / maxHp(t) >= mov.criticoSiHpMin)
+      || (mov.criticoSiMasRapido && stats(a).spd > stats(t).spd);          // p. ej. Totsuka: crítico seguro contra los más lentos
     let probCrit = sa.critRate + (mov.critExtra || 0), danoCrit = sa.critDmg;
     if (mov.critExtraSi && ctx.teniaAntes?.has(mov.critExtraSi.teniaAntes)) probCrit += mov.critExtraSi.pct;   // +crítico si ya tenía X antes del movimiento
     for (const l of lideresDe(a)) {          // líder "bonoCriticoContra": +Prob. y +Daño Crítico al golpear a un enemigo con ese efecto
@@ -766,7 +769,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (acc.probSiConBuff != null && tieneBuff(t)) prob = acc.probSiConBuff;            // p. ej. ¡Te tengo!: 50% si tiene algún buff   // p. ej. Deep Freeze: 100% contra los más rápidos
     if (prob != null && rng() >= prob) return;                          // 1) probabilidad del movimiento (por defecto 100%): si falla, ni lo intenta
     const sa = stats(a), st = stats(t);                                  // 2) Puntería vs Resistencia
-    const irresistible = acc.irresistible || (acc.irresistibleSi && get(t, acc.irresistibleSi));   // irresistible: siempre entra   // p. ej. Miedo de Loki contra envenenados
+    const irresistible = acc.irresistible || (acc.irresistibleSi && get(t, acc.irresistibleSi))   // irresistible: siempre entra
+      || (a.pasiva?.seguroVsLentos && stats(t).spd < stats(a).spd);                            // pasiva: siempre entra contra los más lentos   // p. ej. Miedo de Loki contra envenenados
     if (!irresistible && rng() >= probAplicar(sa.acc, st.res)) { emitir('resistido', { a: t.uid, id: acc.id }); return; }
     aplicarEfecto(a, t, acc);
   }
@@ -1064,6 +1068,16 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         }
         case 'disipar': disipar(a, t, acc); break;
         case 'robarHP': robarHP(a, t, acc.pct); break;
+        case 'robarVelocidad': {       // roba % de Velocidad al objetivo (permanente) y se la suma, hasta un tope total
+          const queda = (acc.tope ?? 1) - (a.velRobada || 0);
+          const r = Math.min(acc.pct, queda);
+          if (r <= 1e-9 || t.lado === a.lado) break;
+          t.permanente.spdPct = (t.permanente.spdPct || 0) - r;
+          a.permanente.spdPct = (a.permanente.spdPct || 0) + r;
+          a.velRobada = (a.velRobada || 0) + r;
+          emitir('bonoVisible', { a: a.uid, texto: `⚡ +${Math.round(r * 100)}% Velocidad robada` }, a, t);
+          break;
+        }
         case 'clavarAgujas': {         // clava N Agujas Escarlata (sin tirada: las clava el golpe), hasta el máximo
           let e = get(t, 'aguja');
           if (!e) { e = { id: 'aguja', valor: 0, fuente: a.uid }; t.estados.push(e); }
@@ -1506,6 +1520,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         if ((mov.objetivo === 'enemigo' || mov.objetivo === 'aliado') && !objetivosValidos(a, mov).includes(t)) throw new Error('Objetivo no válido');
         S.esperando = null;
         ejecutarMovimiento(a, mov, t);
+        // pasiva "turnoExtraSiMasRapido": si es el más rápido de TODO el campo, gana un turno extra (una vez por ronda)
+        if (a.pasiva?.turnoExtraSiMasRapido && !a.muerto && a.turnoRapidoRonda !== S.ronda
+            && P.filter(x => !x.muerto && x !== a).every(x => stats(x).spd < stats(a).spd)) {
+          a.turnoRapidoRonda = S.ronda; a.turnosExtra = (a.turnosExtra || 0) + 1;
+          emitir('turnoExtraGanado', { id: a.uid }, a);
+        }
         if (!a.muerto && !comprobarFin()) actuanInvocaciones(a);
         if (a.turnosExtra > 0 && !a.muerto && !comprobarFin() && opciones(a).some(o => o.disponible)) {   // turno extra: sin DoT, Regeneración ni control; no baja cooldowns
           a.turnosExtra--;

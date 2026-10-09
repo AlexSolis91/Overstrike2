@@ -261,6 +261,12 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Quema su propia vida** (`drenajePropio` en la pasiva): al final de cada turno propio pierde ese % de su HP máx., sin bajar de 1 HP. P. ej. Modo Barión: 3%.
 - **Movimiento de una sola vez** (`unaVez: true`): después de usarlo queda bloqueado el resto de la partida (el panel muestra «✔ Ya usado»), aunque vuelva a esa forma. P. ej. Modo Barión.
 - **Revivir** (pasiva `revivir { turnos, hp }`): al morir, vuelve a la vida **N turnos después** (cuentan los turnos de cualquier personaje; el turno en que muere no cuenta) con `hp` × su HP máx., sin buffs ni debuffs. **Una vez por partida**. Si su equipo cae entero antes, la partida termina igual. P. ej. Wukong Invencible: 3 turnos, 100% HP.
+- **Velocidad** (pasivas, p. ej. Sharingan Mangekyō de Itachi):
+  - Acción `robarVelocidad { pct, tope }`: quita ese % de Velocidad al objetivo y se lo suma al ejecutor, **para toda la partida**, hasta `tope` en total.
+  - `danoPorVelocidad { pct, max }`: +pct de daño por cada punto de Velocidad que le saque al objetivo, hasta `max`.
+  - `turnoExtraSiMasRapido: true`: si es el personaje **más rápido de todo el campo** al terminar su movimiento, gana 1 turno extra (una vez por ronda).
+  - `seguroVsLentos: true`: sus debuffs siempre entran (sin tirada de Puntería) contra enemigos más lentos que él.
+  - Movimiento `criticoSiMasRapido`: crítico seguro si el atacante es más rápido que el objetivo (p. ej. Espada de Totsuka).
 - **Aura contra efectos** (pasiva `auraContra { efecto | [efectos], pct }`): **todo su equipo** (incluido él) hace +pct de daño a enemigos con esos efectos. P. ej. Saga: +40% contra confundidos o poseídos.
 - **Cargas al aplicar** (pasiva `cargasAlAplicar { efectos, efecto, max }`): gana 1 carga cada vez que **le entra** a un enemigo alguno de esos debuffs. Con `transformarConCargas { efecto, cargas, turnos }` se transforma (temporal) al juntarlas, las consume y puede **repetirse** en la partida. P. ej. Dualidad de Géminis: 3 de Oscuridad 🌑 → Saga Oscuro 4 turnos.
 - **Formas que comparten cooldowns** (`compartirCooldowns: true` en la forma): al transformarse no se reinician los cooldowns (siguen corriendo los mismos). P. ej. la Explosión de Galaxias de Saga.
@@ -434,7 +440,7 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
 - Cada campeón declara en su ficha `sobres: [...]`: puede estar en **varios**. Los campeones de los Starter Packs **también** están en sobres; el Starter Pack es un arranque único, no se compra.
 - **Sobres actuales** (`activo: true/false` = si se ven en la tienda; por temporada):
   - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Scorpion, Kratos, Sasuke Uchiha, Milo.
-  - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King, Doctor Doom, Skeletor, Saga.
+  - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King, Doctor Doom, Skeletor, Saga, Itachi Uchiha.
   - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki, Kratos, Wukong.
   - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema. **Goku, Vegeta, Naruto y He-Man salen solo aquí** (sin sobre temático + «Solo su sobre»).
   - Sin sobre temático por ahora (salen en Unbreakable Force y en los aleatorios): Daenerys, Rhaenys, Rengoku, Sub-Zero. Llegarán sobres de Quemadura, Congelación, etc.
