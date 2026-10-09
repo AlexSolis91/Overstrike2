@@ -1,5 +1,5 @@
 // Carta de personaje en el campo. Se dibuja a partir de la ficha (estática) y de la "vista" que manda el motor.
-import { G, CW, CH, EMOJI_FONT, canvasTex, rr, shade, txt, spawn, rand, pick, hpVisible, texturaDesenfocada } from './graficos.js';
+import { G, CW, CH, EMOJI_FONT, canvasTex, rr, shade, txt, spawn, rand, pick, hpVisible, texturaDesenfocada, MOVIL } from './graficos.js';
 import { IMG, TEX_INVOCACION, drawCover } from './imagenes.js';
 import { INVOCACIONES } from '../datos/invocaciones.js';
 const { PIXI, gsap } = window;
@@ -147,7 +147,22 @@ export class Carta {
 
     this.disp = { hp: 0, lag: 0, sh: 0 };
     this.rk = '';
+    this.apagado = 0;               // 0–1: carta que no se puede elegir como objetivo (se ve en blanco y negro y translúcida)
     G.cardLayer.addChild(c);
+  }
+
+  // Apagado (0–1): blanco y negro + oscuro. En celular solo se oscurece (sin filtro, para no gastar rendimiento).
+  apagar(n, forzar = false) {
+    if (!forzar && Math.abs(n - this.apagado) < .002) return;
+    this.apagado = n < .01 ? 0 : n;
+    const k = Math.round(255 - 110 * this.apagado);
+    this.face.tint = this.apagado ? (k << 16) | (k << 8) | k : 0xffffff;
+    if (MOVIL) return;
+    if (this.apagado) {
+      if (!this.gris) { this.gris = new PIXI.ColorMatrixFilter(); this.gris.desaturate(); }
+      this.gris.alpha = this.apagado;
+      if (!this.face.filters?.length) this.face.filters = [this.gris];
+    } else if (this.face.filters?.length) this.face.filters = null;
   }
 
   hover(on) {
@@ -267,7 +282,7 @@ export class Carta {
     const v = this.v;
     if (!v) return;
     if (v.muerto) {
-      if (this.rk !== 'dead') { this.ring.clear(); this.aura.clear(); this.marker.alpha = 0; this.body.alpha = 1; this.rk = 'dead'; }
+      if (this.rk !== 'dead') { this.ring.clear(); this.aura.clear(); this.marker.alpha = 0; this.body.alpha = 1; this.rk = 'dead'; this.apagado = 0; this.face.filters = null; this.c.scale.set(1); }   // el tinte gris de muerto lo pone fx.muerte
       return;
     }
     const uid = this.p.uid;
@@ -312,7 +327,14 @@ export class Carta {
       }
     }
     const tiene = id => v.estados.some(e => e.id === id);
-    this.body.alpha = tiene('stealth') ? .45 + .1 * Math.sin(T * 3) : 1;   // Sigilo: carta translúcida
+    // Al elegir objetivo: las cartas del lado apuntado que NO se pueden elegir (Provocación, Sigilo, Incitar) se apagan
+    // y la(s) válida(s) crecen un poco para que se note a quién hay que atacar
+    const ladoApuntado = ui.tipoObjetivo === 'enemigo' ? 'rival' : ui.tipoObjetivo === 'aliado' ? 'jugador' : null;
+    const bloqueada = !!(ui.objetivosValidos && this.p.lado === ladoApuntado && !targ);
+    this.apagar(this.apagado + ((bloqueada ? 1 : 0) - this.apagado) * Math.min(1, dt * .2));
+    const sc = this.c.scale.x + ((targ && ui.hayBloqueados ? 1.05 : 1) - this.c.scale.x) * Math.min(1, dt * .2);
+    this.c.scale.set(sc);
+    this.body.alpha = (tiene('stealth') ? .45 + .1 * Math.sin(T * 3) : 1) * (1 - .6 * this.apagado);   // Sigilo: carta translúcida
     if (tiene('burn') && Math.random() < .35 * dt)
       spawn({ x: x + rand(-60, 60), y: y + rand(30, 95), vy: rand(-1.4, -2.8), vx: rand(-.3, .3), color: pick([0xff7a2a, 0xffb347, 0xff4500]), size: rand(.12, .24), life: rand(30, 50), drag: .99, grow: -.8 });
     if (tiene('poison') && Math.random() < .1 * dt)

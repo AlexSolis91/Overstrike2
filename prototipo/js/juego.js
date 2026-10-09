@@ -61,7 +61,7 @@ async function iniciarPartida(eqJ, eqR) {
     cartas[p.uid].aplicar(vistas[p.uid], true);
   }
   G.alTick = [(dt, T) => { for (const c of Object.values(cartas)) c.tick(dt, T, ui); }];
-  window.__os2.combate = combate; window.__os2.ui = ui;
+  window.__os2.combate = combate; window.__os2.ui = ui; window.__os2.cartas = cartas;
   irA('partida');
   relayout();
   for (const [i, carta] of Object.values(cartas).entries()) {
@@ -401,12 +401,12 @@ function terminar(fin) {
 
 // ---------------------------------------------------------------- entrada del jugador
 function cancelarObjetivo() {
-  ui.movSel = null; ui.objetivosValidos = null; ui.tipoObjetivo = null;
+  ui.movSel = null; ui.objetivosValidos = null; ui.tipoObjetivo = null; ui.hayBloqueados = false;
   if (ui.miTurno) setHint(`Turno de ${nombre(ui.actual)}: elige un movimiento`);
   refrescarPanel();
 }
 async function ejecutar(categoria, objetivo) {
-  ui.miTurno = false; ui.movSel = null; ui.objetivosValidos = null; ui.tipoObjetivo = null;
+  ui.miTurno = false; ui.movSel = null; ui.objetivosValidos = null; ui.tipoObjetivo = null; ui.hayBloqueados = false;
   setHint(''); refrescarPanel();
   await procesar(combate.actuar({ categoria, objetivo }));
 }
@@ -417,12 +417,30 @@ function elegirMovimiento(cat) {
   const mov = (vistas[ui.actual]?.movs || por(ui.actual).movimientos).find(m => m.categoria === cat);
   if (mov.objetivo === 'enemigo' || mov.objetivo === 'aliado') {
     ui.movSel = cat; ui.objetivosValidos = op.objetivos; ui.tipoObjetivo = mov.objetivo;
-    setHint(`${mov.nombre}: elige ${mov.objetivo === 'aliado' ? 'un aliado' : 'un enemigo'} · ${document.body.classList.contains('movil') ? 'toca el movimiento otra vez para cancelar' : 'Esc para cancelar'}`);
+    const lado = mov.objetivo === 'enemigo' ? 'rival' : 'jugador';     // ¿hay cartas de ese lado que no se pueden elegir? (Provocación, Sigilo, Incitar)
+    ui.hayBloqueados = P.some(x => x.lado === lado && !vistas[x.uid]?.muerto && !op.objetivos.includes(x.uid));
+    const ignora = mov.ignoraProvocacion ? ' · ignora Provocación y Sigilo' : '';
+    setHint(`${mov.nombre}: elige ${mov.objetivo === 'aliado' ? 'un aliado' : 'un enemigo'}${ignora} · ${document.body.classList.contains('movil') ? 'toca el movimiento otra vez para cancelar' : 'Esc para cancelar'}`);
     refrescarPanel();
   } else ejecutar(cat, null);
 }
+// Por qué una carta no se puede elegir como objetivo (se muestra al tocarla)
+function motivoBloqueo(carta) {
+  const tiene = (uid, id) => vistas[uid]?.estados.some(e => e.id === id);
+  const validos = ui.objetivosValidos.map(nombre).join(' o ');
+  if (ui.tipoObjetivo === 'enemigo' && tiene(ui.actual, 'incite')) return `🗣️ Incitado: solo puede atacar a ${validos}`;
+  if (tiene(carta.p.uid, 'stealth')) return '👻 Sigilo: no se puede elegir';
+  if (ui.objetivosValidos.some(u => tiene(u, 'taunt'))) return `🛡️ Provocación: debes atacar a ${validos}`;
+  return `Solo puedes elegir a ${validos}`;
+}
 function tocarCarta(carta) {
   if (ui.movSel && ui.miTurno && ui.objetivosValidos?.includes(carta.p.uid)) { ejecutar(ui.movSel, carta.p.uid); return; }
+  const lado = ui.tipoObjetivo === 'enemigo' ? 'rival' : 'jugador';
+  if (ui.movSel && ui.miTurno && carta.p.lado === lado && !vistas[carta.p.uid]?.muerto) {   // carta bloqueada: avisa en vez de solo inspeccionar
+    FX.sacudir(carta, 8);
+    if (Date.now() - (carta.ultimoAviso || 0) > 1200) { carta.ultimoAviso = Date.now(); FX.aviso(carta, motivoBloqueo(carta)); }
+    return;
+  }
   inspeccionar(carta.p.uid);
   if (document.body.classList.contains('movil')) document.body.classList.add('panel-abierto');   // celular: abre el cajón
 }
@@ -496,6 +514,8 @@ $('#test-panel').addEventListener('click', async e => {
 window.__os2 = { combate, ui, jugarIA: () => ui.miTurno && !ui.ocupado && (() => { const d = elegirIA(combate); return ejecutar(d.categoria, d.objetivo); })() };
 window.__os2.audio = { sonar, finDePartida };          // pruebas de sonido desde la consola
 window.__os2.empezar = (j, r) => jugar(j.map(porId), r.map(porId), 'construir');   // pruebas: __os2.empezar(['goku',...], [...])
+window.__os2.elegir = cat => elegirMovimiento(cat);                 // pruebas: elegir movimiento y tocar una carta por uid
+window.__os2.tocar = uid => cartas[uid] && tocarCarta(cartas[uid]);
 
 iniciarGuia();
 iniciarResultados();

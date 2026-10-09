@@ -71,6 +71,12 @@ export function textoSobre(carta, texto, color = '#b9c2d3', size = 16, dy = 34) 
   floatText(x, y + dy, texto, { color, size, font: 'Inter', rise: 30 });
 }
 
+// Aviso al jugador sobre una carta (p. ej. "no se puede elegir": Provocación, Sigilo, Incitar). Más grande y dura más que textoSobre.
+export function aviso(carta, texto) {
+  const { x, y } = pos(carta);
+  floatText(x, y - 10, texto, { color: '#fecaca', size: 19, font: 'Inter', rise: 22, hold: 1.4 });
+}
+
 export function curacion(carta, cantidad) {
   const { x, y } = pos(carta);
   flash(carta, .45, 0x44ff99);
