@@ -57,19 +57,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     return n >= min;
   }
 
-  // Estadísticas base del personaje (de su forma actual): sin reliquias, buffs, debuffs, líder ni bonos permanentes
-  function statsBase(p) {
-    const sec = { ...BASE_COMUN };
-    for (const [k, v] of Object.entries(p.extra || {})) sec[k] = (sec[k] || 0) + v;
-    return { hp: p.base.hp, dmg: p.base.dmg, spd: p.base.spd, ...sec };
-  }
-
-  function stats(p) {
+  // capas: qué sumar ({} = solo la base de su forma). Sin capas = todo. Sirve para el desglose del panel.
+  const TODAS = { reliquias: true, buffs: true, debuffs: true, lider: true, permanente: true };
+  function stats(p, capas = TODAS) {
     const b = p.base;
     const flat = { hp: 0, dmg: 0, spd: 0 }, pct = { hp: 0, dmg: 0, spd: 0 };
     const sec = { ...BASE_COMUN };
     for (const [k, v] of Object.entries(p.extra || {})) sec[k] = (sec[k] || 0) + v;
-    for (const sl of p.slots || []) {
+    if (capas.reliquias) for (const sl of p.slots || []) {
       const r = sl.relic && RELIQUIAS[sl.relic];
       if (!r) continue;
       flat[r.flat[0]] += r.flat[1];
@@ -78,6 +73,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       }
     }
     for (const e of p.estados) {
+      if (!capas[EFECTOS[e.id]?.tipo === 'debuff' ? 'debuffs' : 'buffs']) continue;
       if (e.id === 'dmgUp') pct.dmg += e.valor;
       if (e.id === 'protect') sec.res += BUFFS.proteccion;
       if (e.id === 'frenzy') sec.critRate += BUFFS.frenesi;
@@ -90,7 +86,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       if (e.id === 'freeze') pct.spd -= CONTROL.congelacionVel * (e.mega ? 2 : 1);
     }
     sec.armor = Math.max(0, sec.armor);   // la Armadura nunca baja de 0% (la Puntería sí puede quedar negativa, p. ej. con Ceguera)
-    for (const l of lideresDe(p)) {          // líder "bonoPorEfecto": +valor a una estadística por cada enemigo con ese efecto
+    if (capas.lider) for (const l of lideresDe(p)) {          // líder "bonoPorEfecto": +valor a una estadística por cada enemigo con ese efecto
       const b = l.lider?.bonoPorEfecto;
       if (b) sec[b.stat] = (sec[b.stat] || 0) + b.valor * enemigosDe(p).filter(x => get(x, b.efecto)).length;
       if (l.lider?.bonoDano) pct.dmg += l.lider.bonoDano;                                  // líder "bonoDano": +X% de Daño fijo
@@ -100,7 +96,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const ac = l.lider?.acumulaPorDoT;                                                   // líder "acumulaPorDoT": lo ganado hasta ahora
       if (ac && l.acumLider) sec[ac.stat] = (sec[ac.stat] || 0) + l.acumLider;
     }
-    for (const [k, v] of Object.entries(p.permanente || {})) {
+    if (capas.permanente) for (const [k, v] of Object.entries(p.permanente || {})) {
       if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
     }
     return {
@@ -111,6 +107,19 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     };
   }
   const maxHp = p => stats(p).hp;
+  // Desglose para el panel: cuánto suma o resta cada origen (se agregan por capas, en este orden)
+  function desglose(p) {
+    const orden = ['reliquias', 'buffs', 'debuffs', 'lider', 'permanente'], capas = {}, out = {};
+    let antes = stats(p, capas);
+    const base = antes;
+    for (const c of orden) {
+      capas[c] = true;
+      const ahora = stats(p, capas);
+      out[c] = Object.fromEntries(Object.keys(ahora).map(k => [k, ahora[k] - antes[k]]));
+      antes = ahora;
+    }
+    return { base, ...out };
+  }
   const get = (p, id) => p.estados.find(e => e.id === id);
   const todos = (p, id) => p.estados.filter(e => e.id === id);
   const vivos = lado => P.filter(p => p.lado === lado && !p.muerto);
@@ -183,7 +192,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   function vista(p) {
     return {
       hp: Math.max(0, p.hp), maxHp: maxHp(p), escudo: p.escudo, muerto: p.muerto, esLider: p.esLider,
-      stats: stats(p), base: statsBase(p), estados: vistaEstados(p), cds: { ...p.cds }, silenciado: get(p, 'silence')?.categoria || null, bonos: { ...p.bonos }, inmune: p.inmune,
+      stats: stats(p), desglose: desglose(p), estados: vistaEstados(p), cds: { ...p.cds }, silenciado: get(p, 'silence')?.categoria || null, bonos: { ...p.bonos }, inmune: p.inmune,
       invocaciones: todos(p, 'summon').map(e => ({ key: e.key, dur: e.dur, fresca: !!e.fresca, max: INVOCACIONES[e.key].dur })),
       forma: p.forma ? { nombre: p.forma.nombre, imagen: p.forma.imagen, emoji: p.forma.emoji, color: p.forma.color, turnos: p.forma.turnos, total: p.forma.total, permanente: !!p.forma.permanente } : null,
       transformacion: p.transformacion ? { nombre: p.transformacion.nombre, pasiva: p.transformacion.pasiva?.nombre, movimientos: p.transformacion.movimientos.map(m => m.nombre) } : null,
