@@ -171,6 +171,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'grayskull': texto = `${e.valor} de Poder de Grayskull (máx. 5): Golpe de Grayskull +15% por cada uno`; n = e.valor; break;
         case 'poderRobado': texto = `${e.valor} de Poder Robado (máx. 10): Poder de Grayskull +20% por cada uno`; n = e.valor; break;
         case 'orgullo': texto = `${e.valor} de Orgullo (máx. 5): Final Flash +15% por cada uno`; n = e.valor; break;
+        case 'hiraishin': texto = `Marca de ${porUid(e.fuente)?.nombre || 'Minato'}: al golpearlo, la consume y gana un turno extra · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'zona': texto = `${e.zona.nombre}: ${e.zona.desc} · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'sello': { const se = p.pasiva?.sello; texto = se ? `${se.nombre}: ${se.desc}` : ''; break; }
         case 'rival': texto = `Rival de ${porUid(e.fuente)?.nombre || 'Vegeta'}: recibe más daño de él`; break;
@@ -589,7 +590,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const b = mov.bonoPorAcumulacion;
       d *= 1 + Math.min(todos(t, b.efecto).length, b.max ?? 99) * b.pct;
     }
-    const garantizado = (mov.criticoSiHpMin !== undefined && t.hp / maxHp(t) >= mov.criticoSiHpMin)
+    const garantizado = (mov.criticoSiObjetivoTiene && !!get(t, mov.criticoSiObjetivoTiene))   // p. ej. Rasengan contra marcados
+      || (mov.criticoSiHpMin !== undefined && t.hp / maxHp(t) >= mov.criticoSiHpMin)
       || (mov.criticoSiMasRapido && stats(a).spd > stats(t).spd);          // p. ej. Totsuka: crítico seguro contra los más lentos
     let probCrit = sa.critRate + (mov.critExtra || 0), danoCrit = sa.critDmg;
     if (mov.critExtraSi && ctx.teniaAntes?.has(mov.critExtraSi.teniaAntes)) probCrit += mov.critExtraSi.pct;   // +crítico si ya tenía X antes del movimiento
@@ -652,6 +654,15 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (robo && !a.muerto && (get(a, 'solarBurn') || (a.hp < maxHp(a) && puedeCurarse(a)))) curar(a, a, (aHp + aEsc) * robo);
     emitir('golpe', { de: a.uid, a: t.uid, dano: aHp, escudo: aEsc, critico, quiebre, color: mov.color, fuente: ctx.fuente, multi: (mov.golpes || 1) > 1 }, t);
     recibioDano(t, aHp + aEsc, a);
+    const cm = a.pasiva?.consumeMarca;          // pasiva "consumeMarca": golpear a quien tiene SU marca (puesta en otro movimiento) la consume
+    const mk = cm && t.lado !== a.lado && t.estados.find(e => e.id === cm.marca && e.fuente === a.uid && e.movId !== movId);
+    if (mk && !a.muerto) {
+      quitar(t, mk);
+      emitir('bonoVisible', { a: t.uid, texto: `${EFECTOS[cm.marca].icono} ¡${cm.texto || 'Marca consumida'}!` }, t);
+      if (cm.alConsumir) ejecutarAccion(a, cm.alConsumir, { objetivo: a });
+      if (a.turnoMarcaRonda !== S.ronda) { a.turnoMarcaRonda = S.ronda; a.turnosMarca = 0; }
+      if (cm.turnoExtra && a.turnosMarca < (cm.maxPorRonda ?? 1)) { a.turnosMarca++; ejecutarAccion(a, { tipo: 'turnoExtra', a: 'propio' }, {}); }   // maxPorRonda: turnos extra por ronda
+    }
     if (critico && t.lado !== a.lado && t.hp > 0 && t.sellado && t.pasiva.sello.romper.recibeCritico) romperSello(t);
     if (critico && t.lado !== a.lado && t.hp > 0) for (const l of lideresDe(t)) if (l.lider?.alRecibirCritico) ejecutarAccion(l, l.lider.alRecibirCritico, { objetivo: t });   // líder: p. ej. Conocer el Dolor
     // pasiva "cargasAlRecibirGolpe": cada golpe de un enemigo le da cargas (el doble si su Provocación lo indica); con Control no
@@ -1027,6 +1038,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (spec.aliadosDistintos) return [...aliadosDe(a)].sort(() => rng() - .5).slice(0, spec.aliadosDistintos);
     if (spec === 'sobrevivientes') return (ctx.sobrevivientes || []).filter(x => !x.muerto);
     if (spec.aliadosAzar) return Array.from({ length: spec.aliadosAzar }, () => aliadosDe(a)).filter(l => l.length).map(l => rng.elegir(l));
+    if (spec === 'aliadoMasLento') { const l = aliadosDe(a); return l.length ? [l.reduce((x, y) => stats(x).spd <= stats(y).spd ? x : y)] : []; }
     if (spec === 'aliadoMasHerido') { const l = aliadosDe(a); return l.length ? [l.reduce((x, y) => x.hp / maxHp(x) <= y.hp / maxHp(y) ? x : y)] : []; }
     if (spec.azarCon) {
       const { efecto, min = 1 } = spec.azarCon;
@@ -1090,6 +1102,16 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           let n = 0;
           for (const c of acc.categorias || CATEGORIAS) if (t.cds[c] > 0) { t.cds[c] = Math.max(0, t.cds[c] - (acc.cantidad || 1)); n++; }
           if (n) emitir('extension', { a: t.uid, texto: `⏳ −${acc.cantidad || 1} cooldown` }, t);
+          break;
+        }
+        case 'marcar': {               // pone una marca (tipo marca: sin tirada, no se limpia ni disipa) con dueño; si ya la tiene de él, renueva
+          if (acc.prob != null && rng() >= acc.prob) break;
+          if (t.muerto) break;
+          let e = t.estados.find(x => x.id === acc.marca && x.fuente === a.uid);
+          if (e) { e.dur = Math.max(e.dur, acc.dur); e.movId = movId; }
+          else { e = { id: acc.marca, dur: acc.dur, fuente: a.uid, movId }; t.estados.push(e); }
+          if (S.actuaron.has(t) || S.actual === t) e.nuevo = true;
+          emitir('efecto', { a: t.uid, id: acc.marca, texto: `${EFECTOS[acc.marca].icono} ${EFECTOS[acc.marca].nombre}` }, t);
           break;
         }
         case 'zona': {                 // levanta una zona (dur rondas) en el ejecutor; si ya la tiene, renueva la duración

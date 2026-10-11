@@ -60,6 +60,8 @@ export const EFECTOS = {
     desc: 'Cargas de He-Man (máx. 5): las gana al proteger a un aliado y con su Básico. Golpe de Grayskull las consume. No se puede disipar.' },
   poderRobado: { nombre: 'Poder Robado', icono: '💀', color: 0x8b5cf6, tipo: 'buff', tags: ['Carga'], noDisipable: true,
     desc: 'Cargas de Skeletor (máx. 10): gana 1 cada vez que un enemigo recibe un buff. Poder de Grayskull las consume. No se puede disipar.' },
+  hiraishin: { nombre: 'Marca Hiraishin', icono: '🗡️', color: 0xfacc15, tipo: 'marca', tags: ['Marca'], noDisipable: true,
+    desc: 'Sello del Dios del Trueno Volador de Minato: el ancla a la que se teletransporta. Cuando Minato golpea a un enemigo con su marca, la consume y gana un turno extra (hasta 2 por ronda) y Velocidad. Dura 3 rondas; no se limpia.' },
   zona:    { nombre: 'Zona', icono: '🏛️', color: 0xfacc15, tipo: 'marca', tags: ['Zona'], noDisipable: true,
     desc: 'Zona levantada por su portador (p. ej. el Ramesseum Tentyris de Ozymandias): fortalece a todo su equipo y puede actuar al inicio de cada ronda mientras dure. No se puede disipar.' },
   sello:   { nombre: 'Sellado', icono: '🔒', color: 0xfbbf24, tipo: 'marca', tags: ['Sello'], noDisipable: true,

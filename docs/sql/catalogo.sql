@@ -33,6 +33,7 @@ insert into public.campeones (id, nombre, starter, sobres, activo) values
   ('itachi-uchiha', 'Itachi Uchiha', null, array['phantom']::text[], true),
   ('pain', 'Pain', null, array[]::text[], true),
   ('gilgamesh', 'Gilgamesh', null, array['sacred']::text[], true),
-  ('ozymandias', 'Ozymandias', null, array['sacred']::text[], true)
+  ('ozymandias', 'Ozymandias', null, array['sacred']::text[], true),
+  ('minato', 'Minato Namikaze', null, array[]::text[], true)
 on conflict (id) do update set nombre = excluded.nombre, starter = excluded.starter, sobres = excluded.sobres, activo = excluded.activo;
--- 33 campeones
+-- 34 campeones
