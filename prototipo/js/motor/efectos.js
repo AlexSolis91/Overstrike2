@@ -60,6 +60,8 @@ export const EFECTOS = {
     desc: 'Cargas de He-Man (máx. 5): las gana al proteger a un aliado y con su Básico. Golpe de Grayskull las consume. No se puede disipar.' },
   poderRobado: { nombre: 'Poder Robado', icono: '💀', color: 0x8b5cf6, tipo: 'buff', tags: ['Carga'], noDisipable: true,
     desc: 'Cargas de Skeletor (máx. 10): gana 1 cada vez que un enemigo recibe un buff. Poder de Grayskull las consume. No se puede disipar.' },
+  zona:    { nombre: 'Zona', icono: '🏛️', color: 0xfacc15, tipo: 'marca', tags: ['Zona'], noDisipable: true,
+    desc: 'Zona levantada por su portador (p. ej. el Ramesseum Tentyris de Ozymandias): fortalece a todo su equipo y puede actuar al inicio de cada ronda mientras dure. No se puede disipar.' },
   sello:   { nombre: 'Sellado', icono: '🔒', color: 0xfbbf24, tipo: 'marca', tags: ['Sello'], noDisipable: true,
     desc: 'Uno de sus movimientos está sellado hasta que se cumpla una condición de su pasiva (p. ej. la Arrogancia de Gilgamesh). No se puede disipar.' },
   camino:  { nombre: 'Camino', icono: '☯️', color: 0xa855f7, tipo: 'marca', tags: ['Postura'], noDisipable: true,

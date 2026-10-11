@@ -86,6 +86,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       if (e.id === 'wear') sec.armor -= e.valor;
       if (e.id === 'freeze') pct.spd -= CONTROL.congelacionVel * (e.mega ? 2 : 1);
     }
+    if (capas.buffs) for (const x of P) {                // zona: bono a todo el equipo de quien la levantó (p. ej. Ramesseum Tentyris)
+      if (x.lado !== p.lado || x.muerto) continue;
+      const z = get(x, 'zona');
+      for (const [k, v] of Object.entries(z?.zona?.bono || {})) { if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v; }
+    }
     sec.armor = Math.max(0, sec.armor);   // la Armadura nunca baja de 0% (la Puntería sí puede quedar negativa, p. ej. con Ceguera)
     if (capas.lider) for (const l of lideresDe(p)) {          // líder "bonoPorEfecto": +valor a una estadística por cada enemigo con ese efecto
       const b = l.lider?.bonoPorEfecto;
@@ -166,6 +171,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'grayskull': texto = `${e.valor} de Poder de Grayskull (máx. 5): Golpe de Grayskull +15% por cada uno`; n = e.valor; break;
         case 'poderRobado': texto = `${e.valor} de Poder Robado (máx. 10): Poder de Grayskull +20% por cada uno`; n = e.valor; break;
         case 'orgullo': texto = `${e.valor} de Orgullo (máx. 5): Final Flash +15% por cada uno`; n = e.valor; break;
+        case 'zona': texto = `${e.zona.nombre}: ${e.zona.desc} · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'sello': { const se = p.pasiva?.sello; texto = se ? `${se.nombre}: ${se.desc}` : ''; break; }
         case 'rival': texto = `Rival de ${porUid(e.fuente)?.nombre || 'Vegeta'}: recibe más daño de él`; break;
         case 'cargas': texto = `${e.valor} carga(s): su próximo movimiento que las consume hace más daño`; n = e.valor; break;
@@ -185,7 +191,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'regen': texto = `Cura ${Math.round(BUFFS.regeneracion * 100)}% del HP máx. al inicio de su turno · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'fireAura': texto = `Quema (5%, 1 turno) al enemigo que lo golpee · ${e.dur} ronda(s)`; n = e.dur; break;
       }
-      const fase = e.id === 'camino' ? p.pasiva?.ciclo?.fases?.[e.valor] : e.id === 'sello' ? p.pasiva?.sello : null;      // ciclo: se ve el icono y el nombre de la fase activa
+      const fase = e.id === 'camino' ? p.pasiva?.ciclo?.fases?.[e.valor] : e.id === 'sello' ? p.pasiva?.sello : e.id === 'zona' ? e.zona : null;      // ciclo: se ve el icono y el nombre de la fase activa
       out.push(grupo(e.id, { nombre, texto, n, ...(fase ? { nombre: fase.nombre, icono: fase.icono } : {}) }));
     }
     const ven = todos(p, 'poison');
@@ -233,6 +239,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       ejecutarAccion(l, l.lider.alIniciarRonda, {});
     }
     for (const p of P) pasivas(p, 'alIniciarRonda', {});      // pasivas "al inicio de cada ronda" (p. ej. Modo Rikudo)
+    for (const p of P) {                                    // zona: actúa al inicio de cada ronda mientras dure (p. ej. Luz de Dendera)
+      const z = !p.muerto && get(p, 'zona');
+      if (!z?.zona?.alIniciarRonda || !enemigosDe(p).length) continue;
+      emitir('pasiva', { id: p.uid, nombre: z.zona.nombre });
+      ejecutarAccion(p, z.zona.alIniciarRonda, {});
+    }
     procesarReacciones();
   }
 
@@ -758,6 +770,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
 
   function morir(t, asesino = null) {
     if (t.muerto) return;
+    if (get(t, 'zona')?.zona?.inmortal) {             // zona "inmortal": mientras dure, su portador no baja de 1 HP
+      t.hp = 1;
+      emitir('bonoVisible', { a: t.uid, texto: get(t, 'zona').zona.textoInmortal || '¡No puede caer!' }, t);
+      emitir('actualizar', {}, t);
+      return;
+    }
     const ua = t.pasiva?.ultimoAliento;               // la primera vez que muere: queda con 1 HP (y puede transformarse)
     if (ua && !t.usoUltimoAliento) {
       t.usoUltimoAliento = true; t.hp = Math.max(1, (ua.hp || 0) * maxHp(t));   // hp: % de su HP máx. con el que queda (1 HP si no se indica)
@@ -1072,6 +1090,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           let n = 0;
           for (const c of acc.categorias || CATEGORIAS) if (t.cds[c] > 0) { t.cds[c] = Math.max(0, t.cds[c] - (acc.cantidad || 1)); n++; }
           if (n) emitir('extension', { a: t.uid, texto: `⏳ −${acc.cantidad || 1} cooldown` }, t);
+          break;
+        }
+        case 'zona': {                 // levanta una zona (dur rondas) en el ejecutor; si ya la tiene, renueva la duración
+          let e = get(t, 'zona');
+          if (e) e.dur = Math.max(e.dur, acc.dur);
+          else { e = { id: 'zona', dur: acc.dur, zona: acc.zona, fuente: a.uid }; t.estados.push(e); }
+          if (S.actuaron.has(t) || S.actual === t) e.nuevo = true;
+          emitir('efecto', { a: t.uid, id: 'zona', texto: `${acc.zona.icono} ${acc.zona.nombre}` }, t);
           break;
         }
         case 'turnoExtra':

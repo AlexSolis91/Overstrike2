@@ -102,6 +102,16 @@ export const INVOCACIONES = {
     desc: 'Reduce 1 turno el cooldown del Especial y del Over de Daenerys.',
     acciones: [{ tipo: 'reducirCooldown', cantidad: 1, categorias: ['especial', 'over'], a: 'propio' }],
   },
+  // ---------------------------------------------------------------- Ozymandias
+  esfingeWehemMesut: {
+    nombre: 'Esfinge Wehem-Mesut', rareza: 'Épico', emoji: '🦁', color: 0xeab308, imagen: 'assets/invocaciones/esfinge-wehem-mesut.webp', dur: 2,
+    enfoque: [.27, .45],
+    desc: 'Golpea 50% al enemigo más fuerte y da Protección (+30% Resistencia, 1 ronda) al aliado más herido.',
+    acciones: [
+      { tipo: 'golpe', pct: .50, elegir: 'masFuerte' },
+      { tipo: 'efecto', id: 'protect', dur: 1, a: 'aliadoMasHerido' },
+    ],
+  },
   // ---------------------------------------------------------------- Camino Animal de Pain
   ciempiesGigante: {
     nombre: 'Ciempiés Gigante', rareza: 'Común', emoji: '🐛', color: 0xf97316, imagen: 'assets/invocaciones/ciempies-gigante.webp', dur: 2,

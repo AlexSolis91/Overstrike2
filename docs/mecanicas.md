@@ -279,6 +279,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Ignorar Provocación** (movimiento `ignoraProvocacion: true`): puede elegir a cualquier enemigo, aunque haya Provocación o Sigilo. P. ej. Bansho Ten'in de Pain.
 - **Sello** (pasiva `sello { nombre, icono, desc, categoria, dano, romper: { hpMenor, muereAliado, recibeCritico }, textoRomper, alRomper }`, p. ej. Arrogancia de Gilgamesh): empieza con ese movimiento **sellado** (no se puede usar; el panel muestra «🔒 Sellado») y con `dano` de modificador a su daño (p. ej. −10%). La carta muestra la marca `sello` con el icono y nombre de la pasiva. Se rompe **para siempre** en cuanto se cumple cualquiera de las condiciones: su HP baja de `hpMenor` × HP máx., muere un aliado o recibe un golpe crítico de un enemigo (y sobrevive). Al romperse: el movimiento queda listo al instante, desaparece el modificador de daño y ejecuta `alRomper` (p. ej. +25% de Daño permanente). Condición `sellado: true/false` para efectos que cambian según el estado (p. ej. Enkidu: Mega Aturdimiento si ya va en serio).
 - **Romper Escudo** (movimiento `rompeEscudo: true`): antes de golpear a cada enemigo le destruye **todo** su Escudo (cuenta como perder el Escudo para las pasivas). P. ej. Enuma Elish.
+- **Zona** (acción `zona { dur, zona: { nombre, icono, desc, bono, alIniciarRonda, inmortal, textoInmortal } }`, p. ej. Ramesseum Tentyris de Ozymandias): el ejecutor levanta una zona por `dur` rondas (regla general de duraciones; si ya la tiene, se renueva). Es una marca `zona` en su carta (icono y nombre de la zona, rondas restantes; no se disipa). Mientras dure: `bono` se suma a las estadísticas de **todo su equipo** (capa Buffs del desglose; claves como `bonoStat`, p. ej. `dmgPct`, `res`); `alIniciarRonda` se ejecuta al inicio de cada ronda (p. ej. `golpeDirecto` de 40% a todos los enemigos); con `inmortal` su portador no baja de 1 HP (cualquier golpe mortal lo deja en 1). Desaparece al terminar su duración.
 - **Cooldown inicial propio** (`cdInicial` en un movimiento): con cuánto empieza la partida en vez del general (Over = 2). P. ej. Explosión de Galaxias: empieza en 6.
 - **Protector** (pasiva `protector { pct, cargas: { efecto, max } }`): mientras no tenga un Control que le quite el turno, recibe **en lugar** de su aliado ese % de cada **golpe** enemigo (ya mitigado por el aliado; luego aplica su propia Armadura y reducciones; se ve como daño amarillo). Cada vez gana 1 carga de ese tipo. P. ej. Protector de Eternia de He-Man: 25%, Poder de Grayskull ⚡ (máx. 5).
 - **Castigador de buffs** (pasiva): `cargasPorBuffEnemigo { efecto, max }` = cada buff que **recibe** un enemigo (por la vía normal; no los robados ni transferidos) le da 1 carga de ese tipo (p. ej. Poder Robado 💀 de Skeletor, máx. 10). `bonoPorBuffsObjetivo { pct, max }` = +pct de daño por cada buff activo del objetivo (sin contar invocaciones), hasta `max`.
@@ -337,6 +338,11 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | Beru | Épico | 9 | 2 | 2×30% + Sangrado o Veneno |
 | Bellion | Épico | 5 | 2 | 35% al enemigo más fuerte · al aparecer: Aturdimiento a hasta 3 enemigos distintos |
 | Kamish | Legendario | 1 | 1 | 50% a todos · al aparecer: 150% a todos + Miedo |
+
+### Esfinge Wehem-Mesut (Ozymandias, la invoca su Especial)
+| Invocación | Rareza | Dura | Rol |
+|---|---|---|---|
+| Esfinge Wehem-Mesut | Épico | 2 | 50% al enemigo más fuerte + Protección (1 ronda) al aliado más herido |
 
 ### Criaturas del Camino Animal de Pain (tabla `animalesPain`)
 | Criatura | Rareza | Peso | Dura | Rol |
