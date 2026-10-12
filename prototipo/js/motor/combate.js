@@ -46,6 +46,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     }
     // efectosPermanentes: la pasiva da ese efecto toda la partida (sin duración, no se disipa ni se roba)
     for (const id of def.pasiva?.efectosPermanentes || []) p.estados.push({ id, permanente: true });
+    const cl = def.pasiva?.clones;                       // clones: empieza con N (p. ej. Clones de Cuervo de Itachi)
+    if (cl?.iniciales) p.estados.push({ id: cl.efecto, valor: cl.iniciales });
     if (def.pasiva?.sello) { p.sellado = true; p.estados.push({ id: 'sello', permanente: true }); }   // sello: un movimiento bloqueado hasta romperlo
     p.hp = stats(p).hp;
     return p;
@@ -167,6 +169,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'mirror': texto = `Devuelve el ${Math.round(BUFFS.espejismo * 100)}% del daño de cada golpe recibido · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'aguja': texto = `${e.valor} aguja(s): pierde ${Math.round(e.valor * DEBUFFS.agujaTurno * 1000) / 10}% del HP máx. al inicio de su turno y recibe +${Math.round(e.valor * DEBUFFS.aguja * 100)}% de daño de Veneno y Sangrado`; n = e.valor; break;
         case 'blockBuffs': texto = `No puede recibir buffs nuevos · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'cuervos': texto = `${e.valor} clon(es) de cuervo: cada uno absorbe un ataque enemigo contra Itachi`; n = e.valor; break;
         case 'oscuridad': texto = `${e.valor} de Oscuridad (máx. 3): con 3 se transforma en Saga Oscuro`; n = e.valor; break;
         case 'grayskull': texto = `${e.valor} de Poder de Grayskull (máx. 5): Golpe de Grayskull +15% por cada uno`; n = e.valor; break;
         case 'poderRobado': texto = `${e.valor} de Poder Robado (máx. 10): Poder de Grayskull +20% por cada uno`; n = e.valor; break;
@@ -1472,6 +1475,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (t.muerto) return;
     const hostil = t.lado !== a.lado || ctx.forzado;
     if (hostil && rng() < Math.min(stats(t).block, TOPES.block)) { emitir('bloqueo', { de: a.uid, a: t.uid }); return; }
+    const cln = hostil && t.lado !== a.lado && t.pasiva?.clones, clon = cln && get(t, cln.efecto);
+    if (clon?.valor > 0) {             // pasiva "clones": un clon absorbe por completo este ataque contra él (daño y efectos)
+      clon.valor--; if (!clon.valor) quitar(t, clon);
+      emitir('bonoVisible', { a: t.uid, texto: cln.texto || '¡Era un clon!' }, t);
+      emitir('actualizar', {}, t);
+      if (cln.alAbsorber && !a.muerto) ejecutarAccion(t, cln.alAbsorber, { objetivo: a, atacante: a });
+      return;
+    }
     if (mov.rompeEscudo && hostil && t.escudo > 0) {     // rompeEscudo: destruye todo el Escudo del objetivo antes de golpear (p. ej. Enuma Elish)
       t.escudo = 0;
       emitir('bonoVisible', { a: t.uid, texto: '💥 ¡Escudo destruido!' }, t);

@@ -2,7 +2,7 @@ import { espacios } from '../reliquias.js';
 
 // Ficha oficial #34 (2026-10-11). Minato Namikaze, el Destello Amarillo / Cuarto Hokage. Marca a los enemigos con el sello del
 // Dios del Trueno Volador (Marca Hiraishin: es una marca, no un debuff) y se teletransporta hacia ellos: al golpear a un marcado
-// consume la marca y gana un turno extra (hasta 2 por ronda) y Velocidad. 25% de Bloqueo (esquiva teletransportándose). Las marcas puestas en un movimiento no se consumen en ese mismo.
+// consume la marca y gana un turno extra (hasta 2 por ronda) y Velocidad. Todos sus golpes escalan por Velocidad. 25% de Bloqueo (esquiva teletransportándose). Las marcas puestas en un movimiento no se consumen en ese mismo.
 export default {
   id: 'minato',
   nombre: 'Minato Namikaze',
@@ -29,19 +29,19 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Kunai Hiraishin', objetivo: 'azar', golpes: 2, estilo: 'ranged', color: 0xfacc15,
-      pct: .45, escala: 'dano', cd: 0,
-      desc: 'Lanza 2 kunai de 45% a enemigos al azar. Cada uno tiene 60% de probabilidad de dejar una Marca Hiraishin (3 rondas).',
+      pct: .45, escala: 'vel', cd: 0,
+      desc: 'Lanza 2 kunai de 45% (escala por Velocidad) a enemigos al azar. Cada uno tiene 60% de probabilidad de dejar una Marca Hiraishin (3 rondas).',
       efectos: [{ accion: { tipo: 'marcar', marca: 'hiraishin', dur: 3, prob: .60 } }],
     },
     {
       categoria: 'especial', nombre: 'Rasengan', objetivo: 'enemigo', estilo: 'melee', color: 0x60a5fa,
-      pct: 2.00, escala: 'dano', cd: 2, criticoSiObjetivoTiene: 'hiraishin',
-      desc: 'Causa 200%. Si el objetivo tiene Marca Hiraishin, Minato aparece a su espalda: crítico seguro.',
+      pct: 2.00, escala: 'vel', cd: 2, criticoSiObjetivoTiene: 'hiraishin',
+      desc: 'Causa 200% (escala por Velocidad). Si el objetivo tiene Marca Hiraishin, Minato aparece a su espalda: crítico seguro.',
     },
     {
       categoria: 'over', nombre: 'Dios del Trueno Volador: Nivel 2', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfde047,
-      pct: 1.00, escala: 'dano', cd: 5, cdInicial: 0,
-      desc: 'Listo desde el inicio de la partida. Golpea 100% a todos los enemigos y luego les deja a todos una Marca Hiraishin (3 rondas), sin tirada.',
+      pct: 1.00, escala: 'vel', cd: 5, cdInicial: 0,
+      desc: 'Listo desde el inicio de la partida. Golpea 100% (escala por Velocidad) a todos los enemigos y luego les deja a todos una Marca Hiraishin (3 rondas), sin tirada.',
       efectos: [{ cuando: 'final', accion: { tipo: 'marcar', marca: 'hiraishin', dur: 3, a: 'todosEnemigos' } }],
     },
   ],

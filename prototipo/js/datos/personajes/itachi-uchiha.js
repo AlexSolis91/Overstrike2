@@ -1,28 +1,27 @@
 import { espacios } from '../reliquias.js';
 
-// Ficha oficial #30 (2026-10-09, ajustada tras la simulación: ~71% de victorias, objetivo 65–75%).
-// Control de velocidad: cada golpe le roba Velocidad al enemigo (permanente), pega más mientras más rápido sea, gana un
-// turno extra si es el más rápido del campo, y sus controles siempre entran contra los más lentos.
-// Miedo (Genjutsu de Cuervos), Mega Aturdimiento (Tsukuyomi) y la Espada de Totsuka que sella el Over enemigo.
-// Sin Habilidad de Líder.
+// Ficha oficial #30, rediseñada el 2026-10-12: Itachi deja de ser un personaje de velocidad (eso es de Minato) y pasa a ser el
+// maestro del genjutsu. Clones de Cuervo (contador): cada uno absorbe un ataque enemigo contra él y los cuervos pueden asustar
+// al atacante; gana clones al aplicar Control. Tsukuyomi (Mega Aturdimiento + Debilitar), Susanoo: Espada de Totsuka (sella el
+// Over enemigo) y Espejo de Yata (Espejismo + Escudo). Sin Habilidad de Líder.
 export default {
   id: 'itachi-uchiha',
   nombre: 'Itachi Uchiha',
   rol: 'Control', rolSecundario: 'Daño',
   sobres: ['phantom'],
   emoji: '🐦‍⬛', color: '#b91c1c', imagen: 'assets/personajes/itachi-uchiha.webp',
-  base: { hp: 680, dmg: 88, spd: 105 },
+  base: { hp: 680, dmg: 88, spd: 96 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
   pasiva: {
-    nombre: 'Sharingan Mangekyō',
-    desc: 'Cada golpe de Itachi le roba 5% de Velocidad al enemigo y se la suma (toda la partida, hasta +25% en total). Hace +1% de daño por cada punto de Velocidad que le saque al objetivo (hasta +50%). Si es el personaje más rápido de todo el campo, gana un turno extra (una vez por ronda). Sus debuffs siempre entran (sin tirada de Puntería) contra enemigos más lentos que él.',
-    gatillo: 'alGolpear', filtro: { en: 'enemigos' },
-    accion: { tipo: 'robarVelocidad', pct: .05, tope: .25, a: 'objetivo' },
-    danoPorVelocidad: { pct: .01, max: .50 },
-    turnoExtraSiMasRapido: true,
-    seguroVsLentos: true,
+    nombre: 'Mangekyō Sharingan',
+    desc: 'Empieza con 2 Clones de Cuervo (máx. 3). Cada clon absorbe por completo un ataque enemigo contra Itachi (daño y efectos): era un genjutsu, y los cuervos tienen 40% de probabilidad de aplicar Miedo (2 rondas) al atacante. Gana 1 clon cada vez que le aplica Aturdimiento o Miedo a un enemigo.',
+    clones: {
+      efecto: 'cuervos', iniciales: 2, texto: '🐦‍⬛ ¡Era un genjutsu!',
+      alAbsorber: { tipo: 'efecto', id: 'fear', dur: 2, prob: .40, a: 'objetivo' },
+    },
+    cargasAlAplicar: { efectos: ['stun', 'fear'], efecto: 'cuervos', max: 3 },
   },
   movimientos: [
     {
@@ -34,15 +33,19 @@ export default {
     {
       categoria: 'especial', nombre: 'Tsukuyomi', objetivo: 'enemigo', estilo: 'ranged', color: 0xdc2626,
       pct: 1.20, escala: 'dano', cd: 3,
-      desc: 'Causa 120% y con 70% de probabilidad atrapa al enemigo en el Tsukuyomi: Mega Aturdimiento (pierde 2 turnos).',
-      efectos: [{ accion: { tipo: 'efecto', id: 'stun', mega: true, prob: .70 } }],
+      desc: 'Causa 120% y con 70% de probabilidad atrapa al enemigo en el Tsukuyomi: Mega Aturdimiento (pierde 2 turnos). Si cae, sale mentalmente destrozado: Debilitar (2 rondas).',
+      efectos: [
+        { accion: { tipo: 'efecto', id: 'stun', mega: true, prob: .70 } },
+        { condicion: { objetivoTiene: 'stun' }, accion: { tipo: 'efecto', id: 'weaken', dur: 2 } },
+      ],
     },
     {
-      categoria: 'over', nombre: 'Susanoo: Espada de Totsuka', objetivo: 'enemigo', estilo: 'melee', color: 0xef4444,
-      pct: 2.40, escala: 'dano', cd: 5, criticoSiMasRapido: true,
-      desc: 'Causa 240% (crítico seguro si Itachi es más rápido que el objetivo) y sella su Over: lo pone en su cooldown completo. El Espejo de Yata le da a Itachi un Escudo del 20% de su HP máx.',
+      categoria: 'over', nombre: 'Susanoo', objetivo: 'enemigo', estilo: 'melee', color: 0xef4444,
+      pct: 2.20, escala: 'dano', cd: 5,
+      desc: 'La Espada de Totsuka causa 220% y sella el Over del objetivo (lo pone en su cooldown completo). El Espejo de Yata le da a Itachi Espejismo (2 rondas: devuelve el 30% del daño de cada golpe) y un Escudo del 20% de su HP máx.',
       efectos: [
         { accion: { tipo: 'activarCooldown', categoria: 'over' } },
+        { cuando: 'final', accion: { tipo: 'efecto', id: 'mirror', dur: 2, a: 'propio' } },
         { cuando: 'final', accion: { tipo: 'escudo', pct: .20, escala: 'hpMax', a: 'propio' } },
       ],
     },
