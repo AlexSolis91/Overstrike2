@@ -88,6 +88,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       if (e.id === 'wear') sec.armor -= e.valor;
       if (e.id === 'freeze') pct.spd -= CONTROL.congelacionVel * (e.mega ? 2 : 1);
     }
+    if (capas.lider) for (const x of P) {                // pasiva "bonoPorAliadosQueAplican": bono a todo su equipo según cuántos aliados aplican X (mientras viva)
+      const bp = x.pasiva?.bonoPorAliadosQueAplican;
+      if (!bp || x.lado !== p.lado || x.muerto || !x.aliadosQueAplican) continue;
+      const n = Math.min(x.aliadosQueAplican, bp.max ?? 4);
+      for (const [k, v] of Object.entries(bp.bono)) { if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v * n; else sec[k] = (sec[k] || 0) + v * n; }
+    }
     if (capas.buffs) for (const x of P) {                // zona: bono a todo el equipo de quien la levantó (p. ej. Ramesseum Tentyris)
       if (x.lado !== p.lado || x.muerto) continue;
       const z = get(x, 'zona');
@@ -169,6 +175,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'mirror': texto = `Devuelve el ${Math.round(BUFFS.espejismo * 100)}% del daño de cada golpe recibido · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'aguja': texto = `${e.valor} aguja(s): pierde ${Math.round(e.valor * DEBUFFS.agujaTurno * 1000) / 10}% del HP máx. al inicio de su turno y recibe +${Math.round(e.valor * DEBUFFS.aguja * 100)}% de daño de Veneno y Sangrado`; n = e.valor; break;
         case 'blockBuffs': texto = `No puede recibir buffs nuevos · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'destruccion': texto = `${e.valor} de Destrucción (máx. 10): +${e.valor * 3}% de daño · el Aliento de la Destrucción las consume`; n = e.valor; break;
         case 'cuervos': texto = `${e.valor} clon(es) de cuervo: cada uno absorbe un ataque enemigo contra Itachi`; n = e.valor; break;
         case 'oscuridad': texto = `${e.valor} de Oscuridad (máx. 3): con 3 se transforma en Saga Oscuro`; n = e.valor; break;
         case 'grayskull': texto = `${e.valor} de Poder de Grayskull (máx. 5): Golpe de Grayskull +15% por cada uno`; n = e.valor; break;
@@ -581,6 +588,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const ac = p.pasiva?.auraContra;
       if (ac && t.lado !== a.lado && [].concat(ac.efecto).some(id => get(t, id))) d *= 1 + ac.pct;
     }
+    const dc = a.pasiva?.danoPorCargas;       // pasiva: +X% de daño por cada carga de un contador (p. ej. Destrucción de Antares)
+    if (dc) d *= 1 + (get(a, dc.efecto)?.valor || 0) * dc.pct;
+    const ej = a.pasiva?.enemigoJurado;       // pasiva: +X% de daño a un personaje concreto (p. ej. Antares ↔ Sun Jin Woo)
+    if (ej && t.lado !== a.lado && t.id === ej.id) d *= 1 + ej.bono;
     const bc = a.pasiva?.bonoContra;          // pasiva: +X% de daño a enemigos con un efecto (p. ej. Reptile contra envenenados)
     if (bc && [].concat(bc.efecto).some(id => get(t, id))) d *= 1 + bc.pct;
     const fz = ctx.fase !== undefined ? ctx.fase : (S.actual === a && mov.categoria !== 'invocacion' ? a.faseActiva : null);   // ciclo: bono de la fase (p. ej. Camino Asura)
@@ -805,7 +816,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const rivalDe = P.filter(v => v.lado !== t.lado && !v.muerto && v.pasiva?.rival && esRival(v, t));
     t.muerto = true; t.hp = 0; t.escudo = 0; t.estados = [];
     emitir('muerte', { a: t.uid, invocaciones, lider: t.esLider && !!t.lider }, t);
-    if (t.esLider && t.lider) for (const x of aliadosDe(t)) if (x.hp > maxHp(x)) { x.hp = maxHp(x); emitir('actualizar', {}, x); }
+    if ((t.esLider && t.lider) || t.pasiva?.bonoPorAliadosQueAplican) for (const x of aliadosDe(t)) if (x.hp > maxHp(x)) { x.hp = maxHp(x); emitir('actualizar', {}, x); }
     const rv = t.pasiva?.revivir;                      // pasiva "revivir": vuelve tras N turnos (de cualquiera), una vez por partida
     if (rv && !t.revivio) { t.revivio = true; t.reviveEn = rv.turnos + (S.actual ? 1 : 0); emitir('extension', { a: t.uid, texto: `🐒 Revivirá en ${rv.turnos} turnos` }, t); }
     for (const b of bombas) explotarBomba(t, b, true);
@@ -1105,6 +1116,15 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           let n = 0;
           for (const c of acc.categorias || CATEGORIAS) if (t.cds[c] > 0) { t.cds[c] = Math.max(0, t.cds[c] - (acc.cantidad || 1)); n++; }
           if (n) emitir('extension', { a: t.uid, texto: `⏳ −${acc.cantidad || 1} cooldown` }, t);
+          break;
+        }
+        case 'detonarDoT': {           // hace al instante todo el daño restante de un DoT (valor × rondas que le quedan) y lo quita (salvo inextinguible)
+          const e = get(t, acc.efecto);
+          if (!e || t.muerto) break;
+          const extra = acc.bonoPorCargas ? (ctx.cargas || 0) * acc.bonoPorCargas : 0;   // + % por cargas consumidas por el movimiento
+          if (!e.inextinguible) quitar(t, e);
+          emitir('bonoVisible', { a: t.uid, texto: acc.texto || '💥 ¡Detonación!' }, t);
+          danoDoT(t, e.valor * Math.max(1, e.dur ?? 1) * (1 + extra), acc.efecto, porUid(e.fuente) || a);
           break;
         }
         case 'marcar': {               // pone una marca (tipo marca: sin tirada, no se limpia ni disipa) con dueño; si ya la tiene de él, renueva
@@ -1523,6 +1543,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   }
 
   // Efectos que un movimiento puede aplicar o propagar (la interfaz los usa, p. ej. para el sonido de un golpe de fuego)
+  const formasDe = d => { const l = [d]; for (let f = d.transformacion; f; f = f.transformacion) l.push(f); return l; };
   function efectosQueAplica(mov) {
     const ids = new Set();
     const ver = acc => {
@@ -1634,6 +1655,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   equipoJugador.forEach((d, i) => P.push(crearPersonaje(d, 'jugador', i)));
   equipoRival.forEach((d, i) => P.push(crearPersonaje(d, 'rival', i)));
   for (const p of P) if (p.pasiva?.rival) elegirRival(p, false);
+  for (const p of P) { const bp = p.pasiva?.bonoPorAliadosQueAplican;     // cuenta (al inicio) los aliados cuyos movimientos aplican ese efecto
+    if (bp) p.aliadosQueAplican = P.filter(x => x !== p && x.lado === p.lado && formasDe(x).some(f => (f.movimientos || []).some(m => efectosQueAplica(m).includes(bp.efecto)))).length; }
+  for (const p of P) { const ej = p.pasiva?.enemigoJurado;          // enemigo jurado: se marca como Rival desde el inicio
+    if (ej) for (const t of P) if (t.lado !== p.lado && t.id === ej.id) t.estados.push({ id: 'rival', fuente: p.uid, permanente: true }); }
   for (const p of P) p.hp = stats(p).hp;      // con todos creados: incluye bonos de líder al HP máx. (el líder se crea antes que su equipo)
 
   return {

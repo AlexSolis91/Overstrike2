@@ -33,6 +33,7 @@ import pain from './pain.js';
 import gilgamesh from './gilgamesh.js';
 import ozymandias from './ozymandias.js';
 import minato from './minato.js';
+import antares from './antares.js';
 
-export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato];
+export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares];
 export const porId = id => OFICIALES.find(p => p.id === id);

@@ -13,9 +13,10 @@ export default {
 
   pasiva: {
     nombre: 'Extracción de las Sombras',
-    desc: 'Cada vez que Sun Jin Woo o sus sombras eliminan a un enemigo, invoca una sombra Épica o Legendaria al azar. Es inmune a Veneno.',
+    desc: 'Cada vez que Sun Jin Woo o sus sombras eliminan a un enemigo, invoca una sombra Épica o Legendaria al azar. Es inmune a Veneno. Enemigo jurado de Antares: le hace +20% de daño.',
     gatillo: 'alEliminar',
     inmuneA: ['poison'],
+    enemigoJurado: { id: 'antares', bono: .20 },   // Antares, el Monarca de la Destrucción: +20% de daño contra él (y él contra Sun Jin Woo)
     accion: { tipo: 'invocarAzar', tabla: 'sombras', rarezas: ['Épico', 'Legendario'], a: 'propio' },
   },
   movimientos: [
