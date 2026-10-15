@@ -60,6 +60,8 @@ export const EFECTOS = {
     desc: 'Cargas de He-Man (máx. 5): las gana al proteger a un aliado y con su Básico. Golpe de Grayskull las consume. No se puede disipar.' },
   poderRobado: { nombre: 'Poder Robado', icono: '💀', color: 0x8b5cf6, tipo: 'buff', tags: ['Carga'], noDisipable: true,
     desc: 'Cargas de Skeletor (máx. 10): gana 1 cada vez que un enemigo recibe un buff. Poder de Grayskull las consume. No se puede disipar.' },
+  cargaElectrica: { nombre: 'Carga Eléctrica', icono: '⚡', color: 0xa5b4fc, tipo: 'marca', tags: ['Carga'], noDisipable: true,
+    desc: 'Contador de Baran sobre un enemigo: cada golpe de Baran deja 1. Con 2 sufre una Sobrecarga: queda Aturdido (sin tirada) y las cargas se reinician. El Juicio del Rey Demonio las consume. No se limpia.' },
   destruccion: { nombre: 'Destrucción', icono: '🔥', color: 0xdc2626, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Contador de Antares (máx. 10): gana 1 cada vez que cualquier Quemadura hace daño a un enemigo; cada una le da +3% de daño. El Aliento de la Destrucción las consume. No se disipa ni se limpia.' },
   cuervos: { nombre: 'Clones de Cuervo', icono: '🐦‍⬛', color: 0x334155, tipo: 'marca', tags: ['Carga'], noDisipable: true,

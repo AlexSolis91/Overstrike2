@@ -175,6 +175,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'mirror': texto = `Devuelve el ${Math.round(BUFFS.espejismo * 100)}% del daño de cada golpe recibido · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'aguja': texto = `${e.valor} aguja(s): pierde ${Math.round(e.valor * DEBUFFS.agujaTurno * 1000) / 10}% del HP máx. al inicio de su turno y recibe +${Math.round(e.valor * DEBUFFS.aguja * 100)}% de daño de Veneno y Sangrado`; n = e.valor; break;
         case 'blockBuffs': texto = `No puede recibir buffs nuevos · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'cargaElectrica': texto = `${e.valor} carga(s) de ${porUid(e.fuente)?.nombre || 'Baran'}: al completar sus cargas, Sobrecarga (Aturdido)`; n = e.valor; break;
         case 'destruccion': texto = `${e.valor} de Destrucción (máx. 10): +${e.valor * 3}% de daño · el Aliento de la Destrucción las consume`; n = e.valor; break;
         case 'cuervos': texto = `${e.valor} clon(es) de cuervo: cada uno absorbe un ataque enemigo contra Itachi`; n = e.valor; break;
         case 'oscuridad': texto = `${e.valor} de Oscuridad (máx. 3): con 3 se transforma en Saga Oscuro`; n = e.valor; break;
@@ -582,7 +583,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (dv && t.lado !== a.lado) { const dif = stats(a).spd - stats(t).spd; if (dif > 0) d *= 1 + Math.min(dif * dv.pct, dv.max); }
     const bb = a.pasiva?.bonoPorBuffsObjetivo;   // pasiva: +X% de daño por cada buff activo del objetivo (sin contar invocaciones), con tope
     if (bb && t.lado !== a.lado) d *= 1 + Math.min(t.estados.filter(e => EFECTOS[e.id]?.tipo === 'buff' && e.id !== 'summon').length * bb.pct, bb.max ?? 9);
-    for (const l of lideresDe(a)) if (l.lider?.bonoContraConBuff && t.lado !== a.lado && tieneBuff(t)) d *= 1 + l.lider.bonoContraConBuff;   // líder: +X% a enemigos con buffs
+    for (const l of lideresDe(a)) if (l.lider?.bonoContraConBuff && t.lado !== a.lado && tieneBuff(t)) d *= 1 + l.lider.bonoContraConBuff;
+    for (const l of lideresDe(a)) if (l.lider?.bonoContraControl && t.lado !== a.lado && t.estados.some(e => EFECTOS[e.id]?.tags.includes('Control'))) d *= 1 + l.lider.bonoContraControl;   // líder: +X% a enemigos con Control
+    const bm = mov.bonoPorMarca;               // movimiento: +X% por cada carga de SU marca en el objetivo; con consume, las quita
+    const mkb = bm && t.estados.find(e => e.id === bm.marca && e.fuente === a.uid);
+    if (mkb) { d *= 1 + (mkb.valor || 1) * bm.pct; if (bm.consume) quitar(t, mkb); }   // líder: +X% a enemigos con buffs
     for (const l of lideresDe(a)) if (l.lider?.bonoDanoConEscudo && a.escudo > 0) d *= 1 + l.lider.bonoDanoConEscudo;   // líder: +X% de daño a los aliados con Escudo
     for (const p of aliadosDe(a)) {          // pasiva "auraContra": TODO su equipo (incluido él) hace +X% a enemigos con esos efectos
       const ac = p.pasiva?.auraContra;
@@ -668,6 +673,17 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (robo && !a.muerto && (get(a, 'solarBurn') || (a.hp < maxHp(a) && puedeCurarse(a)))) curar(a, a, (aHp + aEsc) * robo);
     emitir('golpe', { de: a.uid, a: t.uid, dano: aHp, escudo: aEsc, critico, quiebre, color: mov.color, fuente: ctx.fuente, multi: (mov.golpes || 1) > 1 }, t);
     recibioDano(t, aHp + aEsc, a);
+    const ce = a.pasiva?.cargaEnemigo;        // pasiva "cargaEnemigo": cada golpe deja 1 carga de su marca en el enemigo; al máximo, alMax y se reinicia
+    if (ce && t.lado !== a.lado && !t.muerto && !a.muerto && !mov.bonoPorMarca?.consume) {
+      let k = t.estados.find(e => e.id === ce.marca && e.fuente === a.uid);
+      if (!k) { k = { id: ce.marca, valor: 0, fuente: a.uid }; t.estados.push(k); }
+      k.valor++;
+      if (k.valor >= ce.max) {
+        quitar(t, k);
+        emitir('bonoVisible', { a: t.uid, texto: ce.texto || '¡Sobrecarga!' }, t);
+        for (const acc of [].concat(ce.alMax)) ejecutarAccion(a, acc, { objetivo: t, ejecutor: a });   // alMax: una acción o una lista (cada una con su destino)
+      } else emitir('actualizar', {}, t);
+    }
     const cm = a.pasiva?.consumeMarca;          // pasiva "consumeMarca": golpear a quien tiene SU marca (puesta en otro movimiento) la consume
     const mk = cm && t.lado !== a.lado && t.estados.find(e => e.id === cm.marca && e.fuente === a.uid && e.movId !== movId);
     if (mk && !a.muerto) {
@@ -1313,6 +1329,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
 
   function cumple(cond, ctx) {
     if (!cond) return true;
+    if (cond.objetivoMarcaMin) { const { marca, min } = cond.objetivoMarcaMin; const e = ctx.objetivo?.estados.find(x => x.id === marca && x.fuente === ctx.ejecutor?.uid); return (e?.valor || 0) >= min; }
     if (cond.sellado !== undefined) return !!ctx.ejecutor && !!ctx.ejecutor.sellado === cond.sellado;   // p. ej. Enkidu: Mega Aturdimiento si ya va en serio
     if (cond.objetivoTiene) return !!(ctx.objetivo && get(ctx.objetivo, cond.objetivoTiene));
     if (cond.objetivoTeniaAntes) return [].concat(cond.objetivoTeniaAntes).some(id => ctx.teniaAntes?.has(id));
@@ -1609,8 +1626,16 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       });
       else {
         for (const ef of mov.efectos || []) if (ef.cuando === 'antes')     // "antes": se aplican a cada objetivo ANTES de golpear
-          for (const t of objetivos) if (!t.muerto) ejecutarAccion(a, ef.accion, { objetivo: t, ejecutor: a });
+          for (const t of objetivos) { const cx = { objetivo: t, ejecutor: a }; if (!t.muerto && cumple(ef.condicion, cx)) ejecutarAccion(a, ef.accion, cx); }
         for (const t of objetivos) resolverSobreObjetivo(a, t, mov, c);
+        if (mov.salta && !a.muerto) {        // "salta": después del objetivo, salta a N enemigos distintos con otro % (p. ej. Cadena de Relámpagos)
+          const otros = [...enemigosDe(a).filter(x => !objetivos.includes(x))].sort(() => rng() - .5).slice(0, mov.salta.veces);
+          for (const d of otros) {
+            if (a.muerto) break;
+            emitir('bonoVisible', { a: d.uid, texto: mov.salta.texto || '¡Salta!' }, d);
+            resolverSobreObjetivo(a, d, { ...mov, pct: mov.salta.pct, golpes: 1, salta: null }, c);
+          }
+        }
       }
 
       const sobrevivientes = [...new Set(objetivos)].filter(t => !t.muerto && t.lado !== a.lado);
