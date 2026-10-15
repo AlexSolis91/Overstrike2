@@ -490,7 +490,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const antes = e.valor; e.valor = Math.min(max, e.valor + n);
     if (e.valor !== antes) emitir('actualizar', {}, p);
     const tc = p.pasiva?.transformarConCargas;       // al juntar N cargas: se transforma (consume las cargas); p. ej. Saga → Saga Oscuro
-    if (tc && tc.efecto === id && e.valor >= tc.cargas && !p.forma && p.transformacion && !p.transformando) {
+    if (tc && tc.efecto === id && e.valor >= tc.cargas && !p.forma && p.transformacion && !p.transformando && (!tc.soloLider || p.esLider)) {   // soloLider: solo si es el líder del equipo
       p.transformando = true;
       reacciones.push(() => {
         p.transformando = false;
