@@ -38,6 +38,7 @@ insert into public.campeones (id, nombre, starter, sobres, activo) values
   ('antares', 'Antares', 'blazing', array['phantom']::text[], true),
   ('baran', 'Baran', null, array['phantom']::text[], true),
   ('orochimaru', 'Orochimaru', 'noxious', array['phantom']::text[], true),
-  ('ghost-rider', 'Ghost Rider', 'blazing', array['phantom']::text[], true)
+  ('ghost-rider', 'Ghost Rider', 'blazing', array['phantom']::text[], true),
+  ('venom', 'Venom', null, array['bloodline']::text[], true)
 on conflict (id) do update set nombre = excluded.nombre, starter = excluded.starter, sobres = excluded.sobres, activo = excluded.activo;
--- 38 campeones
+-- 39 campeones

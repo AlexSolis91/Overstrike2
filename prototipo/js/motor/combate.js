@@ -781,7 +781,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   function danoDoT(t, valor, tipo, fuente = null) {
     if (t.muerto) return;
     const ag = (tipo === 'poison' || tipo === 'bleed' || tipo === 'hemo') && get(t, 'aguja');   // Agujas Escarlata: +3% por aguja
-    const d = valor * maxHp(t) * (1 - reduccion(t, 'dot')) * (ag ? 1 + ag.valor * DEBUFFS.aguja : 1);
+    const db = t.pasiva?.debilidadA;                        // pasiva "debilidadA": recibe +pct de daño de esos DoT (p. ej. Venom: fuego)
+    const debil = db && [].concat(db.efecto).includes(tipo) ? 1 + db.pct : 1;
+    const d = valor * maxHp(t) * (1 - reduccion(t, 'dot')) * (ag ? 1 + ag.valor * DEBUFFS.aguja : 1) * debil;
     t.hp -= d;
     emitir('dot', { a: t.uid, tipo, dano: d }, t);
     recibioDano(t, d, fuente);
