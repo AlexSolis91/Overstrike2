@@ -1,4 +1,5 @@
 // Reliquias de ejemplo (valores provisionales hasta que llegue la lista oficial). [stat, valor, mín, máx]
+// imagen: arte montado en el marco de su rareza (herramientas/marcos_reliquias.py, desde assets/originales/reliquias/)
 export const RAREZAS = {
   'Común':      { color: '#a3acb9' },
   'Raro':       { color: '#4ade80' },
@@ -25,22 +26,22 @@ export const STAT_META = {
 };
 
 export const RELIQUIAS = {
-  obsidiana: { name: 'Espada de Obsidiana', rarity: 'Raro', category: 'Arma', type: 'Espada',
+  obsidiana: { name: 'Espada de Obsidiana', rarity: 'Raro', category: 'Arma', type: 'Espada', imagen: 'assets/reliquias/obsidiana.webp',
     flat: ['dmg', 9, 6, 10], rolls: [['critDmg', 0.08, 0.05, 0.08]] },
-  argonita: { name: 'Arco de Argonita', rarity: 'Raro', category: 'Arma', type: 'Arco',
+  argonita: { name: 'Arco de Argonita', rarity: 'Raro', category: 'Arma', type: 'Arco', imagen: 'assets/reliquias/argonita.webp',
     flat: ['dmg', 9, 6, 10], rolls: [['acc', 0.08, 0.05, 0.09]] },
-  lanzaFuego: { name: 'Lanza de Fuego', rarity: 'Especial', category: 'Arma', type: 'Lanza',
+  lanzaFuego: { name: 'Lanza de Fuego', rarity: 'Especial', category: 'Arma', type: 'Lanza', imagen: 'assets/reliquias/lanzaFuego.webp',
     flat: ['spd', 13, 10, 15], rolls: [['critDmg', 0.11, 0.07, 0.12], ['critRate', 0.12, 0.07, 0.12]] },
-  nichirin: { name: 'Espada Nichirin', rarity: 'Especial', category: 'Arma', type: 'Espada',
+  katanaCarmesi: { name: 'Katana Carmesí', rarity: 'Especial', category: 'Arma', type: 'Espada', imagen: 'assets/reliquias/katanaCarmesi.webp',
     flat: ['dmg', 14, 12, 16], rolls: [['critDmg', 0.08, 0.06, 0.11], ['critDmg', 0.11, 0.06, 0.11]] },
-  anilloLuz: { name: 'Anillo de la Luz', rarity: 'Épico', category: 'Accesorio', type: 'Anillo',
+  anilloLuz: { name: 'Anillo de la Luz', rarity: 'Épico', category: 'Accesorio', type: 'Anillo', imagen: 'assets/reliquias/anilloLuz.webp',
     flat: ['dmg', 19, 15, 22], rolls: [['block', 0.03, 0.02, 0.05], ['armor', 0.17, 0.12, 0.18], ['hpPct', 0.21, 0.15, 0.22]] },
-  amuletoPantano: { name: 'Amuleto del Pantano', rarity: 'Épico', category: 'Accesorio', type: 'Amuleto',
+  amuletoPantano: { name: 'Amuleto del Pantano', rarity: 'Épico', category: 'Accesorio', type: 'Amuleto', imagen: 'assets/reliquias/amuletoPantano.webp',
     flat: ['dmg', 17, 15, 22], rolls: [['dot', 0.12, 0.11, 0.14], ['dot', 0.14, 0.11, 0.14], ['dot', 0.13, 0.11, 0.14]] },
-  frostmourne: { name: 'Frostmourne', rarity: 'Legendario', category: 'Arma', type: 'Espada',
+  frostmourne: { name: 'Frostmourne', rarity: 'Legendario', category: 'Arma', type: 'Espada', imagen: 'assets/reliquias/frostmourne.webp',
     flat: ['dmg', 35, 30, 35], rolls: [['critRate', 0.19, 0.15, 0.20], ['dmgPct', 0.23, 0.18, 0.25], ['critDmg', 0.27, 0.20, 0.27]],
     passive: 'Si el portador elimina a uno o más enemigos con un ataque, revive a uno de ellos al azar como aliado durante 2 rondas.' },
-  anilloCobre: { name: 'Anillo de Cobre', rarity: 'Común', category: 'Accesorio', type: 'Anillo',
+  anilloCobre: { name: 'Anillo de Cobre', rarity: 'Común', category: 'Accesorio', type: 'Anillo', imagen: 'assets/reliquias/anilloCobre.webp',
     flat: ['spd', 4, 2, 5], rolls: [] },
   yelmo: { name: 'Yelmo del Centinela', rarity: 'Raro', category: 'Equipación', type: 'Yelmo',
     flat: ['hp', 60, 45, 65], rolls: [['res', 0.06, 0.04, 0.07]] },

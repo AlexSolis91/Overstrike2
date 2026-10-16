@@ -7,7 +7,7 @@ Toma las imágenes de assets/originales/<tipo>/ y genera versiones WebP ligeras 
 
 - personajes, transformaciones: recorte centrado (con sesgo hacia arriba, donde suele estar la cara)
   a 800x680, la proporción de la ilustración de la carta.
-- invocaciones (512x512), reliquias (256x256): quita el fondo (transparencia real, cuadriculado falso
+- invocaciones (512x512): quita el fondo (transparencia real, cuadriculado falso
   "de Google" o color liso), recorta a la figura y la centra en un cuadro con fondo transparente.
 
 El nombre del archivo debe ser el nombre del personaje/invocación/reliquia de su ficha
@@ -211,7 +211,7 @@ def main():
         ('personajes', personaje),
         ('transformaciones', personaje),
         ('invocaciones', lambda a, b: recorte_transparente(a, b, INVOCACION_SIZE)),
-        ('reliquias', lambda a, b: recorte_transparente(a, b, RELIQUIA_SIZE)),
+        # reliquias: las monta herramientas/marcos_reliquias.py dentro del marco de su rareza
     ]
     hechas = 0
     for carpeta, fn in tareas:

@@ -54,7 +54,7 @@ export const liora = {
 export const vex = {
   id: 'vex', nombre: 'Vex', rol: 'Asesino', emoji: '🗡️', color: '#ff4d6d', prueba: true,
   base: { hp: 560, dmg: 80, spd: 95 }, extra: {},
-  slots: espacios('nichirin', 'botas', 'amuletoPantano'),
+  slots: espacios('katanaCarmesi', 'botas', 'amuletoPantano'),
   movimientos: [
     { categoria: 'basico', nombre: 'Estocada', objetivo: 'enemigo', estilo: 'melee', color: 0xffb0c0, pct: 1.0, escala: 'dano', cd: 0,
       desc: 'Causa 100% del Daño a un enemigo.' },

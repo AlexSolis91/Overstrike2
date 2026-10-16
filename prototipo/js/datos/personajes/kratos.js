@@ -11,7 +11,7 @@ export default {
   base: { hp: 700, dmg: 85, spd: 86 },
   extra: { dot: .40 },                         // Daño DoT 40%: su Sangrado quita 7% por golpe
   // Por defecto lleva 2 Espadas (las Espadas del Caos) mientras no exista el inventario de reliquias de los jugadores
-  slots: espacios('obsidiana', 'pechera', 'anilloCobre', { relic: 'nichirin' }),
+  slots: espacios('obsidiana', 'pechera', 'anilloCobre', { relic: 'katanaCarmesi' }),
 
   pasiva: {
     nombre: 'Fantasma de Esparta',

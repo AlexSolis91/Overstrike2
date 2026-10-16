@@ -9,7 +9,7 @@ export default {
   emoji: '🌑', color: '#8b5cf6', imagen: 'assets/personajes/sun-jin-woo.webp',
   base: { hp: 650, dmg: 70, spd: 88 },
   extra: {},
-  slots: espacios('nichirin', 'botas', 'anilloCobre'),
+  slots: espacios('katanaCarmesi', 'botas', 'anilloCobre'),
 
   pasiva: {
     nombre: 'Extracción de las Sombras',

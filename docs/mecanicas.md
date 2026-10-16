@@ -414,6 +414,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - Se optimizan con `python herramientas/optimizar_imagenes.py`.
 - **Fondo negro u oscuro:** se recorta como cualquier color liso y la figura queda sólida (p. ej. Viserion).
 - **Espíritus** (opcional): si una invocación debe verse como un espíritu brillante, se agrega su nombre a `LUMINOSAS` en el optimizador (conserva el fondo negro) y lleva `luminosa: true` en su ficha: se dibuja en modo "pantalla", el negro desaparece y la figura brilla **translúcida**. Hoy ninguna lo usa.
+- **Reliquias:** el arte se genera con IA (Leonardo.ai, estilo pintado: objeto centrado, armas en diagonal, fondo oscuro con humo y runas tenues, sin marco ni texto) y va en `assets/originales/reliquias/` con el nombre o id de la reliquia. `python herramientas/marcos_reliquias.py` lo recorta (3% por lado), lo monta dentro de un **marco de piedra tallada dibujado por código** con el color de su rareza (borde interior luminoso, esquinas y una joya facetada arriba a la derecha) y guarda `assets/reliquias/<id>.webp` (512×512). Las **Legendarias** llevan marco dorado con resplandor de luz amarilla. La ficha de la reliquia lleva `imagen`; el panel la muestra como miniatura en cada espacio y en grande en la carta de la reliquia. `--muestra` guarda los 5 marcos vacíos en `herramientas/marcos/`.
 
 ## 13. Pantallas y construcción de equipos
 
