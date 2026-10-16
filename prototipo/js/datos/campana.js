@@ -55,7 +55,7 @@ export const AREAS = {
     etapas: [   // orden: del tema más débil al más fuerte (simulación); poder calibrado para ~95% → ~40% de victorias en Normal
       { tema: 'exploradores', poder: 1.51 },   // 1
       { tema: 'gotica', poder: 1.51 },   // 2
-      { tema: 'fuego', poder: 1.29 },   // 3
+      { tema: 'fuego', poder: 1.1 },   // 3
       { tema: 'mortal', poder: 1.29 },   // 4
       { tema: 'sayajin', poder: 1.19 },   // 5
       { tema: 'cazadores', poder: 1.2 },   // 6
@@ -66,7 +66,7 @@ export const AREAS = {
       { tema: 'dragones', poder: 1.1 },   // 11
       { tema: 'santos', poder: 1.13 },   // 12
       { tema: 'konoha', poder: 1.05 },   // 13
-      { tema: 'marvel', poder: 1.1 },   // 14
+      { tema: 'marvel', poder: 1.0 },   // 14
       { tema: 'caos', poder: 1.09 },   // 15
       { tema: 'asgard', poder: 1.1 },   // 16
       { tema: 'reyes', poder: 0.99 },   // 17

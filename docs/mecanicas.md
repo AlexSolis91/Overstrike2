@@ -472,7 +472,7 @@ Pantalla: al iniciar sesión por primera vez (ver sección 19).
 - Un starter pack da **3 campeones de su tema** + **2 al azar** entre los libres y los de su propio tema. **Nunca** salen exclusivos de otro pack.
 - Funciones listas: `exclusivosDe(id)` y `elegiblesAleatorios(id)`.
 - Clasificación actual:
-  - **Blazing:** Alexstrasza, Rhaenys Targaryen, Rengoku, Daenerys Targaryen, Scorpion.
+  - **Blazing:** Alexstrasza, Rhaenys Targaryen, Rengoku, Daenerys Targaryen, Scorpion, Antares, Ghost Rider.
   - **Frostborn:** Sub-Zero, Lich King, Jaina Proudmoore, Camus (4 exclusivos: el pack saca 3 al azar). ⚠️ Simulación 2026-10-09: Frostborn 67.7% contra equipos al azar; Blazing 33.5% y Noxious 39.0% (sus exclusivos son de los campeones más débiles). Revisar en el pase de balance antes de abrir el juego.
   - **Noxious:** The Joker, Reptile, Loki, Milo.
   - **Libres:** Goku, Sun Jin Woo, Shaka, Batman, Aldebarán, Thor, Madara Uchiha.
