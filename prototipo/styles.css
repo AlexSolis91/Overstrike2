@@ -81,21 +81,18 @@ section h3::after { content: ''; flex: 1; height: 1px; background: linear-gradie
 .eff .tag { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 99px; background: rgba(255, 255, 255, .06); color: var(--muted); }
 .none { color: var(--muted); font-size: 12px; font-style: italic; }
 
-.relics { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.relics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .slot {
-  --rc: #3a4254; position: relative; padding: 7px 8px 7px 11px; border-radius: 8px; background: var(--panel-2);
-  border: 1px solid var(--line); cursor: default; min-height: 52px; overflow: hidden;
+  --rc: #3a4254; position: relative; aspect-ratio: 1; border-radius: 10px; background: var(--panel-2);
+  border: 1px solid var(--line); cursor: default; overflow: hidden; display: grid; place-items: center;
 }
-.slot::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--rc); }
-.slot.has { cursor: pointer; }
-.slot.con-img { padding-left: 52px; min-height: 52px; }
-.slot-img { position: absolute; left: 6px; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 6px; }
-.slot.has:hover { border-color: var(--rc); box-shadow: 0 0 12px color-mix(in srgb, var(--rc) 35%, transparent); }
-.slot.locked { opacity: .55; background: repeating-linear-gradient(135deg, #10151f, #10151f 6px, #0c1018 6px, #0c1018 12px); }
-.slot-label { font-size: 9px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; color: var(--muted); }
-.slot-name { font-size: 12px; font-weight: 700; margin-top: 2px; color: var(--rc); }
-.slot.empty .slot-name, .slot.locked .slot-name { color: var(--muted); font-weight: 600; }
-.slot-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.slot.has { cursor: pointer; border: none; background: transparent; transition: transform .15s, filter .15s; }
+.slot.has:hover { transform: scale(1.06); filter: drop-shadow(0 0 10px color-mix(in srgb, var(--rc) 70%, transparent)); }
+.slot-img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.slot.has:not(:has(img)) { border: 2px solid var(--rc); background: var(--panel-2); }   /* reliquia sin imagen todavía */
+.slot-txt { padding: 6px; font-size: 11px; font-weight: 700; color: var(--rc); text-align: center; }
+.slot.locked { opacity: .5; background: repeating-linear-gradient(135deg, #10151f, #10151f 6px, #0c1018 6px, #0c1018 12px); font-size: 20px; }
+.slot.empty { border-style: dashed; color: var(--muted); font-size: 22px; }
 
 .moves { display: flex; flex-direction: column; gap: 6px; }
 .move { padding: 8px 10px; border-radius: 8px; background: var(--panel-2); border: 1px solid var(--line); transition: .15s; }

@@ -8,7 +8,7 @@ Uso (desde la carpeta prototipo):
 Toma el arte de cada reliquia de assets/originales/reliquias/ (el nombre del archivo es el nombre de la reliquia
 o su id de js/datos/reliquias.js), lo recorta al centro, lo monta dentro del marco de piedra de su rareza
 (con la joya del color de la rareza en la esquina superior derecha) y guarda assets/reliquias/<id>.webp (512x512, id exacto de la ficha).
-Las legendarias llevan además un marco dorado con resplandor de luz amarilla.
+Todos los marcos son de metal del color de su rareza con resplandor exterior; el de las legendarias es dorado, más intenso y con destellos.
 """
 import re
 import sys
@@ -71,79 +71,73 @@ def joya(color, r):
 
 
 def marco(rareza):
+    """Marco de metal labrado del color de la rareza, con resplandor exterior y la joya arriba a la derecha."""
     color = COLORES[rareza]
     leg = rareza == 'Legendario'
-    capa = Image.new('RGBA', (S, S), (0, 0, 0, 0))
     x0, y0, x1, y1 = M, M, S - M, S - M
+    capa = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+    # resplandor exterior del color de la rareza (más intenso en las legendarias)
+    aura = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+    ImageDraw.Draw(aura).rounded_rectangle([x0 - 4, y0 - 4, x1 + 4, y1 + 4], radius=30, outline=color + (255,), width=30 if leg else 16)
+    capa = Image.alpha_composite(capa, aura.filter(ImageFilter.GaussianBlur(20 if leg else 12)))
+    if leg:
+        capa = Image.alpha_composite(capa, aura.filter(ImageFilter.GaussianBlur(8)))
+    # cuerpo del marco: metal del color de la rareza (oscuro -> brillante) con textura de piedra encima
     mascara = Image.new('L', (S, S), 0)
     dm = ImageDraw.Draw(mascara)
     dm.rounded_rectangle([x0, y0, x1, y1], radius=26, fill=255)
     dm.rounded_rectangle([x0 + B, y0 + B, x1 - B, y1 - B], radius=10, fill=0)
-    piedra = textura_piedra(color if not leg else (200, 150, 40), 7)
-    if leg:   # marco dorado: piedra cálida con más brillo
-        piedra = Image.blend(piedra, Image.new('RGB', (S, S), (150, 108, 28)), .55)
-    capa.paste(piedra, (0, 0), mascara)
+    tex = np.asarray(textura_piedra((128, 128, 128), 7).convert('L'), float) / 255
+    yy, xx = np.mgrid[0:S, 0:S] / S
+    luz = np.clip(1.05 - (xx + yy) * .45, .35, 1)                 # luz desde arriba a la izquierda
+    oscuro, claro = np.array(mezcla(color, (0, 0, 0), .62), float), np.array(mezcla(color, (255, 255, 255), .18), float)
+    t = np.clip(luz * .75 + tex * .45 - .1, 0, 1)[..., None]
+    metal = Image.fromarray((oscuro * (1 - t) + claro * t).clip(0, 255).astype('uint8'), 'RGB')
+    capa.paste(metal, (0, 0), mascara)
     d = ImageDraw.Draw(capa)
-    # biseles: luz arriba/izquierda, sombra abajo/derecha
-    luz, sombra = (255, 255, 255, 70 if not leg else 110), (0, 0, 0, 120)
-    d.rounded_rectangle([x0, y0, x1, y1], radius=26, outline=(0, 0, 0, 200), width=5)
-    d.line([(x0 + 10, y0 + 6), (x1 - 10, y0 + 6)], fill=luz, width=4)
-    d.line([(x0 + 6, y0 + 10), (x0 + 6, y1 - 10)], fill=luz, width=4)
-    d.line([(x0 + 10, y1 - 6), (x1 - 10, y1 - 6)], fill=sombra, width=4)
-    d.line([(x1 - 6, y0 + 10), (x1 - 6, y1 - 10)], fill=sombra, width=4)
-    # surco tallado a mitad del marco
-    h = B // 2 - 4
-    d.rounded_rectangle([x0 + h, y0 + h, x1 - h, y1 - h], radius=18, outline=(0, 0, 0, 110), width=5)
-    d.rounded_rectangle([x0 + h + 3, y0 + h + 3, x1 - h - 3, y1 - h - 3], radius=16, outline=(255, 255, 255, 35 if not leg else 70), width=2)
-    # adornos tallados en las esquinas (placas diagonales)
+    brillo, sombra = mezcla(color, (255, 255, 255), .6) + (230,), (0, 0, 0, 150)
+    d.rounded_rectangle([x0, y0, x1, y1], radius=26, outline=(0, 0, 0, 220), width=5)
+    d.line([(x0 + 14, y0 + 7), (x1 - 14, y0 + 7)], fill=brillo, width=4)
+    d.line([(x0 + 7, y0 + 14), (x0 + 7, y1 - 14)], fill=brillo, width=4)
+    d.line([(x0 + 14, y1 - 7), (x1 - 14, y1 - 7)], fill=sombra, width=5)
+    d.line([(x1 - 7, y0 + 14), (x1 - 7, y1 - 14)], fill=sombra, width=5)
+    # surco labrado a mitad del marco
+    h = B // 2 - 2
+    d.rounded_rectangle([x0 + h, y0 + h, x1 - h, y1 - h], radius=18, outline=mezcla(color, (0, 0, 0), .7) + (200,), width=5)
+    d.rounded_rectangle([x0 + h + 4, y0 + h + 4, x1 - h - 4, y1 - h - 4], radius=16, outline=mezcla(color, (255, 255, 255), .35) + (120,), width=2)
+    # esquinas labradas
     for (cx, cy, sx, sy) in [(x0, y0, 1, 1), (x0, y1, 1, -1), (x1, y1, -1, -1)]:
-        poly = [(cx + sx * 8, cy + sy * 8), (cx + sx * (B + 26), cy + sy * 8), (cx + sx * 8, cy + sy * (B + 26))]
-        d.polygon(poly, fill=(28, 28, 30, 255) if not leg else (110, 78, 20, 255), outline=(0, 0, 0, 230))
-        d.line([poly[1], poly[2]], fill=color + (200,), width=3)
-    # borde interior (hacia la ilustración) con línea del color de la rareza
-    d.rounded_rectangle([x0 + B - 6, y0 + B - 6, x1 - B + 6, y1 - B + 6], radius=12, outline=(10, 10, 12, 255), width=8)
-    d.rounded_rectangle([x0 + B - 2, y0 + B - 2, x1 - B + 2, y1 - B + 2], radius=10, outline=color + (255,), width=4)
-    resplandor = Image.new('RGBA', (S, S), (0, 0, 0, 0))
-    ImageDraw.Draw(resplandor).rounded_rectangle([x0 + B - 2, y0 + B - 2, x1 - B + 2, y1 - B + 2], radius=10, outline=color + (200,), width=10)
-    capa = Image.alpha_composite(capa, resplandor.filter(ImageFilter.GaussianBlur(7)))
+        poly = [(cx + sx * 8, cy + sy * 8), (cx + sx * (B + 30), cy + sy * 8), (cx + sx * 8, cy + sy * (B + 30))]
+        d.polygon(poly, fill=mezcla(color, (0, 0, 0), .5) + (255,), outline=(0, 0, 0, 230))
+        d.line([poly[1], poly[2]], fill=mezcla(color, (255, 255, 255), .5) + (255,), width=4)
+    # remaches
+    for (rx, ry) in [((x0 + x1) // 2, y0 + B // 2), ((x0 + x1) // 2, y1 - B // 2), (x0 + B // 2, (y0 + y1) // 2), (x1 - B // 2, (y0 + y1) // 2)]:
+        d.ellipse([rx - 10, ry - 10, rx + 10, ry + 10], fill=(20, 20, 22, 255))
+        d.ellipse([rx - 7, ry - 8, rx + 6, ry + 5], fill=mezcla(color, (255, 255, 255), .55) + (255,))
+    # borde interior luminoso (hacia la ilustración)
+    d.rounded_rectangle([x0 + B - 6, y0 + B - 6, x1 - B + 6, y1 - B + 6], radius=12, outline=(8, 8, 10, 255), width=8)
+    interior = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+    ImageDraw.Draw(interior).rounded_rectangle([x0 + B - 2, y0 + B - 2, x1 - B + 2, y1 - B + 2], radius=10, outline=color + (255,), width=12)
+    capa = Image.alpha_composite(capa, interior.filter(ImageFilter.GaussianBlur(8)))
     d = ImageDraw.Draw(capa)
-    # grietas sutiles en la piedra
-    rng = np.random.default_rng(3)
-    for _ in range(14):
-        lado = rng.integers(0, 4)
-        if lado == 0: px, py = rng.integers(x0 + 40, x1 - 40), rng.integers(y0 + 8, y0 + B - 8)
-        elif lado == 1: px, py = rng.integers(x0 + 40, x1 - 40), rng.integers(y1 - B + 8, y1 - 8)
-        elif lado == 2: px, py = rng.integers(x0 + 8, x0 + B - 8), rng.integers(y0 + 40, y1 - 40)
-        else: px, py = rng.integers(x1 - B + 8, x1 - 8), rng.integers(y0 + 40, y1 - 40)
-        pts = [(int(px), int(py))]
-        for _ in range(3): pts.append((pts[-1][0] + int(rng.integers(-14, 15)), pts[-1][1] + int(rng.integers(-14, 15))))
-        d.line(pts, fill=(20, 20, 22, 150), width=2)
-    # remaches en los costados (como el ejemplo)
-    for (rx, ry) in [((x0 + x1) // 2, y0 + B // 2), ((x0 + x1) // 2, y1 - B // 2), (x0 + B // 2, (y0 + y1) // 2), (x1 - B // 2, (y0 + y1) // 2),
-                     (x0 + B // 2, y1 - B // 2)]:
-        d.ellipse([rx - 9, ry - 9, rx + 9, ry + 9], fill=(30, 30, 32, 255))
-        d.ellipse([rx - 6, ry - 7, rx + 5, ry + 4], fill=(150, 148, 140, 255) if not leg else (240, 200, 90, 255))
-    # esquina de la joya (arriba a la derecha): placa de piedra que sobresale
-    jx, jy, jr = x1 - B // 2 - 4, y0 + B // 2 + 4, 54
-    d.rounded_rectangle([jx - jr - 14, jy - jr - 14, jx + jr + 14, jy + jr + 14], radius=18, fill=(46, 44, 46, 255) if not leg else (120, 90, 30, 255),
-                        outline=(0, 0, 0, 220), width=4)
-    brillo = Image.new('RGBA', (S, S), (0, 0, 0, 0))
-    ImageDraw.Draw(brillo).ellipse([jx - jr - 30, jy - jr - 30, jx + jr + 30, jy + jr + 30], fill=color + (150,))
-    brillo = brillo.filter(ImageFilter.GaussianBlur(18))
-    capa = Image.alpha_composite(capa, brillo)
+    d.rounded_rectangle([x0 + B - 2, y0 + B - 2, x1 - B + 2, y1 - B + 2], radius=10, outline=mezcla(color, (255, 255, 255), .45) + (255,), width=4)
+    # joya arriba a la derecha sobre una placa oscura, con halo del color
+    jx, jy, jr = x1 - B // 2 - 4, y0 + B // 2 + 4, 58
+    d.rounded_rectangle([jx - jr - 14, jy - jr - 14, jx + jr + 14, jy + jr + 14], radius=20, fill=mezcla(color, (0, 0, 0), .75) + (255,),
+                        outline=mezcla(color, (255, 255, 255), .4) + (255,), width=5)
+    halo = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+    ImageDraw.Draw(halo).ellipse([jx - jr - 34, jy - jr - 34, jx + jr + 34, jy + jr + 34], fill=color + (190,))
+    capa = Image.alpha_composite(capa, halo.filter(ImageFilter.GaussianBlur(20)))
     g = joya(color, jr)
     capa.alpha_composite(g, (jx - g.width // 2, jy - g.height // 2))
-    if leg:   # resplandor dorado exterior + filo brillante
-        aura = Image.new('RGBA', (S, S), (0, 0, 0, 0))
-        da = ImageDraw.Draw(aura)
-        da.rounded_rectangle([x0 - 6, y0 - 6, x1 + 6, y1 + 6], radius=30, outline=(255, 214, 90, 255), width=26)
-        aura = aura.filter(ImageFilter.GaussianBlur(16))
+    if leg:   # filo dorado brillante y destellos
         filo = Image.new('RGBA', (S, S), (0, 0, 0, 0))
-        ImageDraw.Draw(filo).rounded_rectangle([x0 + 2, y0 + 2, x1 - 2, y1 - 2], radius=24, outline=(255, 236, 150, 255), width=4)
-        fondo = Image.new('RGBA', (S, S), (0, 0, 0, 0))
-        fondo = Image.alpha_composite(fondo, aura)
-        capa = Image.alpha_composite(fondo, capa)
-        capa = Image.alpha_composite(capa, filo.filter(ImageFilter.GaussianBlur(1)))
+        df = ImageDraw.Draw(filo)
+        df.rounded_rectangle([x0 + 2, y0 + 2, x1 - 2, y1 - 2], radius=24, outline=(255, 240, 170, 255), width=4)
+        for (sx, sy) in [(x0 + 90, y0 + 4), (x1 - 4, y1 - 160), (x0 + 4, y1 - 90), ((x0 + x1) // 2 + 120, y1 - 4)]:
+            df.line([(sx - 22, sy), (sx + 22, sy)], fill=(255, 255, 230, 255), width=4)
+            df.line([(sx, sy - 22), (sx, sy + 22)], fill=(255, 255, 230, 255), width=4)
+        capa = Image.alpha_composite(capa, filo.filter(ImageFilter.GaussianBlur(1.5)))
     return capa
 
 
