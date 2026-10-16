@@ -5,6 +5,7 @@ import { espacios } from '../reliquias.js';
 // Líder: Carcelero de los Malditos.
 export default {
   id: 'lich-king',
+  franquicia: 'Warcraft', grupos: ['plaga', 'reyes', 'hielo'],   // campaña: temas de las etapas
   nombre: 'Lich King',
   rol: 'Tanque', rolSecundario: 'Control',
   sobres: ['phantom'],

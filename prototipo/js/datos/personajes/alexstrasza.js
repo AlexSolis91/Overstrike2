@@ -39,6 +39,7 @@ const dragonDeLaVida = {
 
 export default {
   id: 'alexstrasza',
+  franquicia: 'Warcraft', grupos: ['dragones', 'aspectos'],   // campaña: temas de las etapas
   nombre: 'Alexstrasza',
   rol: 'Support', rolSecundario: 'DoTer',
   sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)

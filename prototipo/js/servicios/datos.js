@@ -10,7 +10,10 @@ async function q(fn) {
 const rpc = (nombre, args = {}) => q(sb => sb.rpc(nombre, args));
 
 export const miColeccion = () => q(sb => sb.from('coleccion').select('campeon, copias, estrellas, espacios'));
-export const miInventario = () => q(sb => sb.from('inventario').select('oro, frag_runa, frag_otros, runas').maybeSingle());
+export async function miInventario() {      // vales_sobre llega con docs/sql/004_campana.sql; sin él, se lee lo demás
+  try { return await q(sb => sb.from('inventario').select('oro, frag_runa, frag_otros, runas, vales_sobre').maybeSingle()); }
+  catch (e) { if (!/vales_sobre/.test(e?.message || '')) throw e; return q(sb => sb.from('inventario').select('oro, frag_runa, frag_otros, runas').maybeSingle()); }
+}
 export const configSobres = () => q(sb => sb.from('sobres_config').select('id, activo, precio, desde, hasta').order('id'));
 
 export const abrirStarter = id => rpc('abrir_starter', { p_starter: id });
@@ -20,6 +23,11 @@ export const desbloquearEspacio = (c, con) => rpc('desbloquear_espacio', { p_cam
 export const desfragmentar = (c, n) => rpc('desfragmentar', { p_campeon: c, p_cantidad: n });
 export const combinarRuna = () => rpc('combinar_runa');
 export const invocarPortal = c => rpc('invocar_portal', { p_campeon: c });
+export const abrirSobreVale = id => rpc('abrir_sobre_vale', { p_sobre: id });
+
+// Campaña: progreso (solo lectura) y cobrar una victoria (el servidor valida desbloqueo, tiempo entre repeticiones y paga)
+export const miCampana = area => q(sb => sb.from('campana_progreso').select('dificultad, etapa, estrellas, victorias, ultima').eq('area', area));
+export const campanaCompletar = (area, dificultad, etapa, estrellas) => rpc('campana_completar', { p_area: area, p_dificultad: dificultad, p_etapa: etapa, p_estrellas: estrellas });
 
 // Administrador (el servidor rechaza si no lo es)
 export async function adminGuardarSobre(id, cambios) {

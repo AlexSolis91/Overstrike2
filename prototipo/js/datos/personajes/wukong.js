@@ -5,6 +5,7 @@ import { espacios } from '../reliquias.js';
 // Bloquear Buffs, y revive una vez por partida. Líder: Gran Sabio Igual al Cielo (el aura de Velocidad de Raid).
 export default {
   id: 'wukong',
+  franquicia: 'Black Myth: Wukong', grupos: ['dioses', 'guerreros'],   // campaña: temas de las etapas
   nombre: 'Wukong',
   rol: 'Daño', rolSecundario: 'Control',
   sobres: ['sacred'],

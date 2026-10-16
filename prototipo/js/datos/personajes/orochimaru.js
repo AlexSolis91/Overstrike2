@@ -6,6 +6,7 @@ import { espacios } from '../reliquias.js';
 // Sello Maldito del Cielo: marca con bono a él y a cada aliado envenenador; su equipo hace +25% a envenenados.
 export default {
   id: 'orochimaru',
+  franquicia: 'Naruto', grupos: ['sannin', 'renegados'],   // campaña: temas de las etapas
   nombre: 'Orochimaru',
   rol: 'DoTer', rolSecundario: 'Support',
   sobres: ['phantom'],

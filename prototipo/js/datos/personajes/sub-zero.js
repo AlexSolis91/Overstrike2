@@ -4,6 +4,7 @@ import { espacios } from '../reliquias.js';
 // castiga a los enemigos cuando sus aliados les rompen el hielo. Líder: Gran Maestro del Lin Kuei.
 export default {
   id: 'sub-zero',
+  franquicia: 'Mortal Kombat', grupos: ['lin-kuei', 'hielo'],   // campaña: temas de las etapas
   nombre: 'Sub-Zero',
   rol: 'Control', rolSecundario: 'Daño',
   sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)

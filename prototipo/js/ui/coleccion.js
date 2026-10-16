@@ -17,7 +17,7 @@ const retrato = p => p.imagen ? `<img src="${p.imagen}" alt="" loading="lazy">` 
 const estrellas = n => `<span class="tc-estrellas">${'★'.repeat(n)}<i>${'★'.repeat(5 - n)}</i></span>`;
 
 let col = new Map();          // campeón → { copias, estrellas, espacios }
-let inv = { oro: 0, frag_runa: 0, frag_otros: 0, runas: 0 };
+let inv = { oro: 0, frag_runa: 0, frag_otros: 0, runas: 0, vales_sobre: 0 };
 let cfg = [];                 // sobres_config del servidor
 let pestana = 'tienda', detalle = null, elegidoPortal = null, ocupado = false;
 
@@ -51,6 +51,7 @@ function pintarInventario() {
   const pct = Math.min(100, inv.frag_runa / FRAG_POR_RUNA * 100);
   $('#tc-inv').innerHTML = `
     <span title="Oro">🪙 <b>${num(inv.oro)}</b></span>
+    ${inv.vales_sobre ? `<span title="Vales de sobre (ábrelos gratis en la Tienda)">🎟️ <b>${num(inv.vales_sobre)}</b></span>` : ''}
     <span title="Runas de Invocación">🔮 <b>${num(inv.runas)}</b></span>
     <span class="tc-frag" title="Fragmentos de Runa de Invocación (${FRAG_POR_RUNA} = 1 Runa)">🧩 <b>${inv.frag_runa}/${FRAG_POR_RUNA}</b><i style="--p:${pct}%"></i></span>
     <span title="Otros fragmentos (sus usos llegarán pronto)">💠 <b>${num(inv.frag_otros)}</b></span>`;
@@ -69,7 +70,7 @@ function htmlTienda() {
         ${s.imagen ? `<div class="tc-sobre-arte con-arte" style="--arte:url('${s.imagen}')"><img src="${s.imagen}" alt="${s.nombre}"></div>` : `<div class="tc-sobre-arte"><span>${s.icono}</span></div>`}
         <b>${s.nombre}</b>
         <button class="eq-listo tc-abrir" data-sobre="${c.id}" ${alcanza ? '' : 'disabled'}>${c.precio > 0 ? `🪙 ${num(c.precio)}` : 'Gratis'}</button>
-        ${alcanza ? '' : '<em>Te falta oro</em>'}
+        ${inv.vales_sobre ? `<button class="eq-btn tc-vale" data-vale="${c.id}">🎟️ Usar vale</button>` : alcanza ? '' : '<em>Te falta oro</em>'}
       </div>`; }).join('')}</div>`;
 }
 
@@ -163,12 +164,23 @@ async function abrirSobre(id) {
   });
 }
 
+async function abrirConVale(id) {
+  const s = SOBRES[id];
+  if (!confirm(`¿Usar 1 vale para abrir ${s.nombre}? (Te quedan ${inv.vales_sobre})`)) return;
+  await accion(async () => {
+    const ids = await D.abrirSobreVale(id);
+    await revelarCartas({ sobre: s, campeones: fichas(ids), nuevos: nuevosDe(ids) });
+    await recargar(); pintar();
+  });
+}
+
 async function ejecutar(e) {
   const t = e.target;
   if (t.id === 'tc' || t.closest('#tc-x')) return cerrarTC();
   const tab = t.closest('.tc-tabs button'); if (tab) { pestana = tab.dataset.tab; detalle = null; return pintar(); }
   const b = t.closest('button'); if (!b || b.disabled) return;
   if (b.dataset.sobre) return abrirSobre(b.dataset.sobre);
+  if (b.dataset.vale) return abrirConVale(b.dataset.vale);
   if (b.dataset.ver) { detalle = b.dataset.ver; return pintar(); }
   if ('volver' in b.dataset) { detalle = null; return pintar(); }
   if ('ascender' in b.dataset) return accion(async () => { const n = await D.ascender(detalle); await recargar(); pintar(); aviso(`¡${porId(detalle).nombre} ascendió a ${n}★!`); });

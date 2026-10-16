@@ -5,6 +5,7 @@ import { espacios } from '../reliquias.js';
 // inicio de cada ronda y el Faraón no puede caer mientras el Templo siga en pie. El Over está listo desde el inicio. Privilegio Imperial: un buff al azar cada turno.
 export default {
   id: 'ozymandias',
+  franquicia: 'Fate', grupos: ['reyes', 'servants'],   // campaña: temas de las etapas
   nombre: 'Ozymandias',
   rol: 'Daño', rolSecundario: 'Support',
   sobres: ['sacred'],

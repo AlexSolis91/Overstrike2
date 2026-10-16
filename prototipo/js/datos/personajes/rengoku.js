@@ -3,6 +3,7 @@ import { espacios } from '../reliquias.js';
 // Ficha oficial #2 (revisada el 2026-10-01).
 export default {
   id: 'rengoku',
+  franquicia: 'Demon Slayer', grupos: ['cazadores-de-demonios', 'fuego'],   // campaña: temas de las etapas
   nombre: 'Rengoku',
   rol: 'Tanque', rolSecundario: 'DoTer',
   sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)

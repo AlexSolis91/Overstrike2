@@ -5,6 +5,7 @@ import { espacios } from '../reliquias.js';
 // (Desgaste y Debilitar sirven a cualquier equipo de daño). Sin habilidad de líder: no es líder en su historia.
 export default {
   id: 'reptile',
+  franquicia: 'Mortal Kombat', grupos: ['outworld'],   // campaña: temas de las etapas
   nombre: 'Reptile',
   rol: 'DoTer', rolSecundario: 'Daño',
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)

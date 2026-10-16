@@ -41,6 +41,7 @@ const vegetaSuperSayajin = {
 
 export default {
   id: 'vegeta',
+  franquicia: 'Dragon Ball', grupos: ['sayajin', 'guerreros-z'],   // campaña: temas de las etapas
   nombre: 'Vegeta',
   rol: 'Daño', rolSecundario: '',
   sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)

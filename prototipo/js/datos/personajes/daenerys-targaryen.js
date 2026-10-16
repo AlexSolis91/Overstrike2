@@ -3,6 +3,7 @@ import { espacios } from '../reliquias.js';
 // Ficha oficial #7 (revisada el 2026-10-01). Invoca un dragón al azar al inicio de cada turno (Drogon, Rhaegal, Viserion).
 export default {
   id: 'daenerys-targaryen',
+  franquicia: 'Game of Thrones', grupos: ['targaryen', 'dragones', 'reyes'],   // campaña: temas de las etapas
   nombre: 'Daenerys Targaryen',
   rol: 'Invoker', rolSecundario: 'DoTer',
   sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)

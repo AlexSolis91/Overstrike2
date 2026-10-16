@@ -3,6 +3,7 @@ import { espacios } from '../reliquias.js';
 // Ficha oficial #5 (revisada el 2026-10-01). Tanque de escudos: todo escala con su HP.
 export default {
   id: 'shaka',
+  franquicia: 'Saint Seiya', grupos: ['santos-de-oro'],   // campaña: temas de las etapas
   nombre: 'Shaka',
   rol: 'Tanque', rolSecundario: 'Support',
   sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)

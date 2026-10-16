@@ -5,6 +5,7 @@ import { espacios } from '../reliquias.js';
 // Relámpagos salta a todos los demás enemigos y el Juicio del Rey Demonio consume las cargas para pegar más y aturdir a los que tenían carga.
 export default {
   id: 'baran',
+  franquicia: 'Solo Leveling', grupos: ['monarcas', 'demonios'],   // campaña: temas de las etapas
   nombre: 'Baran',
   rol: 'Daño', rolSecundario: 'Control',
   sobres: ['phantom'],

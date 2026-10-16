@@ -60,7 +60,7 @@ function animar() {
 }
 
 // gano: true/false · empate · limite (terminó por límite de rondas) · ronda · duracionMs · personajes: estadísticas con nombre/imagen/color · recompensas: lista
-export function mostrarResultados({ gano, empate = false, limite = false, ronda, duracionMs, personajes, recompensas = [] }) {
+export function mostrarResultados({ gano, empate = false, limite = false, ronda, duracionMs, personajes, recompensas = [], campana = null }) {
   datos = { personajes };
   const caja = $('#overlay');
   caja.classList.toggle('derrota', !gano && !empate);
@@ -69,8 +69,23 @@ export function mostrarResultados({ gano, empate = false, limite = false, ronda,
   const m = Math.floor(duracionMs / 60000), s = Math.round(duracionMs / 1000) % 60;
   $('#ov-sub').textContent = `${limite ? 'Límite de rondas · ' : ''}Ronda ${ronda} · Duración ${m}:${String(s).padStart(2, '0')}`;
   $('#res-premios').innerHTML = premios(recompensas);
+  pintarCampana(campana);
   cartas('jugador');
   caja.classList.remove('hidden');
+}
+
+// Campaña: estrellas (se encienden una por una), condiciones, avisos (cofres, etapa perfecta, dificultad abierta) y serie
+const CONDICIONES = ['Ganar', 'Sin aliados caídos', 'En 8 rondas o menos'];
+function pintarCampana(c) {
+  const caja = $('#res-camp');
+  caja.classList.toggle('hidden', !c);
+  if (!c) return (caja.innerHTML = '');
+  caja.innerHTML = `
+    <div class="rc-estrellas">${[0, 1, 2].map(i => `<span class="${i < c.estrellas ? 'on' : ''}" style="--d:${.25 + i * .35}s">★</span>`).join('')}</div>
+    <div class="rc-conds">${CONDICIONES.map((t, i) => `<span class="${c.condiciones[i] ? 'ok' : ''}">${c.condiciones[i] ? '✔' : '✖'} ${t}</span>`).join('')}</div>
+    ${(c.avisos || []).map((a, i) => `<div class="rc-aviso" style="--d:${1.3 + i * .3}s">${a}</div>`).join('')}
+    ${c.error ? `<div class="rc-error">⚠️ ${c.error}</div>` : ''}
+    ${c.serie ? `<div class="rc-serie"><span id="res-serie-t">Siguiente batalla…</span> <button id="res-serie-stop">⏹ Detener</button></div>` : ''}`;
 }
 
 export function iniciarResultados() {

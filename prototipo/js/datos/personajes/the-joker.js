@@ -4,6 +4,7 @@ import { espacios } from '../reliquias.js';
 // y detona todos los venenos con su Over.
 export default {
   id: 'the-joker',
+  franquicia: 'DC', grupos: ['villanos-de-gotham'],   // campaña: temas de las etapas
   nombre: 'The Joker',
   rol: 'DoTer', rolSecundario: 'Control',
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)

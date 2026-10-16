@@ -15,8 +15,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=13">
-  <link rel="stylesheet" href="menu.css?v=21">
+  <link rel="stylesheet" href="styles.css?v=15">
+  <link rel="stylesheet" href="menu.css?v=23">
 </head>
 <body data-pantalla="cargando">
   <!-- ============================================================ LOBBY -->
@@ -54,6 +54,18 @@
     <div id="eq-filtros" class="eq-filtros"></div>
     <div id="eq-galeria" class="eq-galeria"></div>
     <div id="eq-aviso"></div>
+  </section>
+
+  <!-- ============================================================ CAMPAÑA: EL PORTAL -->
+  <section id="pantalla-campana" class="pantalla">
+    <header class="eq-top cp-top">
+      <button id="cp-volver" class="eq-btn">← Menú</button>
+      <h2>🌀 El Portal</h2>
+      <div id="cp-estrellas" class="cp-estrellas"></div>
+    </header>
+    <div id="cp-difs" class="cp-difs"></div>
+    <div class="cp-cuerpo"><div id="cp-mapa" class="cp-mapa"></div><aside id="cp-detalle" class="cp-detalle"></aside></div>
+    <div id="cp-aviso"></div>
   </section>
 
   <div id="guia" class="hidden">
@@ -111,10 +123,13 @@
         <div id="round-label">Ronda 1</div>
         <div id="order"></div>
       </div>
+      <div id="jefe-barra" class="hidden"><div class="jb-nombre"></div><div class="jb-track"><i></i></div></div>
       <div id="hint" class="hidden"></div>
       <div id="girar">📱↻ Gira el teléfono para jugar mejor <button id="girar-x" title="Cerrar">✕</button></div>
 
       <div id="tools">
+        <button id="btn-auto" title="Auto-batalla: la IA juega por ti">🤖<span class="lbl"> Auto</span></button>
+        <button id="btn-vel" title="Velocidad de la batalla">×1</button>
         <button id="btn-menu" title="Volver al menú">🏠</button>
         <button id="btn-sonido" data-abre-ajustes title="Sonido">🔊</button>
         <button id="btn-guia" data-abre-guia title="Guía de buffs y debuffs">📖<span class="lbl"> Guía</span></button>
@@ -165,10 +180,11 @@
         <div class="ov-box res-caja">
           <h1 id="ov-title"></h1>
           <p id="ov-sub"></p>
+          <div id="res-camp" class="hidden"></div>
           <section class="res-recompensas"><h3>Recompensas</h3><div id="res-premios"></div></section>
           <div class="res-tabs"><button data-lado="jugador" class="on">Tu equipo</button><button data-lado="rival">Rival</button></div>
           <div id="res-cartas" class="res-cartas"></div>
-          <div class="ov-botones"><button id="ov-revancha">⚔️ Revancha</button><button id="ov-equipo">👥 Cambiar equipo</button><button id="ov-menu">🏠 Menú</button></div>
+          <div class="ov-botones"><button id="ov-siguiente" class="hidden">➡️ Siguiente etapa</button><button id="ov-revancha">⚔️ Revancha</button><button id="ov-equipo">👥 Cambiar equipo</button><button id="ov-menu">🏠 Menú</button></div>
         </div>
       </div>
     </main>

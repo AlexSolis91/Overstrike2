@@ -6,6 +6,7 @@ import { espacios } from '../reliquias.js';
 // Camino Animal: invoca 1 de sus 6 criaturas al azar (ver invocaciones.js, tabla animalesPain).
 export default {
   id: 'pain',
+  franquicia: 'Naruto', grupos: ['akatsuki', 'renegados'],   // campaña: temas de las etapas
   nombre: 'Pain',
   rol: 'Daño', rolSecundario: 'Invoker',
   sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)

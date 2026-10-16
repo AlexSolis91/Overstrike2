@@ -44,6 +44,7 @@ const sagaOscuro = {
 
 export default {
   id: 'saga',
+  franquicia: 'Saint Seiya', grupos: ['santos-de-oro'],   // campaña: temas de las etapas
   nombre: 'Saga',
   rol: 'Control', rolSecundario: 'Daño',
   sobres: ['phantom'],

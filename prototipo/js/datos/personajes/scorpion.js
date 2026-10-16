@@ -4,6 +4,7 @@ import { espacios } from '../reliquias.js';
 // equipos quemados con Spear y deja una Quemadura fuerte con su Fatality. Líder: Gran Maestro del Shirai Ryu.
 export default {
   id: 'scorpion',
+  franquicia: 'Mortal Kombat', grupos: ['espectros', 'fuego'],   // campaña: temas de las etapas
   nombre: 'Scorpion',
   rol: 'Daño', rolSecundario: 'DoTer',
   sobres: ['bloodline', 'phantom'],  // sobres de la tienda (ver js/datos/sobres.js)

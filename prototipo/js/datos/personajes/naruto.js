@@ -72,6 +72,7 @@ const narutoModoRikudo = {
 
 export default {
   id: 'naruto',
+  franquicia: 'Naruto', grupos: ['konoha'],   // campaña: temas de las etapas
   nombre: 'Naruto',
   rol: 'Daño', rolSecundario: 'Invocador',
   sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)

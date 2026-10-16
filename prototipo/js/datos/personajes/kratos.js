@@ -4,6 +4,7 @@ import { espacios } from '../reliquias.js';
 // Daño con Sangrado: castiga a los que sangran, los convierte en Hemorragia y cambia su estilo según las armas que lleva (Espadas del Caos / Lanza de Draupnir).
 export default {
   id: 'kratos',
+  franquicia: 'God of War', grupos: ['dioses', 'guerreros'],   // campaña: temas de las etapas
   nombre: 'Kratos',
   rol: 'Daño', rolSecundario: 'DoTer',
   sobres: ['bloodline', 'sacred'],

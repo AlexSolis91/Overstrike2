@@ -5,6 +5,7 @@ import { espacios } from '../reliquias.js';
 // turno y amplifican los DoTs del enemigo; Antares, la 15.ª, las consume. Punto Shinou: cura y limpia DoTs.
 export default {
   id: 'milo',
+  franquicia: 'Saint Seiya', grupos: ['santos-de-oro'],   // campaña: temas de las etapas
   nombre: 'Milo',
   rol: 'DoTer', rolSecundario: 'Support',
   sobres: ['bloodline'],

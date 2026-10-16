@@ -3,6 +3,7 @@ import { espacios } from '../reliquias.js';
 // Ficha oficial #8 (revisada el 2026-10-01). Control: aturde con su Básico y castiga a los enemigos que usan Especial u Over.
 export default {
   id: 'batman',
+  franquicia: 'DC', grupos: ['justicieros'],   // campaña: temas de las etapas
   nombre: 'Batman',
   rol: 'Control', rolSecundario: 'Support',
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)

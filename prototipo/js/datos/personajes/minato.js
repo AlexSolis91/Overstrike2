@@ -5,6 +5,7 @@ import { espacios } from '../reliquias.js';
 // consume la marca y gana un turno extra (hasta 2 por ronda) y Velocidad. Todos sus golpes escalan por Velocidad. 25% de Bloqueo (esquiva teletransportándose). Las marcas puestas en un movimiento no se consumen en ese mismo.
 export default {
   id: 'minato',
+  franquicia: 'Naruto', grupos: ['konoha', 'hokage'],   // campaña: temas de las etapas
   nombre: 'Minato Namikaze',
   rol: 'Daño', rolSecundario: 'Control',
   sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)

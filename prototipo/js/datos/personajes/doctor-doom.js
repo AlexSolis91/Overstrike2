@@ -5,6 +5,7 @@ import { espacios } from '../reliquias.js';
 // Líder: Dios Emperador Doom.
 export default {
   id: 'doctor-doom',
+  franquicia: 'Marvel', grupos: ['reyes'],   // campaña: temas de las etapas
   nombre: 'Doctor Doom',
   rol: 'Support', rolSecundario: 'Tanque',
   sobres: ['phantom'],

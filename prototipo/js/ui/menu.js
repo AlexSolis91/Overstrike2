@@ -9,7 +9,7 @@ const $ = s => document.querySelector(s);
 const TAM = 5;                                   // los equipos siempre son de 5
 const MODOS = [
   { id: 'rapida', nombre: 'Partida rápida', icono: '⚔️', desc: 'Arma tu equipo y enfrenta a la IA', activo: true },
-  { id: 'campana', nombre: 'Campaña', icono: '📜' },
+  { id: 'campana', nombre: 'Campaña', icono: '📜', desc: 'Cruza el Portal: 20 etapas y 3 dificultades', activo: true },
   { id: 'multi', nombre: 'Multijugador', icono: '🌐' },
   { id: 'hordas', nombre: 'Hordas', icono: '🧟' },
   { id: 'jefe', nombre: 'Jefe de Clan', icono: '🐲' },
@@ -21,11 +21,12 @@ const CAT = { basico: 'Básico', especial: 'Especial', over: 'Over' };
 const OBJ = { enemigo: 'Un enemigo', aliado: 'Un aliado', propio: 'Propio', todosEnemigos: 'Todos los enemigos', todosAliados: 'Todos los aliados', azar: 'Enemigos al azar' };
 const pct = v => `${Math.round(v * 1000) / 10}%`;
 
-const E = { jugador: [], rival: [], rivalModo: 'azar', editando: 'jugador', filtro: null, sel: null };
+const E = { jugador: [], rival: [], rivalModo: 'azar', editando: 'jugador', filtro: null, sel: null, campana: null };
+// campana (modo Campaña): { titulo, rivales: [fichas], propios: Set(ids), alListo(eqJ), alVolver() } · el rival es fijo y solo se eligen campeones propios
 let alJugar = null;
 
 // ---------------------------------------------------------------- navegación entre pantallas (con el botón "atrás")
-const PANTALLAS = ['menu', 'equipo', 'partida'];
+const PANTALLAS = ['menu', 'equipo', 'partida', 'campana'];
 let alSalirDePartida = null;
 export function irA(p, { reemplazar = false } = {}) {
   if (reemplazar) history.replaceState(null, '', '#' + p); else if (location.hash !== '#' + p) history.pushState(null, '', '#' + p);
@@ -36,8 +37,10 @@ function mostrar(p) {
   document.body.dataset.pantalla = p;
   if (antes === 'partida' && p !== 'partida') alSalirDePartida?.();
   musica(p === 'partida' ? 'batalla' : 'menu');
-  fondo(p === 'menu' ? 'menu' : p === 'equipo' ? 'equipo' : null);
+  fondo(p === 'menu' || p === 'campana' ? 'menu' : p === 'equipo' ? 'equipo' : null);
   if (p === 'equipo') renderEquipo();
+  if (p === 'campana') alAbrirCampana?.();
+  if (p === 'menu') E.campana = null;
 }
 addEventListener('popstate', () => {
   const p = location.hash.slice(1);
@@ -98,7 +101,7 @@ const aleatorio = (base = []) => {
   const resto = OFICIALES.filter(p => !base.some(b => b.id === p.id)).sort(() => Math.random() - .5);
   return [...base, ...resto].slice(0, TAM);
 };
-const listo = () => E.jugador.length === TAM && (E.rivalModo === 'azar' || E.rival.length === TAM);
+const listo = () => E.jugador.length === TAM && (E.campana || E.rivalModo === 'azar' || E.rival.length === TAM);
 
 function retrato(p, cls = '') {
   return `<div class="ret ${cls}" style="--c:${p.color}">${imgHtml(p.imagen, p.nombre) || `<span class="ret-emoji">${p.emoji}</span>`}</div>`;
@@ -106,9 +109,14 @@ function retrato(p, cls = '') {
 
 function renderEquipo() {
   // filas de equipos
+  const camp = E.campana;
+  document.body.classList.toggle('eq-campana', !!camp);
+  $('#pantalla-equipo h2').textContent = camp ? camp.titulo : 'Construye tu equipo';
+  $('#eq-volver').textContent = camp ? '← Portal' : '← Menú';
+  if (camp) { E.editando = 'jugador'; E.rival = camp.rivales; }
   for (const lado of ['jugador', 'rival']) {
     const fila = $(`.eq-fila[data-lado="${lado}"]`);
-    const oculto = lado === 'rival' && E.rivalModo === 'azar';
+    const oculto = lado === 'rival' && E.rivalModo === 'azar' && !camp;
     fila.classList.toggle('editando', E.editando === lado);
     fila.classList.toggle('azar', oculto);
     fila.querySelector('.eq-slots').innerHTML = oculto
@@ -133,7 +141,7 @@ function renderEquipo() {
   $('#eq-filtros').innerHTML = `<span class="eq-editando">Eligiendo para: <b>${E.editando === 'jugador' ? 'Tu equipo' : 'Rival'}</b></span>` +
     [null, ...roles].map(r => `<button class="filtro ${E.filtro === r ? 'on' : ''}" data-rol="${r ?? ''}">${r ?? 'Todos'}</button>`).join('');
   // galería
-  const lista = OFICIALES.filter(p => !E.filtro || rolesDe(p).includes(E.filtro));
+  const lista = OFICIALES.filter(p => (!E.filtro || rolesDe(p).includes(E.filtro)) && (!camp || camp.propios.has(p.id)));
   $('#eq-galeria').innerHTML = lista.map(p => {
     const pos = equipoDe(E.editando).findIndex(x => x.id === p.id);
     return `<div class="gc ${pos >= 0 ? 'elegido' : ''}" data-id="${p.id}" style="--c:${p.color}">
@@ -146,11 +154,12 @@ function renderEquipo() {
     </div>`;
   }).join('');
   $('#eq-listo').disabled = !listo();
-  $('#eq-listo').title = listo() ? '' : 'Completa los 5 personajes de cada equipo que construyas';
+  $('#eq-listo').title = listo() ? '' : camp ? 'Elige 5 de tus campeones' : 'Completa los 5 personajes de cada equipo que construyas';
+  if (camp && !lista.length) $('#eq-galeria').innerHTML = '<p class="eq-vacio">No tienes campeones todavía: abre tu Starter Pack en la Tienda.</p>';
 }
 
 function alternarPersonaje(id) {
-  const p = OFICIALES.find(x => x.id === id), lado = E.editando, eq = equipoDe(lado);
+  const p = OFICIALES.find(x => x.id === id), lado = E.campana ? 'jugador' : E.editando, eq = equipoDe(lado);
   const i = eq.findIndex(x => x.id === id);
   if (i >= 0) { eq.splice(i, 1); sonar('quitar'); }
   else if (eq.length < TAM) { eq.push(p); sonar('elegir'); }
@@ -159,7 +168,7 @@ function alternarPersonaje(id) {
   renderEquipo();
 }
 function tocarSlot(lado, i) {
-  if (lado === 'rival' && E.rivalModo === 'azar') return;
+  if (lado === 'rival' && (E.rivalModo === 'azar' || E.campana)) return;
   E.editando = lado;
   const eq = equipoDe(lado);
   if (!eq[i]) { E.sel = null; return renderEquipo(); }
@@ -210,27 +219,33 @@ export function presentarVS(eqJ, eqR) {
 }
 
 // ---------------------------------------------------------------- arranque
-export function iniciarMenu({ jugar, salirDePartida }) {
-  alJugar = jugar; alSalirDePartida = salirDePartida;
+let alAbrirCampana = null;
+export function iniciarMenu({ jugar, salirDePartida, abrirCampana }) {
+  alJugar = jugar; alSalirDePartida = salirDePartida; alAbrirCampana = abrirCampana;
   renderMenu();
-  $('#menu-modos').addEventListener('click', e => { if (e.target.closest('[data-modo="rapida"]')) irA('equipo'); });
-  $('#eq-volver').addEventListener('click', () => irA('menu'));
+  $('#menu-modos').addEventListener('click', e => {
+    if (e.target.closest('[data-modo="rapida"]')) { E.campana = null; irA('equipo'); }
+    if (e.target.closest('[data-modo="campana"]')) irA('campana');
+  });
+  $('#eq-volver').addEventListener('click', () => { if (E.campana) { const c = E.campana; E.campana = null; c.alVolver?.(); } else irA('menu'); });
   $('#pantalla-equipo').addEventListener('click', e => {
     const t = e.target;
     const info = t.closest('.gc-info'); if (info) return abrirFicha(info.dataset.id);
-    const x = t.closest('.slot-x'); if (x) { equipoDe(x.dataset.lado).splice(+x.dataset.i, 1); E.sel = null; return renderEquipo(); }
+    const x = t.closest('.slot-x'); if (x) { if (E.campana && x.dataset.lado === 'rival') return; equipoDe(x.dataset.lado).splice(+x.dataset.i, 1); E.sel = null; return renderEquipo(); }
     const slot = t.closest('.slot'); if (slot) return tocarSlot(slot.dataset.lado, +slot.dataset.i);
     const gc = t.closest('.gc'); if (gc) return alternarPersonaje(gc.dataset.id);
     const f = t.closest('.filtro'); if (f) { E.filtro = f.dataset.rol || null; return renderEquipo(); }
     const m = t.closest('.eq-modo button'); if (m) { E.rivalModo = m.dataset.modo; E.editando = m.dataset.modo === 'construir' ? 'rival' : 'jugador'; E.sel = null; return renderEquipo(); }
     const az = t.closest('.eq-azar');
+    if (az && E.campana) { if (az.dataset.lado === 'jugador') { E.jugador = [...E.jugador, ...OFICIALES.filter(p => E.campana.propios.has(p.id) && !E.jugador.includes(p)).sort(() => Math.random() - .5)].slice(0, TAM); renderEquipo(); } return; }
     if (az) { const l = az.dataset.lado; if (l === 'rival') E.rivalModo = 'construir';
       E[l] = E[l].length === TAM ? aleatorio() : aleatorio(E[l]); E.editando = l; E.sel = null; return renderEquipo(); }
-    const fila = t.closest('.eq-fila'); if (fila && !(fila.dataset.lado === 'rival' && E.rivalModo === 'azar')) { E.editando = fila.dataset.lado; return renderEquipo(); }
+    const fila = t.closest('.eq-fila'); if (fila && !E.campana && !(fila.dataset.lado === 'rival' && E.rivalModo === 'azar')) { E.editando = fila.dataset.lado; return renderEquipo(); }
   });
   $('#eq-listo').addEventListener('click', () => {
     if (!listo()) return;
     sonar('listo');
+    if (E.campana) return E.campana.alListo([...E.jugador]);
     alJugar([...E.jugador], E.rivalModo === 'azar' ? aleatorio() : [...E.rival]);
   });
   $('#ficha').addEventListener('click', e => { if (e.target.id === 'ficha' || e.target.closest('#ficha-x')) cerrarFicha(); });
@@ -239,3 +254,10 @@ export function iniciarMenu({ jugar, salirDePartida }) {
 // Recupera la selección (al volver de una partida para "Cambiar equipo")
 export function cargarSeleccion(eqJ, eqR, rivalModo) { E.jugador = [...eqJ]; E.rival = rivalModo === 'construir' ? [...eqR] : []; E.rivalModo = rivalModo; E.editando = 'jugador'; }
 export const seleccion = () => ({ rivalModo: E.rivalModo });
+// Modo Campaña: abre la construcción de equipo con el rival fijo de la etapa y solo los campeones propios
+export function equipoCampana({ titulo, rivales, propios, alListo, alVolver }) {
+  E.campana = { titulo, rivales, propios, alListo, alVolver };
+  E.jugador = E.jugador.filter(p => propios.has(p.id));          // conserva la última selección (si sigue siendo suya)
+  E.sel = null; E.filtro = null;
+  irA('equipo');
+}

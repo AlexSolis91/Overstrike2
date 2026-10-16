@@ -51,6 +51,7 @@ const reyDragon = {
 
 export default {
   id: 'antares',
+  franquicia: 'Solo Leveling', grupos: ['monarcas', 'dragones'],   // campaña: temas de las etapas
   nombre: 'Antares',
   rol: 'DoTer', rolSecundario: 'Control',
   sobres: ['phantom'],

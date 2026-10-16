@@ -4,6 +4,7 @@ import { espacios } from '../reliquias.js';
 // los quemados. Las llamas negras saltan a otro enemigo cuando muere uno que arde. Sin Habilidad de Líder.
 export default {
   id: 'sasuke-uchiha',
+  franquicia: 'Naruto', grupos: ['uchiha', 'konoha'],   // campaña: temas de las etapas
   nombre: 'Sasuke Uchiha',
   rol: 'Daño', rolSecundario: 'DoTer',
   sobres: ['bloodline'],

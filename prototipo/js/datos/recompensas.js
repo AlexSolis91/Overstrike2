@@ -1,6 +1,6 @@
 // Registro universal de RECOMPENSAS. Un modo de juego que dé premios le pasa a la pantalla de resultados una lista:
 //   [{ tipo: 'oro', cantidad: 5967 }, { tipo: 'reliquia', cantidad: 1, rareza: 'Épico', nombre: 'Espada de Obsidiana' }, ...]
-// y se muestran con su ícono, cantidad y el color de su rareza. Partida rápida todavía no da recompensas (lista vacía).
+// y se muestran con su ícono, cantidad y el color de su rareza. Partida rápida no da recompensas; la Campaña sí (las paga el servidor).
 export const TIPOS_RECOMPENSA = {
   oro:        { nombre: 'Oro',        icono: '🪙' },
   reliquia:   { nombre: 'Reliquia',   icono: '💎' },
@@ -8,6 +8,8 @@ export const TIPOS_RECOMPENSA = {
   llave:      { nombre: 'Llave',      icono: '🗝️' },
   runa:       { nombre: 'Runa',       icono: '🔮' },
   experiencia: { nombre: 'Experiencia', icono: '✨' },
+  vale:       { nombre: 'Vale de sobre', icono: '🎟️' },
+  cofre:      { nombre: 'Cofre de estrellas', icono: '🎁' },
 };
 
 export const COLOR_RAREZA = {

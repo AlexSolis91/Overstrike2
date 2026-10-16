@@ -515,3 +515,19 @@ Solo con sesión iniciada. Todo cambio lo valida el **servidor** (funciones de `
 - **Animación de apertura** (`js/ui/apertura.js`, la misma para sobres, Starter Pack y Portal): el sobre flota y brilla → al tocarlo (o a los 5 s) tiembla cada vez más → estalla en un destello con chispas → las cartas salen boca abajo → se voltean **una por una** con rayos de luz del color del campeón y la etiqueta **¡NUEVO!** o **+1 copia**. Tocar acelera la revelación. Botón *Continuar* al final.
 - **Panel de administrador** (en 👤 Tu cuenta, solo rol admin): casilla de activo y precio de cada sobre (*Guardar sobres*) y *Dar oro* a un jugador por su nombre.
 - **Al agregar un campeón nuevo:** declarar `starter` y `sobres` en su ficha, correr `node herramientas/generar_catalogo.mjs` (desde `prototipo`) y ejecutar `docs/sql/catalogo.sql` en Supabase. Sin ese paso el servidor no lo puede dar en sobres.
+
+## 20. Modo Campaña: el Portal (Área 1)
+
+Solo con sesión iniciada. El progreso y los premios los valida y paga el **servidor** (`docs/sql/004_campana.sql`: `campana_completar` y `abrir_sobre_vale`). Datos en `js/datos/campana.js`, pantalla en `js/ui/campana.js`.
+
+- **20 etapas**: mini-jefe en la 10 (💀) y jefe final en la 20 (👑). Se desbloquean en orden. Las etapas futuras se ven como **???** (tema y equipo ocultos) hasta llegar a ellas; al revelarse se animan (lo ya visto se guarda en este dispositivo).
+- **Dificultades** (`DIFICULTADES`): Normal ×1.0 (rival sin reliquias ni habilidad de líder) · Difícil ×1.5 (con reliquias) · Brutal ×2.2 (reliquias, habilidad de líder y +10% Velocidad). Difícil se abre al ganar la etapa 20 en Normal; Brutal, al ganarla en Difícil. Premios ×1 / ×2 / ×3.
+- **Equipos por tema, no fijos** (`TEMAS` + `equipoDeTema`): cada ficha declara `franquicia` y `grupos`. Una etapa es un tema (franquicia o grupo): toma sus `preferidos`, luego los campeones del tema y, solo si faltan, el `relleno`; el `lider` va primero. **Un campeón nuevo entra solo** a las etapas de su tema. Al agregarlo: volver a simular la campaña y ajustar el `poder` de las etapas.
+- **Poder de la etapa** (`etapas[].poder`): multiplica HP y Daño del rival (motor: `crearCombate({ rival: { poder, spdPct, sinReliquias, sinLider, jefe } })`, capa `campana` de las estadísticas permanentes). Calibrado con simulación: ~95% de victorias en la etapa 1 → ~40% en la 20 (Normal, equipo al azar de referencia).
+- **Jefes:** el rival en la posición 1 recibe +50% HP, barra grande arriba e intro (*MINI-JEFE / JEFE FINAL*). Al bajar del 50% de vida entra en **FURIA** una vez: +25% Daño y +15% Velocidad (evento `jefeFuria`).
+- **Estrellas:** ★ ganar · ★ sin aliados caídos · ★ en 8 rondas o menos. Se guarda la mejor. **Cofres** por dificultad a las 20 / 40 / 60 estrellas: 10,000 oro · 5 fragmentos de Runa · (Normal 1 vale, Difícil 1 Runa, Brutal 4 Runas), todo × el premio de la dificultad salvo el cofre de 60.
+- **Premios por victoria:** 1.ª vez 5,000 oro; repetir 1,000 oro (× dificultad). Mini-jefe (1.ª vez): 5 fragmentos de Runa × dificultad. Jefe final (1.ª vez): Normal 1 vale · Difícil 1 vale + 1 Runa · Brutal 2 vales + 2 Runas. Entre repeticiones cobradas el servidor exige **90 s**.
+- **Vale de sobre** 🎟️: abre cualquier sobre de la Tienda sin pagar oro (botón *Usar vale*).
+- **Batalla:** 🤖 **Auto** (la IA juega por ti; se puede encender o apagar en cualquier turno) y **×2** de velocidad; ambos se recuerdan en el dispositivo. **Repetir ×5 / ×10** (etapas ya ganadas): juega en Auto ×2 una tras otra respetando los 90 s; se detiene al perder o con *⏹ Detener*.
+- **Resultados:** estrellas animadas, condiciones cumplidas, avisos (cofre abierto, etapa perfecta, nueva etapa, dificultad desbloqueada) y botones *Siguiente etapa / Repetir / Cambiar equipo / Portal*.
+- **Construcción del equipo:** el rival es fijo y solo se eligen campeones propios (mínimo 5).

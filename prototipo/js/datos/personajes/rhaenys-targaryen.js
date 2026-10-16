@@ -5,6 +5,7 @@ import { espacios } from '../reliquias.js';
 // Sin habilidad de líder: nunca llegó a gobernar.
 export default {
   id: 'rhaenys-targaryen',
+  franquicia: 'Game of Thrones', grupos: ['targaryen', 'dragones'],   // campaña: temas de las etapas
   nombre: 'Rhaenys Targaryen',
   rol: 'Daño', rolSecundario: 'Control',
   sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)

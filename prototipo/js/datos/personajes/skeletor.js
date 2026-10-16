@@ -6,6 +6,7 @@ import { espacios } from '../reliquias.js';
 // buffs del objetivo. Líder: Señor de la Montaña de la Serpiente (comanda a los Guerreros del Mal).
 export default {
   id: 'skeletor',
+  franquicia: 'He-Man', grupos: ['villanos'],   // campaña: temas de las etapas
   nombre: 'Skeletor',
   rol: 'Control', rolSecundario: 'Daño',
   sobres: ['phantom'],

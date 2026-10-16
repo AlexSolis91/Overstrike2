@@ -5,6 +5,7 @@ import { espacios } from '../reliquias.js';
 // (reflejan daño), Furia y Provocación. Usurpó el trono de Asgard: tiene habilidad de líder.
 export default {
   id: 'loki',
+  franquicia: 'Marvel', grupos: ['asgard', 'dioses'],   // campaña: temas de las etapas
   nombre: 'Loki',
   rol: 'Tanque', rolSecundario: 'Control',
   sobres: ['phantom', 'sacred'],  // sobres de la tienda (ver js/datos/sobres.js)

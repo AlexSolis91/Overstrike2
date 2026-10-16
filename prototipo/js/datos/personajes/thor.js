@@ -5,6 +5,7 @@ import { espacios } from '../reliquias.js';
 // rival usa los suyos.
 export default {
   id: 'thor',
+  franquicia: 'Marvel', grupos: ['asgard', 'dioses'],   // campaña: temas de las etapas
   nombre: 'Thor',
   rol: 'Daño', rolSecundario: 'Support',
   sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)

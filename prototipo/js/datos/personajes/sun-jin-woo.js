@@ -3,6 +3,7 @@ import { espacios } from '../reliquias.js';
 // Ficha oficial #4 (diseñada el 2026-10-01). Invocador de sombras: ver INVOCACIONES y TABLAS_INVOCACION.sombras.
 export default {
   id: 'sun-jin-woo',
+  franquicia: 'Solo Leveling', grupos: ['cazadores', 'monarcas', 'sombras'],   // campaña: temas de las etapas
   nombre: 'Sun Jin Woo',
   rol: 'Daño', rolSecundario: 'Invocador',
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)

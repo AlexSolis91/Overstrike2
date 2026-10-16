@@ -4,6 +4,7 @@ import { espacios } from '../reliquias.js';
 // Ejecución de Aurora. Su pasiva hace que TODO su equipo castigue a los congelados: brilla en equipos de congelación.
 export default {
   id: 'camus',
+  franquicia: 'Saint Seiya', grupos: ['santos-de-oro', 'hielo'],   // campaña: temas de las etapas
   nombre: 'Camus',
   rol: 'Control', rolSecundario: 'Daño',
   sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)

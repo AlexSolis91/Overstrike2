@@ -4,6 +4,7 @@ import { espacios } from '../reliquias.js';
 // aliados congelan, acumulando crítico, y su Over protege al equipo con Aura Gélida.
 export default {
   id: 'jaina-proudmoore',
+  franquicia: 'Warcraft', grupos: ['alianza', 'hielo'],   // campaña: temas de las etapas
   nombre: 'Jaina Proudmoore',
   rol: 'Daño',
   sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)

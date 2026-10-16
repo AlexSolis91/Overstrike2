@@ -5,6 +5,7 @@ import { espacios } from '../reliquias.js';
 // Sin habilidad de líder: en su historia no es líder (los Dorados responden al Patriarca).
 export default {
   id: 'aldebaran',
+  franquicia: 'Saint Seiya', grupos: ['santos-de-oro'],   // campaña: temas de las etapas
   nombre: 'Aldebarán',
   rol: 'Tanque', rolSecundario: 'Daño',
   sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)

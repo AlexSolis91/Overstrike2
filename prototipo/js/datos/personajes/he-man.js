@@ -5,6 +5,7 @@ import { espacios } from '../reliquias.js';
 // acumula Poder de Grayskull y lo descarga en su Over. Líder: Defensores de Grayskull.
 export default {
   id: 'he-man',
+  franquicia: 'He-Man', grupos: ['heroes-de-eternia', 'guerreros'],   // campaña: temas de las etapas
   nombre: 'He-Man',
   rol: 'Tanque', rolSecundario: 'Daño',
   sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)

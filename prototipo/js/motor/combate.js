@@ -14,7 +14,8 @@ const NOMBRE_CAT = { basico: 'Básico', especial: 'Especial', over: 'Over' };
 const NOMBRE_STAT = { hpPct: 'HP máx.', dmgPct: 'Daño', critDmg: 'Daño Crítico', critRate: 'Prob. Crítico', armor: 'Armadura', res: 'Resistencia', acc: 'Puntería', pen: 'Penetración de escudo' };
 const clonar = o => JSON.parse(JSON.stringify(o));
 
-export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() }) {
+// rival (opcional, p. ej. Campaña): { poder: ×HP y ×Daño, spdPct, sinReliquias, sinLider, jefe: { hpExtra, umbral, dmgPct, spdPct } }
+export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival: opcionesRival = {} }) {
   const rng = crearRng(semilla);
   const P = [];
   const S = { ronda: 0, actuaron: new Set(), orden: [], actual: null, esperando: null, fin: null };
@@ -112,6 +113,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       }
       const ac = l.lider?.acumulaPorDoT;                                                   // líder "acumulaPorDoT": lo ganado hasta ahora
       if (ac && l.acumLider) sec[ac.stat] = (sec[ac.stat] || 0) + l.acumLider;
+    }
+    if (capas.permanente) for (const [k, v] of Object.entries(p.campana || {})) {     // poder del rival en modos como Campaña (y la furia del Jefe)
+      if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
     }
     if (capas.permanente) for (const [k, v] of Object.entries(p.permanente || {})) {
       if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
@@ -226,7 +230,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       invocaciones: todos(p, 'summon').map(e => ({ key: e.key, dur: e.dur, fresca: !!e.fresca, max: INVOCACIONES[e.key].dur })),
       forma: p.forma ? { nombre: p.forma.nombre, imagen: p.forma.imagen, emoji: p.forma.emoji, color: p.forma.color, turnos: p.forma.turnos, total: p.forma.total, permanente: !!p.forma.permanente } : null,
       transformacion: p.transformacion ? { nombre: p.transformacion.nombre, pasiva: p.transformacion.pasiva?.nombre, movimientos: p.transformacion.movimientos.map(m => m.nombre) } : null,
-      movs: p.movimientos, pasiva: p.pasiva,
+      movs: p.movimientos, pasiva: p.pasiva, jefe: p.jefe ? { furia: p.jefe.furia } : null,
     };
   }
   function emitir(t, datos = {}, ...afectados) {
@@ -482,6 +486,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     const ultimo = reparto.filter(([f]) => f && f.lado !== t.lado).sort((x, y) => y[1] - x[1])[0];
     if (ultimo) t.ultimoDanoDe = ultimo[0];
     if (t.pasiva?.rival && cantidad > 0 && !t.muerto) revisarTransformacion(t);
+    if (t.jefe && !t.jefe.furia && t.hp > 0 && t.hp < t.jefe.umbral * maxHp(t)) {   // Jefe: entra en furia una vez
+      t.jefe.furia = true;
+      t.campana.dmgPct = (t.campana.dmgPct || 0) + t.jefe.dmgPct;
+      t.campana.spdPct = (t.campana.spdPct || 0) + t.jefe.spdPct;
+      emitir('jefeFuria', { id: t.uid, texto: `🔥 ¡FURIA! +${Math.round(t.jefe.dmgPct * 100)}% Daño y +${Math.round(t.jefe.spdPct * 100)}% Velocidad` }, t);
+    }
     const rs = t.sellado && t.pasiva.sello.romper;
     if (rs?.hpMenor && t.hp > 0 && t.hp < rs.hpMenor * maxHp(t)) romperSello(t);
     const s = cantidad > 0 && !t.muerto && get(t, 'stealth');
@@ -1707,6 +1717,18 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
 
   equipoJugador.forEach((d, i) => P.push(crearPersonaje(d, 'jugador', i)));
   equipoRival.forEach((d, i) => P.push(crearPersonaje(d, 'rival', i)));
+  for (const p of P.filter(x => x.lado === 'rival')) {     // opciones del equipo rival (dificultad de Campaña, Jefes)
+    const r = opcionesRival;
+    if (r.sinReliquias) p.slots = (p.slots || []).map(sl => ({ ...sl, relic: null }));
+    if (r.sinLider) p.esLider = false;
+    p.campana = {};
+    if (r.poder && r.poder !== 1) { p.campana.hpPct = r.poder - 1; p.campana.dmgPct = r.poder - 1; }
+    if (r.spdPct) p.campana.spdPct = r.spdPct;
+    if (r.jefe && p.pos === 0) {                             // el Jefe: más HP y una fase de furia al bajar de cierto % de HP
+      p.jefe = { furia: false, umbral: r.jefe.umbral ?? .5, dmgPct: r.jefe.dmgPct ?? .25, spdPct: r.jefe.spdPct ?? .15 };
+      p.campana.hpPct = (p.campana.hpPct || 0) + (r.jefe.hpExtra ?? .5);
+    }
+  }
   for (const p of P) if (p.pasiva?.rival) elegirRival(p, false);
   for (const p of P) { const ma = p.pasiva?.marcaAliadosQueAplican;    // al inicio: marca con bono a cada aliado (incluido él) cuyos movimientos aplican ese efecto
     if (ma) for (const x of P.filter(x => x.lado === p.lado && aplicaEnFormas(x, ma.efecto)))

@@ -6,6 +6,7 @@ import { espacios } from '../reliquias.js';
 // Over enemigo) y Espejo de Yata (Espejismo + Escudo). Sin Habilidad de Líder.
 export default {
   id: 'itachi-uchiha',
+  franquicia: 'Naruto', grupos: ['uchiha', 'akatsuki', 'konoha'],   // campaña: temas de las etapas
   nombre: 'Itachi Uchiha',
   rol: 'Control', rolSecundario: 'Daño',
   sobres: ['phantom'],

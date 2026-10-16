@@ -3,7 +3,10 @@ const { PIXI, gsap } = window;
 
 export const W = 1280, H = 800, CW = 150, CH = 210;
 export const EMOJI_FONT = '"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
-export const wait = ms => new Promise(r => setTimeout(r, ms));
+// Velocidad de la batalla (×1 / ×2): acelera las esperas y todas las animaciones de GSAP
+export let VELOCIDAD = 1;
+export function setVelocidad(v) { VELOCIDAD = v; gsap.globalTimeline.timeScale(v); }
+export const wait = ms => new Promise(r => setTimeout(r, ms / VELOCIDAD));
 export const rand = (a, b) => a + Math.random() * (b - a);
 export const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 // HP que se muestra: si está vivo con una fracción (p. ej. 0.3), se ve 1, nunca 0

@@ -1,5 +1,6 @@
 // Punto de entrada: une el motor (reglas) con la interfaz (animaciones y panel).
-import { iniciarEscena, G, W, wait, banner, relayout, shakeScene } from './ui/graficos.js';
+import { iniciarEscena, G, W, wait, banner, relayout, shakeScene, setVelocidad } from './ui/graficos.js';
+import { iniciarCampana, abrirCampana, cerrarBatalla, siguienteEtapa, jugarEtapa, elegirEquipoEtapa, esperaRepeticion } from './ui/campana.js';
 import { precargar } from './ui/imagenes.js';
 import { Carta } from './ui/carta.js';
 import * as FX from './ui/fx.js';
@@ -48,12 +49,15 @@ const nombre = uid => por(uid)?.nombre ?? '';
 const colX = i => W / 2 + (i - 2) * 178;
 activarReliquias(() => por(ui.inspeccionado));
 
-async function iniciarPartida(eqJ, eqR) {
+async function iniciarPartida(eqJ, eqR, opciones = null) {
   partida++;
   inicioPartida = Date.now();
-  combate = crearCombate({ equipoJugador: eqJ, equipoRival: eqR });
+  combate = crearCombate({ equipoJugador: eqJ, equipoRival: eqR, rival: opciones?.rival });
   P = combate.personajes;
-  ui = { actual: null, inspeccionado: P[0].uid, miTurno: false, movSel: null, objetivosValidos: null, tipoObjetivo: null, ocupado: true, opciones: null };
+  const serie = opciones?.serie || 0;                         // en una serie de repeticiones siempre va en Auto y ×2
+  ui = { actual: null, inspeccionado: P[0].uid, miTurno: false, movSel: null, objetivosValidos: null, tipoObjetivo: null, ocupado: true, opciones: null,
+    camp: opciones?.campana || null, serie, auto: !!serie || autoActivo };
+  setVelocidad(serie ? 2 : velocidad); marcarControles();
   vistas = {}; cartas = {};
   for (const p of P) {
     cartas[p.uid] = new Carta(p, colX(p.pos), p.lado === 'rival' ? 215 : 585, tocarCarta);
@@ -70,20 +74,23 @@ async function iniciarPartida(eqJ, eqR) {
     gsap.to(carta.c, { y: carta.hy, alpha: 1, duration: .6, delay: .15 + (i % 5) * .08 + (carta.p.lado === 'jugador' ? .2 : 0), ease: 'back.out(1.4)' });
   }
   refrescarPanel();
+  actualizarJefe();
   await wait(1100);
+  const jefe = P.find(p => p.lado === 'rival' && vistas[p.uid]?.jefe);
+  if (jefe) { banner(`⚠️ ${ui.camp?.etapa === 20 ? 'JEFE FINAL' : 'MINI-JEFE'}: ${jefe.nombre}`, { size: 46, color: '#fca5a5', hold: 1.3 }); shakeScene(8); await wait(1600); }
   await procesar(combate.iniciar());
 }
 
 // Empezar una partida (Listo, Revancha). Sin recargar la página: se limpia la anterior, así el audio sigue activo.
 // La música de batalla (un tema al azar) empieza 2 segundos después.
-async function jugar(eqJ, eqR, rivalModo) {
-  ultima = { jugador: eqJ.map(p => p.id), rival: eqR.map(p => p.id), rivalModo };
+async function jugar(eqJ, eqR, rivalModo, opciones = null) {
+  ultima = { jugador: eqJ.map(p => p.id), rival: eqR.map(p => p.id), rivalModo, opciones };
   if (combate) limpiarPartida();
   nuevaPartida();
   const esta = ++arranques;
   setTimeout(() => { if (esta === arranques) musica('batalla'); }, 2000);
   await presentarVS(eqJ, eqR);
-  await iniciarPartida(eqJ, eqR);
+  await iniciarPartida(eqJ, eqR, opciones);
 }
 let arranques = 0;
 // Quita todo lo visual de la partida anterior: cartas, efectos, textos, animaciones pendientes, registro y resultados
@@ -99,7 +106,25 @@ function limpiarPartida() {
   $('#log').innerHTML = ''; logLeido();
   $('#overlay').classList.add('hidden');
 }
-function salirDePartida() { partida++; ui.miTurno = false; ui.ocupado = true; $('#overlay').classList.add('hidden'); }
+function salirDePartida() { partida++; ui.miTurno = false; ui.ocupado = true; ui.serie = 0; clearTimeout(serieT); $('#overlay').classList.add('hidden'); setVelocidad(1); $('#jefe-barra').classList.add('hidden'); }
+
+// ---------------------------------------------------------------- Auto-batalla y velocidad (se recuerdan en este dispositivo)
+let autoActivo = false, velocidad = 1, serieT = null;
+try { autoActivo = localStorage.getItem('os2-auto') === '1'; velocidad = localStorage.getItem('os2-vel') === '2' ? 2 : 1; } catch (e) { /* sin almacenamiento */ }
+function marcarControles() {
+  const v = ui.serie ? 2 : velocidad;
+  $('#btn-auto').classList.toggle('on', !!ui.auto);
+  $('#btn-vel').textContent = `×${v}`; $('#btn-vel').classList.toggle('on', v === 2);
+}
+// Barra del Jefe (Campaña): nombre, vida y estado de furia
+function actualizarJefe() {
+  const j = P.find(p => p.lado === 'rival' && vistas[p.uid]?.jefe), bar = $('#jefe-barra');
+  if (!j) return bar.classList.add('hidden');
+  const v = vistas[j.uid];
+  bar.classList.remove('hidden'); bar.classList.toggle('furia', !!v.jefe.furia); bar.classList.toggle('muerto', !!v.muerto);
+  bar.querySelector('.jb-nombre').textContent = `${ui.camp?.etapa === 20 ? '👑' : '💀'} ${j.nombre}${v.jefe.furia ? ' · 🔥 FURIA' : ''}`;
+  bar.querySelector('i').style.width = `${Math.max(0, v.hp / v.maxHp * 100)}%`;
+}
 
 function refrescarPanel() { renderPanel(por(ui.inspeccionado), vistas[ui.inspeccionado], ui); refrescarAccion(); }
 function refrescarAccion() { renderAccion(por(ui.actual), vistas[ui.actual], ui); }
@@ -107,6 +132,7 @@ function inspeccionar(uid) { ui.inspeccionado = uid; refrescarPanel(); }
 function aplicar(e) {
   if (!e.s) return;
   for (const [uid, v] of Object.entries(e.s)) { vistas[uid] = v; cartas[uid].aplicar(v); }
+  actualizarJefe();
   if (e.s[ui.inspeccionado]) refrescarPanel();
   else if (e.s[ui.actual]) refrescarAccion();
 }
@@ -180,6 +206,11 @@ async function manejar(e) {
       break;
     case 'turno':
       ui.actual = e.id; aplicar(e); renderOrden(e.orden, P, vistas); refrescarAccion();
+      break;
+    case 'jefeFuria':
+      aplicar(e); FX.textoSobre(c(e.id), '🔥 FURIA', '#f87171', 22, -125); shakeScene(10);
+      banner(e.texto, { size: 30, color: '#fca5a5' }); log(`${nombre(e.id)} entra en FURIA`, 'fx');
+      await wait(1300);
       break;
     case 'dot':
       aplicar(e); FX.dot(c(e.a), e.dano, e.tipo);
@@ -385,8 +416,9 @@ async function procesar(res) {
   if (actor.lado === 'jugador') {
     ui.miTurno = true; ui.ocupado = false;
     inspeccionar(actor.uid);
-    setHint(`Turno de ${actor.nombre}: elige un movimiento`);
+    setHint(ui.auto ? `🤖 Auto: ${actor.nombre}` : `Turno de ${actor.nombre}: elige un movimiento`);
     barra();
+    if (ui.auto) await jugarAuto(esta);
   } else {
     ui.miTurno = false;
     inspeccionar(actor.uid);
@@ -397,6 +429,14 @@ async function procesar(res) {
   }
 }
 
+// Auto-batalla: la IA elige por el jugador (se puede apagar en cualquier momento)
+async function jugarAuto(esta) {
+  await wait(350);
+  if (esta !== partida || !ui.auto || !ui.miTurno || ui.ocupado) return;
+  const d = elegirIA(combate);
+  return ejecutar(d.categoria, d.objetivo);
+}
+
 function terminar(fin) {
   ui.fin = fin; ui.miTurno = false; ui.actual = null; ui.ocupado = true; barra(); setHint('');
   // la ventana de resultados aparece a los 0.7 s; la música del menú entra 2 s después de la ventana
@@ -405,8 +445,37 @@ function terminar(fin) {
     const p = por(e.uid), f = vistas[e.uid]?.forma;            // si terminó transformado, se muestra su forma
     return { ...e, nombre: f?.nombre || p.nombre, imagen: f?.imagen || p.imagen, emoji: f?.emoji || p.emoji, color: f?.color || p.color };
   });
-  const esta = partida;
-  setTimeout(() => esta === partida && mostrarResultados({ gano: fin.ganador === 'jugador', empate: fin.ganador === 'empate', limite: !!fin.limite, ronda: fin.ronda, duracionMs: Date.now() - inicioPartida, personajes, recompensas: fin.recompensas || [] }), 700);
+  const esta = partida, gano = fin.ganador === 'jugador';
+  const base = { gano, empate: fin.ganador === 'empate', limite: !!fin.limite, ronda: fin.ronda, duracionMs: Date.now() - inicioPartida, personajes };
+  botonesResultado(gano);
+  if (!ui.camp) return void setTimeout(() => esta === partida && mostrarResultados({ ...base, recompensas: fin.recompensas || [] }), 700);
+  // Campaña: estrellas y cobro en el servidor; luego (si es una serie) la siguiente repetición
+  const muertosAliados = P.filter(p => p.lado === 'jugador' && vistas[p.uid]?.muerto).length;
+  Promise.all([cerrarBatalla({ campana: ui.camp, gano, muertosAliados, rondas: fin.ronda }), wait(700)]).then(([res]) => {
+    if (esta !== partida) return;
+    if (ui.serie > 1 && gano && !res.error) res.serie = { quedan: ui.serie - 1 };
+    mostrarResultados({ ...base, recompensas: res.recompensas || [], campana: res });
+    if (res.serie) programarRepeticion(esta);
+  });
+}
+
+// Botones de la ventana de resultados: en Campaña son Siguiente etapa / Repetir / Cambiar equipo / Portal
+function botonesResultado(gano) {
+  const camp = ui.camp;
+  $('#ov-siguiente').classList.toggle('hidden', !(camp && gano && siguienteEtapa(camp)));
+  $('#ov-revancha').textContent = camp ? '🔁 Repetir' : '⚔️ Revancha';
+  $('#ov-menu').textContent = camp ? '🌀 Portal' : '🏠 Menú';
+}
+// Serie de repeticiones: espera lo que pida el servidor entre victorias (90 s) y lanza la siguiente batalla en Auto ×2
+function programarRepeticion(esta) {
+  const camp = ui.camp, quedan = ui.serie - 1, eqJ = ultima.jugador.map(porId);
+  const tick = () => {
+    if (esta !== partida) return;
+    const s = esperaRepeticion() + 2;
+    const t = document.querySelector('#res-serie-t'); if (t) t.textContent = `Siguiente batalla en ${s} s · quedan ${quedan}`;
+    serieT = setTimeout(s > 2 ? tick : () => { if (esta === partida) jugarEtapa(camp.dif, camp.etapa, eqJ, quedan); }, s > 2 ? 1000 : 2000);
+  };
+  tick();
 }
 
 // ---------------------------------------------------------------- entrada del jugador
@@ -508,9 +577,30 @@ addEventListener('keydown', e => {
   else if (!$('#log-panel').classList.contains('hidden')) alternar('#log-panel', '#btn-log');
   else if (!$('#test-panel').classList.contains('hidden')) alternar('#test-panel', '#btn-test');
 });
-$('#ov-revancha').addEventListener('click', () => jugar(ultima.jugador.map(porId), ultima.rival.map(porId), ultima.rivalModo));
-$('#ov-equipo').addEventListener('click', () => { cargarSeleccion(ultima.jugador.map(porId), ultima.rival.map(porId), ultima.rivalModo); irA('equipo'); });
-$('#ov-menu').addEventListener('click', () => irA('menu'));
+$('#ov-revancha').addEventListener('click', () => { clearTimeout(serieT); jugar(ultima.jugador.map(porId), ultima.rival.map(porId), ultima.rivalModo, ultima.opciones ? { ...ultima.opciones, serie: 0 } : null); });
+$('#ov-equipo').addEventListener('click', () => {
+  clearTimeout(serieT);
+  const c = ultima.opciones?.campana;
+  if (c) return elegirEquipoEtapa(c.dif, c.etapa);
+  cargarSeleccion(ultima.jugador.map(porId), ultima.rival.map(porId), ultima.rivalModo); irA('equipo');
+});
+$('#ov-menu').addEventListener('click', () => { clearTimeout(serieT); irA(ultima.opciones?.campana ? 'campana' : 'menu'); });
+$('#ov-siguiente').addEventListener('click', () => { clearTimeout(serieT); const c = ultima.opciones?.campana, e = c && siguienteEtapa(c); if (e) elegirEquipoEtapa(c.dif, e); });
+$('#overlay').addEventListener('click', e => {
+  const b = e.target.closest('#res-serie-stop'); if (!b) return;
+  clearTimeout(serieT); ui.serie = 0; b.parentElement.textContent = '⏹ Serie detenida';
+});
+$('#btn-auto').addEventListener('click', () => {
+  ui.auto = !ui.auto;
+  if (!ui.serie) { autoActivo = ui.auto; try { localStorage.setItem('os2-auto', autoActivo ? '1' : '0'); } catch (e) { /* sin almacenamiento */ } }
+  marcarControles();
+  if (ui.auto && ui.miTurno && !ui.ocupado) { cancelarObjetivo(); jugarAuto(partida); }
+});
+$('#btn-vel').addEventListener('click', () => {
+  if (ui.serie) return;
+  velocidad = velocidad === 2 ? 1 : 2; setVelocidad(velocidad); marcarControles();
+  try { localStorage.setItem('os2-vel', String(velocidad)); } catch (e) { /* sin almacenamiento */ }
+});
 $('#btn-menu').addEventListener('click', () => { if (ui.fin || confirm('¿Abandonar la partida y volver al menú?')) irA('menu'); });
 $('#menu-full').addEventListener('click', () => $('#btn-full').click());
 $('#test-panel').addEventListener('click', async e => {
@@ -536,7 +626,8 @@ iniciarColeccion();
 document.addEventListener('click', e => { if (e.target.closest('button:not([disabled]):not(.act.off)')) sonar('clic'); }, true);
 
 // ---------------------------------------------------------------- inicio: menú, o directo a la partida si venimos de "Revancha"/"Jugar"
-iniciarMenu({ jugar: (j, r) => jugar(j, r, document.querySelector('.eq-modo button.on')?.dataset.modo || 'azar'), salirDePartida });
+iniciarMenu({ jugar: (j, r) => jugar(j, r, document.querySelector('.eq-modo button.on')?.dataset.modo || 'azar'), salirDePartida, abrirCampana });
+iniciarCampana({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 let pendiente = null;
 try { pendiente = JSON.parse(sessionStorage.getItem('os2-partida') || 'null'); sessionStorage.removeItem('os2-partida'); } catch (e) { /* sin almacenamiento */ }
 const eqs = pendiente && [pendiente.jugador.map(porId), pendiente.rival.map(porId)];

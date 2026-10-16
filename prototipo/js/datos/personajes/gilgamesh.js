@@ -5,6 +5,7 @@ import { espacios } from '../reliquias.js';
 // Enuma Elish listo al instante y 1 turno extra. Gate of Babylon dispara tesoros con efectos al azar; Enkidu encadena; Enuma Elish destruye Escudos.
 export default {
   id: 'gilgamesh',
+  franquicia: 'Fate', grupos: ['reyes', 'servants'],   // campaña: temas de las etapas
   nombre: 'Gilgamesh',
   rol: 'Daño', rolSecundario: 'Control',
   sobres: ['sacred'],
