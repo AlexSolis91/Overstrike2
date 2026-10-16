@@ -99,6 +99,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       const z = get(x, 'zona');
       for (const [k, v] of Object.entries(z?.zona?.bono || {})) { if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v; }
     }
+    if (capas.buffs) for (const e of p.estados) if (e.bono) {      // marca con bono de estadísticas (p. ej. Sello Maldito)
+      for (const [k, v] of Object.entries(e.bono)) { if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v; }
+    }
     sec.armor = Math.max(0, sec.armor);   // la Armadura nunca baja de 0% (la Puntería sí puede quedar negativa, p. ej. con Ceguera)
     if (capas.lider) for (const l of lideresDe(p)) {          // líder "bonoPorEfecto": +valor a una estadística por cada enemigo con ese efecto
       const b = l.lider?.bonoPorEfecto;
@@ -175,6 +178,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
         case 'mirror': texto = `Devuelve el ${Math.round(BUFFS.espejismo * 100)}% del daño de cada golpe recibido · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'aguja': texto = `${e.valor} aguja(s): pierde ${Math.round(e.valor * DEBUFFS.agujaTurno * 1000) / 10}% del HP máx. al inicio de su turno y recibe +${Math.round(e.valor * DEBUFFS.aguja * 100)}% de daño de Veneno y Sangrado`; n = e.valor; break;
         case 'blockBuffs': texto = `No puede recibir buffs nuevos · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'selloMaldito': texto = `Sello de ${porUid(e.fuente)?.nombre || 'Orochimaru'}: ${Object.entries(e.bono || {}).map(([k, v]) => `+${Math.round(v * 100)}% ${{ dmgPct: 'Daño', hpPct: 'HP máx.', spdPct: 'Velocidad' }[k] || k}`).join(', ')}`; break;
+        case 'edoTensei': texto = `Reanimado por ${porUid(e.fuente)?.nombre || 'Orochimaru'}: no puede morir mientras ${porUid(e.fuente)?.nombre || 'Orochimaru'} viva · sus golpes pueden envenenar`; break;
         case 'cargaElectrica': texto = `${e.valor} carga(s) de ${porUid(e.fuente)?.nombre || 'Baran'}: al completar sus cargas, Sobrecarga (Aturdido)`; n = e.valor; break;
         case 'destruccion': texto = `${e.valor} de Destrucción (máx. 10): +${e.valor * 3}% de daño · el Aliento de la Destrucción las consume`; n = e.valor; break;
         case 'cuervos': texto = `${e.valor} clon(es) de cuervo: cada uno absorbe un ataque enemigo contra Itachi`; n = e.valor; break;
@@ -442,7 +447,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       categoria: m.categoria,
       agotado: !!(m.unaVez && p.usados?.has(m.nombre)),     // unaVez: solo se puede usar una vez por partida
       sellado: !!(p.sellado && p.pasiva.sello.categoria === m.categoria),
-      disponible: !(p.sellado && p.pasiva.sello.categoria === m.categoria) && (p.cds[m.categoria] || 0) === 0 && get(p, 'silence')?.categoria !== m.categoria && (!inc || m.categoria === 'basico')
+      sinCaidos: !!(m.requiereAliadoCaido && !P.some(x => x.lado === p.lado && x.muerto && x !== p)),   // p. ej. Edo Tensei
+      disponible: !(p.sellado && p.pasiva.sello.categoria === m.categoria) && !(m.requiereAliadoCaido && !P.some(x => x.lado === p.lado && x.muerto && x !== p)) && (p.cds[m.categoria] || 0) === 0 && get(p, 'silence')?.categoria !== m.categoria && (!inc || m.categoria === 'basico')
         && !(m.unaVez && p.usados?.has(m.nombre)),
       cd: p.cds[m.categoria] || 0,
       objetivos: objetivosValidos(p, m).map(t => t.uid),
@@ -526,13 +532,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       reacciones.push(() => { p.transformando = false; if (!p.forma && !p.muerto) transformar(p); });
     }
   }
-  function revivir(x) {
+  function revivir(x, hpPct) {
     if (!enemigosDe(x).length) return;               // la partida ya terminó
     Object.assign(x, { muerto: false, estados: [], escudo: 0, inmune: false, recienLiberado: false, reviveEn: 0 });
     for (const id of x.pasiva?.efectosPermanentes || []) x.estados.push({ id, permanente: true });
-    x.hp = maxHp(x) * (x.pasiva?.revivir?.hp ?? 1);
+    x.hp = maxHp(x) * (hpPct ?? x.pasiva?.revivir?.hp ?? 1);
     if (x.pasiva?.rival) elegirRival(x);
-    emitir('revivir', { a: x.uid, nombre: x.pasiva?.revivir ? x.pasiva.nombre : '' }, x);
+    emitir('revivir', { a: x.uid, nombre: x.pasiva?.revivir && hpPct == null ? x.pasiva.nombre : '' }, x);
   }
   // reparto del daño de un DoT entre quienes lo aplicaron (cada acumulación recuerda su "fuente")
   const fuentesDe = estados => { const tot = estados.reduce((s, e) => s + (e.valor || 0), 0) || 1; return estados.map(e => [porUid(e.fuente), (e.valor || 0) / tot]); };
@@ -673,6 +679,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
     if (robo && !a.muerto && (get(a, 'solarBurn') || (a.hp < maxHp(a) && puedeCurarse(a)))) curar(a, a, (aHp + aEsc) * robo);
     emitir('golpe', { de: a.uid, a: t.uid, dano: aHp, escudo: aEsc, critico, quiebre, color: mov.color, fuente: ctx.fuente, multi: (mov.golpes || 1) > 1 }, t);
     recibioDano(t, aHp + aEsc, a);
+    for (const e of a.estados) if (e.alGolpear && t.lado !== a.lado && !t.muerto && !a.muerto) ejecutarAccion(a, e.alGolpear, { objetivo: t });   // marca con "alGolpear"
     const ce = a.pasiva?.cargaEnemigo;        // pasiva "cargaEnemigo": cada golpe deja 1 carga de su marca en el enemigo; al máximo, alMax y se reinicia
     if (ce && t.lado !== a.lado && !t.muerto && !a.muerto && !mov.bonoPorMarca?.consume) {
       let k = t.estados.find(e => e.id === ce.marca && e.fuente === a.uid);
@@ -811,6 +818,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
 
   function morir(t, asesino = null) {
     if (t.muerto) return;
+    const re = t.estados.find(e => e.inmortalMientras && !porUid(e.inmortalMientras)?.muerto);   // marca "inmortal mientras X viva" (p. ej. Edo Tensei)
+    if (re) {
+      t.hp = 1;
+      emitir('bonoVisible', { a: t.uid, texto: re.textoInmortal || '¡No puede morir!' }, t);
+      emitir('actualizar', {}, t);
+      return;
+    }
     if (get(t, 'zona')?.zona?.inmortal) {             // zona "inmortal": mientras dure, su portador no baja de 1 HP
       t.hp = 1;
       emitir('bonoVisible', { a: t.uid, texto: get(t, 'zona').zona.textoInmortal || '¡No puede caer!' }, t);
@@ -910,7 +924,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
       }
       case 'poison': {
         const v = acc.valorFinal ?? DOT.veneno(sa.dot), pila = todos(t, 'poison');
-        if (pila.length < DOT.maxVeneno) t.estados.push({ id: 'poison', valor: v, dur: acc.dur ?? DOT.durVeneno, fuente: a.uid });
+        const maxV = Math.max(DOT.maxVeneno, ...aliadosDe(a).map(x => x.pasiva?.venenoMax || 0));   // pasiva "venenoMax": los Venenos de su equipo se acumulan hasta N
+        if (pila.length < maxV) t.estados.push({ id: 'poison', valor: v, dur: acc.dur ?? DOT.durVeneno, fuente: a.uid });
         else {
           const debil = pila.reduce((x, y) => (x.valor < y.valor || (x.valor === y.valor && x.dur < y.dur)) ? x : y);
           debil.valor = Math.max(debil.valor, v); debil.dur = acc.dur ?? DOT.durVeneno; debil.tocado = true; debil.fuente = a.uid;
@@ -1141,6 +1156,17 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
           if (!e.inextinguible) quitar(t, e);
           emitir('bonoVisible', { a: t.uid, texto: acc.texto || '💥 ¡Detonación!' }, t);
           danoDoT(t, e.valor * Math.max(1, e.dur ?? 1) * (1 + extra), acc.efecto, porUid(e.fuente) || a);
+          break;
+        }
+        case 'reanimar': {              // revive hasta N aliados caídos con % de HP y les pone una marca (p. ej. Edo Tensei)
+          const caidos = P.filter(x => x.lado === a.lado && x.muerto && x !== a && !(x.reviveEn > 0)).sort(() => rng() - .5).slice(0, acc.cantidad || 1);
+          for (const x of caidos) {
+            revivir(x, acc.hp ?? .5);
+            if (x.muerto) continue;
+            x.estados.push({ id: acc.marca, permanente: true, fuente: a.uid, inmortalMientras: acc.inmortal ? a.uid : null,
+              textoInmortal: acc.textoInmortal, alGolpear: acc.alGolpear });
+            emitir('efecto', { a: x.uid, id: acc.marca, texto: `${EFECTOS[acc.marca].icono} ${EFECTOS[acc.marca].nombre}` }, x);
+          }
           break;
         }
         case 'marcar': {               // pone una marca (tipo marca: sin tirada, no se limpia ni disipa) con dueño; si ya la tiene de él, renueva
@@ -1561,6 +1587,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
 
   // Efectos que un movimiento puede aplicar o propagar (la interfaz los usa, p. ej. para el sonido de un golpe de fuego)
   const formasDe = d => { const l = [d]; for (let f = d.transformacion; f; f = f.transformacion) l.push(f); return l; };
+  // ¿Algún movimiento o pasiva (en cualquier forma) aplica ese efecto? (p. ej. Loki envenena desde su pasiva)
+  const aplicaEnFormas = (d, id) => formasDe(d).some(f => (f.movimientos || []).some(m => efectosQueAplica(m).includes(id)) || efectosQueAplica({ efectos: [{ accion: f.pasiva?.accion }] }).includes(id));
   function efectosQueAplica(mov) {
     const ids = new Set();
     const ver = acc => {
@@ -1680,8 +1708,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now() 
   equipoJugador.forEach((d, i) => P.push(crearPersonaje(d, 'jugador', i)));
   equipoRival.forEach((d, i) => P.push(crearPersonaje(d, 'rival', i)));
   for (const p of P) if (p.pasiva?.rival) elegirRival(p, false);
+  for (const p of P) { const ma = p.pasiva?.marcaAliadosQueAplican;    // al inicio: marca con bono a cada aliado (incluido él) cuyos movimientos aplican ese efecto
+    if (ma) for (const x of P.filter(x => x.lado === p.lado && aplicaEnFormas(x, ma.efecto)))
+      x.estados.push({ id: ma.marca, permanente: true, fuente: p.uid, bono: ma.bono }); }
   for (const p of P) { const bp = p.pasiva?.bonoPorAliadosQueAplican;     // cuenta (al inicio) los aliados cuyos movimientos aplican ese efecto
-    if (bp) p.aliadosQueAplican = P.filter(x => x !== p && x.lado === p.lado && formasDe(x).some(f => (f.movimientos || []).some(m => efectosQueAplica(m).includes(bp.efecto)))).length; }
+    if (bp) p.aliadosQueAplican = P.filter(x => x !== p && x.lado === p.lado && aplicaEnFormas(x, bp.efecto)).length; }
   for (const p of P) { const ej = p.pasiva?.enemigoJurado;          // enemigo jurado: se marca como Rival desde el inicio
     if (ej) for (const t of P) if (t.lado !== p.lado && t.id === ej.id) t.estados.push({ id: 'rival', fuente: p.uid, permanente: true }); }
   for (const p of P) p.hp = stats(p).hp;      // con todos creados: incluye bonos de líder al HP máx. (el líder se crea antes que su equipo)
