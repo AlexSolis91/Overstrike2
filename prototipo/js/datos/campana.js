@@ -10,7 +10,7 @@ export const TEMAS = {
   exploradores: { nombre: 'Exploradores del Portal', temas: [], preferidos: ['reptile', 'the-joker', 'rhaenys-targaryen', 'aldebaran', 'rengoku'], relleno: [] },
   sayajin:      { nombre: 'Guerreros Sayajin', temas: ['sayajin'], lider: 'goku', relleno: ['wukong', 'kratos', 'rengoku'] },
   konoha:       { nombre: 'Héroes de la Hoja', temas: ['konoha'], lider: 'minato', preferidos: ['naruto', 'sasuke-uchiha', 'minato'], relleno: ['rengoku', 'batman'] },
-  akatsuki:     { nombre: 'Akatsuki', temas: ['akatsuki', 'renegados'], lider: 'pain', preferidos: ['pain', 'itachi-uchiha', 'orochimaru', 'madara-uchiha'], relleno: ['loki'] },
+  akatsuki:     { nombre: 'Akatsuki', temas: ['akatsuki'], lider: 'pain', relleno: ['orochimaru', 'madara-uchiha'] },   // solo miembros reales; Orochimaru y Madara solo de relleno
   uchiha:       { nombre: 'El Clan Uchiha', temas: ['uchiha'], lider: 'madara-uchiha', relleno: ['orochimaru', 'pain'] },
   santos:       { nombre: 'Santos de Oro', temas: ['santos-de-oro'], lider: 'saga', relleno: ['thor'] },
   monarcas:     { nombre: 'Los Monarcas', temas: ['monarcas'], lider: 'antares', relleno: ['gilgamesh', 'itachi-uchiha', 'ozymandias'] },
@@ -62,7 +62,7 @@ export const AREAS = {
       { tema: 'eternia', poder: 1.14 },   // 7
       { tema: 'hielo', poder: 1.1 },   // 8
       { tema: 'azeroth', poder: 1.05 },   // 9
-      { tema: 'akatsuki', poder: 0.93, jefe: true },   // 10
+      { tema: 'akatsuki', poder: 0.84, jefe: true },   // 10
       { tema: 'dragones', poder: 1.1 },   // 11
       { tema: 'santos', poder: 1.13 },   // 12
       { tema: 'konoha', poder: 1.05 },   // 13

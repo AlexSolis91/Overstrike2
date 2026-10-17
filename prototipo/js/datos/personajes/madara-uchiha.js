@@ -3,7 +3,7 @@ import { espacios } from '../reliquias.js';
 // Ficha oficial #1 (revisada el 2026-09-30).
 export default {
   id: 'madara-uchiha',
-  franquicia: 'Naruto', grupos: ['uchiha', 'akatsuki', 'renegados'],   // campaña: temas de las etapas
+  franquicia: 'Naruto', grupos: ['uchiha', 'renegados'],   // campaña: temas de las etapas
   nombre: 'Madara Uchiha',
   rol: 'Daño',
   sobres: ['bloodline', 'phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
