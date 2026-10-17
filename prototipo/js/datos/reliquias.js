@@ -166,6 +166,7 @@ export const RELIQUIAS = {
   pecheraGuardabosques: { name: 'Pechera del Guardabosques', rarity: 'Raro', type: 'Pechera', imagen: 'assets/reliquias/pecheraGuardabosques.webp' },
   capaPeregrino: { name: 'Capa del Peregrino', rarity: 'Común', type: 'Capa', imagen: 'assets/reliquias/capaPeregrino.webp' },
   lanzaGuardiaFronteriza: { name: 'Lanza de la Guardia Fronteriza', rarity: 'Común', type: 'Lanza', imagen: 'assets/reliquias/lanzaGuardiaFronteriza.webp' },
+  dagaColmilloVibora: { name: 'Daga Colmillo de Víbora', rarity: 'Raro', type: 'Daga', imagen: 'assets/reliquias/dagaColmilloVibora.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
