@@ -67,7 +67,7 @@ export const AREAS = {
       { tema: 'santos', poder: 1.13 },   // 12
       { tema: 'konoha', poder: 1.05 },   // 13
       { tema: 'marvel', poder: 1.0 },   // 14
-      { tema: 'caos', poder: 1.09 },   // 15
+      { tema: 'caos', poder: 1.29 },   // 15
       { tema: 'asgard', poder: 1.1 },   // 16
       { tema: 'reyes', poder: 0.99 },   // 17
       { tema: 'uchiha', poder: 1.07 },   // 18
