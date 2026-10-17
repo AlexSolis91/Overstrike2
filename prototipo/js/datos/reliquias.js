@@ -154,6 +154,7 @@ export const RELIQUIAS = {
   amuletoOjoKraken: { name: 'Amuleto del Ojo del Kraken', rarity: 'Especial', type: 'Amuleto', imagen: 'assets/reliquias/amuletoOjoKraken.webp' },
   dagaSaqueador: { name: 'Daga del Saqueador', rarity: 'Común', type: 'Daga', imagen: 'assets/reliquias/dagaSaqueador.webp' },
   hombrerasGlaciar: { name: 'Hombreras del Glaciar', rarity: 'Especial', type: 'Hombreras', imagen: 'assets/reliquias/hombrerasGlaciar.webp' },
+  arcoCazadorFurtivo: { name: 'Arco del Cazador Furtivo', rarity: 'Común', type: 'Arco', imagen: 'assets/reliquias/arcoCazadorFurtivo.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
