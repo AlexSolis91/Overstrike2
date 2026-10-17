@@ -73,7 +73,8 @@ insert into public.reliquia_tipos (tipo, categoria, planas, pcts) values
   ('Anillo', 'Accesorio', array['dmg', 'hp']::text[], array['critRate', 'critDmg', 'dot', 'pen', 'acc', 'res', 'armor', 'block', 'hpPct', 'dmgPct', 'spdPct']::text[]),
   ('Collar', 'Accesorio', array['dmg', 'hp']::text[], array['spdPct', 'armor', 'acc', 'hpPct']::text[]),
   ('Amuleto', 'Accesorio', array['spd']::text[], array['res', 'critRate', 'acc', 'block']::text[]),
-  ('Libro', 'Accesorio', array['dmg']::text[], array['dot', 'critRate']::text[])
+  ('Libro', 'Accesorio', array['dmg']::text[], array['dot', 'critRate']::text[]),
+  ('Piedra', 'Accesorio', array['hp']::text[], array['hpPct', 'acc', 'dmgPct']::text[])
 on conflict (tipo) do update set categoria = excluded.categoria, planas = excluded.planas, pcts = excluded.pcts;
 
 insert into public.reliquia_rangos (rareza, stat, minimo, maximo) values
@@ -176,7 +177,8 @@ insert into public.reliquias_catalogo (id, nombre, rareza, tipo, en_sobre, solo_
   ('anilloMagnetico', 'Anillo Magnético', 'Común', 'Anillo', true, false, true),
   ('yelmoNigromante', 'Yelmo de Nigromante', 'Raro', 'Yelmo', true, false, true),
   ('pecheraBestias', 'Pechera de las Bestias', 'Común', 'Pechera', true, false, true),
-  ('cinturonMilicia', 'Cinturón de Milicia', 'Común', 'Cinturón', true, false, true)
+  ('cinturonMilicia', 'Cinturón de Milicia', 'Común', 'Cinturón', true, false, true),
+  ('piedraSol', 'Piedra del Sol', 'Épico', 'Piedra', true, false, true)
 on conflict (id) do update set nombre = excluded.nombre, rareza = excluded.rareza, tipo = excluded.tipo,
   en_sobre = excluded.en_sobre, solo_receta = excluded.solo_receta, activo = excluded.activo;
--- 38 reliquias · 23 tipos
+-- 39 reliquias · 24 tipos

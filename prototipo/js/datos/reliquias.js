@@ -1,5 +1,5 @@
 // RELIQUIAS. Tres capas:
-//   1) TIPOS: los 23 tipos (categoría, estadística plana posible y estadísticas porcentuales permitidas).
+//   1) TIPOS: los 24 tipos (categoría, estadística plana posible y estadísticas porcentuales permitidas).
 //   2) RANGOS: mínimo y máximo de cada estadística según la rareza (las porcentuales en puntos enteros: 8 = 8%).
 //   3) RELIQUIAS: el catálogo con nombre (rareza fija por nombre). Cada copia que entra a una cuenta (sobre, recompensa,
 //      receta…) sortea SUS valores dentro de los rangos en el servidor; dos copias del mismo nombre pueden ser distintas.
@@ -62,6 +62,7 @@ export const TIPOS = {
   Collar:     T('Accesorio', ['dmg', 'hp'], ['spdPct', 'armor', 'acc', 'hpPct']),
   Amuleto:    T('Accesorio', ['spd'], ['res', 'critRate', 'acc', 'block']),
   Libro:      T('Accesorio', ['dmg'], ['dot', 'critRate']),
+  Piedra:     T('Accesorio', ['hp'], ['hpPct', 'acc', 'dmgPct']),
 };
 
 // ---------------------------------------------------------------- 2) rangos por rareza (aprobados 2026-10-16)
@@ -138,6 +139,7 @@ export const RELIQUIAS = {
   yelmoNigromante: { name: 'Yelmo de Nigromante', rarity: 'Raro', type: 'Yelmo', imagen: 'assets/reliquias/yelmoNigromante.webp' },
   pecheraBestias: { name: 'Pechera de las Bestias', rarity: 'Común', type: 'Pechera', imagen: 'assets/reliquias/pecheraBestias.webp' },
   cinturonMilicia: { name: 'Cinturón de Milicia', rarity: 'Común', type: 'Cinturón', imagen: 'assets/reliquias/cinturonMilicia.webp' },
+  piedraSol: { name: 'Piedra del Sol', rarity: 'Épico', type: 'Piedra', imagen: 'assets/reliquias/piedraSol.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
