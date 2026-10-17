@@ -121,6 +121,7 @@ export const RELIQUIAS = {
   nichirin: { name: 'Nichirin', rarity: 'Épico', type: 'Espada', imagen: 'assets/reliquias/nichirin.webp' },
   amuletoOlvido: { name: 'Amuleto del Olvido', rarity: 'Común', type: 'Amuleto', imagen: 'assets/reliquias/amuletoOlvido.webp' },
   arcantos: { name: 'Arcantos', rarity: 'Especial', type: 'Martillo', imagen: 'assets/reliquias/arcantos.webp' },
+  hombreraTigre: { name: 'Hombrera del Rey Tigre', rarity: 'Raro', type: 'Hombreras', imagen: 'assets/reliquias/hombreraTigre.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
