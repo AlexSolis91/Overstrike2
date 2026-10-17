@@ -149,7 +149,8 @@ insert into public.reliquias_catalogo (id, nombre, rareza, tipo, en_sobre, solo_
   ('yelmo', 'Yelmo del Centinela', 'Raro', 'Yelmo', true, false, true),
   ('pechera', 'Pechera de Escamas', 'Especial', 'Pechera', true, false, true),
   ('botas', 'Botas del Viento', 'Especial', 'Botas', true, false, true),
-  ('furiaEscarlata', 'Furia Escarlata', 'Común', 'Espada', true, false, true)
+  ('furiaEscarlata', 'Furia Escarlata', 'Común', 'Espada', true, false, true),
+  ('collarNiebla', 'Collar de la Niebla', 'Común', 'Collar', true, false, true)
 on conflict (id) do update set nombre = excluded.nombre, rareza = excluded.rareza, tipo = excluded.tipo,
   en_sobre = excluded.en_sobre, solo_receta = excluded.solo_receta, activo = excluded.activo;
--- 12 reliquias · 22 tipos
+-- 13 reliquias · 22 tipos
