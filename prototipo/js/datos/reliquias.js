@@ -150,6 +150,7 @@ export const RELIQUIAS = {
   guanteletesColoso: { name: 'Guanteletes del Coloso', rarity: 'Épico', type: 'Guantes', imagen: 'assets/reliquias/guanteletesColoso.webp' },
   grimorioPlaga: { name: 'Grimorio de la Plaga', rarity: 'Raro', type: 'Libro', imagen: 'assets/reliquias/grimorioPlaga.webp' },
   botasTrueno: { name: 'Botas del Trueno', rarity: 'Épico', type: 'Botas', imagen: 'assets/reliquias/botasTrueno.webp' },
+  colganteWyvern: { name: 'Colgante de Escama de Wyvern', rarity: 'Raro', type: 'Collar', imagen: 'assets/reliquias/colganteWyvern.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
