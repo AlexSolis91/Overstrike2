@@ -44,6 +44,7 @@ export const SONIDOS = {
   disparoHielo:         { archivo: sfx('disparo-hielo'), v: .9, var: .03, gap: 120 }, // ráfaga de hielo (ice-blast-2)
   disparo:              { archivo: sfx('disparo'), v: .85, var: .04, gap: 120 },   // swoosh (swoosh-of-fireball-3, 2 s)
   veneno:               { archivo: sfx('veneno'), v: .9, dur: 1.6, gap: 60 },
+  explosion:            { archivo: sfx('explosion'), v: .9, dur: 2.4, gap: 150 },   // Bomba (minecraft-explosion): solo la 1.ª de las 3 explosiones del archivo
   congelar:             { archivo: sfx('hielo'), v: .9 },
   pierdeTurnoHielo:     { archivo: sfx('hielo'), v: .9 },
   over:                 { archivo: sfx('over'), v: 1, duck: 2.4 },
