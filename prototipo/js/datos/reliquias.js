@@ -112,6 +112,7 @@ export const RELIQUIAS = {
   // ---------------------------------------------------------------- reliquias nuevas (fichas del diseñador; sin "legado": no van en fichas de campeones)
   furiaEscarlata: { name: 'Furia Escarlata', rarity: 'Común', type: 'Espada', imagen: 'assets/reliquias/furiaEscarlata.webp' },
   collarNiebla: { name: 'Collar de la Niebla', rarity: 'Común', type: 'Collar', imagen: 'assets/reliquias/collarNiebla.webp' },
+  anilloCobalto: { name: 'Anillo de Cobalto', rarity: 'Común', type: 'Anillo', imagen: 'assets/reliquias/anilloCobalto.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
