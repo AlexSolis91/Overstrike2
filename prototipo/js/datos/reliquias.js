@@ -120,6 +120,7 @@ export const RELIQUIAS = {
   punoCastigo: { name: 'Puño del Castigo', rarity: 'Común', type: 'Guantes', imagen: 'assets/reliquias/punoCastigo.webp' },
   nichirin: { name: 'Nichirin', rarity: 'Épico', type: 'Espada', imagen: 'assets/reliquias/nichirin.webp' },
   amuletoOlvido: { name: 'Amuleto del Olvido', rarity: 'Común', type: 'Amuleto', imagen: 'assets/reliquias/amuletoOlvido.webp' },
+  arcantos: { name: 'Arcantos', rarity: 'Especial', type: 'Martillo', imagen: 'assets/reliquias/arcantos.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
