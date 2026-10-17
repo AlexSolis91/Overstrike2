@@ -508,7 +508,7 @@ body.app-instalada #menu-full { visibility: hidden; }
 /* ================================================================ TIENDA · COLECCIÓN · PORTAL */
 #tc, #starter { position: fixed; inset: 0; z-index: 45; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; padding: 14px; background: rgba(3, 6, 12, .8); }
 #tc.hidden, #starter.hidden { display: none; }
-.tc-caja { width: min(980px, 100%); height: min(760px, 100%); display: flex; flex-direction: column; border-radius: 16px; overflow: hidden;
+.tc-caja { width: min(1240px, 100%); height: min(990px, 100%); display: flex; flex-direction: column; border-radius: 16px; overflow: hidden;
   background: linear-gradient(180deg, #121827, #0a0e17); border: 1px solid rgba(243, 213, 138, .4); box-shadow: 0 20px 60px rgba(0, 0, 0, .6); }
 .tc-tabs { display: flex; gap: 6px; flex: 1; flex-wrap: wrap; }
 .tc-tabs button { font: 800 13px Inter, sans-serif; padding: 7px 14px; border-radius: 99px; cursor: pointer; color: var(--muted); background: #121826; border: 1px solid rgba(255, 255, 255, .12); }
@@ -527,6 +527,8 @@ body.tc-ocupado #tc button, body.tc-ocupado #starter button { pointer-events: no
 body.tc-ocupado #tc-cont, body.tc-ocupado .st-packs { opacity: .6; }
 /* sobres */
 .tc-sobres { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.tc-seccion { margin: 2px 0 10px; font: 900 13px Cinzel, serif; color: var(--gold); letter-spacing: .05em; }
+.tc-sobres + .tc-seccion { margin-top: 18px; }
 .tc-sobre { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 12px; text-align: center; border-radius: 14px;
   background: linear-gradient(180deg, color-mix(in srgb, var(--c) 16%, #0f1522), #0a0e17); border: 1px solid color-mix(in srgb, var(--c) 55%, transparent); }
 .tc-sobre-arte { position: relative; width: 104px; aspect-ratio: 5 / 7; display: grid; place-items: center; border-radius: 10px; overflow: hidden; margin-bottom: 4px;

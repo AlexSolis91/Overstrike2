@@ -71,6 +71,14 @@ function sobresVisibles() {
 function htmlTienda() {
   const lista = sobresVisibles();
   if (!lista.length) return '<p class="tc-vacio">No hay sobres disponibles en este momento. ¡Vuelve pronto!</p>';
+  // Sobres de campeones arriba (en el orden del registro) y sobres de reliquias abajo, cada grupo en su sección
+  const orden = id => Object.keys(SOBRES).indexOf(id);
+  const grupo = rel => lista.filter(c => (SOBRES[c.id].tipo === 'reliquias') === rel).sort((a, b) => orden(a.id) - orden(b.id));
+  const campeones = grupo(false), reliquias = sinReliquias ? [] : grupo(true);
+  return `${campeones.length ? `<h4 class="tc-seccion">Sobres de campeones</h4>${htmlSobres(campeones)}` : ''}
+    ${reliquias.length ? `<h4 class="tc-seccion">Sobres de reliquias</h4>${htmlSobres(reliquias)}` : ''}`;
+}
+function htmlSobres(lista) {
   return `<div class="tc-sobres">${lista.map(c => { const s = SOBRES[c.id], alcanza = inv.oro >= c.precio, esRel = s.tipo === 'reliquias';
       if (esRel && sinReliquias) return '';
       return `<div class="tc-sobre ${esRel ? 'reliquias' : ''}" style="--c:${s.color}">
