@@ -397,6 +397,8 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - `alAplicar { efecto, accion }`: cada vez que su equipo **acierta** ese debuff en un enemigo (incluye pasar a Mega), **quien lo aplicó** ejecuta la acción sobre ese enemigo. P. ej. Carcelero de los Malditos de Lich King: robar 5% del HP máx. al congelado.
   - `alAplicar { efecto, stat, valor }`: cada vez que su equipo **acierta** ese debuff en un enemigo, un aliado al azar (puede ser el líder) gana un bono **permanente e invisible** a esa estadística. No es un buff y no se puede disipar.
 
+- **Sucesión de liderazgo** (pasiva `sucesorDe { id, texto, alSurgir: [acciones] }`): si el líder de su equipo es el personaje `id` y cae, este aliado (si tiene habilidad de líder y sigue vivo) **surge como nuevo líder**: su habilidad de líder se activa desde ese momento (corona y resplandor en su carta) y ejecuta las acciones de `alSurgir`. Funciona en cualquier equipo y modo donde los líderes estén activos (en Campaña, solo Brutal). P. ej. Obito tras Pain: limpia todos los debuffs aliados, disipa todos los buffs enemigos (sin tirada) y cura 30% del HP máx. a sus aliados.
+
 ## 12. Transformaciones
 
 - Un **estado** del personaje (no es buff): no se puede Disipar ni Limpiar.

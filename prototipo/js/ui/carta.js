@@ -196,6 +196,11 @@ export class Carta {
       this.shieldBadge.text = `🛡 ${Math.round(v.escudo)}`;
     } else this.shieldBadge.text = '';
     this.estados(); this.invocaciones();
+    if (v.esLider && !this.liderGlow && !v.muerto) {                 // nuevo líder durante la partida (sucesión): resplandor dorado
+      this.liderGlow = new PIXI.Sprite(TEX_LIDER); this.liderGlow.anchor.set(.5);
+      this.c.addChildAt(this.liderGlow, this.c.getChildIndex(this.shadow) + 1);
+      this.liderT = 0;
+    }
     if (this.liderGlow) this.liderGlow.alpha = v.muerto ? 0 : 1;
     this.dibujarForma();
   }

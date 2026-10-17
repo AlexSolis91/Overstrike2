@@ -182,6 +182,7 @@ function sonidoDe(e) {
     case 'muerte': return 'muerte';
     case 'pasiva': return 'pasiva';
     case 'liderActua': return 'lider';
+    case 'nuevoLider': return 'lider';
     case 'invocacion': return e.rareza === 'Legendario' ? 'invocacionLegendaria' : 'invocacion';
     case 'invocacionAtaca': return 'lanzar';
     case 'transformacion': return 'transformacion';
@@ -206,6 +207,11 @@ async function manejar(e) {
       break;
     case 'turno':
       ui.actual = e.id; aplicar(e); renderOrden(e.orden, P, vistas); refrescarAccion();
+      break;
+    case 'nuevoLider':
+      aplicar(e); FX.textoSobre(c(e.id), '👑 NUEVO LÍDER', '#fde047', 20, -125); shakeScene(8);
+      banner(e.texto, { size: 40, color: '#fde68a', hold: 1.2 }); log(`👑 ${nombre(e.id)} surge como líder: ${e.nombre}`, 'sys');
+      await wait(1500);
       break;
     case 'jefeFuria':
       aplicar(e); FX.textoSobre(c(e.id), '🔥 FURIA', '#f87171', 22, -125); shakeScene(10);

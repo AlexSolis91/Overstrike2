@@ -17,7 +17,7 @@ export default {
 
   lider: {
     nombre: 'Líder de Akatsuki',
-    desc: 'Los aliados ganan +10% de Puntería y hacen +10% de daño a enemigos con cualquier efecto de Control.',
+    desc: 'Los aliados ganan +10% de Puntería y hacen +10% de daño a enemigos con cualquier efecto de Control. El Verdadero Líder: si Pain es el líder de su equipo y cae, Obito surge como líder (se activa esta habilidad), limpia todos los debuffs de sus aliados, disipa todos los buffs enemigos y cura a sus aliados 30% de su HP máx.',
     bonoStat: { acc: .10 },
     bonoContraControl: .10,
   },
@@ -28,6 +28,14 @@ export default {
     gatillo: 'alRecibirGolpe', maxPorRonda: 1,
     accion: { tipo: 'efecto', id: 'stealth', dur: 1, finDeRonda: true, a: 'propio' },
     auraContra: { efecto: ['confuse', 'possess'], pct: .35 },
+    sucesorDe: {                                            // El Verdadero Líder de Akatsuki
+      id: 'pain', texto: '🌀 ¡Obito surge como el verdadero líder!',
+      alSurgir: [
+        { tipo: 'limpiar', a: 'todosAliados' },
+        { tipo: 'disipar', sinTirada: true, a: 'todosEnemigos' },
+        { tipo: 'curar', base: 'hpMaxObjetivo', pct: .30, a: 'todosAliados' },
+      ],
+    },
     bonoPorAliadosQueAplican: { efecto: 'confuse', max: 4, bono: { dmgPct: .05, hpPct: .05 } },   // Seguidores del Plan
   },
   movimientos: [

@@ -858,6 +858,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     const rivalDe = P.filter(v => v.lado !== t.lado && !v.muerto && v.pasiva?.rival && esRival(v, t));
     t.muerto = true; t.hp = 0; t.escudo = 0; t.estados = [];
     emitir('muerte', { a: t.uid, invocaciones, lider: t.esLider && !!t.lider }, t);
+    // pasiva "sucesorDe": si cae el líder indicado de su equipo, ese aliado surge como nuevo líder (p. ej. Obito tras Pain)
+    if (t.esLider && t.lider) {
+      const s = aliadosDe(t).find(x => x !== t && !x.muerto && x.lider && x.pasiva?.sucesorDe?.id === t.id);
+      if (s) { t.esLider = false; reacciones.push(() => surgirLider(s, t)); }
+    }
     if ((t.esLider && t.lider) || t.pasiva?.bonoPorAliadosQueAplican) for (const x of aliadosDe(t)) if (x.hp > maxHp(x)) { x.hp = maxHp(x); emitir('actualizar', {}, x); }
     const rv = t.pasiva?.revivir;                      // pasiva "revivir": vuelve tras N turnos (de cualquiera), una vez por partida
     if (rv && !t.revivio) { t.revivio = true; t.reviveEn = rv.turnos + (S.actual ? 1 : 0); emitir('extension', { a: t.uid, texto: `🐒 Revivirá en ${rv.turnos} turnos` }, t); }
@@ -871,6 +876,16 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     for (const p of P.filter(x => x.lado !== t.lado && !x.muerto)) pasivas(p, 'alMorirEnemigo', { objetivo: t, teniaAlMorir });
     for (const p of aliadosDe(t)) if (p.sellado && p.pasiva.sello.romper.muereAliado) romperSello(p);
     for (const l of P.filter(x => x.lado !== t.lado && x.esLider && !x.muerto && x.lider?.alMorirEnemigo)) ejecutarAccion(l, l.lider.alMorirEnemigo, { objetivo: t });   // líder: p. ej. Tesoro del Rey
+  }
+
+  // Sucesión de liderazgo: el sucesor pasa a ser el líder (su habilidad de líder se activa) y ejecuta sus acciones "alSurgir"
+  function surgirLider(s, viejo) {
+    if (s.muerto || P.some(x => x.lado === s.lado && x.esLider && !x.muerto)) return;
+    const su = s.pasiva.sucesorDe;
+    s.esLider = true;
+    emitir('nuevoLider', { id: s.uid, de: viejo.uid, nombre: s.lider.nombre, texto: su.texto || `👑 ${s.nombre} toma el mando` }, s);
+    for (const acc of su.alSurgir || []) ejecutarAccion(s, acc, {});
+    emitir('actualizar', {}, ...aliadosDe(s));
   }
 
   function explotarBomba(t, b, soloSalpicadura) {
