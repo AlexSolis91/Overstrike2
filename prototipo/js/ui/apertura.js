@@ -2,6 +2,7 @@
 // cada vez más fuerte y estalla en un destello; las cartas salen boca abajo y se voltean una por una con un brillo del
 // color del campeón, rayos de luz y la etiqueta "¡NUEVO!" o "+1 copia". Tocar acelera la revelación.
 import { sonar } from './audio.js';
+import { RAREZAS, calidad } from '../datos/reliquias.js';
 
 const espera = ms => new Promise(r => setTimeout(r, ms));
 const ROL = { Support: 'Soporte', Invoker: 'Invocador' };
@@ -18,8 +19,23 @@ function cartaHtml(p, nuevo, i) {
   </div>`;
 }
 
+// Carta de una reliquia (copia con sus valores): arte con su marco, nombre, rareza y calidad. Épicas y Legendarias brillan más.
+function cartaReliquiaHtml(r, i) {
+  const rz = RAREZAS[r.rarity], top = rz.orden >= 3 ? (rz.orden === 4 ? 'legendaria' : 'epica') : '';
+  return `<div class="ap-carta reliquia ${top}" style="--c:${rz.color};--i:${i}">
+    <div class="ap-cara ap-dorso"><span class="ap-dorso-ii">II</span><span class="ap-dorso-marca">OVERSTRIKE</span></div>
+    <div class="ap-cara ap-frente">
+      <div class="ap-img">${r.imagen ? `<img src="${r.imagen}" alt="${r.name}">` : `<span class="ap-emoji">⚔️</span>`}</div>
+      <div class="ap-info"><b>${r.name}</b><small>${r.rarity} · ${r.type} · Calidad ${calidad(r)}%</small></div>
+      <span class="ap-tag rareza">${r.rarity}</span>
+    </div>
+  </div>`;
+}
+
 // sobre: { nombre, icono, color, imagen? } (con imagen se muestra el arte del sobre) · campeones: fichas · nuevos: Set de ids que el jugador no tenía
-export function revelarCartas({ sobre, campeones, nuevos = new Set() }) {
+// reliquias: copias de reliquias (en lugar de campeones)
+export function revelarCartas({ sobre, campeones = [], nuevos = new Set(), reliquias = null }) {
+  const htmlCartas = reliquias ? reliquias.map(cartaReliquiaHtml) : campeones.map((p, i) => cartaHtml(p, nuevos.has(p.id), i));
   return new Promise(async resolve => {
     document.querySelector('#apertura')?.remove();
     const capa = document.createElement('div');
@@ -31,7 +47,7 @@ export function revelarCartas({ sobre, campeones, nuevos = new Set() }) {
         ? `<div class="ap-sobre con-arte"><img src="${sobre.imagen}" alt="${sobre.nombre}"><div class="ap-sobre-brillo" style="--arte:url('${sobre.imagen}')"></div><small>Toca para abrir</small></div>`
         : `<div class="ap-sobre"><div class="ap-sobre-brillo"></div><span class="ap-sobre-ico">${sobre.icono || '🎁'}</span><b>${sobre.nombre}</b><small>Toca para abrir</small></div>`}
       <div class="ap-chispas"></div>
-      <div class="ap-cartas">${campeones.map((p, i) => cartaHtml(p, nuevos.has(p.id), i)).join('')}</div>
+      <div class="ap-cartas">${htmlCartas.join('')}</div>
       <p class="ap-ayuda">Toca para revelar más rápido</p>
       <button class="ap-continuar eq-listo">Continuar</button>`;
     document.body.appendChild(capa);
@@ -54,13 +70,13 @@ export function revelarCartas({ sobre, campeones, nuevos = new Set() }) {
     await espera(450);
     // 3) las cartas salen boca abajo
     capa.classList.add('cartas');
-    await espera(500 + campeones.length * 120);
+    await espera(500 + htmlCartas.length * 120);
     // 4) se voltean una por una
     $('.ap-ayuda').classList.add('visible');
     const cartas = [...capa.querySelectorAll('.ap-carta')];
     for (const c of cartas) {
       c.classList.add('revelada');
-      sonar('invocacion');
+      sonar(c.classList.contains('legendaria') || c.classList.contains('epica') ? 'invocacionLegendaria' : 'invocacion');
       await espera(rapido ? 140 : 950);
     }
     $('.ap-ayuda').classList.remove('visible');

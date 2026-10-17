@@ -9,21 +9,30 @@ async function q(fn) {
 }
 const rpc = (nombre, args = {}) => q(sb => sb.rpc(nombre, args));
 
-export const miColeccion = () => q(sb => sb.from('coleccion').select('campeon, copias, estrellas, espacios'));
-export async function miInventario() {      // vales_sobre llega con docs/sql/004_campana.sql; sin él, se lee lo demás
-  try { return await q(sb => sb.from('inventario').select('oro, frag_runa, frag_otros, runas, vales_sobre').maybeSingle()); }
-  catch (e) { if (!/vales_sobre/.test(e?.message || '')) throw e; return q(sb => sb.from('inventario').select('oro, frag_runa, frag_otros, runas').maybeSingle()); }
+// Las columnas nuevas llegan con los SQL 004 (vales_sobre) y 005 (rel_sobres, espacios_abiertos); sin ellos se lee lo que exista
+async function conRespaldo(fn, completo, basico) {
+  try { return await fn(completo); }
+  catch (e) { if (!/column|does not exist|schema cache/i.test(e?.message || '')) throw e; return fn(basico); }
 }
+export const miColeccion = () => conRespaldo(c => q(sb => sb.from('coleccion').select(c)), 'campeon, copias, estrellas, espacios, espacios_abiertos', 'campeon, copias, estrellas, espacios');
+export const miInventario = () => conRespaldo(c => q(sb => sb.from('inventario').select(c).maybeSingle()),
+  'oro, frag_runa, frag_otros, runas, vales_sobre, rel_sobres', 'oro, frag_runa, frag_otros, runas');
 export const configSobres = () => q(sb => sb.from('sobres_config').select('id, activo, precio, desde, hasta').order('id'));
 
 export const abrirStarter = id => rpc('abrir_starter', { p_starter: id });
 export const abrirSobre = id => rpc('abrir_sobre', { p_sobre: id });
 export const ascender = c => rpc('ascender', { p_campeon: c });
-export const desbloquearEspacio = (c, con) => rpc('desbloquear_espacio', { p_campeon: c, p_con: con });
+export const desbloquearEspacio = (c, con, espacio) => rpc('desbloquear_espacio', { p_campeon: c, p_con: con, p_espacio: espacio });
 export const desfragmentar = (c, n) => rpc('desfragmentar', { p_campeon: c, p_cantidad: n });
 export const combinarRuna = () => rpc('combinar_runa');
 export const invocarPortal = c => rpc('invocar_portal', { p_campeon: c });
 export const abrirSobreVale = id => rpc('abrir_sobre_vale', { p_sobre: id });
+
+// Reliquias (docs/sql/005_reliquias.sql): cada fila es una copia con sus valores sorteados por el servidor
+export const misReliquias = () => q(sb => sb.from('reliquias').select('id, reliquia, plana_stat, plana_valor, tiradas, campeon, espacio, obtenida').order('obtenida', { ascending: false }));
+export const abrirSobreReliquias = () => rpc('abrir_sobre_reliquias');
+export const equiparReliquia = (id, campeon, espacio) => rpc('equipar_reliquia', { p_reliquia: id, p_campeon: campeon, p_espacio: espacio });
+export const desequiparReliquia = id => rpc('desequipar_reliquia', { p_reliquia: id });
 
 // Campaña: progreso (solo lectura) y cobrar una victoria (el servidor valida desbloqueo, tiempo entre repeticiones y paga)
 export const miCampana = area => q(sb => sb.from('campana_progreso').select('dificultad, etapa, estrellas, victorias, ultima').eq('area', area));

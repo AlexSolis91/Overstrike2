@@ -6,7 +6,6 @@
 import { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, LIMITE_RONDAS, CONTROL, DOT, BUFFS, DEBUFFS, PUNTERIA, probAplicar } from './reglas.js';
 import { EFECTOS, esDe } from './efectos.js';
 import { crearRng } from './rng.js';
-import { RELIQUIAS } from '../datos/reliquias.js';
 import { INVOCACIONES, TABLAS_INVOCACION } from '../datos/invocaciones.js';
 
 const CATEGORIAS = ['basico', 'especial', 'over'];
@@ -56,8 +55,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
 
   // Equipo: cuenta las reliquias equipadas (espacios no bloqueados) por tipo (Espada, Lanza…) o categoría (Arma, Accesorio…)
   function tieneEquipo(p, { tipo, categoria, min = 1 }) {
-    const n = (p.slots || []).filter(sl => !sl.locked && sl.relic && RELIQUIAS[sl.relic]
-      && (!tipo || RELIQUIAS[sl.relic].type === tipo) && (!categoria || RELIQUIAS[sl.relic].category === categoria)).length;
+    const n = (p.slots || []).filter(sl => !sl.locked && sl.relic                     // sl.relic: copia de la reliquia (catálogo + valores)
+      && (!tipo || sl.relic.type === tipo) && (!categoria || sl.relic.category === categoria)).length;
     return n >= min;
   }
 
@@ -69,8 +68,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     const sec = { ...BASE_COMUN };
     for (const [k, v] of Object.entries(p.extra || {})) sec[k] = (sec[k] || 0) + v;
     if (capas.reliquias) for (const sl of p.slots || []) {
-      const r = sl.relic && RELIQUIAS[sl.relic];
-      if (!r) continue;
+      const r = sl.relic;
+      if (!r || sl.locked) continue;
       flat[r.flat[0]] += r.flat[1];
       for (const [k, v] of r.rolls) {
         if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] += v;

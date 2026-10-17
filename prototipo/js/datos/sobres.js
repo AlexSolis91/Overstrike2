@@ -10,6 +10,8 @@ export const SOBRES = {
   phantom:     { nombre: 'Phantom of Chaos',    tema: 'Personajes sombríos y caóticos',   icono: '🌑', color: '#8b5cf6', imagen: 'assets/sobres/phantom.webp', activo: true },
   sacred:      { nombre: 'Sacred Aegis',        tema: 'Divinos, sagrados y mitológicos',  icono: '✨', color: '#facc15', imagen: 'assets/sobres/sacred.webp', activo: true },
   unbreakable: { nombre: 'Unbreakable Force',   tema: null,                               icono: '💪', color: '#f97316', imagen: 'assets/sobres/unbreakable.webp', activo: true },   // de todo
+  // Sobre de RELIQUIAS (no de campeones): 3 reliquias, garantías por calendario. Lo abre el servidor (abrir_sobre_reliquias).
+  reliquias:   { nombre: 'Relics of Power',     tema: 'Reliquias', tipo: 'reliquias',     icono: '⚔️', color: '#a855f7', imagen: 'assets/sobres/reliquias.webp', activo: true },
 };
 export const CAMPEONES_POR_SOBRE = 3;
 

@@ -1,5 +1,5 @@
 // Panel de información (DOM), orden de turnos, registro y carta de reliquia.
-import { RELIQUIAS, RAREZAS, STAT_META, COSTOS_ESPACIO } from '../datos/reliquias.js';
+import { RAREZAS, STAT_META, COSTOS_ESPACIO, calidad } from '../datos/reliquias.js';
 import { INVOCACIONES } from '../datos/invocaciones.js';
 import { ESCALADO } from '../motor/reglas.js';
 import { imgHtml } from './imagenes.js';
@@ -66,7 +66,7 @@ export function renderPanel(p, v, ui) {
 
   let desbloqueo = 0;
   const slots = (p.slots || []).map((sl, i) => {      // los espacios solo muestran la imagen; nombre y stats salen al pasar el cursor
-    const rel = sl.relic && RELIQUIAS[sl.relic];
+    const rel = !sl.locked && sl.relic;
     if (rel) return `<div class="slot has" data-slot="${i}" style="--rc:${RAREZAS[rel.rarity].color}" title="">${rel.imagen
       ? `<img class="slot-img" src="${rel.imagen}" alt="${rel.name}">` : `<div class="slot-txt">${rel.name}</div>`}</div>`;
     if (sl.locked) return `<div class="slot locked" title="${sl.label}: bloqueado · ${COSTOS_ESPACIO[Math.min(desbloqueo++, 2)]} de Oro${sl.bow ? ' · por el Arco' : ''}"><span>🔒</span></div>`;
@@ -147,8 +147,6 @@ export function renderAccion(p, v, ui) {
 export function cartaReliquia(rel) {
   const f = (k, v) => (k === 'hp' || k === 'dmg' || k === 'spd') ? `+${v}` : `+${Math.round(v * 1000) / 10}%`;
   const star = (v, mx) => v >= mx - 1e-9 ? '⭐' : '';
-  const q = [rel.flat, ...rel.rolls].map(([, v, mn, mx]) => mx === mn ? 1 : (v - mn) / (mx - mn));
-  const calidad = Math.round(q.reduce((a, b) => a + b, 0) / q.length * 100);
   const grupos = [];
   for (const r of rel.rolls) { let g = grupos.find(x => x.stat === r[0]); if (!g) grupos.push(g = { stat: r[0], rolls: [] }); g.rolls.push(r); }
   const lineas = grupos.map(g => {
@@ -159,7 +157,7 @@ export function cartaReliquia(rel) {
   const [fk, fv, , fmx] = rel.flat;
   return `<div class="rc" style="--rc:${RAREZAS[rel.rarity].color}">
     ${rel.imagen ? `<img class="rc-img" src="${rel.imagen}" alt="${rel.name}">` : ''}
-    <div class="rc-head"><div class="rc-name">${rel.name}</div><div class="rc-rarity">${rel.rarity}<span class="rc-q">Calidad ${calidad}%</span></div></div>
+    <div class="rc-head"><div class="rc-name">${rel.name}</div><div class="rc-rarity">${rel.rarity}<span class="rc-q">Calidad ${calidad(rel)}%</span></div></div>
     <div class="rc-type">${rel.category} · ${rel.type}</div>
     <div class="rc-line flat"><span class="lbl">${STAT_META[fk].label}</span><b>${f(fk, fv)}</b><span class="stars">${star(fv, fmx)}</span></div>
     ${lineas ? `<div class="rc-sep"></div>${lineas}` : ''}
@@ -171,7 +169,7 @@ export function activarReliquias(obtenerPersonaje) {
   let timer = null, fijo = false;
   const mostrar = el => {
     const p = obtenerPersonaje(); if (!p) return;
-    pop.innerHTML = cartaReliquia(RELIQUIAS[p.slots[+el.dataset.slot].relic]);
+    pop.innerHTML = cartaReliquia(p.slots[+el.dataset.slot].relic);
     pop.classList.remove('hidden');
     const r = el.getBoundingClientRect();
     let left = r.right + 12, top = r.top - 10;
