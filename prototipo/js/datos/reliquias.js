@@ -123,6 +123,7 @@ export const RELIQUIAS = {
   arcantos: { name: 'Arcantos', rarity: 'Especial', type: 'Martillo', imagen: 'assets/reliquias/arcantos.webp' },
   hombreraTigre: { name: 'Hombrera del Rey Tigre', rarity: 'Raro', type: 'Hombreras', imagen: 'assets/reliquias/hombreraTigre.webp' },
   mosqueteMilitar: { name: 'Mosquete Militar', rarity: 'Común', type: 'Mosquete', imagen: 'assets/reliquias/mosqueteMilitar.webp' },
+  dagaMortifaga: { name: 'Daga Mortífaga', rarity: 'Especial', type: 'Daga', imagen: 'assets/reliquias/dagaMortifaga.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
