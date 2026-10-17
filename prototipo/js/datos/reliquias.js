@@ -156,6 +156,7 @@ export const RELIQUIAS = {
   hombrerasGlaciar: { name: 'Hombreras del Glaciar', rarity: 'Especial', type: 'Hombreras', imagen: 'assets/reliquias/hombrerasGlaciar.webp' },
   arcoCazadorFurtivo: { name: 'Arco del Cazador Furtivo', rarity: 'Común', type: 'Arco', imagen: 'assets/reliquias/arcoCazadorFurtivo.webp' },
   guantesDuelista: { name: 'Guantes del Duelista', rarity: 'Raro', type: 'Guantes', imagen: 'assets/reliquias/guantesDuelista.webp' },
+  martilloForjadorEnano: { name: 'Martillo del Forjador Enano', rarity: 'Raro', type: 'Martillo', imagen: 'assets/reliquias/martilloForjadorEnano.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
