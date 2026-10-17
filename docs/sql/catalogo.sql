@@ -201,7 +201,8 @@ insert into public.reliquias_catalogo (id, nombre, rareza, tipo, en_sobre, solo_
   ('anilloFuegoFatuo', 'Anillo de Fuego Fatuo', 'Especial', 'Anillo', true, false, true),
   ('arcoVacioEstelar', 'Arco del Vacío Estelar', 'Épico', 'Arco', true, false, true),
   ('yelmoCaballeroAbisal', 'Yelmo del Caballero Abisal', 'Especial', 'Yelmo', true, false, true),
-  ('hachaJarlHelado', 'Hacha del Jarl Helado', 'Especial', 'Hacha', true, false, true)
+  ('hachaJarlHelado', 'Hacha del Jarl Helado', 'Especial', 'Hacha', true, false, true),
+  ('pecheraGuardabosques', 'Pechera del Guardabosques', 'Raro', 'Pechera', true, false, true)
 on conflict (id) do update set nombre = excluded.nombre, rareza = excluded.rareza, tipo = excluded.tipo,
   en_sobre = excluded.en_sobre, solo_receta = excluded.solo_receta, activo = excluded.activo;
--- 62 reliquias · 24 tipos
+-- 63 reliquias · 24 tipos
