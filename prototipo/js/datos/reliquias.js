@@ -164,6 +164,7 @@ export const RELIQUIAS = {
   yelmoCaballeroAbisal: { name: 'Yelmo del Caballero Abisal', rarity: 'Especial', type: 'Yelmo', imagen: 'assets/reliquias/yelmoCaballeroAbisal.webp' },
   hachaJarlHelado: { name: 'Hacha del Jarl Helado', rarity: 'Especial', type: 'Hacha', imagen: 'assets/reliquias/hachaJarlHelado.webp' },
   pecheraGuardabosques: { name: 'Pechera del Guardabosques', rarity: 'Raro', type: 'Pechera', imagen: 'assets/reliquias/pecheraGuardabosques.webp' },
+  capaPeregrino: { name: 'Capa del Peregrino', rarity: 'Común', type: 'Capa', imagen: 'assets/reliquias/capaPeregrino.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
