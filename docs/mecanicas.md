@@ -219,6 +219,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - `sobrante`: si el golpe mata al objetivo, el daño que sobró (ya mitigado) pasa a otro enemigo al azar como daño por efecto (una sola vez). P. ej. Bastón Prodigioso de Wukong.
 - **Efectos `cuando: 'antes'`:** se aplican a cada objetivo **antes** de golpear (p. ej. Ahora Nos Ves: robar todos los buffs y después atacar).
 - **Quemadura inextinguible** (`inextinguible: true` en la acción de Quemadura): **no se puede limpiar** (solo termina por duración). Si se fusiona con otra Quemadura, la fusionada queda inextinguible. Se muestra como ⚫🔥 Amaterasu. P. ej. Amaterasu de Sasuke.
+- **Acción `efecto` con `finDeRonda: true`** (y `dur: 1`): el efecto expira al final de la ronda en curso aunque el objetivo ya haya actuado (excepción a la regla general de duraciones). P. ej. Kamui de Obito: Sigilo hasta el final de la ronda en que lo golpearon.
 - **Acción `efecto`:** `probSiConBuff` (otra probabilidad si el objetivo tiene algún buff, sin contar invocaciones) e `irresistible: true` (siempre entra: sin tirada de Puntería vs Resistencia).
 - `golpeExtraContra { efecto, prob }`: prob de **un** golpe más (mismo %) a **otro** enemigo que tenga ese efecto (nunca al mismo objetivo; si no hay otro, nada). Ese golpe no provoca otro. P. ej. Descarga de Escarcha de Jaina: 20% contra otro congelado.
 - `golpeExtraSiCritico`: si algún golpe fue crítico, **un** golpe más (máximo uno) al mismo objetivo; si murió, a un enemigo al azar (p. ej. Venganza Eterna de Scorpion).

@@ -70,7 +70,7 @@ export const AREAS = {
       { tema: 'caos', poder: 1.29 },   // 15
       { tema: 'asgard', poder: 1.1 },   // 16
       { tema: 'reyes', poder: 0.99 },   // 17
-      { tema: 'uchiha', poder: 1.07 },   // 18
+      { tema: 'uchiha', poder: 1.24 },   // 18
       { tema: 'servants', poder: 0.7 },   // 19
       { tema: 'monarcas', poder: 0.93, jefe: true },   // 20
     ],

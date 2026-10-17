@@ -1032,7 +1032,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         break;
       }
     }
-    if (S.actuaron.has(t) || S.actual === t) {       // ya actuó en esta ronda: la duración empieza a contar desde la siguiente
+    // finDeRonda: el efecto expira al final de ESTA ronda aunque el objetivo ya haya actuado (p. ej. el Sigilo del Kamui de Obito)
+    if (!acc.finDeRonda && (S.actuaron.has(t) || S.actual === t)) {       // ya actuó en esta ronda: la duración empieza a contar desde la siguiente
       const tocado = acc.id === 'poison' || acc.id === 'bomb' ? t.estados.filter(e => e.id === acc.id && (!antes.has(e) || e.tocado)) : [get(t, id)];
       for (const e of tocado) if (e) e.nuevo = true;
     }
