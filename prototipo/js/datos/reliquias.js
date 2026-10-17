@@ -143,6 +143,7 @@ export const RELIQUIAS = {
   collarMareaAstral: { name: 'Collar de la Marea Astral', rarity: 'Raro', type: 'Collar', imagen: 'assets/reliquias/collarMareaAstral.webp' },
   mascaraDragon: { name: 'Máscara de Dragón', rarity: 'Épico', type: 'Máscara', imagen: 'assets/reliquias/mascaraDragon.webp' },
   amuletoColmilloLunar: { name: 'Amuleto del Colmillo Lunar', rarity: 'Raro', type: 'Amuleto', imagen: 'assets/reliquias/amuletoColmilloLunar.webp' },
+  capaEclipse: { name: 'Capa del Eclipse', rarity: 'Épico', type: 'Capa', imagen: 'assets/reliquias/capaEclipse.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
