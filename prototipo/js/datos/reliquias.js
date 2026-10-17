@@ -109,6 +109,8 @@ export const RELIQUIAS = {
     legado: { flat: ['hp', 110, 90, 120], rolls: [['armor', 0.08, 0.06, 0.10], ['block', 0.02, 0.02, 0.04]] } },
   botas: { name: 'Botas del Viento', rarity: 'Especial', type: 'Botas', imagen: 'assets/reliquias/botas.webp',
     legado: { flat: ['spd', 11, 8, 12], rolls: [['spdPct', 0.05, 0.03, 0.06], ['res', 0.07, 0.05, 0.09]] } },
+  // ---------------------------------------------------------------- reliquias nuevas (fichas del diseñador; sin "legado": no van en fichas de campeones)
+  furiaEscarlata: { name: 'Furia Escarlata', rarity: 'Común', type: 'Espada', imagen: 'assets/reliquias/furiaEscarlata.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
