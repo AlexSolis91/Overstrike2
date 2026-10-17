@@ -38,6 +38,7 @@ import baran from './baran.js';
 import orochimaru from './orochimaru.js';
 import ghostRider from './ghost-rider.js';
 import venom from './venom.js';
+import spiderMan from './spider-man.js';
 
-export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom];
+export const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan];
 export const porId = id => OFICIALES.find(p => p.id === id);
