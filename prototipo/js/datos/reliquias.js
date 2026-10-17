@@ -160,6 +160,7 @@ export const RELIQUIAS = {
   mascaraBandido: { name: 'Máscara del Bandido', rarity: 'Común', type: 'Máscara', imagen: 'assets/reliquias/mascaraBandido.webp' },
   mazaCarcelero: { name: 'Maza del Carcelero', rarity: 'Común', type: 'Maza', imagen: 'assets/reliquias/mazaCarcelero.webp' },
   anilloFuegoFatuo: { name: 'Anillo de Fuego Fatuo', rarity: 'Especial', type: 'Anillo', imagen: 'assets/reliquias/anilloFuegoFatuo.webp' },
+  arcoVacioEstelar: { name: 'Arco del Vacío Estelar', rarity: 'Épico', type: 'Arco', imagen: 'assets/reliquias/arcoVacioEstelar.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
