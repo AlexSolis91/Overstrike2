@@ -43,11 +43,11 @@ export const RELIQUIAS = {
     passive: 'Si el portador elimina a uno o más enemigos con un ataque, revive a uno de ellos al azar como aliado durante 2 rondas.' },
   anilloCobre: { name: 'Anillo de Cobre', rarity: 'Común', category: 'Accesorio', type: 'Anillo', imagen: 'assets/reliquias/anilloCobre.webp',
     flat: ['spd', 4, 2, 5], rolls: [] },
-  yelmo: { name: 'Yelmo del Centinela', rarity: 'Raro', category: 'Equipación', type: 'Yelmo',
+  yelmo: { name: 'Yelmo del Centinela', rarity: 'Raro', category: 'Equipación', type: 'Yelmo', imagen: 'assets/reliquias/yelmo.webp',
     flat: ['hp', 60, 45, 65], rolls: [['res', 0.06, 0.04, 0.07]] },
-  pechera: { name: 'Pechera de Escamas', rarity: 'Especial', category: 'Equipación', type: 'Pechera',
+  pechera: { name: 'Pechera de Escamas', rarity: 'Especial', category: 'Equipación', type: 'Pechera', imagen: 'assets/reliquias/pechera.webp',
     flat: ['hp', 110, 90, 120], rolls: [['armor', 0.08, 0.06, 0.10], ['block', 0.02, 0.02, 0.04]] },
-  botas: { name: 'Botas del Viento', rarity: 'Especial', category: 'Equipación', type: 'Botas',
+  botas: { name: 'Botas del Viento', rarity: 'Especial', category: 'Equipación', type: 'Botas', imagen: 'assets/reliquias/botas.webp',
     flat: ['spd', 11, 8, 12], rolls: [['spdPct', 0.05, 0.03, 0.06], ['res', 0.07, 0.05, 0.09]] },
 };
 
