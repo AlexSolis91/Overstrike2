@@ -159,6 +159,7 @@ export const RELIQUIAS = {
   martilloForjadorEnano: { name: 'Martillo del Forjador Enano', rarity: 'Raro', type: 'Martillo', imagen: 'assets/reliquias/martilloForjadorEnano.webp' },
   mascaraBandido: { name: 'Máscara del Bandido', rarity: 'Común', type: 'Máscara', imagen: 'assets/reliquias/mascaraBandido.webp' },
   mazaCarcelero: { name: 'Maza del Carcelero', rarity: 'Común', type: 'Maza', imagen: 'assets/reliquias/mazaCarcelero.webp' },
+  anilloFuegoFatuo: { name: 'Anillo de Fuego Fatuo', rarity: 'Especial', type: 'Anillo', imagen: 'assets/reliquias/anilloFuegoFatuo.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
