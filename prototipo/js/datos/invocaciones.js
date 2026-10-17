@@ -112,6 +112,13 @@ export const INVOCACIONES = {
       { tipo: 'efecto', id: 'protect', dur: 1, a: 'aliadoMasHerido' },
     ],
   },
+  // ---------------------------------------------------------------- Sasori
+  tercerKazekage: {
+    nombre: 'Marioneta del Tercer Kazekage', rareza: 'Épico', emoji: '🪆', color: 0x57534e, imagen: 'assets/invocaciones/tercer-kazekage.webp', dur: 3,
+    enfoque: [.38, .20],
+    desc: 'Arena de Hierro: golpea 60% a todos los enemigos con 60% de probabilidad de Veneno a cada uno.',
+    acciones: [{ tipo: 'golpe', pct: .60, elegir: 'todos', efectos: [{ accion: { tipo: 'efecto', id: 'poison', prob: .60 } }] }],
+  },
   // ---------------------------------------------------------------- Camino Animal de Pain
   ciempiesGigante: {
     nombre: 'Ciempiés Gigante', rareza: 'Común', emoji: '🐛', color: 0xf97316, imagen: 'assets/invocaciones/ciempies-gigante.webp', dur: 2,

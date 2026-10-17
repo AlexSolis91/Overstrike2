@@ -358,6 +358,11 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 |---|---|---|---|
 | Esfinge Wehem-Mesut | Épico | 2 | 50% al enemigo más fuerte + Protección (1 ronda) al aliado más herido |
 
+### Marioneta del Tercer Kazekage (Sasori, la invoca su Especial)
+| Invocación | Rareza | Dura | Rol |
+|---|---|---|---|
+| Marioneta del Tercer Kazekage | Épico | 3 | Arena de Hierro: 60% a todos los enemigos + 60% de Veneno a cada uno |
+
 ### Criaturas del Camino Animal de Pain (tabla `animalesPain`)
 | Criatura | Rareza | Peso | Dura | Rol |
 |---|---|---|---|---|
@@ -475,7 +480,7 @@ Pantalla: al iniciar sesión por primera vez (ver sección 19).
 - Clasificación actual:
   - **Blazing:** Alexstrasza, Rhaenys Targaryen, Rengoku, Daenerys Targaryen, Scorpion, Antares, Ghost Rider.
   - **Frostborn:** Sub-Zero, Lich King, Jaina Proudmoore, Camus (4 exclusivos: el pack saca 3 al azar). ⚠️ Simulación 2026-10-09: Frostborn 67.7% contra equipos al azar; Blazing 33.5% y Noxious 39.0% (sus exclusivos son de los campeones más débiles). Revisar en el pase de balance antes de abrir el juego.
-  - **Noxious:** The Joker, Reptile, Loki, Milo.
+  - **Noxious:** The Joker, Reptile, Loki, Milo, Orochimaru, Sasori.
   - **Libres:** Goku, Sun Jin Woo, Shaka, Batman, Aldebarán, Thor, Madara Uchiha.
 - Al crear un campeón nuevo se decide si es exclusivo de algún pack.
 
