@@ -118,6 +118,7 @@ export const RELIQUIAS = {
   escudoMagma: { name: 'Escudo de Magma', rarity: 'Común', type: 'Escudo', imagen: 'assets/reliquias/escudoMagma.webp' },
   coronaBestias: { name: 'Corona del Rey de las Bestias', rarity: 'Común', type: 'Corona', imagen: 'assets/reliquias/coronaBestias.webp' },
   punoCastigo: { name: 'Puño del Castigo', rarity: 'Común', type: 'Guantes', imagen: 'assets/reliquias/punoCastigo.webp' },
+  nichirin: { name: 'Nichirin', rarity: 'Épico', type: 'Espada', imagen: 'assets/reliquias/nichirin.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);

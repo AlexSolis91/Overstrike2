@@ -156,7 +156,8 @@ insert into public.reliquias_catalogo (id, nombre, rareza, tipo, en_sobre, solo_
   ('arcoDorado', 'Arco del Dorado', 'Raro', 'Arco', true, false, true),
   ('escudoMagma', 'Escudo de Magma', 'Común', 'Escudo', true, false, true),
   ('coronaBestias', 'Corona del Rey de las Bestias', 'Común', 'Corona', true, false, true),
-  ('punoCastigo', 'Puño del Castigo', 'Común', 'Guantes', true, false, true)
+  ('punoCastigo', 'Puño del Castigo', 'Común', 'Guantes', true, false, true),
+  ('nichirin', 'Nichirin', 'Épico', 'Espada', true, false, true)
 on conflict (id) do update set nombre = excluded.nombre, rareza = excluded.rareza, tipo = excluded.tipo,
   en_sobre = excluded.en_sobre, solo_receta = excluded.solo_receta, activo = excluded.activo;
--- 19 reliquias · 22 tipos
+-- 20 reliquias · 22 tipos
