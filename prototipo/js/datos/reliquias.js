@@ -1,5 +1,5 @@
 // RELIQUIAS. Tres capas:
-//   1) TIPOS: los 22 tipos (categoría, estadística plana posible y estadísticas porcentuales permitidas).
+//   1) TIPOS: los 23 tipos (categoría, estadística plana posible y estadísticas porcentuales permitidas).
 //   2) RANGOS: mínimo y máximo de cada estadística según la rareza (las porcentuales en puntos enteros: 8 = 8%).
 //   3) RELIQUIAS: el catálogo con nombre (rareza fija por nombre). Cada copia que entra a una cuenta (sobre, recompensa,
 //      receta…) sortea SUS valores dentro de los rangos en el servidor; dos copias del mismo nombre pueden ser distintas.
@@ -61,6 +61,7 @@ export const TIPOS = {
   Anillo:     T('Accesorio', ['dmg', 'hp'], PORCENTUALES),
   Collar:     T('Accesorio', ['dmg', 'hp'], ['spdPct', 'armor', 'acc', 'hpPct']),
   Amuleto:    T('Accesorio', ['spd'], ['res', 'critRate', 'acc', 'block']),
+  Libro:      T('Accesorio', ['dmg'], ['dot', 'critRate']),
 };
 
 // ---------------------------------------------------------------- 2) rangos por rareza (aprobados 2026-10-16)
@@ -132,6 +133,7 @@ export const RELIQUIAS = {
   botasExplorador: { name: 'Botas de Explorador', rarity: 'Común', type: 'Botas', imagen: 'assets/reliquias/botasExplorador.webp' },
   grebasCazador: { name: 'Grebas de Cazador', rarity: 'Común', type: 'Grebas', imagen: 'assets/reliquias/grebasCazador.webp' },
   bestiari: { name: 'Bestiari', rarity: 'Épico', type: 'Hacha', imagen: 'assets/reliquias/bestiari.webp' },
+  libroArcano: { name: 'Libro Arcano', rarity: 'Especial', type: 'Libro', imagen: 'assets/reliquias/libroArcano.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);

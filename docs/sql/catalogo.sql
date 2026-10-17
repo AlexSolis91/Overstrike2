@@ -72,7 +72,8 @@ insert into public.reliquia_tipos (tipo, categoria, planas, pcts) values
   ('Máscara', 'Equipación', array['spd']::text[], array['dmgPct', 'hpPct', 'res']::text[]),
   ('Anillo', 'Accesorio', array['dmg', 'hp']::text[], array['critRate', 'critDmg', 'dot', 'pen', 'acc', 'res', 'armor', 'block', 'hpPct', 'dmgPct', 'spdPct']::text[]),
   ('Collar', 'Accesorio', array['dmg', 'hp']::text[], array['spdPct', 'armor', 'acc', 'hpPct']::text[]),
-  ('Amuleto', 'Accesorio', array['spd']::text[], array['res', 'critRate', 'acc', 'block']::text[])
+  ('Amuleto', 'Accesorio', array['spd']::text[], array['res', 'critRate', 'acc', 'block']::text[]),
+  ('Libro', 'Accesorio', array['dmg']::text[], array['dot', 'critRate']::text[])
 on conflict (tipo) do update set categoria = excluded.categoria, planas = excluded.planas, pcts = excluded.pcts;
 
 insert into public.reliquia_rangos (rareza, stat, minimo, maximo) values
@@ -170,7 +171,8 @@ insert into public.reliquias_catalogo (id, nombre, rareza, tipo, en_sobre, solo_
   ('capaGuardiaReal', 'Capa de Guardia Real', 'Raro', 'Capa', true, false, true),
   ('botasExplorador', 'Botas de Explorador', 'Común', 'Botas', true, false, true),
   ('grebasCazador', 'Grebas de Cazador', 'Común', 'Grebas', true, false, true),
-  ('bestiari', 'Bestiari', 'Épico', 'Hacha', true, false, true)
+  ('bestiari', 'Bestiari', 'Épico', 'Hacha', true, false, true),
+  ('libroArcano', 'Libro Arcano', 'Especial', 'Libro', true, false, true)
 on conflict (id) do update set nombre = excluded.nombre, rareza = excluded.rareza, tipo = excluded.tipo,
   en_sobre = excluded.en_sobre, solo_receta = excluded.solo_receta, activo = excluded.activo;
--- 33 reliquias · 22 tipos
+-- 34 reliquias · 23 tipos
