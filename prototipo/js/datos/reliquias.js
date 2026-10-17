@@ -135,6 +135,7 @@ export const RELIQUIAS = {
   bestiari: { name: 'Bestiari', rarity: 'Épico', type: 'Hacha', imagen: 'assets/reliquias/bestiari.webp' },
   libroArcano: { name: 'Libro Arcano', rarity: 'Especial', type: 'Libro', imagen: 'assets/reliquias/libroArcano.webp' },
   anilloMagnetico: { name: 'Anillo Magnético', rarity: 'Común', type: 'Anillo', imagen: 'assets/reliquias/anilloMagnetico.webp' },
+  yelmoNigromante: { name: 'Yelmo de Nigromante', rarity: 'Raro', type: 'Yelmo', imagen: 'assets/reliquias/yelmoNigromante.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
