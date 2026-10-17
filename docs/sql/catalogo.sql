@@ -191,7 +191,8 @@ insert into public.reliquias_catalogo (id, nombre, rareza, tipo, en_sobre, solo_
   ('botasTrueno', 'Botas del Trueno', 'Épico', 'Botas', true, false, true),
   ('colganteWyvern', 'Colgante de Escama de Wyvern', 'Raro', 'Collar', true, false, true),
   ('amuletoOjoKraken', 'Amuleto del Ojo del Kraken', 'Especial', 'Amuleto', true, false, true),
-  ('dagaSaqueador', 'Daga del Saqueador', 'Común', 'Daga', true, false, true)
+  ('dagaSaqueador', 'Daga del Saqueador', 'Común', 'Daga', true, false, true),
+  ('hombrerasGlaciar', 'Hombreras del Glaciar', 'Especial', 'Hombreras', true, false, true)
 on conflict (id) do update set nombre = excluded.nombre, rareza = excluded.rareza, tipo = excluded.tipo,
   en_sobre = excluded.en_sobre, solo_receta = excluded.solo_receta, activo = excluded.activo;
--- 52 reliquias · 24 tipos
+-- 53 reliquias · 24 tipos
