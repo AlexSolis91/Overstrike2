@@ -103,6 +103,10 @@ export const RELIQUIAS = {
   frostmourne: { name: 'Frostmourne', rarity: 'Legendario', type: 'Espada', imagen: 'assets/reliquias/frostmourne.webp', soloReceta: true,
     passive: 'Si el portador elimina a uno o más enemigos con un ataque, revive a uno de ellos al azar como aliado durante 2 rondas.',
     legado: { flat: ['dmg', 35, 30, 35], rolls: [['critRate', 0.19, 0.15, 0.20], ['dmgPct', 0.23, 0.18, 0.25], ['critDmg', 0.27, 0.20, 0.27]] } },
+  // motor: pasiva de reliquia que el motor ejecuta (pieza universal, ver combate.js → pasivasDeReliquia)
+  shadowmourne: { name: 'Shadowmourne', rarity: 'Legendario', type: 'Hacha', imagen: 'assets/reliquias/shadowmourne.webp', soloReceta: true,
+    passive: 'Los ataques en área (AOE) del portador tienen +100% de Daño Crítico. Cada movimiento en área o de varios golpes que ejecuta le da 1 Alma (máx. 20): cada Alma da +10 de Daño. Duran toda la batalla.',
+    motor: { critDmgAoe: 1, contador: { efecto: 'almasShadowmourne', al: ['aoe', 'multigolpe'], max: 20, bono: { dmg: 10 } } } },
   anilloCobre: { name: 'Anillo de Cobre', rarity: 'Común', type: 'Anillo', imagen: 'assets/reliquias/anilloCobre.webp',
     legado: { flat: ['spd', 4, 2, 5], rolls: [] } },
   yelmo: { name: 'Yelmo del Centinela', rarity: 'Raro', type: 'Yelmo', imagen: 'assets/reliquias/yelmo.webp',

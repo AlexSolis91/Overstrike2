@@ -60,6 +60,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     return n >= min;
   }
 
+  // Pasivas de reliquia (pieza universal): las reliquias equipadas con "motor" (p. ej. Shadowmourne)
+  //   critDmgAoe: +X Daño Crítico en los golpes de movimientos a todos los enemigos
+  //   contador: { efecto, al: ['aoe','multigolpe'], max, bono }: +1 por movimiento de ese tipo; bono por cada uno (toda la batalla)
+  const pasivasDeReliquia = p => (p.slots || []).filter(sl => !sl.locked && sl.relic?.motor).map(sl => sl.relic.motor);
+
   // capas: qué sumar ({} = solo la base de su forma). Sin capas = todo. Sirve para el desglose del panel.
   const TODAS = { reliquias: true, buffs: true, debuffs: true, lider: true, permanente: true };
   function stats(p, capas = TODAS) {
@@ -73,6 +78,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       flat[r.flat[0]] += r.flat[1];
       for (const [k, v] of r.rolls) {
         if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] += v;
+      }
+    }
+    if (capas.reliquias) for (const m of pasivasDeReliquia(p)) {      // contador de reliquia: bono por cada carga
+      const n = m.contador && get(p, m.contador.efecto)?.valor;
+      if (n) for (const [k, v] of Object.entries(m.contador.bono)) {
+        if (k in flat) flat[k] += v * n; else if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v * n; else sec[k] = (sec[k] || 0) + v * n;
       }
     }
     for (const e of p.estados) {
@@ -185,6 +196,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'edoTensei': texto = `Reanimado por ${porUid(e.fuente)?.nombre || 'Orochimaru'}: no puede morir mientras ${porUid(e.fuente)?.nombre || 'Orochimaru'} viva · sus golpes pueden envenenar`; break;
         case 'cargaElectrica': texto = `${e.valor} carga(s) de ${porUid(e.fuente)?.nombre || 'Baran'}: al completar sus cargas, Sobrecarga (Aturdido)`; n = e.valor; break;
         case 'destruccion': texto = `${e.valor} de Destrucción (máx. 10): +${e.valor * 3}% de daño · el Aliento de la Destrucción las consume`; n = e.valor; break;
+        case 'almasShadowmourne': texto = `${e.valor} Alma(s) de Shadowmourne (máx. 20): +${e.valor * 10} de Daño · toda la batalla`; n = e.valor; break;
         case 'cuervos': texto = `${e.valor} clon(es) de cuervo: cada uno absorbe un ataque enemigo contra Itachi`; n = e.valor; break;
         case 'oscuridad': texto = `${e.valor} de Oscuridad (máx. 3): con 3 se transforma en Saga Oscuro`; n = e.valor; break;
         case 'grayskull': texto = `${e.valor} de Poder de Grayskull (máx. 5): Golpe de Grayskull +15% por cada uno`; n = e.valor; break;
@@ -633,6 +645,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       const b = l.lider?.bonoCriticoContra;
       if (b && t.lado !== a.lado && get(t, b.efecto)) { probCrit += b.critRate || 0; danoCrit += b.critDmg || 0; }
     }
+    if (mov.objetivo === 'todosEnemigos' && mov.categoria !== 'invocacion')   // reliquia: +Daño Crítico en área (p. ej. Shadowmourne)
+      for (const m of pasivasDeReliquia(a)) danoCrit += m.critDmgAoe || 0;
     const acc = a.pasiva?.acumulaCriticoContra;   // pasiva: cada golpe a un enemigo con X sube Prob. y Daño Crítico (permanente, con tope)
     if (acc && t.lado !== a.lado) {
       const e = get(t, acc.efecto);
@@ -1710,6 +1724,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         a.bonos[mov.categoria] = (a.bonos[mov.categoria] || 0) + mov.bonoPorSobreviviente * sobrevivientes.length;
         emitir('bono', { id: a.uid, texto: `${mov.nombre} +${Math.round(a.bonos[mov.categoria] * 100)}%` }, a);
       }
+    }
+    if (!a.muerto && mov.pct && mov.categoria !== 'invocacion') for (const m of pasivasDeReliquia(a)) {   // contador de reliquia: +1 por movimiento
+      const ct = m.contador;
+      const tipo = mov.objetivo === 'todosEnemigos' ? 'aoe' : (mov.golpes || 1) > 1 ? 'multigolpe' : null;
+      if (ct && tipo && ct.al.includes(tipo)) ganarCargas(a, 1, ct.max, ct.efecto);
     }
     emitir('movimientoFin', { id: a.uid, estilo: mov.estilo }, a);
     if (!ctx.contraataque && !ctx.forzado) for (const d of new Set(objetivos)) {
