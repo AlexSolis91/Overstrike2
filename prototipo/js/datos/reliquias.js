@@ -184,6 +184,7 @@ export const RELIQUIAS = {
   lanzaValquiria: { name: 'Lanza de la Valquiria', rarity: 'Épico', type: 'Lanza', imagen: 'assets/reliquias/lanzaValquiria.webp' },
   escudoTortugaDragon: { name: 'Escudo de la Tortuga Dragón', rarity: 'Raro', type: 'Escudo', imagen: 'assets/reliquias/escudoTortugaDragon.webp' },
   rodelaRoble: { name: 'Rodela de Roble', rarity: 'Común', type: 'Escudo', imagen: 'assets/reliquias/rodelaRoble.webp' },
+  cinturonGladiador: { name: 'Cinturón del Gladiador', rarity: 'Raro', type: 'Cinturón', imagen: 'assets/reliquias/cinturonGladiador.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
