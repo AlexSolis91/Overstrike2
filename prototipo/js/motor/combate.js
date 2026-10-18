@@ -42,7 +42,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     });
     for (const m of p.movimientos) {                     // conEquipo: el movimiento cambia si lleva cierto equipo (p. ej. 2 Espadas)
       if (m.conEquipo && tieneEquipo(p, m.conEquipo.equipo)) { Object.assign(m, m.conEquipo.cambios); m.equipoActivo = true; }
-      p.cds[m.categoria] = m.cdInicial ?? CD_INICIAL[m.categoria] ?? 0;   // cdInicial: con qué cooldown empieza (p. ej. Explosión de Galaxias: 6)
+      p.cds[m.categoria] = cdDe(p, m.cdInicial ?? CD_INICIAL[m.categoria] ?? 0);   // cdInicial: con qué cooldown empieza (p. ej. Explosión de Galaxias: 6)
     }
     // efectosPermanentes: la pasiva da ese efecto toda la partida (sin duración, no se disipa ni se roba)
     for (const id of def.pasiva?.efectosPermanentes || []) p.estados.push({ id, permanente: true });
@@ -63,7 +63,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   // Pasivas de reliquia (pieza universal): las reliquias equipadas con "motor" (p. ej. Shadowmourne)
   //   critDmgAoe: +X Daño Crítico en los golpes de movimientos a todos los enemigos
   //   contador: { efecto, al: ['aoe','multigolpe'], max, bono }: +1 por movimiento de ese tipo; bono por cada uno (toda la batalla)
+  //   cooldownPct: multiplica los cooldowns de sus movimientos (redondeo hacia arriba), incluida la espera inicial del Over
+  //   revivir: { hp }: al ser eliminado, revive al FINAL de la ronda siguiente con ese % de HP (una vez por batalla;
+  //     si otro efecto lo revive antes, el anillo no se gasta y la cuenta vuelve a empezar en su siguiente muerte)
   const pasivasDeReliquia = p => (p.slots || []).filter(sl => !sl.locked && sl.relic?.motor).map(sl => sl.relic.motor);
+  const cdDe = (p, cd) => {                              // cooldown real de un movimiento (reliquias que lo reducen)
+    for (const m of pasivasDeReliquia(p)) if (m.cooldownPct != null) cd = Math.ceil(cd * m.cooldownPct);
+    return cd;
+  };
 
   // capas: qué sumar ({} = solo la base de su forma). Sin capas = todo. Sirve para el desglose del panel.
   const TODAS = { reliquias: true, buffs: true, debuffs: true, lider: true, permanente: true };
@@ -298,6 +305,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       p.estados = p.estados.filter(e => (e.dur === undefined || e.dur > 0) && !(e.id === 'bomb' && e.contador <= 0));
     }
     for (const [p, b] of explotan) if (!p.muerto) explotarBomba(p, b, false);
+    for (const x of P) if (x.muerto && x.reviveRonda && x.reviveRonda <= S.ronda && !x.revivioReliquia) {   // reliquia "revivir"
+      x.revivioReliquia = true; revivir(x, x.reviveRelHp);
+      if (!x.muerto) emitir('bonoVisible', { a: x.uid, texto: '⏳ ¡Vuelve en el tiempo!' }, x);
+    }
     // "alTerminar": al expirar el efecto (no si lo disipan o limpian), su dueño ejecuta la acción (p. ej. Gran Cuerno de Aldebarán)
     for (const [p, e] of terminan) { const d = porUid(e.duenoTerminar) || p; if (!d.muerto && enemigosDe(d).length) ejecutarAccion(d, e.alTerminar, {}); }
     procesarReacciones();
@@ -555,7 +566,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   }
   function revivir(x, hpPct) {
     if (!enemigosDe(x).length) return;               // la partida ya terminó
-    Object.assign(x, { muerto: false, estados: [], escudo: 0, inmune: false, recienLiberado: false, reviveEn: 0 });
+    Object.assign(x, { muerto: false, estados: [], escudo: 0, inmune: false, recienLiberado: false, reviveEn: 0, reviveRonda: 0 });
     for (const id of x.pasiva?.efectosPermanentes || []) x.estados.push({ id, permanente: true });
     x.hp = maxHp(x) * (hpPct ?? x.pasiva?.revivir?.hp ?? 1);
     if (x.pasiva?.rival) elegirRival(x);
@@ -878,6 +889,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     }
     if ((t.esLider && t.lider) || t.pasiva?.bonoPorAliadosQueAplican) for (const x of aliadosDe(t)) if (x.hp > maxHp(x)) { x.hp = maxHp(x); emitir('actualizar', {}, x); }
     const rv = t.pasiva?.revivir;                      // pasiva "revivir": vuelve tras N turnos (de cualquiera), una vez por partida
+    const rr = !t.revivioReliquia && pasivasDeReliquia(t).find(m => m.revivir);   // reliquia "revivir" (p. ej. Anillo del Tiempo)
+    if (rr) { t.reviveRonda = S.ronda + 1; t.reviveRelHp = rr.revivir.hp ?? 1; emitir('extension', { a: t.uid, texto: '⏳ Revivirá al final de la próxima ronda' }, t); }
     if (rv && !t.revivio) { t.revivio = true; t.reviveEn = rv.turnos + (S.actual ? 1 : 0); emitir('extension', { a: t.uid, texto: `🐒 Revivirá en ${rv.turnos} turnos` }, t); }
     for (const b of bombas) explotarBomba(t, b, true);
     if (asesino && asesino.lado !== t.lado) pasivas(asesino, 'alEliminar', { objetivo: t });
@@ -1331,8 +1344,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'activarCooldown': {            // pone el movimiento del objetivo en su cooldown COMPLETO (si era menor)
           if (acc.prob != null && rng() >= acc.prob) break;
           const m = t.movimientos.find(x => x.categoria === acc.categoria);
-          if (!m || (t.cds[acc.categoria] || 0) >= (m.cd || 0)) break;
-          t.cds[acc.categoria] = m.cd || 0;
+          if (!m || (t.cds[acc.categoria] || 0) >= cdDe(t, m.cd || 0)) break;
+          t.cds[acc.categoria] = cdDe(t, m.cd || 0);
           emitir('extension', { a: t.uid, texto: `⏳ ${NOMBRE_CAT[acc.categoria]} en cooldown (${m.cd})` }, t);
           break;
         }
@@ -1673,7 +1686,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     }
     const hm = get(a, 'hemo');                       // Hemorragia: pierde HP al ejecutar un movimiento
     if (hm) danoDoT(a, hm.valor, 'hemo', fuentesDe([hm]));
-    if (!ctx.forzado && !ctx.reaccion) a.cds[mov.categoria] = mov.cd || 0;
+    if (!ctx.forzado && !ctx.reaccion) a.cds[mov.categoria] = cdDe(a, mov.cd || 0);
     if (mov.unaVez) (a.usados ||= new Set()).add(mov.nombre);
 
     if (!a.muerto) {
