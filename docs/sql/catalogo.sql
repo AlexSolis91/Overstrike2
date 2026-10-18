@@ -228,7 +228,8 @@ insert into public.reliquias_catalogo (id, nombre, rareza, tipo, en_sobre, solo_
   ('hachaBerserker', 'Hacha del Berserker', 'Raro', 'Hacha', true, false, true),
   ('cotaMallaOxidada', 'Cota de Malla Oxidada', 'Común', 'Pechera', true, false, true),
   ('mascaraKitsune', 'Máscara del Kitsune', 'Raro', 'Máscara', true, false, true),
-  ('dagaViudaNegra', 'Daga de la Viuda Negra', 'Épico', 'Daga', true, false, true)
+  ('dagaViudaNegra', 'Daga de la Viuda Negra', 'Épico', 'Daga', true, false, true),
+  ('hachaCampesino', 'Hacha del Campesino', 'Común', 'Hacha', true, false, true)
 on conflict (id) do update set nombre = excluded.nombre, rareza = excluded.rareza, tipo = excluded.tipo,
   en_sobre = excluded.en_sobre, solo_receta = excluded.solo_receta, activo = excluded.activo;
--- 89 reliquias · 24 tipos
+-- 90 reliquias · 24 tipos
