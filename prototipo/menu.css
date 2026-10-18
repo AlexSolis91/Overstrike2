@@ -805,3 +805,8 @@ body.eq-campana .eq-modo, body.eq-campana .eq-azar[data-lado="rival"], body.eq-c
   .tc-rels { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) { .ap-carta.reliquia.legendaria.revelada .ap-frente { animation: none; } }
+
+/* Legendarias en Colección: el marco dorado emite luz amarilla */
+.tc-rel.legendaria, .tc-slot.lleno.legendaria { animation: tcLegend 1.8s ease-in-out infinite; }
+@keyframes tcLegend { 0%, 100% { box-shadow: 0 0 12px #fbbf24, 0 0 26px rgba(251, 191, 36, .45); } 50% { box-shadow: 0 0 22px #fde68a, 0 0 46px rgba(251, 191, 36, .75); } }
+@media (prefers-reduced-motion: reduce) { .tc-rel.legendaria, .tc-slot.lleno.legendaria { animation: none; box-shadow: 0 0 18px #fbbf24; } }

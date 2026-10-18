@@ -67,7 +67,7 @@ export function renderPanel(p, v, ui) {
   let desbloqueo = 0;
   const slots = (p.slots || []).map((sl, i) => {      // los espacios solo muestran la imagen; nombre y stats salen al pasar el cursor
     const rel = !sl.locked && sl.relic;
-    if (rel) return `<div class="slot has" data-slot="${i}" style="--rc:${RAREZAS[rel.rarity].color}" title="">${rel.imagen
+    if (rel) return `<div class="slot has${rel.rarity === 'Legendario' ? ' legendaria' : ''}" data-slot="${i}" style="--rc:${RAREZAS[rel.rarity].color}" title="">${rel.imagen
       ? `<img class="slot-img" src="${rel.imagen}" alt="${rel.name}">` : `<div class="slot-txt">${rel.name}</div>`}</div>`;
     if (sl.locked) return `<div class="slot locked" title="${sl.label}: bloqueado · ${COSTOS_ESPACIO[Math.min(desbloqueo++, 2)]} de Oro${sl.bow ? ' · por el Arco' : ''}"><span>🔒</span></div>`;
     return `<div class="slot empty" title="${sl.label}: vacío${sl.bow ? ' · desbloqueado por el Arco' : ''}"><span>＋</span></div>`;
@@ -155,7 +155,7 @@ export function cartaReliquia(rel) {
     return `<div class="rc-line ${cls}"><span class="lbl">${STAT_META[g.stat].label}</span><b>${f(g.stat, total)}</b><span class="stars">${g.rolls.map(r => star(r[1], r[3])).join('')}</span></div>`;
   }).join('');
   const [fk, fv, , fmx] = rel.flat;
-  return `<div class="rc" style="--rc:${RAREZAS[rel.rarity].color}">
+  return `<div class="rc${rel.rarity === 'Legendario' ? ' legendaria' : ''}" style="--rc:${RAREZAS[rel.rarity].color}">
     ${rel.imagen ? `<img class="rc-img" src="${rel.imagen}" alt="${rel.name}">` : ''}
     <div class="rc-head"><div class="rc-name">${rel.name}</div><div class="rc-rarity">${rel.rarity}<span class="rc-q">Calidad ${calidad(rel)}%</span></div></div>
     <div class="rc-type">${rel.category} · ${rel.type}</div>

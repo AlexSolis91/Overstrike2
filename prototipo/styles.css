@@ -395,3 +395,13 @@ body.movil #jefe-barra .jb-track { height: 8px; }
 .rc-serie { margin-top: 8px; color: var(--text); display: flex; justify-content: center; align-items: center; gap: 10px; }
 .rc-serie button { font: 800 12px Inter, sans-serif; padding: 4px 10px; border-radius: 8px; cursor: pointer; color: var(--text); background: rgba(8, 11, 18, .8); border: 1px solid rgba(255, 255, 255, .25); }
 @media (prefers-reduced-motion: reduce) { .rc-estrellas span.on, .rc-aviso, #jefe-barra.furia .jb-track { animation: none; } }
+
+/* Legendarias: su marco dorado emite una luz amarilla que late (panel de partida y carta de reliquia) */
+@keyframes brilloLegendario { 0%, 100% { filter: drop-shadow(0 0 6px #fbbf24) drop-shadow(0 0 14px rgba(251, 191, 36, .55)); }
+  50% { filter: drop-shadow(0 0 12px #fde68a) drop-shadow(0 0 26px rgba(251, 191, 36, .85)); } }
+.slot.has.legendaria { overflow: visible; }
+.slot.has.legendaria .slot-img, .rc.legendaria .rc-img { animation: brilloLegendario 1.8s ease-in-out infinite; }
+.rc.legendaria { box-shadow: 0 0 18px rgba(251, 191, 36, .45), 0 0 40px rgba(251, 191, 36, .2); }
+@media (prefers-reduced-motion: reduce) {
+  .slot.has.legendaria .slot-img, .rc.legendaria .rc-img { animation: none; filter: drop-shadow(0 0 10px #fbbf24); }
+}

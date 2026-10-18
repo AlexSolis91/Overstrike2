@@ -101,7 +101,7 @@ function htmlGarantias() {
 const ordenRel = (a, b) => RAREZAS[b.rarity].orden - RAREZAS[a.rarity].orden || calidad(b) - calidad(a) || a.name.localeCompare(b.name);
 const dondeEsta = r => r.campeon ? `${porId(r.campeon)?.nombre || r.campeon} · ${ESPACIOS.find(e => e.id === r.espacio)?.label || ''}` : '';
 function miniaturaRel(r, attrs = '') {
-  return `<button class="tc-rel ${r.campeon ? 'puesta' : ''}" ${attrs} style="--rc:${RAREZAS[r.rarity].color}" title="${r.name} · ${r.rarity} · Calidad ${calidad(r)}%${r.campeon ? ` · en ${dondeEsta(r)}` : ''}">
+  return `<button class="tc-rel ${r.campeon ? 'puesta' : ''} ${r.rarity === 'Legendario' ? 'legendaria' : ''}" ${attrs} style="--rc:${RAREZAS[r.rarity].color}" title="${r.name} · ${r.rarity} · Calidad ${calidad(r)}%${r.campeon ? ` · en ${dondeEsta(r)}` : ''}">
     ${r.imagen ? `<img src="${r.imagen}" alt="" loading="lazy">` : `<span>${r.name}</span>`}
     <i class="tc-rel-q">${calidad(r)}%</i>${r.campeon ? `<i class="tc-rel-en">${porId(r.campeon)?.emoji || '👤'}</i>` : ''}</button>`;
 }
@@ -132,7 +132,7 @@ function htmlEspaciosReliquias(p, r) {
   const casillas = ESPACIOS.map(e => {
     const label = e.id === 'arma2' && arco ? 'Equipación 3' : e.label, rel = equipo[e.id], cerrado = e.extra && !abiertos.includes(e.id);
     if (cerrado) return `<div class="tc-slot cerrado"><span>🔒</span><small>${label}</small></div>`;
-    return `<button class="tc-slot ${rel ? 'lleno' : ''} ${slotSel === e.id ? 'sel' : ''}" data-slot="${e.id}" style="--rc:${rel ? RAREZAS[rel.rarity].color : '#334155'}">
+    return `<button class="tc-slot ${rel ? 'lleno' : ''} ${rel?.rarity === 'Legendario' ? 'legendaria' : ''} ${slotSel === e.id ? 'sel' : ''}" data-slot="${e.id}" style="--rc:${rel ? RAREZAS[rel.rarity].color : '#334155'}">
       ${rel ? (rel.imagen ? `<img src="${rel.imagen}" alt="">` : `<b>${rel.name}</b>`) : '<span>＋</span>'}<small>${label}</small></button>`;
   }).join('');
   let panel = '';
