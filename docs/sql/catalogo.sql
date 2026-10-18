@@ -220,7 +220,8 @@ insert into public.reliquias_catalogo (id, nombre, rareza, tipo, en_sobre, solo_
   ('rodelaRoble', 'Rodela de Roble', 'Común', 'Escudo', true, false, true),
   ('cinturonGladiador', 'Cinturón del Gladiador', 'Raro', 'Cinturón', true, false, true),
   ('guantesLenador', 'Guantes del Leñador', 'Común', 'Guantes', true, false, true),
-  ('collarCometaAzul', 'Collar del Cometa Azul', 'Especial', 'Collar', true, false, true)
+  ('collarCometaAzul', 'Collar del Cometa Azul', 'Especial', 'Collar', true, false, true),
+  ('grebasPaladinCeleste', 'Grebas del Paladín Celeste', 'Especial', 'Grebas', true, false, true)
 on conflict (id) do update set nombre = excluded.nombre, rareza = excluded.rareza, tipo = excluded.tipo,
   en_sobre = excluded.en_sobre, solo_receta = excluded.solo_receta, activo = excluded.activo;
--- 81 reliquias · 24 tipos
+-- 82 reliquias · 24 tipos
