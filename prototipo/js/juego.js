@@ -16,6 +16,7 @@ import { iniciarCuenta } from './ui/cuenta.js';
 import { iniciarColeccion } from './ui/coleccion.js';
 import { EFECTOS } from './motor/efectos.js';
 import { INVOCACIONES } from './datos/invocaciones.js';
+import { cargarCuenta, conCuenta } from './servicios/cuentaBatalla.js';
 
 const { gsap } = window;
 const $ = s => document.querySelector(s);
@@ -52,6 +53,8 @@ activarReliquias(() => por(ui.inspeccionado));
 async function iniciarPartida(eqJ, eqR, opciones = null) {
   partida++;
   inicioPartida = Date.now();
+  const cuenta = await cargarCuenta();                         // tus estrellas y reliquias equipadas pelean contigo
+  eqJ = eqJ.map(d => conCuenta(d, cuenta));
   combate = crearCombate({ equipoJugador: eqJ, equipoRival: eqR, rival: opciones?.rival });
   P = combate.personajes;
   const serie = opciones?.serie || 0;                         // en una serie de repeticiones siempre va en Auto y ×2

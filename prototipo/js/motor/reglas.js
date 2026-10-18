@@ -7,6 +7,9 @@ export const BASE_COMUN = {
   armor: 0, block: 0, dot: 0, pen: 0,
 };
 
+// Estrellas de la cuenta (ascensión): por estrella, +3% HP/Daño/Velocidad y +1 punto a cada estadística en %
+export const BONO_ESTRELLA = { base: .03, pct: .01 };
+
 export const TOPES = { block: .50, armor: .75 };
 
 // Tirada de debuffs (estilo Raid): si la Puntería alcanza a la Resistencia, el debuff entra siempre;

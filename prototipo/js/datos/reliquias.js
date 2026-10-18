@@ -283,6 +283,16 @@ export function espacios(a1, e1, c1, a2 = { locked: true }, e2 = { locked: true 
 
 // Reglas para equipar (las mismas que valida el servidor). equipo: { arma1: copia|null, … } del campeón; abiertos: ['arma2', …]
 // Devuelve el motivo si NO se puede, o null si se puede.
+// Espacios de batalla con lo que el jugador tiene equipado en su cuenta (equipo: { arma1: instancia, … }; abiertos: extras abiertos).
+// Un campeón sin nada equipado pelea sin reliquias. Con un Arco en Arma 1, Arma 2 se vuelve Equipación 3.
+export function espaciosDeCuenta(equipo = {}, abiertos = []) {
+  const arco = equipo.arma1?.type === 'Arco';
+  return ESPACIOS.map(e => {
+    const label = e.id === 'arma2' && arco ? 'Equipación 3' : e.label;
+    const locked = !!e.extra && !abiertos.includes(e.id);
+    return { label, locked, bow: e.id === 'arma2' && arco, relic: locked ? null : equipo[e.id] || null };
+  });
+}
 export function motivoNoEquipar(rel, espacio, { equipo = {}, abiertos = [], estrellas = 0 } = {}) {
   const e = ESPACIOS.find(x => x.id === espacio);
   if (!e) return 'Espacio desconocido';

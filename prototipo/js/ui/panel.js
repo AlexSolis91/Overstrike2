@@ -44,7 +44,7 @@ export function renderPanel(p, v, ui) {
   const r = v.hp / max, total = Math.max(max, v.hp + v.escudo);
 
   // El total: verde si está por encima de su estadística normal, rojo si está por debajo. Al pasar el cursor: el desglose
-  const ORIGEN = { reliquias: 'Reliquias', buffs: 'Buffs', debuffs: 'Debuffs', lider: 'Líder', permanente: 'Bonos permanentes' };
+  const ORIGEN = { estrellas: 'Estrellas', reliquias: 'Reliquias', buffs: 'Buffs', debuffs: 'Debuffs', lider: 'Líder', permanente: 'Bonos permanentes' };
   const statRows = ['hp', 'spd', 'dmg', 'critRate', 'critDmg', 'armor', 'acc', 'res', 'block', 'dot', 'pen'].map(k => {
     const total = k === 'hp' ? max : s[k], ds = v.desglose, base = ds?.base[k] ?? total;
     const capped = (k === 'block' && s.block > .5) || (k === 'armor' && s.armor > .75);

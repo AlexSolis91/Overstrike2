@@ -3,7 +3,7 @@
 // - Ningún personaje tiene código propio: sus fichas solo combinan piezas (acciones, gatillos, condiciones, efectos).
 // - Todo el azar pasa por un generador con semilla (misma semilla + mismas decisiones = misma partida).
 
-import { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, LIMITE_RONDAS, CONTROL, DOT, BUFFS, DEBUFFS, PUNTERIA, probAplicar } from './reglas.js';
+import { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, LIMITE_RONDAS, CONTROL, DOT, BUFFS, DEBUFFS, PUNTERIA, probAplicar, BONO_ESTRELLA } from './reglas.js';
 import { EFECTOS, esDe } from './efectos.js';
 import { crearRng } from './rng.js';
 import { INVOCACIONES, TABLAS_INVOCACION } from '../datos/invocaciones.js';
@@ -82,7 +82,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   };
 
   // capas: qué sumar ({} = solo la base de su forma). Sin capas = todo. Sirve para el desglose del panel.
-  const TODAS = { reliquias: true, buffs: true, debuffs: true, lider: true, permanente: true };
+  const TODAS = { estrellas: true, reliquias: true, buffs: true, debuffs: true, lider: true, permanente: true };
   function stats(p, capas = TODAS) {
     const b = p.base;
     const flat = { hp: 0, dmg: 0, spd: 0 }, pct = { hp: 0, dmg: 0, spd: 0 };
@@ -95,6 +95,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       for (const [k, v] of r.rolls) {
         if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] += v;
       }
+    }
+    if (capas.estrellas && p.estrellas) {                            // estrellas de la cuenta: +3% HP/Daño/Velocidad y +1 punto a cada % por estrella
+      const n = p.estrellas;
+      pct.hp += BONO_ESTRELLA.base * n; pct.dmg += BONO_ESTRELLA.base * n; pct.spd += BONO_ESTRELLA.base * n;
+      for (const k of Object.keys(BASE_COMUN)) sec[k] += BONO_ESTRELLA.pct * n;
     }
     if (capas.reliquias) for (const m of pasivasDeReliquia(p)) {      // reliquia: bono fijo y lo que ha crecido
       for (const [k, v] of Object.entries({ ...m.bono }).concat(m.crece ? [[m.crece.stat, p.creceRel?.[m.crece.stat] || 0]] : [])) {
@@ -161,7 +166,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   const maxHp = p => stats(p).hp;
   // Desglose para el panel: cuánto suma o resta cada origen (se agregan por capas, en este orden)
   function desglose(p) {
-    const orden = ['reliquias', 'buffs', 'debuffs', 'lider', 'permanente'], capas = {}, out = {};
+    const orden = ['estrellas', 'reliquias', 'buffs', 'debuffs', 'lider', 'permanente'], capas = {}, out = {};
     let antes = stats(p, capas);
     const base = antes;
     for (const c of orden) {
