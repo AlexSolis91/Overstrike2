@@ -190,6 +190,7 @@ export const RELIQUIAS = {
   grebasPaladinCeleste: { name: 'Grebas del Paladín Celeste', rarity: 'Especial', type: 'Grebas', imagen: 'assets/reliquias/grebasPaladinCeleste.webp' },
   piedraRio: { name: 'Piedra de Río', rarity: 'Común', type: 'Piedra', imagen: 'assets/reliquias/piedraRio.webp' },
   egidaFaro: { name: 'Égida del Faro', rarity: 'Especial', type: 'Escudo', imagen: 'assets/reliquias/egidaFaro.webp' },
+  espadaEscudero: { name: 'Espada del Escudero', rarity: 'Común', type: 'Espada', imagen: 'assets/reliquias/espadaEscudero.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
