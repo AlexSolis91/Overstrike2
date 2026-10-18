@@ -212,7 +212,15 @@ export const RELIQUIAS = {
   arcabuzOxidado: { name: 'Arcabuz Oxidado', rarity: 'Común', type: 'Mosquete', imagen: 'assets/reliquias/arcabuzOxidado.webp' },
   grebasCueroRemachado: { name: 'Grebas de Cuero Remachado', rarity: 'Común', type: 'Grebas', imagen: 'assets/reliquias/grebasCueroRemachado.webp' },
 };
+// Lotes: cada contenido de la Horda tiene su propio lote de reliquias (solo ahí caen como recompensa sus Comunes a Épicas).
+// Las 100 primeras son del lote de los Orcos. Más adelante: Elfos Oscuros y Demonios, con reliquias exclusivas.
+export const LOTES = {
+  orcos:   { nombre: 'Horda de Orcos' },
+  // elfosOscuros: { nombre: 'Horda de Elfos Oscuros' },
+  // demonios:     { nombre: 'Horda de Demonios' },
+};
 for (const [id, r] of Object.entries(RELIQUIAS)) {
+  if (!LOTES[r.lote ??= 'orcos']) throw new Error(`Reliquia ${id}: lote desconocido ${r.lote}`);                                  // reliquia nueva de otro lote: poner lote: 'elfosOscuros' / 'demonios'
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
   r.id = id; r.category = TIPOS[r.type].categoria;
   r.enSobre ??= r.rarity !== 'Legendario' && !r.soloReceta;
