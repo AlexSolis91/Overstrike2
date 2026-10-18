@@ -68,6 +68,8 @@ export const EFECTOS = {
     desc: 'Contador de Baran sobre un enemigo: cada golpe de Baran deja 1. Con 2 sufre una Sobrecarga: queda Aturdido (sin tirada) y las cargas se reinician. El Juicio del Rey Demonio las consume. No se limpia.' },
   destruccion: { nombre: 'Destrucción', icono: '🔥', color: 0xdc2626, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Contador de Antares (máx. 10): gana 1 cada vez que cualquier Quemadura hace daño a un enemigo; cada una le da +3% de daño. El Aliento de la Destrucción las consume. No se disipa ni se limpia.' },
+  esclavoRuna: { nombre: 'Esclavo de la Runa', icono: '❄️', color: 0x93c5fd, tipo: 'marca', tags: ['Marca'], noDisipable: true,
+    desc: 'Revivido por Frostmourne: lucha para el equipo de su portador durante 2 rondas, sin habilidad de líder. Al terminar vuelve a morir y ya no puede revivir. No se disipa ni se limpia.' },
   almasShadowmourne: { nombre: 'Almas de Shadowmourne', icono: '🪓', color: 0x7dd3fc, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Contador de la reliquia Shadowmourne (máx. 20): gana 1 por cada movimiento en área o de varios golpes que ejecuta su portador; cada Alma da +10 de Daño. Dura toda la batalla; no se disipa ni se limpia.' },
   cuervos: { nombre: 'Clones de Cuervo', icono: '🐦‍⬛', color: 0x334155, tipo: 'marca', tags: ['Carga'], noDisipable: true,

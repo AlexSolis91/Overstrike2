@@ -71,6 +71,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   //   bono: { stat: v }: bono fijo de estadística (p. ej. hpPct: .5 = +50% HP máx.)
   //   crece: { stat, valor, max }: al final de cada ronda (vivo) suma "valor" a esa estadística hasta "max"; se conserva si revive.
   //     Si es hpPct, también gana la vida que sube su máximo. No se muestra contador.
+  //   convertir: { hp, rondas, maxBatalla }: si un ATAQUE suyo elimina enemigos, revive a uno de ellos al azar como su aliado
+  //     (hp %, sin líder ni efectos) durante N rondas, una vez por ronda y hasta maxBatalla. Al terminar vuelve a morir del
+  //     lado enemigo y ya no puede revivir. Si cae antes, queda muerto para siempre. Marca visible "Esclavo de la Runa".
   const pasivasDeReliquia = p => (p.slots || []).filter(sl => !sl.locked && sl.relic?.motor).map(sl => sl.relic.motor);
   const cdDe = (p, cd) => {                              // cooldown real de un movimiento (reliquias que lo reducen)
     for (const m of pasivasDeReliquia(p)) if (m.cooldownPct != null) cd = Math.ceil(cd * m.cooldownPct);
@@ -213,6 +216,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'edoTensei': texto = `Reanimado por ${porUid(e.fuente)?.nombre || 'Orochimaru'}: no puede morir mientras ${porUid(e.fuente)?.nombre || 'Orochimaru'} viva · sus golpes pueden envenenar`; break;
         case 'cargaElectrica': texto = `${e.valor} carga(s) de ${porUid(e.fuente)?.nombre || 'Baran'}: al completar sus cargas, Sobrecarga (Aturdido)`; n = e.valor; break;
         case 'destruccion': texto = `${e.valor} de Destrucción (máx. 10): +${e.valor * 3}% de daño · el Aliento de la Destrucción las consume`; n = e.valor; break;
+        case 'esclavoRuna': texto = `Lucha para ${porUid(e.fuente)?.nombre || 'Frostmourne'} hasta el final de la ronda ${p.convertido?.hasta ?? ''} · luego vuelve a morir`; n = p.convertido ? Math.max(0, p.convertido.hasta - S.ronda + 1) : ''; break;
         case 'almasShadowmourne': texto = `${e.valor} Alma(s) de Shadowmourne (máx. 20): +${e.valor * 10} de Daño · toda la batalla`; n = e.valor; break;
         case 'cuervos': texto = `${e.valor} clon(es) de cuervo: cada uno absorbe un ataque enemigo contra Itachi`; n = e.valor; break;
         case 'oscuridad': texto = `${e.valor} de Oscuridad (máx. 3): con 3 se transforma en Saga Oscuro`; n = e.valor; break;
@@ -303,6 +307,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       if (p.muerto || !perdido) continue;
       const m = pasivasDeReliquia(p).find(x => x.recuperaGolpes);
       if (m) curar(p, p, perdido * m.recuperaGolpes);
+    }
+    for (const x of P) if (x.convertido && x.convertido.hasta <= S.ronda) {   // reliquia "convertir": se acaba su tiempo
+      const vivo = !x.muerto;
+      x.lado = x.convertido.lado; x.convertido = null; x.noRevivir = true;
+      if (vivo) { x.hp = 0; x.muerto = true; x.estados = []; x.escudo = 0; emitir('muerte', { a: x.uid, invocaciones: 0, lider: false }, x); emitir('bonoVisible', { a: x.uid, texto: '❄️ La runa lo libera' }, x); }
     }
     for (const p of P) if (!p.muerto) for (const m of pasivasDeReliquia(p)) {   // reliquia "crece" (p. ej. Armadura de Mithril)
       const c = m.crece; if (!c) continue;
@@ -590,6 +599,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     }
   }
   function revivir(x, hpPct) {
+    if (x.noRevivir) return;                         // p. ej. un esclavo de Frostmourne que ya cumplió su tiempo
     if (!enemigosDe(x).length) return;               // la partida ya terminó
     Object.assign(x, { muerto: false, estados: [], escudo: 0, inmune: false, recienLiberado: false, reviveEn: 0, reviveRonda: 0 });
     for (const id of x.pasiva?.efectosPermanentes || []) x.estados.push({ id, permanente: true });
@@ -906,6 +916,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (t.ultimoDanoDe && t.ultimoDanoDe.lado !== t.lado) t.ultimoDanoDe.est.elim++;   // la eliminación es de quien hizo el último daño
     const teniaAlMorir = new Set(t.estados.map(e => e.id));
     const rivalDe = P.filter(v => v.lado !== t.lado && !v.muerto && v.pasiva?.rival && esRival(v, t));
+    if (t.convertido) t.noRevivir = true;            // esclavo de Frostmourne: si cae, queda muerto para siempre
     t.muerto = true; t.hp = 0; t.escudo = 0; t.estados = [];
     emitir('muerte', { a: t.uid, invocaciones, lider: t.esLider && !!t.lider }, t);
     // pasiva "sucesorDe": si cae el líder indicado de su equipo, ese aliado surge como nuevo líder (p. ej. Obito tras Pain)
@@ -1764,6 +1775,19 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         a.bonos[mov.categoria] = (a.bonos[mov.categoria] || 0) + mov.bonoPorSobreviviente * sobrevivientes.length;
         emitir('bono', { id: a.uid, texto: `${mov.nombre} +${Math.round(a.bonos[mov.categoria] * 100)}%` }, a);
       }
+    }
+    if (!a.muerto && mov.pct && mov.categoria !== 'invocacion' && enemigosDe(a).length) for (const m of pasivasDeReliquia(a)) {   // reliquia "convertir"
+      const cv = m.convertir; if (!cv) continue;
+      if ((a.conversiones || 0) >= cv.maxBatalla || a.convirtioRonda === S.ronda) continue;
+      const caidos = [...new Set(objetivos)].filter(t => t.muerto && t.lado !== a.lado && !t.noRevivir && !t.convertido);
+      if (!caidos.length) continue;
+      const t = rng.elegir(caidos);
+      a.conversiones = (a.conversiones || 0) + 1; a.convirtioRonda = S.ronda;
+      t.convertido = { lado: t.lado, hasta: S.ronda + cv.rondas, era: t.esLider };
+      t.lado = a.lado; t.esLider = false; t.muerto = false;           // pasa al equipo del portador (sin habilidad de líder)
+      t.muerto = true; revivir(t, cv.hp);
+      t.estados.push({ id: 'esclavoRuna', permanente: true, fuente: a.uid });
+      emitir('bonoVisible', { a: t.uid, texto: '❄️ ¡Esclavo de Frostmourne!' }, t);
     }
     if (!a.muerto && mov.pct && mov.categoria !== 'invocacion') for (const m of pasivasDeReliquia(a)) {   // contador de reliquia: +1 por movimiento
       const ct = m.contador;
