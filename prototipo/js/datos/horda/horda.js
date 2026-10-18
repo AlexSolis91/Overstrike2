@@ -43,8 +43,16 @@ export const oroOleada = n => 1000 + 150 * (n - 1);
 export const MULT_ORO = { miniJefe: 3, jefe: 5 };
 export const PROB_RELIQUIA = .30;
 export const PROB_FRAGMENTOS = .02;           // 1–3 fragmentos de Runa de Invocación
-// Rareza de la reliquia: Épica +0.25% cada 10 oleadas (máx. 2%), restado de las Comunes
+// Rareza de la reliquia según el tramo de la oleada superada (aprobado 2026-10-18): en oleadas bajas casi solo Comunes;
+// llegar más lejos abre Raras, Especiales y Épicas. La Épica nunca pasa de 3%.
+export const TRAMOS_RAREZA = [
+  { desde: 1,  'Común': .95, 'Raro': .05,  'Especial': 0,    'Épico': 0 },
+  { desde: 10, 'Común': .75, 'Raro': .22,  'Especial': .03,  'Épico': 0 },
+  { desde: 20, 'Común': .50, 'Raro': .38,  'Especial': .115, 'Épico': .005 },
+  { desde: 30, 'Común': .30, 'Raro': .45,  'Especial': .23,  'Épico': .02 },
+  { desde: 40, 'Común': .20, 'Raro': .45,  'Especial': .32,  'Épico': .03 },
+];
 export function rarezasOleada(n) {
-  const epica = Math.min(.02, .0025 + .0025 * Math.floor(n / 10));
-  return { 'Común': .70 - (epica - .0025), 'Raro': .20, 'Especial': .0975, 'Épico': epica };
+  const { desde, ...r } = [...TRAMOS_RAREZA].reverse().find(t => n >= t.desde);
+  return r;
 }
