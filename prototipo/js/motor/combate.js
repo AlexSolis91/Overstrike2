@@ -17,7 +17,7 @@ const clonar = o => JSON.parse(JSON.stringify(o));
 export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival: opcionesRival = {} }) {
   const rng = crearRng(semilla);
   const P = [];
-  const S = { ronda: 0, actuaron: new Set(), orden: [], actual: null, esperando: null, fin: null };
+  const S = { ronda: 0, rondaBase: 0, actuaron: new Set(), orden: [], actual: null, esperando: null, fin: null };
   let EV = [];
   // Reacciones: lo que una pasiva hace en respuesta a la acción de otro (p. ej. Sub-Zero lanza Ice Blast cuando le rompen
   // el hielo a un enemigo) espera a que termine el movimiento en curso, para no mezclarse con él.
@@ -479,7 +479,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     while (!comprobarFin()) {
       let n = S.ronda ? siguiente() : null;
       if (!n) {
-        if (S.ronda) { finRonda(); if (comprobarFin()) return; if (S.ronda >= LIMITE_RONDAS) { finPorLimite(); return; } }
+        if (S.ronda) { finRonda(); if (comprobarFin()) return; if (S.ronda - S.rondaBase >= LIMITE_RONDAS) { finPorLimite(); return; } }
         iniciarRonda();
         n = siguiente();
         if (!n) return;
@@ -948,6 +948,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       elegirRival(v);
     }
     for (const p of P.filter(x => x.lado !== t.lado && !x.muerto)) pasivas(p, 'alMorirEnemigo', { objetivo: t, teniaAlMorir });
+    for (const p of aliadosDe(t)) pasivas(p, 'alMorirAliado', { objetivo: t });   // p. ej. Almas Atadas de Gul'dan
     for (const p of aliadosDe(t)) if (p.sellado && p.pasiva.sello.romper.muereAliado) romperSello(p);
     for (const l of P.filter(x => x.lado !== t.lado && x.esLider && !x.muerto && x.lider?.alMorirEnemigo)) ejecutarAccion(l, l.lider.alMorirEnemigo, { objetivo: t });   // líder: p. ej. Tesoro del Rey
   }
@@ -1265,7 +1266,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           const caidos = P.filter(x => x.lado === a.lado && x.muerto && x !== a && !(x.reviveEn > 0)).sort(() => rng() - .5).slice(0, acc.cantidad || 1);
           for (const x of caidos) {
             revivir(x, acc.hp ?? .5);
-            if (x.muerto) continue;
+            if (x.muerto || !acc.marca) continue;            // sin marca: solo revive (p. ej. Gul'dan)
             x.estados.push({ id: acc.marca, permanente: true, fuente: a.uid, inmortalMientras: acc.inmortal ? a.uid : null,
               textoInmortal: acc.textoInmortal, alGolpear: acc.alGolpear });
             emitir('efecto', { a: x.uid, id: acc.marca, texto: `${EFECTOS[acc.marca].icono} ${EFECTOS[acc.marca].nombre}` }, x);
@@ -1828,8 +1829,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
 
   equipoJugador.forEach((d, i) => P.push(crearPersonaje(d, 'jugador', i)));
   equipoRival.forEach((d, i) => P.push(crearPersonaje(d, 'rival', i)));
-  for (const p of P.filter(x => x.lado === 'rival')) {     // opciones del equipo rival (dificultad de Campaña, Jefes)
-    const r = opcionesRival;
+  function prepararRival(p, r) {                             // opciones del equipo rival (dificultad de Campaña, Horda, Jefes)
     if (r.sinReliquias) p.slots = (p.slots || []).map(sl => ({ ...sl, relic: null }));
     if (r.sinLider) p.esLider = false;
     p.campana = {};
@@ -1840,6 +1840,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       p.campana.hpPct = (p.campana.hpPct || 0) + (r.jefe.hpExtra ?? .5);
     }
   }
+  for (const p of P.filter(x => x.lado === 'rival')) prepararRival(p, opcionesRival);
   for (const p of P) if (p.pasiva?.rival) elegirRival(p, false);
   for (const p of P) { const ma = p.pasiva?.marcaAliadosQueAplican;    // al inicio: marca con bono a cada aliado (incluido él) cuyos movimientos aplican ese efecto
     if (ma) for (const x of P.filter(x => x.lado === p.lado && aplicaEnFormas(x, ma.efecto)))
@@ -1860,6 +1861,20 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     estadisticas: () => P.map(p => ({ uid: p.uid, id: p.id, nombre: p.nombre, lado: p.lado, muerto: p.muerto, ...p.est,
       dano: Math.round(p.est.dano), escudo: Math.round(p.est.escudo), curacion: Math.round(p.est.curacion), recibido: Math.round(p.est.recibido) })),
     iniciar: () => ejecutar(avanzar),
+
+    // Horda: tras ganar una oleada, entra un nuevo equipo rival. Tu equipo conserva HP, muertos, efectos y cooldowns.
+    siguienteOleada(equipoRival, opciones = {}) {
+      if (S.fin?.ganador !== 'jugador') throw new Error('La oleada no ha terminado');
+      for (let i = P.length - 1; i >= 0; i--) if (P[i].uid.startsWith('rival-')) P.splice(i, 1);   // fuera la oleada anterior
+      const nuevos = equipoRival.map((d, i) => crearPersonaje(d, 'rival', i));
+      P.push(...nuevos);
+      for (const p of nuevos) prepararRival(p, opciones);
+      for (const p of nuevos) p.hp = stats(p).hp;
+      S.fin = null; S.actual = null; S.esperando = null;
+      S.actuaron = new Set(P);                     // la ronda en curso se da por terminada: la oleada nueva empieza en una ronda nueva
+      S.rondaBase = S.ronda;
+      return ejecutar(avanzar);
+    },
 
     // El jugador (o la IA) decide: categoría del movimiento + uid del objetivo (si aplica)
     actuar({ categoria, objetivo }) {

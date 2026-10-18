@@ -83,6 +83,13 @@ export const INVOCACIONES = {
     desc: 'Escupe fuego a un enemigo al azar: 30% + Quemadura 5% (2 rondas).',
     acciones: [{ tipo: 'golpe', pct: .30, elegir: 'azar', efectos: [{ accion: { tipo: 'efecto', id: 'burn', valor: .05, dur: 2 } }] }],
   },
+  // ---------------------------------------------------------------- Domador de Lobos (Horda de Orcos)
+  loboGuerra: {
+    nombre: 'Lobo de Guerra', rareza: 'Común', emoji: '🐺', color: 0x78716c, imagen: 'assets/invocaciones/lobo-de-guerra.webp', dur: 3,
+    enfoque: [.30, .55],
+    desc: 'Muerde 80% al enemigo con menos HP, con 40% de probabilidad de Sangrado.',
+    acciones: [{ tipo: 'golpe', pct: .80, elegir: 'menorHp', efectos: [{ accion: { tipo: 'efecto', id: 'bleed', prob: .40 } }] }],
+  },
   // ---------------------------------------------------------------- Dragones de Daenerys Targaryen
   drogon: {
     nombre: 'Drogon', rareza: 'Legendario', emoji: '🐲', color: 0xdc2626, imagen: 'assets/invocaciones/drogon.webp', dur: 2,

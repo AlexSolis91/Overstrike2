@@ -210,6 +210,7 @@ def main():
     tareas = [
         ('personajes', personaje),
         ('transformaciones', personaje),
+        ('horda', personaje),                 # enemigos de la Horda (mismo recorte que los campeones)
         ('invocaciones', lambda a, b: recorte_transparente(a, b, INVOCACION_SIZE)),
         # reliquias: las monta herramientas/marcos_reliquias.py dentro del marco de su rareza
     ]
