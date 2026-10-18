@@ -206,6 +206,7 @@ export const RELIQUIAS = {
   mazaInquisidor: { name: 'Maza del Inquisidor', rarity: 'Especial', type: 'Maza', imagen: 'assets/reliquias/mazaInquisidor.webp' },
   capaGrifo: { name: 'Capa de Plumas de Grifo', rarity: 'Especial', type: 'Capa', imagen: 'assets/reliquias/capaGrifo.webp' },
   trabucoCazadorBrujas: { name: 'Trabuco del Cazador de Brujas', rarity: 'Raro', type: 'Mosquete', imagen: 'assets/reliquias/trabucoCazadorBrujas.webp' },
+  coronaDruida: { name: 'Corona de Espinas del Druida', rarity: 'Raro', type: 'Corona', imagen: 'assets/reliquias/coronaDruida.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
