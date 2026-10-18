@@ -1,13 +1,14 @@
 // IA simple: elige movimiento y objetivo usando solo lo que el motor ofrece (las mismas reglas que el jugador).
 import { INVOCACIONES } from '../datos/invocaciones.js';
 
-export function elegirIA(combate) {
+// rnd: azar de la IA (por defecto Math.random; en la Arena, uno con semilla para que el servidor pueda repetir la batalla)
+export function elegirIA(combate, rnd = Math.random) {
   const esp = combate.esperando;
   const P = combate.personajes;
   const a = P.find(p => p.uid === esp.id);
   const por = uid => P.find(p => p.uid === uid);
   const ratio = p => p.hp / combate.stats(p).hp;
-  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const pick = arr => arr[Math.floor(rnd() * arr.length)];
   const invocaciones = key => a.estados.filter(e => e.id === 'summon' && (!key || e.key === key)).length;
 
   const planes = [];
@@ -27,7 +28,7 @@ export function elegirIA(combate) {
       const cands = op.objetivos.map(por);
       const marcas = p => p.estados.find(e => e.id === 'aguja')?.valor || 0;
       if (mov.consumeAgujas && cands.some(marcas)) objetivo = cands.reduce((x, y) => marcas(y) > marcas(x) ? y : x);   // consume marcas: al que más tenga
-      else objetivo = Math.random() < .4 ? cands.reduce((x, y) => ratio(x) < ratio(y) ? x : y) : pick(cands);
+      else objetivo = rnd() < .4 ? cands.reduce((x, y) => ratio(x) < ratio(y) ? x : y) : pick(cands);
     } else if (mov.objetivo === 'aliado') {
       const cands = op.objetivos.map(por);
       if (acciones.includes('limpiar')) {
@@ -51,7 +52,7 @@ export function elegirIA(combate) {
     return { categoria: op.categoria, objetivo: op.objetivos[0] || null };
   }
   const de = c => planes.find(p => p.categoria === c);
-  if (de('over') && Math.random() < .75) return de('over');
-  if (de('especial') && Math.random() < .7) return de('especial');
+  if (de('over') && rnd() < .75) return de('over');
+  if (de('especial') && rnd() < .7) return de('especial');
   return de('basico') || planes[0];
 }

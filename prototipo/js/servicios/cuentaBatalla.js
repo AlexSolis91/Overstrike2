@@ -2,9 +2,7 @@
 // Sin sesión (o sin servidor) los campeones pelean con el equipo de su ficha, como antes.
 import * as D from './datos.js';
 import { perfilActual } from '../ui/cuenta.js';
-import { instancia, espaciosDeCuenta } from '../datos/reliquias.js';
-
-const abiertosDe = r => r?.espacios_abiertos?.length || !r?.espacios ? (r?.espacios_abiertos || []) : ['arma2', 'equip2', 'acc2'].slice(0, r.espacios);
+import { instancia } from '../datos/reliquias.js';
 
 // Lee la cuenta una vez por batalla (siempre al día con lo que se equipó en Colección)
 export async function cargarCuenta() {
@@ -17,18 +15,5 @@ export async function cargarCuenta() {
   } catch { return null; }
 }
 
-// Datos de batalla de un equipo que manda el servidor (Arena: tu ataque o la Defensa de otro jugador)
-export function cuentaDesdeServidor(j) {
-  const equipo = {};
-  for (const f of j?.reliquias || []) if (f.campeon && f.espacio) (equipo[f.campeon] ||= {})[f.espacio] = instancia(f);
-  return { col: new Map((j?.col || []).map(r => [r.campeon, r])), equipo, reliquias: true };
-}
-
-// Ficha lista para la batalla: estrellas y reliquias de la cuenta (un campeón que no tienes pelea con 0★ y sin reliquias)
-export function conCuenta(def, cuenta) {
-  if (!cuenta) return def;
-  const r = cuenta.col.get(def.id);
-  const out = { ...def, estrellas: r?.estrellas || 0 };
-  if (cuenta.reliquias) out.slots = espaciosDeCuenta(cuenta.equipo[def.id] || {}, abiertosDe(r));
-  return out;
-}
+// Lo puro (sin DOM) vive en datos/cuenta.js para que el servidor lo pueda usar al verificar batallas
+export { cuentaDesdeServidor, conCuenta } from '../datos/cuenta.js';

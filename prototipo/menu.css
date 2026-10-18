@@ -900,3 +900,10 @@ body.eq-campana .eq-modo, body.eq-campana .eq-azar[data-lado="rival"], body.eq-c
 .ar-cuenta { font: 900 72px Cinzel, serif; color: var(--gold); margin: 6px 0; text-shadow: 0 0 24px rgba(250, 204, 21, .6); }
 body.eq-sin-rival .eq-fila[data-lado="rival"], body.eq-sin-rival .eq-modo { display: none; }
 @media (max-width: 760px) { .ar-cuerpo { grid-template-columns: 1fr; } .ar-tabla { font-size: 11px; } }
+
+/* Arena: títulos del top 3 (marco en el ranking) */
+.ar-titulos { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.ar-titulo { display: inline-block; padding: 1px 8px; border-radius: 99px; font: 900 11px Inter, sans-serif; color: #1a1205; background: #fbbf24; white-space: nowrap; }
+.ar-titulo.p2 { background: #e5e7eb; } .ar-titulo.p3 { background: #d97706; color: #fff; }
+.ar-tabla tr.con-titulo td:first-child { box-shadow: inset 4px 0 0 #fbbf24; } .ar-tabla tr.con-titulo.p2 td:first-child { box-shadow: inset 4px 0 0 #e5e7eb; }
+.ar-tabla tr.con-titulo.p3 td:first-child { box-shadow: inset 4px 0 0 #d97706; }

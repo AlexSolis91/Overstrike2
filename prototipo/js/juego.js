@@ -22,6 +22,9 @@ import { oleada, defsOleada, HORDAS } from './datos/horda/horda.js';
 import { iniciarHorda, abrirHorda } from './ui/horda.js';
 import { iniciarArena, abrirArena } from './ui/arena.js';
 import { conectarVivo, swapUid, ganadorRelativo } from './servicios/arenaVivo.js';
+import { crearRng } from './motor/rng.js';
+import { semillaIA } from './motor/verificar.js';
+import { supabase } from './servicios/supabase.js';
 import { RELIQUIAS, RAREZAS } from './datos/reliquias.js';
 
 const { gsap } = window;
@@ -80,6 +83,7 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   refrescarPanel();
   actualizarJefe();
   if (vivo) { ui.vivo = conectarVivo(opciones.arena, { alAbandonar: () => abandonoRival() }); ui.auto = false; marcarControles(); }
+  else if (ui.arena) { ui.arena.decisiones = []; ui.arena.rnd = crearRng(semillaIA(opciones.semilla)); }   // contra una Defensa: se guardan las decisiones para verificarlas
   await wait(1100);
   await anunciar();
   if (vivo) { banner(`⚔️ EN VIVO vs ${opciones.arena.rival?.nombre || 'rival'}`, { size: 40, color: '#fde68a', hold: 1.2 }); await wait(1500); }
@@ -463,6 +467,10 @@ async function procesar(res) {
     }
     await wait(700);
     if (esta !== partida) return;
+    if (ui.arena?.decisiones) {                               // la Defensa: IA con azar de semilla (el servidor la puede repetir)
+      const d = elegirIA(combate, ui.arena.rnd); ui.arena.decisiones.push({ c: d.categoria, o: d.objetivo || null });
+      return procesar(combate.actuar(d));
+    }
     await procesar(combate.actuar(elegirIA(combate)));
   }
 }
@@ -611,15 +619,22 @@ async function finArena(base, fin) {
   if (a.vivo) return finVivo(base, fin);
   const gano = fin.ganador === 'jugador' && !fin.limite;              // contra una Defensa, el límite de rondas lo gana la Defensa
   let res = null, error = '';
-  const cobrar = () => D.arenaResultado(a.combate, gano);
-  try { res = await cobrar(); }
+  const cobrar = () => D.arenaResultado(a.combate, gano, a.decisiones);
+  try {
+    res = await cobrar();
+    if (res?.pendiente) {                                              // verificación encendida: el servidor repite la batalla
+      try { const sb = await supabase(); const v = await sb.functions.invoke('verificar-arena', { body: { combate: a.combate } });
+        if (v.error) throw v.error; res = v.data; if (res?.error) throw new Error(res.error); }
+      catch (e) { res = null; error = 'Tu resultado se está verificando; los puntos se sumarán en cuanto el servidor lo confirme.'; }
+    }
+  }
   catch (e) {                                                          // el servidor pide 15 s mínimos de combate
     if (/corto/i.test(e?.message || '')) { await wait(15500); try { res = await cobrar(); } catch (e2) { error = D.mensajeError(e2); } }
     else error = D.mensajeError(e);
   }
   if (esta !== partida) return;
   mostrarResultados({ ...base, gano, recompensas: res?.oro ? [{ tipo: 'oro', cantidad: res.oro }] : [] });
-  $('#ov-title').textContent = gano ? '🏆 Victoria' : fin.limite ? '🛡️ La Defensa resistió' : '💀 Derrota';
+  $('#ov-title').textContent = res?.verificado === false ? '⚠️ Resultado no válido' : gano ? '🏆 Victoria' : fin.limite ? '🛡️ La Defensa resistió' : '💀 Derrota';
   $('#ov-sub').textContent = res ? `${res.delta >= 0 ? '+' : ''}${res.delta} puntos · ${res.puntos} puntos · ${res.liga}${res.diario ? ' · ataque diario' : ' · ataque extra (25%)'} · vs ${a.rival?.nombre || 'Defensa'}`
     : `⚠️ ${error || 'No se pudo guardar el resultado'}`;
 }
@@ -676,6 +691,7 @@ async function ejecutar(categoria, objetivo) {
   ui.miTurno = false; ui.movSel = null; ui.objetivosValidos = null; ui.tipoObjetivo = null; ui.hayBloqueados = false;
   setHint(''); refrescarPanel();
   if (ui.vivo) { ui.vivo.enviar(ui.vivo.turno, categoria, objetivo); ui.vivo.turno++; }   // en vivo: la decisión viaja al otro jugador
+  if (ui.arena?.decisiones) ui.arena.decisiones.push({ c: categoria, o: objetivo || null });
   await procesar(combate.actuar({ categoria, objetivo }));
 }
 function elegirMovimiento(cat) {

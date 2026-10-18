@@ -51,8 +51,10 @@ export const comprarRunaPortal = () => rpc('comprar_runa_portal');
 // Arena (docs/sql/008_arena.sql)
 export const arenaEstado = () => rpc('arena_estado');
 export const arenaGuardarEquipo = (tipo, equipo) => rpc('arena_guardar_equipo', { p_tipo: tipo, p_equipo: equipo });
-export const arenaAtacar = ataque => rpc('arena_atacar', { p_ataque: ataque });
-export const arenaResultado = (combate, gano) => rpc('arena_resultado', { p_combate: combate, p_gano: gano });
+export const arenaAtacar = (ataque, version) => rpc('arena_atacar', { p_ataque: ataque, p_version: version });
+export const arenaVenganza = (combate, ataque, version) => rpc('arena_venganza', { p_combate: combate, p_ataque: ataque, p_version: version });
+export const arenaResultado = (combate, gano, decisiones) => rpc('arena_resultado', { p_combate: combate, p_gano: gano, p_decisiones: decisiones || null });
+export const arenaMisTitulos = () => rpc('arena_mis_titulos');
 export const arenaRanking = liga => rpc('arena_ranking', { p_liga: liga || null });
 export const arenaHistorial = () => rpc('arena_historial_defensa');
 // Arena en vivo (docs/sql/009_arena_vivo.sql)

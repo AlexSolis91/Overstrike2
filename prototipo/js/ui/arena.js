@@ -7,11 +7,7 @@ import { equipoCampana, irA } from './menu.js';
 import { OFICIALES, porId } from '../datos/personajes/index.js';
 import { LIGAS, liga, siguienteLiga, ATAQUES_DIARIOS, CAMPEONES_MINIMOS, BUSQUEDA_SEG, ORO_VICTORIA, SEMANAL, TEMPORADA } from '../datos/arena.js';
 import { imgHtml } from './imagenes.js';
-import { RELIQUIAS } from '../datos/reliquias.js';
-
-// Versión del juego para emparejar en vivo solo a jugadores con las mismas fichas (si no, las batallas no coincidirían)
-const VERSION = (() => { const t = JSON.stringify([OFICIALES.map(p => [p.id, p.base, p.extra, p.movimientos, p.pasiva, p.lider]), Object.keys(RELIQUIAS)]);
-  let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return String(h >>> 0); })();
+import { VERSION } from '../datos/cuenta.js';
 
 const $ = s => document.querySelector(s);
 const num = n => Number(n || 0).toLocaleString('es-MX');
@@ -21,11 +17,14 @@ async function cargar() {
   error = '';
   if (!perfilActual()) { est = null; return; }
   try {
-    const [e, col] = await Promise.all([D.arenaEstado(), D.miColeccion()]);
-    est = e; propios = new Set((col || []).map(r => r.campeon));
+    const [e, col, t] = await Promise.all([D.arenaEstado(), D.miColeccion(), D.arenaMisTitulos().catch(() => [])]);
+    est = e; propios = new Set((col || []).map(r => r.campeon)); titulos = t || [];
   } catch (e) { est = null; error = /arena_estado|function/i.test(e?.message || '') ? 'Falta ejecutar docs/sql/008_arena.sql en el servidor.' : D.mensajeError(e); }
 }
 
+const TITULO = { 1: '🥇 Campeón', 2: '🥈 Subcampeón', 3: '🥉 Tercer lugar' };
+const titulo = t => t ? `<span class="ar-titulo p${t.puesto}" title="${TITULO[t.puesto]} de la Temporada ${t.temporada}">${TITULO[t.puesto]} T${t.temporada}</span>` : '';
+let titulos = [];
 const insignia = (id, grande = false) => { const l = liga(id); return `<span class="ar-liga ${grande ? 'grande' : ''}" style="--lc:${l.color}">${l.icono} ${l.id}</span>`; };
 const fila = ids => `<div class="ar-equipo">${[0, 1, 2, 3, 4].map(i => { const p = porId(ids?.[i]);
   return `<div class="ar-ret ${i === 0 ? 'lider' : ''}" style="--c:${p?.color || '#334155'}">${p ? imgHtml(p.imagen, p.nombre) || p.emoji : '＋'}${i === 0 && p ? '<i>👑</i>' : ''}</div>`; }).join('')}</div>`;
@@ -36,6 +35,7 @@ function htmlArena() {
   return `<div class="ar-cuerpo">
     <section class="ar-panel ar-principal" style="--lc:${l.color}">
       ${insignia(est.liga, true)}
+      ${titulos.length ? `<div class="ar-titulos">${titulos.map(titulo).join('')}</div>` : ''}
       <div class="ar-puntos"><b>${num(est.puntos)}</b> puntos · puesto #${num(est.puesto)}</div>
       ${sig ? `<div class="ar-barra"><i style="width:${Math.min(100, (est.puntos - l.min) / (sig.min - l.min) * 100)}%"></i></div><small>Faltan ${num(falta)} para ${sig.icono} ${sig.id}${sig.nota ? ` (${sig.nota})` : ''}</small>` : ''}
       <div class="ar-diarios"><div>${Array.from({ length: ATAQUES_DIARIOS }, (_, i) => `<span class="${i < est.diarios ? 'on' : ''}">⚔️</span>`).join('')}</div>
@@ -55,14 +55,16 @@ function htmlRanking() {
   const lista = ranking.lista || [];
   return `<p class="tc-nota">${pestana === 'liga' ? `Los mejores de ${insignia(est.liga)}` : 'Ranking global (top 100)'} · tu puesto global: <b>#${num(ranking.puesto)}</b></p>
     ${lista.length ? `<table class="ar-tabla"><tr><th>#</th><th>Jugador</th><th>Liga</th><th>Puntos</th><th>Líder</th><th>V/D</th></tr>
-      ${lista.map(r => `<tr class="${r.yo ? 'yo' : ''}"><td>${r.puesto}</td><td>${r.nombre}</td><td>${insignia(r.liga)}</td><td>${num(r.puntos)}</td>
+      ${lista.map(r => `<tr class="${r.yo ? 'yo' : ''} ${r.titulo ? 'con-titulo p' + r.titulo.puesto : ''}"><td>${r.puesto}</td><td>${r.nombre} ${titulo(r.titulo)}</td><td>${insignia(r.liga)}</td><td>${num(r.puntos)}</td>
         <td>${porId(r.lider)?.nombre || '—'}</td><td>${r.victorias}/${r.derrotas}</td></tr>`).join('')}</table>` : '<p class="tc-vacio">Todavía no hay jugadores en esta clasificación.</p>'}`;
 }
 function htmlDefensas() {
   if (!historial) return '<p class="tc-vacio">Cargando…</p>';
-  return historial.length ? `<table class="ar-tabla"><tr><th>Atacante</th><th>Resultado</th><th>Puntos</th><th>Cuándo</th></tr>
+  return historial.length ? `<table class="ar-tabla"><tr><th>Atacante</th><th>Resultado</th><th>Puntos</th><th>Cuándo</th><th></th></tr>
     ${historial.map(h => `<tr><td>${h.atacante}</td><td>${h.defendida ? '🛡️ Defendida' : '💥 Derrota'}</td><td>${h.delta_def > 0 ? '+' : ''}${h.delta_def ?? 0}</td>
-      <td>${new Date(h.iniciado).toLocaleString('es-MX')}</td></tr>`).join('')}</table>` : '<p class="tc-vacio">Nadie ha atacado tu Defensa todavía.</p>';
+      <td>${new Date(h.iniciado).toLocaleString('es-MX')}</td>
+      <td>${h.puede_vengar ? `<button class="eq-btn" data-vengar="${h.combate}">⚔️ Venganza</button>` : h.vengado ? '✔ Vengado' : ''}</td></tr>`).join('')}</table>
+    <p class="tc-tenue">Venganza: ataca a quien venció tu Defensa (una vez por derrota, dentro de 7 días). Cuenta como uno de tus ataques.</p>` : '<p class="tc-vacio">Nadie ha atacado tu Defensa todavía.</p>';
 }
 function htmlRecompensas() {
   return `<table class="ar-tabla"><tr><th>Liga</th><th>Desde</th><th>Oro por victoria</th><th>Cada semana</th><th>Fin de temporada</th></tr>
@@ -85,7 +87,7 @@ function pintar() {
 
 function mostrarAvisos() {
   for (const a of est?.avisos || []) {
-    const txt = a.tipo === 'temporada' ? `🏁 Temporada ${a.temporada} terminada en ${liga(a.liga).icono} ${a.liga}: +🪙 ${num(a.oro)}`
+    const txt = a.tipo === 'temporada' ? `🏁 Temporada ${a.temporada} terminada en ${liga(a.liga).icono} ${a.liga}: +🪙 ${num(a.oro)}${a.puesto ? ` · ¡${TITULO[a.puesto]} de la temporada!` : ''}`
       : `📅 Recompensa semanal (${liga(a.liga).icono} ${a.liga}): 🌀 ${a.runas} · 🪙 ${num(a.oro)}${a.fragmentos ? ` · 🧩 ${a.fragmentos}` : ''}${a.vales ? ` · 🎟️ ${a.vales}` : ''}`;
     alert(txt);
   }
@@ -147,11 +149,19 @@ async function buscar() {
   }
   caja.querySelector('h2').textContent = '⚔️ ¡Rival encontrado!'; caja.querySelector('.ar-cuenta').textContent = '';
   let r;
-  try { r = await D.arenaAtacar(est.ataque); } catch (e) { caja.remove(); buscando = null; return alert(D.mensajeError(e)); }
+  try { r = await D.arenaAtacar(est.ataque, VERSION); } catch (e) { caja.remove(); buscando = null; return alert(D.mensajeError(e)); }
   caja.remove(); buscando = null;
-  const eqJ = est.ataque.map(porId);
-  const eqR = r.bot ? [...OFICIALES].sort(() => Math.random() - .5).slice(0, 5) : r.rival.defensa.map(porId);
-  jugar(eqJ, eqR, { semilla: r.semilla, arena: { combate: r.combate, diario: r.diario, bot: r.bot, rival: r.rival, equipoRival: r.equipo_rival || null } });
+  pelear(r);
+}
+// Contra una Defensa (búsqueda o Venganza): la Defensa de práctica usa el equipo de la ficha de cada campeón
+function pelear(r) {
+  jugar(est.ataque.map(porId), r.rival.defensa.map(porId), { semilla: r.semilla,
+    arena: { combate: r.combate, diario: r.diario, bot: r.bot, rival: r.rival, equipoRival: r.equipo_rival || null, venganza: !!r.venganza } });
+}
+async function vengar(combate) {
+  if (est.ataque?.length !== 5) return alert('Primero arma tu equipo de Ataque.');
+  if (!confirm('¿Atacar a este jugador con tu equipo de Ataque? (cuenta como uno de tus ataques)')) return;
+  try { pelear(await D.arenaVenganza(combate, est.ataque, VERSION)); } catch (e) { alert(D.mensajeError(e)); }
 }
 
 export function iniciarArena(opc) {
@@ -160,6 +170,7 @@ export function iniciarArena(opc) {
   $('#pantalla-arena').addEventListener('click', e => {
     const t = e.target.closest('[data-artab]'); if (t) return cambiarPestana(t.dataset.artab);
     const ed = e.target.closest('[data-editar]'); if (ed) return editar(ed.dataset.editar);
+    const vg = e.target.closest('[data-vengar]'); if (vg) return vengar(vg.dataset.vengar);
     if (e.target.closest('#ar-buscar')) return buscar();
   });
 }
