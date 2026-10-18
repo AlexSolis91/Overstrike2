@@ -8,6 +8,7 @@ import path from 'node:path';
 const aqui = path.dirname(fileURLToPath(import.meta.url));
 const { OFICIALES } = await import(pathToFileURL(path.join(aqui, '../js/datos/personajes/index.js')).href);
 const { RELIQUIAS, TIPOS, RANGOS } = await import(pathToFileURL(path.join(aqui, '../js/datos/reliquias.js')).href);
+const { RECETAS } = await import(pathToFileURL(path.join(aqui, '../js/datos/recetas.js')).href);
 
 const q = s => s == null ? 'null' : `'${String(s).replace(/'/g, "''")}'`;
 const filas = OFICIALES.map(p => `  (${q(p.id)}, ${q(p.nombre)}, ${q(p.starter || null)}, array[${(p.sobres || []).map(q).join(', ')}]::text[], true)`);
@@ -34,6 +35,12 @@ ${Object.entries(RELIQUIAS).map(([id, r]) => `  (${q(id)}, ${q(r.name)}, ${q(r.r
 on conflict (id) do update set nombre = excluded.nombre, rareza = excluded.rareza, tipo = excluded.tipo,
   en_sobre = excluded.en_sobre, solo_receta = excluded.solo_receta, activo = excluded.activo, lote = excluded.lote;
 -- ${Object.keys(RELIQUIAS).length} reliquias · ${Object.keys(TIPOS).length} tipos
+
+-- ============================================================ RECETAS DE LEGENDARIAS (requiere docs/sql/007_recetas.sql)
+insert into public.recetas (legendaria, definidas, comodines, activo) values
+${Object.entries(RECETAS).map(([id, r]) => `  (${q(id)}, '${JSON.stringify(r.definidas)}'::jsonb, ${r.comodines}, true)`).join(',\n')}
+on conflict (legendaria) do update set definidas = excluded.definidas, comodines = excluded.comodines, activo = excluded.activo;
+-- ${Object.keys(RECETAS).length} recetas
 `;
 writeFileSync(path.join(aqui, '../../docs/sql/catalogo.sql'), sql, 'utf8');
 console.log(`docs/sql/catalogo.sql: ${OFICIALES.length} campeones · ${Object.keys(RELIQUIAS).length} reliquias · ${Object.keys(TIPOS).length} tipos · ${rangos.length} rangos`);

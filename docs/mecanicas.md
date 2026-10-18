@@ -590,3 +590,8 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - **Mejorar valores** (ficha de la reliquia): vuelve a sortear una línea (plana o porcentual; las de 2–3 tiradas juntas) por Común 2 · Rara 8 · Especial 25 · Épica 80 · Legendaria 200 de Polvo. El nuevo valor reemplaza al anterior.
 - **Fusionar** (modo ⚗️): 10 de la misma rareza → 1 al azar de la siguiente (cualquier lote), por 1,000 / 5,000 / 20,000 de oro (Común / Rara / Especial). Las Épicas no se fusionan.
 - **Tienda → Objetos:** Runa de Portal (precio que sube con cada compra del día).
+
+## 24. Recetas de Legendarias (Colección → Recetas)
+- **Regla:** cada receta pide **siempre 10 Épicas**: Épicas definidas (×2 o ×3) + 2 o 3 comodines (cualquier Épica). Datos en `js/datos/recetas.js` (valida que sumen 10); el servidor forja con `forjar_legendaria` (`docs/sql/007_recetas.sql`, catálogo de recetas en catalogo.sql).
+- Shadowmourne: Bestiari ×3 + Guanteletes del Coloso ×2 + Daga de la Viuda Negra ×2 + 3 comodines · Armadura de Mithril: Cinturón Arcano ×3 + Máscara de Dragón ×2 + Celestia ×2 + 3 · Frostmourne: Nichirin ×3 + Corona del Rey Caído ×3 + Capa del Eclipse ×2 + 2 · Escudo Hyliano: Arco del Vacío Estelar ×3 + Botas del Trueno ×3 + Lanza de la Valquiria ×2 + 2 · Anillo del Tiempo: Anillo de la Luz ×3 + Piedra del Sol ×3 + Amuleto del Pantano ×2 + 2.
+- Recetas de todos y repetibles (cada Legendaria forjada sortea sus valores). Sin costo de oro. No entran Épicas equipadas ni con candado. El juego propone tus copias de menor calidad; tocas una Épica para quitarla o agregarla. Pendiente para la beta: proeza de la oleada 30.

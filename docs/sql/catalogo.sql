@@ -243,3 +243,13 @@ insert into public.reliquias_catalogo (id, nombre, rareza, tipo, en_sobre, solo_
 on conflict (id) do update set nombre = excluded.nombre, rareza = excluded.rareza, tipo = excluded.tipo,
   en_sobre = excluded.en_sobre, solo_receta = excluded.solo_receta, activo = excluded.activo, lote = excluded.lote;
 -- 100 reliquias · 24 tipos
+
+-- ============================================================ RECETAS DE LEGENDARIAS (requiere docs/sql/007_recetas.sql)
+insert into public.recetas (legendaria, definidas, comodines, activo) values
+  ('shadowmourne', '{"bestiari":3,"guanteletesColoso":2,"dagaViudaNegra":2}'::jsonb, 3, true),
+  ('armaduraMithril', '{"cinturonArcano":3,"mascaraDragon":2,"celestia":2}'::jsonb, 3, true),
+  ('frostmourne', '{"nichirin":3,"coronaReyCaido":3,"capaEclipse":2}'::jsonb, 2, true),
+  ('escudoHyliano', '{"arcoVacioEstelar":3,"botasTrueno":3,"lanzaValquiria":2}'::jsonb, 2, true),
+  ('anilloTiempo', '{"anilloLuz":3,"piedraSol":3,"amuletoPantano":2}'::jsonb, 2, true)
+on conflict (legendaria) do update set definidas = excluded.definidas, comodines = excluded.comodines, activo = excluded.activo;
+-- 5 recetas

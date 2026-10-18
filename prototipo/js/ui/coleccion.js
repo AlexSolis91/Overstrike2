@@ -8,6 +8,8 @@ import { revelarCartas } from './apertura.js';
 import * as D from '../servicios/datos.js';
 import { RAREZAS, ESPACIOS, STAT_META, instancia, calidad, motivoNoEquipar } from '../datos/reliquias.js';
 import { cartaReliquia } from './panel.js';
+import { RECETAS, revisarReceta, proponerIngredientes } from '../datos/recetas.js';
+import { RELIQUIAS } from '../datos/reliquias.js';
 
 const $ = s => document.querySelector(s);
 const ROL = { Support: 'Soporte', Invoker: 'Invocador' };
@@ -22,7 +24,8 @@ let col = new Map();          // campeón → { copias, estrellas, espacios }
 let inv = { oro: 0, frag_runa: 0, frag_otros: 0, runas: 0, vales_sobre: 0, rel_sobres: 0 };
 let rels = [], sinReliquias = false;   // copias de reliquias del jugador (sinReliquias: falta docs/sql/005_reliquias.sql)
 let relFiltro = { cat: '', rareza: '' }, relSel = null, slotSel = null;   // pestaña Reliquias y espacio elegido en la ficha
-let relModo = 'ver', relMarcadas = new Set();   // pestaña Reliquias: 'ver' | 'descomponer' | 'fusionar' y las reliquias elegidas
+let relModo = 'ver', relMarcadas = new Set();
+let recetaSel = null, recetaMarcadas = new Set();   // pestaña Recetas: Legendaria elegida y las 10 Épicas que se entregan   // pestaña Reliquias: 'ver' | 'descomponer' | 'fusionar' y las reliquias elegidas
 // Polvo Arcano y fusión (igual que en el servidor, docs/sql/006_horda.sql)
 const POLVO = { 'Común': 1, 'Raro': 5, 'Especial': 20, 'Épico': 100 };
 const COSTO_MEJORA = { 'Común': 2, 'Raro': 8, 'Especial': 25, 'Épico': 80, 'Legendario': 200 };
@@ -111,6 +114,43 @@ function htmlGarantias() {
   const n = inv.rel_sobres || 0;
   return `<div class="tc-garantias">${GARANTIAS.map(([nombre, c, rz]) => { const k = c - (n % c);
     return `<span style="--rc:${RAREZAS[rz].color}">${nombre}: <b>${k === 1 ? '¡el próximo!' : `en ${k} sobres`}</b></span>`; }).join('')}</div>`;
+}
+
+// ---------------------------------------------------------------- pestaña Recetas (forjar Legendarias con 10 Épicas)
+const epicasLibres = () => rels.filter(r => r.rarity === 'Épico' && !r.campeon && !r.bloqueada);
+function htmlRecetas() {
+  if (sinReliquias) return '<p class="tc-vacio">Las recetas se activan con las reliquias del servidor.</p>';
+  if (recetaSel) return htmlReceta(recetaSel);
+  const libres = epicasLibres();
+  return `<p class="tc-nota">Cada receta pide <b>10 Épicas</b>: algunas definidas y otras <b>comodín</b> (cualquier Épica). Las equipadas o con candado no cuentan. Puedes forjar cada Legendaria las veces que quieras.</p>
+    <div class="tc-recetas">${Object.entries(RECETAS).map(([id, r]) => {
+      const leg = RELIQUIAS[id], prop = proponerIngredientes(id, libres, calidad), ok = revisarReceta(id, prop).ok;
+      return `<button class="tc-receta ${ok ? 'lista' : ''}" data-receta="${id}">
+        <img class="tc-receta-img" src="${leg.imagen}" alt="">
+        <div><b>${leg.name}</b><small>${leg.category} · ${leg.type}</small>
+          <div class="tc-ing">${Object.entries(r.definidas).map(([e, n]) => { const t = libres.filter(x => x.id === e).length;
+            return `<span class="${t >= n ? 'ok' : ''}">${t >= n ? '✔' : '✖'} ${RELIQUIAS[e].name} ${Math.min(t, n)}/${n}</span>`; }).join('')}
+            <span class="${prop.length === 10 && ok ? 'ok' : ''}">${ok ? '✔' : '✖'} ${r.comodines} Épicas cualquiera</span></div>
+          ${ok ? '<em class="tc-forjable">✨ ¡Puedes forjarla!</em>' : ''}</div></button>`; }).join('')}</div>`;
+}
+function htmlReceta(id) {
+  const r = RECETAS[id], leg = RELIQUIAS[id], libres = epicasLibres();
+  const elegidas = libres.filter(x => recetaMarcadas.has(x.uid)), rev = revisarReceta(id, elegidas);
+  return `<button class="eq-btn tc-volver" data-receta-volver>← Recetas</button>
+    <div class="tc-rel-det"><div class="rc legendaria" style="--rc:${RAREZAS.Legendario.color}"><img class="rc-img" src="${leg.imagen}" alt="">
+      <div class="rc-head"><div class="rc-name">${leg.name}</div><div class="rc-rarity">Legendaria</div></div><div class="rc-type">${leg.category} · ${leg.type}</div>
+      <div class="rc-passive"><b>Pasiva</b>${leg.passive}</div></div>
+      <div class="tc-rel-acc">
+        <h5>Ingredientes (${elegidas.length}/10)</h5>
+        <div class="tc-ing">${Object.entries(r.definidas).map(([e, n]) => { const t = elegidas.filter(x => x.id === e).length;
+          return `<span class="${t >= n ? 'ok' : ''}">${t >= n ? '✔' : '✖'} ${RELIQUIAS[e].name} ${Math.min(t, n)}/${n}</span>`; }).join('')}
+          <span class="${rev.ok ? 'ok' : ''}">${rev.ok ? '✔' : '✖'} Comodines (cualquier Épica) ${Math.max(0, rev.comodines)}/${r.comodines}</span></div>
+        <p class="tc-tenue">Te propusimos tus copias de menor calidad. Toca una Épica para quitarla o agregarla.</p>
+        <button class="eq-listo" data-forjar="${id}" ${rev.ok ? '' : 'disabled'}>🔨 Forjar ${leg.name}</button>
+      </div></div>
+    <div class="tc-rels">${libres.sort((a, b) => (b.id in r.definidas) - (a.id in r.definidas) || calidad(a) - calidad(b))
+      .map(x => miniaturaRel(x, `data-ingrediente="${x.uid}"`).replace('class="tc-rel ', `class="tc-rel ${recetaMarcadas.has(x.uid) ? 'marcada' : ''} `)).join('')
+      || '<p class="tc-vacio">No tienes Épicas libres.</p>'}</div>`;
 }
 
 // ---------------------------------------------------------------- pestaña Reliquias (inventario)
@@ -274,7 +314,7 @@ function pintar() {
   if ($('#tc').classList.contains('hidden')) return;
   pintarInventario();
   for (const b of document.querySelectorAll('.tc-tabs button')) b.classList.toggle('on', b.dataset.tab === pestana);
-  $('#tc-cont').innerHTML = pestana === 'tienda' ? htmlTienda() : pestana === 'portal' ? htmlPortal() : pestana === 'reliquias' ? htmlReliquias() : htmlColeccion();
+  $('#tc-cont').innerHTML = pestana === 'tienda' ? htmlTienda() : pestana === 'portal' ? htmlPortal() : pestana === 'reliquias' ? htmlReliquias() : pestana === 'recetas' ? htmlRecetas() : htmlColeccion();
 }
 
 export async function abrirTC(tab = 'tienda') {
@@ -325,12 +365,24 @@ async function abrirConVale(id) {
 async function ejecutar(e) {
   const t = e.target;
   if (t.id === 'tc' || t.closest('#tc-x')) return cerrarTC();
-  const tab = t.closest('.tc-tabs button'); if (tab) { pestana = tab.dataset.tab; detalle = null; relSel = null; slotSel = null; relModo = 'ver'; relMarcadas.clear(); return pintar(); }
+  const tab = t.closest('.tc-tabs button'); if (tab) { pestana = tab.dataset.tab; detalle = null; relSel = null; slotSel = null; relModo = 'ver'; relMarcadas.clear(); recetaSel = null; recetaMarcadas.clear(); return pintar(); }
   const gris = t.closest('button[data-motivo]'); if (gris) return aviso(gris.dataset.motivo, 'error');
   const b = t.closest('button'); if (!b || b.disabled) return;
   if (b.dataset.sobre) return abrirSobre(b.dataset.sobre);
   if ('reliquias' in b.dataset) return abrirReliquias();
   if (b.dataset.filtro) { relFiltro[b.dataset.filtro] = b.dataset.valor; return pintar(); }
+  if (b.dataset.receta) { recetaSel = b.dataset.receta; recetaMarcadas = new Set(proponerIngredientes(recetaSel, epicasLibres(), calidad).map(x => x.uid)); return pintar(); }
+  if ('recetaVolver' in b.dataset) { recetaSel = null; recetaMarcadas.clear(); return pintar(); }
+  if (b.dataset.ingrediente) { const u = b.dataset.ingrediente; if (recetaMarcadas.has(u)) recetaMarcadas.delete(u); else if (recetaMarcadas.size < 10) recetaMarcadas.add(u); return pintar(); }
+  if (b.dataset.forjar) {
+    const id = b.dataset.forjar, ids = [...recetaMarcadas];
+    if (!confirm(`¿Forjar ${RELIQUIAS[id].name}? Se consumen estas 10 Épicas. Esto no se puede deshacer.`)) return;
+    return accion(async () => {
+      const fila = await D.forjarLegendaria(id, ids); recetaMarcadas.clear(); recetaSel = null;
+      await revelarCartas({ sobre: { nombre: 'Forja Legendaria', icono: '🔨', color: RAREZAS.Legendario.color }, reliquias: [instancia(fila)].filter(Boolean) });
+      await recargar(); pintar();
+    });
+  }
   if (b.dataset.relmodo) { relModo = b.dataset.relmodo; relMarcadas.clear(); return pintar(); }
   if (b.dataset.marcar) { const id = b.dataset.marcar; if (relMarcadas.has(id)) relMarcadas.delete(id); else if (relModo !== 'fusionar' || relMarcadas.size < 10) relMarcadas.add(id); return pintar(); }
   if (b.dataset.marcartodas) { for (const r of rels) if (r.rarity === b.dataset.marcartodas && !bloqueoMasivo(r)) relMarcadas.add(r.uid); return pintar(); }

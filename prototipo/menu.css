@@ -858,3 +858,18 @@ body.eq-campana .eq-modo, body.eq-campana .eq-azar[data-lado="rival"], body.eq-c
   background: rgba(5, 8, 14, .6); border: 1px solid rgba(255, 255, 255, .1); font-size: 12px; color: var(--muted); }
 .tc-masiva > div { display: flex; flex-wrap: wrap; gap: 6px; }
 .tc-mejorar { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Recetas de Legendarias */
+.tc-recetas { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
+.tc-receta { display: flex; gap: 12px; align-items: flex-start; text-align: left; padding: 10px; border-radius: 14px; cursor: pointer; color: var(--text);
+  background: #0b0f18; border: 1px solid rgba(251, 191, 36, .35); }
+.tc-receta.lista { border-color: #fbbf24; box-shadow: 0 0 18px rgba(251, 191, 36, .35); }
+.tc-receta-img { width: 92px; height: 92px; flex: none; animation: brilloLegendario 1.8s ease-in-out infinite; }
+.tc-receta b { font: 900 15px Cinzel, serif; color: #fbbf24; display: block; }
+.tc-receta small { color: var(--muted); font-size: 11px; }
+.tc-ing { display: grid; gap: 2px; margin-top: 6px; font: 700 12px Inter, sans-serif; color: #fca5a5; }
+.tc-ing .ok { color: #86efac; }
+.tc-forjable { display: block; margin-top: 6px; font: 900 12px Inter, sans-serif; color: #fde68a; font-style: normal; }
+@keyframes brilloLegendario { 0%, 100% { filter: drop-shadow(0 0 6px #fbbf24) drop-shadow(0 0 14px rgba(251, 191, 36, .55)); }
+  50% { filter: drop-shadow(0 0 12px #fde68a) drop-shadow(0 0 26px rgba(251, 191, 36, .85)); } }
+@media (prefers-reduced-motion: reduce) { .tc-receta-img { animation: none; filter: drop-shadow(0 0 10px #fbbf24); } }
