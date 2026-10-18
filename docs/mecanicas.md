@@ -563,5 +563,8 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
   - `inmuneA: [ids]`: esos efectos no se le pueden aplicar (aviso «Inmune a X»), incluidas sus versiones Mega.
   - `recuperaGolpes: X`: al final de cada ronda se **cura** X veces el HP que perdió **por golpes** en esa ronda (no cuenta DoT, Bombas ni lo absorbido por su Escudo). Es curación: la bloquean Plaga/Peste Negra y Quemadura Solar la vuelve daño. Tope: su HP máx. Si murió en la ronda, nada.
   - **Escudo Hyliano** (Escudo Legendario): `inmuneA: ['stun', 'freeze', 'possess', 'confuse']` + `recuperaGolpes: 1.2`.
+  - `bono: { stat: v }`: bono fijo de estadística mientras esté equipada (se suma como las tiradas: `hpPct: .5` = +50% HP máx.).
+  - `crece: { stat, valor, max }`: al final de cada ronda, si está vivo, suma `valor` a esa estadística hasta `max` (solo la parte que crece). Muerto no crece; si revive conserva lo acumulado. Con `hpPct` también gana la vida que sube su máximo. Sin contador visible.
+  - **Armadura de Mithril** (Pechera Legendaria): `bono: { hpPct: .5 }` + `crece: { stat: 'hpPct', valor: .05, max: .5 }` (hasta +100% HP máx. en total).
   - **Shadowmourne** (Hacha Legendaria): `critDmgAoe: 1` + contador Almas de Shadowmourne (AOE o multigolpe, máx. 20, +10 de Daño cada una). Frostmourne todavía solo tiene su texto.
 - **Agregar una reliquia nueva:** (1) ficha en `RELIQUIAS` (nombre, rareza, tipo; en Legendarias su `passive`; `soloReceta` si solo se craftea); un tipo nuevo se agrega antes a `TIPOS`. (2) Imagen con Leonardo.ai en `assets/originales/reliquias/` y `python herramientas/marcos_reliquias.py`. (3) `node herramientas/generar_catalogo.mjs` y ejecutar `docs/sql/catalogo.sql` en Supabase.

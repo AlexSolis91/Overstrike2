@@ -68,6 +68,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   //     si otro efecto lo revive antes, el anillo no se gasta y la cuenta vuelve a empezar en su siguiente muerte)
   //   inmuneA: [ids]: esos efectos no se le pueden aplicar (aviso "Inmune"), incluidas sus versiones Mega
   //   recuperaGolpes: X: al final de cada ronda se cura X veces el HP que perdió por golpes en esa ronda (es curación)
+  //   bono: { stat: v }: bono fijo de estadística (p. ej. hpPct: .5 = +50% HP máx.)
+  //   crece: { stat, valor, max }: al final de cada ronda (vivo) suma "valor" a esa estadística hasta "max"; se conserva si revive.
+  //     Si es hpPct, también gana la vida que sube su máximo. No se muestra contador.
   const pasivasDeReliquia = p => (p.slots || []).filter(sl => !sl.locked && sl.relic?.motor).map(sl => sl.relic.motor);
   const cdDe = (p, cd) => {                              // cooldown real de un movimiento (reliquias que lo reducen)
     for (const m of pasivasDeReliquia(p)) if (m.cooldownPct != null) cd = Math.ceil(cd * m.cooldownPct);
@@ -87,6 +90,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       flat[r.flat[0]] += r.flat[1];
       for (const [k, v] of r.rolls) {
         if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] += v;
+      }
+    }
+    if (capas.reliquias) for (const m of pasivasDeReliquia(p)) {      // reliquia: bono fijo y lo que ha crecido
+      for (const [k, v] of Object.entries({ ...m.bono }).concat(m.crece ? [[m.crece.stat, p.creceRel?.[m.crece.stat] || 0]] : [])) {
+        if (k in flat) flat[k] += v; else if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
       }
     }
     if (capas.reliquias) for (const m of pasivasDeReliquia(p)) {      // contador de reliquia: bono por cada carga
@@ -295,6 +303,15 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       if (p.muerto || !perdido) continue;
       const m = pasivasDeReliquia(p).find(x => x.recuperaGolpes);
       if (m) curar(p, p, perdido * m.recuperaGolpes);
+    }
+    for (const p of P) if (!p.muerto) for (const m of pasivasDeReliquia(p)) {   // reliquia "crece" (p. ej. Armadura de Mithril)
+      const c = m.crece; if (!c) continue;
+      p.creceRel ||= {};
+      const antes = p.creceRel[c.stat] || 0, nuevo = Math.min(c.max, antes + c.valor);
+      if (nuevo <= antes) continue;
+      const hpAntes = maxHp(p);
+      p.creceRel[c.stat] = nuevo;
+      if (c.stat === 'hpPct') { p.hp += maxHp(p) - hpAntes; emitir('actualizar', {}, p); }
     }
     const explotan = [], terminan = [];
     for (const p of P) {
