@@ -14,7 +14,9 @@ const NOMBRE_STAT = { hpPct: 'HP máx.', dmgPct: 'Daño', critDmg: 'Daño Críti
 const clonar = o => JSON.parse(JSON.stringify(o));
 
 // rival (opcional, p. ej. Campaña): { poder: ×HP y ×Daño, spdPct, sinReliquias, sinLider, jefe: { hpExtra, umbral, dmgPct, spdPct } }
-export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival: opcionesRival = {} }) {
+// invertido (Arena en vivo): crea primero el equipo rival. El segundo jugador ve su equipo como "jugador" pero el motor queda en
+// el mismo orden que en la pantalla del primero (misma semilla + mismas decisiones = misma partida en las dos pantallas).
+export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival: opcionesRival = {}, invertido = false }) {
   const rng = crearRng(semilla);
   const P = [];
   const S = { ronda: 0, rondaBase: 0, actuaron: new Set(), orden: [], actual: null, esperando: null, fin: null };
@@ -1827,8 +1829,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     return { eventos: EV, esperando: S.esperando, fin: S.fin };
   }
 
-  equipoJugador.forEach((d, i) => P.push(crearPersonaje(d, 'jugador', i)));
-  equipoRival.forEach((d, i) => P.push(crearPersonaje(d, 'rival', i)));
+  const crearLado = lado => (lado === 'jugador' ? equipoJugador : equipoRival).forEach((d, i) => P.push(crearPersonaje(d, lado, i)));
+  if (invertido) { crearLado('rival'); crearLado('jugador'); } else { crearLado('jugador'); crearLado('rival'); }
   function prepararRival(p, r) {                             // opciones del equipo rival (dificultad de Campaña, Horda, Jefes)
     if (r.sinReliquias) p.slots = (p.slots || []).map(sl => ({ ...sl, relic: null }));
     if (r.sinLider) p.esLider = false;

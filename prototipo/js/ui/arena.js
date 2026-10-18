@@ -7,6 +7,11 @@ import { equipoCampana, irA } from './menu.js';
 import { OFICIALES, porId } from '../datos/personajes/index.js';
 import { LIGAS, liga, siguienteLiga, ATAQUES_DIARIOS, CAMPEONES_MINIMOS, BUSQUEDA_SEG, ORO_VICTORIA, SEMANAL, TEMPORADA } from '../datos/arena.js';
 import { imgHtml } from './imagenes.js';
+import { RELIQUIAS } from '../datos/reliquias.js';
+
+// Versión del juego para emparejar en vivo solo a jugadores con las mismas fichas (si no, las batallas no coincidirían)
+const VERSION = (() => { const t = JSON.stringify([OFICIALES.map(p => [p.id, p.base, p.extra, p.movimientos, p.pasiva, p.lider]), Object.keys(RELIQUIAS)]);
+  let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return String(h >>> 0); })();
 
 const $ = s => document.querySelector(s);
 const num = n => Number(n || 0).toLocaleString('es-MX');
@@ -126,8 +131,20 @@ async function buscar() {
   let n = BUSQUEDA_SEG, cancelado = false;
   caja.addEventListener('click', e => { if (e.target.closest('[data-cancelar]')) { cancelado = true; } });
   buscando = true;
-  while (n > 0 && !cancelado) { await new Promise(r => setTimeout(r, 1000)); n--; const c = caja.querySelector('.ar-cuenta'); if (c) c.textContent = n; }
-  if (cancelado) { caja.remove(); buscando = null; return; }
+  let vivo = null, sinVivo = false;
+  while (n > 0 && !cancelado && !vivo) {                     // cada segundo: ¿alguien más busca ahora? → partida en vivo
+    try { const m = await D.arenaVivoBuscar(est.ataque, VERSION); if (m?.partida) vivo = m; }
+    catch (e) { if (/arena_vivo|function/i.test(e?.message || '')) sinVivo = true; else { caja.remove(); buscando = null; return alert(D.mensajeError(e)); } }
+    if (vivo) break;
+    await new Promise(r => setTimeout(r, 1000)); n--; const c = caja.querySelector('.ar-cuenta'); if (c) c.textContent = n;
+  }
+  if (!vivo && !sinVivo) { try { const m = await D.arenaVivoCancelar(); if (m?.partida) vivo = m; } catch (e) { /* sigue contra una Defensa */ } }
+  if (cancelado && !vivo) { caja.remove(); buscando = null; return; }
+  if (vivo) {
+    caja.remove(); buscando = null;
+    return jugar(vivo.mio.map(porId), vivo.suyo.map(porId), { semilla: vivo.semilla, invertido: vivo.soy === 'b',
+      arena: { vivo: true, partida: vivo.partida, soy: vivo.soy, rival: vivo.rival, equipoMio: vivo.equipo_mio, equipoRival: vivo.equipo_suyo } });
+  }
   caja.querySelector('h2').textContent = '⚔️ ¡Rival encontrado!'; caja.querySelector('.ar-cuenta').textContent = '';
   let r;
   try { r = await D.arenaAtacar(est.ataque); } catch (e) { caja.remove(); buscando = null; return alert(D.mensajeError(e)); }

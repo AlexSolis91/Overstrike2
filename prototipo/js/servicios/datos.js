@@ -55,6 +55,10 @@ export const arenaAtacar = ataque => rpc('arena_atacar', { p_ataque: ataque });
 export const arenaResultado = (combate, gano) => rpc('arena_resultado', { p_combate: combate, p_gano: gano });
 export const arenaRanking = liga => rpc('arena_ranking', { p_liga: liga || null });
 export const arenaHistorial = () => rpc('arena_historial_defensa');
+// Arena en vivo (docs/sql/009_arena_vivo.sql)
+export const arenaVivoBuscar = (ataque, version) => rpc('arena_vivo_buscar', { p_ataque: ataque, p_version: version });
+export const arenaVivoCancelar = () => rpc('arena_vivo_cancelar');
+export const arenaVivoResultado = (partida, ganador) => rpc('arena_vivo_resultado', { p_partida: partida, p_ganador: ganador });
 
 // Campaña: progreso (solo lectura) y cobrar una victoria (el servidor valida desbloqueo, tiempo entre repeticiones y paga)
 export const miCampana = area => q(sb => sb.from('campana_progreso').select('dificultad, etapa, estrellas, victorias, ultima').eq('area', area));

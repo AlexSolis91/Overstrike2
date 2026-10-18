@@ -21,6 +21,7 @@ import * as D from './servicios/datos.js';
 import { oleada, defsOleada, HORDAS } from './datos/horda/horda.js';
 import { iniciarHorda, abrirHorda } from './ui/horda.js';
 import { iniciarArena, abrirArena } from './ui/arena.js';
+import { conectarVivo, swapUid, ganadorRelativo } from './servicios/arenaVivo.js';
 import { RELIQUIAS, RAREZAS } from './datos/reliquias.js';
 
 const { gsap } = window;
@@ -59,14 +60,15 @@ activarReliquias(() => por(ui.inspeccionado));
 async function iniciarPartida(eqJ, eqR, opciones = null) {
   partida++;
   inicioPartida = Date.now();
-  const cuenta = await cargarCuenta();                         // tus estrellas y reliquias equipadas pelean contigo
+  const vivo = opciones?.arena?.vivo;
+  const cuenta = vivo ? cuentaDesdeServidor(opciones.arena.equipoMio) : await cargarCuenta();   // tus estrellas y reliquias pelean contigo
   eqJ = eqJ.map(d => conCuenta(d, cuenta));
   if (opciones?.arena?.equipoRival) { const cr = cuentaDesdeServidor(opciones.arena.equipoRival); eqR = eqR.map(d => conCuenta(d, cr)); }   // la Defensa de otro jugador con sus estrellas y reliquias
-  combate = crearCombate({ equipoJugador: eqJ, equipoRival: eqR, rival: opciones?.rival, ...(opciones?.semilla != null ? { semilla: opciones.semilla } : {}) });
+  combate = crearCombate({ equipoJugador: eqJ, equipoRival: eqR, rival: opciones?.rival, invertido: !!opciones?.invertido, ...(opciones?.semilla != null ? { semilla: opciones.semilla } : {}) });
   P = combate.personajes;
   const serie = opciones?.serie || 0;                         // en una serie de repeticiones siempre va en Auto y ×2
   ui = { actual: null, inspeccionado: P[0].uid, miTurno: false, movSel: null, objetivosValidos: null, tipoObjetivo: null, ocupado: true, opciones: null,
-    camp: opciones?.campana || null, horda: opciones?.horda || null, arena: opciones?.arena || null, serie, auto: !!serie || autoActivo };
+    camp: opciones?.campana || null, horda: opciones?.horda || null, arena: opciones?.arena || null, vivo: null, serie, auto: !!serie || autoActivo };
   setVelocidad(serie ? 2 : velocidad); marcarControles();
   vistas = {}; cartas = {};
   for (const p of P) crearCarta(p);
@@ -77,8 +79,10 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   entrarCartas(Object.values(cartas));
   refrescarPanel();
   actualizarJefe();
+  if (vivo) { ui.vivo = conectarVivo(opciones.arena, { alAbandonar: () => abandonoRival() }); ui.auto = false; marcarControles(); }
   await wait(1100);
   await anunciar();
+  if (vivo) { banner(`⚔️ EN VIVO vs ${opciones.arena.rival?.nombre || 'rival'}`, { size: 40, color: '#fde68a', hold: 1.2 }); await wait(1500); }
   await procesar(combate.iniciar());
 }
 function crearCarta(p) {
@@ -127,7 +131,7 @@ function limpiarPartida() {
   $('#log').innerHTML = ''; logLeido();
   $('#overlay').classList.add('hidden');
 }
-function salirDePartida() { cerrarHorda(); $('#horda-ov').classList.add('hidden'); partida++; ui.miTurno = false; ui.ocupado = true; ui.serie = 0; clearTimeout(serieT); $('#overlay').classList.add('hidden'); setVelocidad(1); $('#jefe-barra').classList.add('hidden'); }
+function salirDePartida() { if (ui.vivo && !ui.fin) { D.arenaVivoResultado(ui.arena.partida, ui.arena.soy === 'a' ? 'b' : 'a').catch(() => null); } ui.vivo?.cerrar(); ui.vivo = null; cerrarHorda(); $('#horda-ov').classList.add('hidden'); partida++; ui.miTurno = false; ui.ocupado = true; ui.serie = 0; clearTimeout(serieT); $('#overlay').classList.add('hidden'); setVelocidad(1); $('#jefe-barra').classList.add('hidden'); }
 
 // ---------------------------------------------------------------- Auto-batalla y velocidad (se recuerdan en este dispositivo)
 let autoActivo = false, velocidad = 1, serieT = null;
@@ -443,17 +447,44 @@ async function procesar(res) {
   if (actor.lado === 'jugador') {
     ui.miTurno = true; ui.ocupado = false;
     inspeccionar(actor.uid);
-    setHint(ui.auto ? `🤖 Auto: ${actor.nombre}` : `Turno de ${actor.nombre}: elige un movimiento`);
+    setHint(ui.auto ? `🤖 Auto: ${actor.nombre}` : `Turno de ${actor.nombre}: elige un movimiento${ui.vivo ? ' (25 s)' : ''}`);
     barra();
+    if (ui.vivo) relojTurno(esta, ui.vivo.turno);            // en vivo: 25 s para elegir; si no, juega la IA por ti
     if (ui.auto) await jugarAuto(esta);
   } else {
     ui.miTurno = false;
     inspeccionar(actor.uid);
-    setHint(`Turno rival: ${actor.nombre}`);
+    setHint(ui.vivo ? `⏳ Turno de ${ui.arena.rival?.nombre || 'tu rival'}: ${actor.nombre}` : `Turno rival: ${actor.nombre}`);
+    if (ui.vivo) {                                           // en vivo: la decisión llega del otro jugador
+      const d = await ui.vivo.esperar(ui.vivo.turno);
+      if (esta !== partida || !d) return;
+      ui.vivo.turno++;
+      return procesar(combate.actuar({ categoria: d.categoria, objetivo: swapUid(d.objetivo) }));
+    }
     await wait(700);
     if (esta !== partida) return;
     await procesar(combate.actuar(elegirIA(combate)));
   }
+}
+
+// En vivo: si el jugador no elige en 25 s, la IA juega su turno (y la decisión se envía igual)
+function relojTurno(esta, n) {
+  setTimeout(() => {
+    if (esta !== partida || !ui.vivo || !ui.miTurno || ui.ocupado || ui.vivo.turno !== n) return;
+    cancelarObjetivo(); const d = elegirIA(combate); ejecutar(d.categoria, d.objetivo);
+  }, 25000);
+}
+// En vivo: el rival dejó de responder 60 s → ganas por abandono
+function abandonoRival() {
+  if (!ui.vivo || ui.fin) return;
+  partida++;                                               // corta lo que esté esperando
+  const esta = partida;
+  ui.fin = { ganador: 'jugador', ronda: combate.ronda, abandono: true }; ui.ocupado = true;
+  finDePartida(true, 700 + 2000);
+  const personajes = combate.estadisticas().map(e => { const p = por(e.uid); return { ...e, nombre: p.nombre, imagen: p.imagen, emoji: p.emoji, color: p.color }; });
+  botonesResultado(true);
+  partida = esta;
+  finArena({ gano: true, empate: false, limite: false, ronda: combate.ronda, duracionMs: Date.now() - inicioPartida, personajes }, ui.fin);
 }
 
 // Auto-batalla: la IA elige por el jugador (se puede apagar en cualquier momento)
@@ -577,6 +608,7 @@ $('#horda-ov').addEventListener('click', e => {
 // ---------------------------------------------------------------- Arena: el servidor cobra el resultado (puntos y oro)
 async function finArena(base, fin) {
   const a = ui.arena, esta = partida;
+  if (a.vivo) return finVivo(base, fin);
   const gano = fin.ganador === 'jugador' && !fin.limite;              // contra una Defensa, el límite de rondas lo gana la Defensa
   let res = null, error = '';
   const cobrar = () => D.arenaResultado(a.combate, gano);
@@ -589,6 +621,27 @@ async function finArena(base, fin) {
   mostrarResultados({ ...base, gano, recompensas: res?.oro ? [{ tipo: 'oro', cantidad: res.oro }] : [] });
   $('#ov-title').textContent = gano ? '🏆 Victoria' : fin.limite ? '🛡️ La Defensa resistió' : '💀 Derrota';
   $('#ov-sub').textContent = res ? `${res.delta >= 0 ? '+' : ''}${res.delta} puntos · ${res.puntos} puntos · ${res.liga}${res.diario ? ' · ataque diario' : ' · ataque extra (25%)'} · vs ${a.rival?.nombre || 'Defensa'}`
+    : `⚠️ ${error || 'No se pudo guardar el resultado'}`;
+}
+
+// Arena en vivo: los dos jugadores reportan; si el otro no reporta (se fue), se acepta el tuyo a los 60 s
+async function finVivo(base, fin) {
+  const a = ui.arena, esta = partida, rel = ganadorRelativo(fin.ganador, a.soy);
+  ui.vivo?.cerrar();
+  let r = null, error = '';
+  for (let i = 0; i < 4; i++) {
+    try { r = await D.arenaVivoResultado(a.partida, rel); } catch (e) { error = D.mensajeError(e); break; }
+    if (r.terminado) break;
+    if (esta === partida) setHint('Esperando el resultado de tu rival…');
+    await wait(25000);
+  }
+  if (esta !== partida) return;
+  const gano = r?.ganador === a.soy;
+  mostrarResultados({ ...base, gano, empate: fin.ganador === 'empate', recompensas: [] });
+  $('#ov-title').textContent = r && !r.terminado ? '⏳ Resultado pendiente' : r?.ganador === 'anulada' ? '⚠️ Partida anulada'
+    : fin.abandono ? '🏆 Victoria por abandono' : gano ? '🏆 Victoria' : fin.ganador === 'empate' ? 'Empate' : '💀 Derrota';
+  if (r && !r.terminado) return void ($('#ov-sub').textContent = 'Tu rival todavía no confirma el resultado. Se guardará solo en cuanto el servidor lo acepte.');
+  $('#ov-sub').textContent = r ? `${r.puntos} puntos · ${r.liga}${r.diario ? ' · ataque diario' : ' · ataque extra (25%)'} · en vivo vs ${a.rival?.nombre || 'rival'}`
     : `⚠️ ${error || 'No se pudo guardar el resultado'}`;
 }
 
@@ -622,6 +675,7 @@ function cancelarObjetivo() {
 async function ejecutar(categoria, objetivo) {
   ui.miTurno = false; ui.movSel = null; ui.objetivosValidos = null; ui.tipoObjetivo = null; ui.hayBloqueados = false;
   setHint(''); refrescarPanel();
+  if (ui.vivo) { ui.vivo.enviar(ui.vivo.turno, categoria, objetivo); ui.vivo.turno++; }   // en vivo: la decisión viaja al otro jugador
   await procesar(combate.actuar({ categoria, objetivo }));
 }
 function elegirMovimiento(cat) {
