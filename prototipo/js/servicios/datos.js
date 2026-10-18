@@ -48,6 +48,14 @@ export const hordaTerminar = partida => rpc('horda_terminar', { p_partida: parti
 export const miRecordHorda = horda => q(sb => sb.from('horda_partidas').select('oleada').eq('horda', horda).order('oleada', { ascending: false }).limit(1));
 export const comprarRunaPortal = () => rpc('comprar_runa_portal');
 
+// Arena (docs/sql/008_arena.sql)
+export const arenaEstado = () => rpc('arena_estado');
+export const arenaGuardarEquipo = (tipo, equipo) => rpc('arena_guardar_equipo', { p_tipo: tipo, p_equipo: equipo });
+export const arenaAtacar = ataque => rpc('arena_atacar', { p_ataque: ataque });
+export const arenaResultado = (combate, gano) => rpc('arena_resultado', { p_combate: combate, p_gano: gano });
+export const arenaRanking = liga => rpc('arena_ranking', { p_liga: liga || null });
+export const arenaHistorial = () => rpc('arena_historial_defensa');
+
 // Campaña: progreso (solo lectura) y cobrar una victoria (el servidor valida desbloqueo, tiempo entre repeticiones y paga)
 export const miCampana = area => q(sb => sb.from('campana_progreso').select('dificultad, etapa, estrellas, victorias, ultima').eq('area', area));
 export const campanaCompletar = (area, dificultad, etapa, estrellas) => rpc('campana_completar', { p_area: area, p_dificultad: dificultad, p_etapa: etapa, p_estrellas: estrellas });

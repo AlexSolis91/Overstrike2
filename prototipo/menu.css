@@ -1,6 +1,6 @@
 /* ================================================================ PANTALLAS FUERA DE LA BATALLA (lobby, equipos, ficha, VS) */
 .pantalla { display: none; }
-body[data-pantalla="menu"] #pantalla-menu, body[data-pantalla="equipo"] #pantalla-equipo, body[data-pantalla="campana"] #pantalla-campana, body[data-pantalla="horda"] #pantalla-horda { display: flex; }
+body[data-pantalla="menu"] #pantalla-menu, body[data-pantalla="equipo"] #pantalla-equipo, body[data-pantalla="campana"] #pantalla-campana, body[data-pantalla="horda"] #pantalla-horda, body[data-pantalla="arena"] #pantalla-arena { display: flex; }
 body:not([data-pantalla="partida"]) #app { visibility: hidden; }
 .pantalla {
   position: fixed; inset: 0; z-index: 20; flex-direction: column; overflow: hidden;
@@ -873,3 +873,30 @@ body.eq-campana .eq-modo, body.eq-campana .eq-azar[data-lado="rival"], body.eq-c
 @keyframes brilloLegendario { 0%, 100% { filter: drop-shadow(0 0 6px #fbbf24) drop-shadow(0 0 14px rgba(251, 191, 36, .55)); }
   50% { filter: drop-shadow(0 0 12px #fde68a) drop-shadow(0 0 26px rgba(251, 191, 36, .85)); } }
 @media (prefers-reduced-motion: reduce) { .tc-receta-img { animation: none; filter: drop-shadow(0 0 10px #fbbf24); } }
+
+/* ================================================================ ARENA */
+#pantalla-arena { gap: 10px; padding: max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
+.ar-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+.ar-cuerpo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+.ar-panel { border-radius: 16px; padding: 16px; background: rgba(8, 11, 18, .85); border: 1px solid rgba(255, 255, 255, .1); display: grid; gap: 10px; align-content: start; }
+.ar-panel h4 { margin: 4px 0 0; font: 900 14px Cinzel, serif; color: var(--gold); }
+.ar-principal { text-align: center; border-color: color-mix(in srgb, var(--lc) 60%, transparent); box-shadow: 0 0 30px color-mix(in srgb, var(--lc) 20%, transparent); }
+.ar-liga { display: inline-block; padding: 2px 10px; border-radius: 99px; font: 900 12px Inter, sans-serif; color: var(--lc); border: 1px solid color-mix(in srgb, var(--lc) 60%, transparent); background: rgba(0, 0, 0, .35); white-space: nowrap; }
+.ar-liga.grande { font: 900 30px Cinzel, serif; padding: 6px 22px; justify-self: center; text-shadow: 0 0 18px var(--lc); }
+.ar-puntos { font-size: 14px; color: var(--muted); } .ar-puntos b { font: 900 26px Inter, sans-serif; color: var(--text); }
+.ar-barra { height: 8px; border-radius: 99px; background: #1f2937; overflow: hidden; } .ar-barra i { display: block; height: 100%; background: var(--lc); }
+.ar-diarios { display: grid; gap: 4px; justify-items: center; } .ar-diarios span { font-size: 22px; filter: grayscale(1) opacity(.3); margin: 0 2px; } .ar-diarios span.on { filter: none; }
+.ar-diarios > span { display: inline; }
+.ar-buscar { font-size: 18px; padding: 14px 26px; justify-self: center; }
+.ar-stats { font-size: 12px; color: var(--muted); }
+.ar-equipo { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.ar-ret { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; display: grid; place-items: center; font-size: 22px; color: var(--muted);
+  background: #0b0f18; border: 2px solid var(--c); }
+.ar-ret img { width: 100%; height: 100%; object-fit: cover; } .ar-ret.lider { box-shadow: 0 0 10px var(--gold); } .ar-ret i { position: absolute; top: 2px; left: 4px; font-style: normal; font-size: 12px; }
+.ar-tabla { width: 100%; border-collapse: collapse; font-size: 13px; background: rgba(8, 11, 18, .85); border-radius: 12px; overflow: hidden; }
+.ar-tabla th, .ar-tabla td { padding: 7px 8px; border-bottom: 1px solid rgba(255, 255, 255, .06); text-align: left; }
+.ar-tabla th { color: var(--gold); font: 800 12px Inter, sans-serif; } .ar-tabla tr.yo td { background: rgba(250, 204, 21, .12); font-weight: 800; }
+#ar-busqueda { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(3, 6, 12, .8); backdrop-filter: blur(3px); }
+.ar-cuenta { font: 900 72px Cinzel, serif; color: var(--gold); margin: 6px 0; text-shadow: 0 0 24px rgba(250, 204, 21, .6); }
+body.eq-sin-rival .eq-fila[data-lado="rival"], body.eq-sin-rival .eq-modo { display: none; }
+@media (max-width: 760px) { .ar-cuerpo { grid-template-columns: 1fr; } .ar-tabla { font-size: 11px; } }

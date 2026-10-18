@@ -13,7 +13,7 @@ const MODOS = [
   { id: 'multi', nombre: 'Multijugador', icono: '🌐' },
   { id: 'hordas', nombre: 'Hordas', icono: '🧟', desc: 'Oleadas sin fin: ¿hasta dónde llegas?', activo: true },
   { id: 'jefe', nombre: 'Jefe de Clan', icono: '🐲' },
-  { id: 'arena', nombre: 'Arena', icono: '🏟️' },
+  { id: 'arena', nombre: 'Arena', icono: '🏟️', desc: 'Defiende y ataca: sube de liga', activo: true },
 ];
 const ROL = { Invocador: 'Invoker' };          // mismos roles con distinto nombre en las fichas
 const rolesDe = p => [p.rol, p.rolSecundario].filter(Boolean).map(r => ROL[r] || r);
@@ -26,7 +26,7 @@ const E = { jugador: [], rival: [], rivalModo: 'azar', editando: 'jugador', filt
 let alJugar = null;
 
 // ---------------------------------------------------------------- navegación entre pantallas (con el botón "atrás")
-const PANTALLAS = ['menu', 'equipo', 'partida', 'campana', 'horda'];
+const PANTALLAS = ['menu', 'equipo', 'partida', 'campana', 'horda', 'arena'];
 let alSalirDePartida = null;
 export function irA(p, { reemplazar = false } = {}) {
   if (reemplazar) history.replaceState(null, '', '#' + p); else if (location.hash !== '#' + p) history.pushState(null, '', '#' + p);
@@ -37,10 +37,11 @@ function mostrar(p) {
   document.body.dataset.pantalla = p;
   if (antes === 'partida' && p !== 'partida') alSalirDePartida?.();
   musica(p === 'partida' ? 'batalla' : 'menu');
-  fondo(p === 'menu' || p === 'campana' || p === 'horda' ? 'menu' : p === 'equipo' ? 'equipo' : null);
+  fondo(p === 'menu' || p === 'campana' || p === 'horda' || p === 'arena' ? 'menu' : p === 'equipo' ? 'equipo' : null);
   if (p === 'equipo') renderEquipo();
   if (p === 'campana') alAbrirCampana?.();
   if (p === 'horda') alAbrirHorda?.();
+  if (p === 'arena') alAbrirArena?.();
   if (p === 'menu') E.campana = null;
 }
 addEventListener('popstate', () => {
@@ -112,6 +113,7 @@ function renderEquipo() {
   // filas de equipos
   const camp = E.campana;
   document.body.classList.toggle('eq-campana', !!camp);
+  document.body.classList.toggle('eq-sin-rival', !!camp?.sinRival);
   $('#pantalla-equipo h2').textContent = camp ? camp.titulo : 'Construye tu equipo';
   $('#eq-volver').textContent = camp ? (camp.volverTxt || '← Portal') : '← Menú';
   if (camp) { E.editando = 'jugador'; E.rival = camp.rivales; }
@@ -220,14 +222,15 @@ export function presentarVS(eqJ, eqR) {
 }
 
 // ---------------------------------------------------------------- arranque
-let alAbrirCampana = null, alAbrirHorda = null;
-export function iniciarMenu({ jugar, salirDePartida, abrirCampana, abrirHorda }) {
-  alJugar = jugar; alSalirDePartida = salirDePartida; alAbrirCampana = abrirCampana; alAbrirHorda = abrirHorda;
+let alAbrirCampana = null, alAbrirHorda = null, alAbrirArena = null;
+export function iniciarMenu({ jugar, salirDePartida, abrirCampana, abrirHorda, abrirArena }) {
+  alJugar = jugar; alSalirDePartida = salirDePartida; alAbrirCampana = abrirCampana; alAbrirHorda = abrirHorda; alAbrirArena = abrirArena;
   renderMenu();
   $('#menu-modos').addEventListener('click', e => {
     if (e.target.closest('[data-modo="rapida"]')) { E.campana = null; irA('equipo'); }
     if (e.target.closest('[data-modo="campana"]')) irA('campana');
     if (e.target.closest('[data-modo="hordas"]')) irA('horda');
+    if (e.target.closest('[data-modo="arena"]')) irA('arena');
   });
   $('#eq-volver').addEventListener('click', () => { if (E.campana) { const c = E.campana; E.campana = null; c.alVolver?.(); } else irA('menu'); });
   $('#pantalla-equipo').addEventListener('click', e => {
@@ -257,9 +260,9 @@ export function iniciarMenu({ jugar, salirDePartida, abrirCampana, abrirHorda })
 export function cargarSeleccion(eqJ, eqR, rivalModo) { E.jugador = [...eqJ]; E.rival = rivalModo === 'construir' ? [...eqR] : []; E.rivalModo = rivalModo; E.editando = 'jugador'; }
 export const seleccion = () => ({ rivalModo: E.rivalModo });
 // Modo Campaña: abre la construcción de equipo con el rival fijo de la etapa y solo los campeones propios
-export function equipoCampana({ titulo, rivales, propios, alListo, alVolver, volverTxt }) {
-  E.campana = { titulo, rivales, propios, alListo, alVolver, volverTxt };
-  E.jugador = E.jugador.filter(p => propios.has(p.id));          // conserva la última selección (si sigue siendo suya)
+export function equipoCampana({ titulo, rivales, propios, alListo, alVolver, volverTxt, sinRival = false, inicial = null }) {
+  E.campana = { titulo, rivales, propios, alListo, alVolver, volverTxt, sinRival };
+  E.jugador = (inicial || E.jugador).filter(p => propios.has(p.id));   // conserva la última selección (si sigue siendo suya)
   E.sel = null; E.filtro = null;
   irA('equipo');
 }

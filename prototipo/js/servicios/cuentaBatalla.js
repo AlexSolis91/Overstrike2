@@ -17,6 +17,13 @@ export async function cargarCuenta() {
   } catch { return null; }
 }
 
+// Datos de batalla de un equipo que manda el servidor (Arena: tu ataque o la Defensa de otro jugador)
+export function cuentaDesdeServidor(j) {
+  const equipo = {};
+  for (const f of j?.reliquias || []) if (f.campeon && f.espacio) (equipo[f.campeon] ||= {})[f.espacio] = instancia(f);
+  return { col: new Map((j?.col || []).map(r => [r.campeon, r])), equipo, reliquias: true };
+}
+
 // Ficha lista para la batalla: estrellas y reliquias de la cuenta (un campeón que no tienes pelea con 0★ y sin reliquias)
 export function conCuenta(def, cuenta) {
   if (!cuenta) return def;
