@@ -66,6 +66,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   //   cooldownPct: multiplica los cooldowns de sus movimientos (redondeo hacia arriba), incluida la espera inicial del Over
   //   revivir: { hp }: al ser eliminado, revive al FINAL de la ronda siguiente con ese % de HP (una vez por batalla;
   //     si otro efecto lo revive antes, el anillo no se gasta y la cuenta vuelve a empezar en su siguiente muerte)
+  //   inmuneA: [ids]: esos efectos no se le pueden aplicar (aviso "Inmune"), incluidas sus versiones Mega
+  //   recuperaGolpes: X: al final de cada ronda se cura X veces el HP que perdió por golpes en esa ronda (es curación)
   const pasivasDeReliquia = p => (p.slots || []).filter(sl => !sl.locked && sl.relic?.motor).map(sl => sl.relic.motor);
   const cdDe = (p, cd) => {                              // cooldown real de un movimiento (reliquias que lo reducen)
     for (const m of pasivasDeReliquia(p)) if (m.cooldownPct != null) cd = Math.ceil(cd * m.cooldownPct);
@@ -288,6 +290,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   }
 
   function finRonda() {
+    for (const p of P) {                                    // reliquia "recuperaGolpes": cura X veces el HP perdido por golpes en la ronda
+      const perdido = p.perdidoGolpesRonda || 0; p.perdidoGolpesRonda = 0;
+      if (p.muerto || !perdido) continue;
+      const m = pasivasDeReliquia(p).find(x => x.recuperaGolpes);
+      if (m) curar(p, p, perdido * m.recuperaGolpes);
+    }
     const explotan = [], terminan = [];
     for (const p of P) {
       if (p.muerto) continue;
@@ -706,6 +714,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     }
     const hpAntesGolpe = t.hp;
     const { aHp, aEsc } = repartir(t, d, sa.pen);
+    if (aHp > 0) t.perdidoGolpesRonda = (t.perdidoGolpesRonda || 0) + aHp;   // reliquia "recuperaGolpes"
     if (ctx.acum) ctx.acum.dano += aHp + aEsc;
     const des = get(t, 'wear');                // Desgaste: cada golpe recibido (no bloqueado) quita 5 puntos más de Armadura
     if (des && des.valor < DEBUFFS.desgasteMax) des.valor = Math.min(DEBUFFS.desgasteMax, des.valor + DEBUFFS.desgaste);
@@ -953,6 +962,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   function aplicarEfecto(a, t, acc) {
     // Protección contra el bloqueo infinito: aplica a CUALQUIER vía (movimientos, pasivas, efectos garantizados)
     if (t.inmune && (CONTROL.pierdeTurno.includes(acc.id) || acc.id === 'silence')) { emitir('inmune', { a: t.uid }); return; }
+    for (const m of pasivasDeReliquia(t)) if (m.inmuneA?.includes(acc.id)) { emitir('inmune', { a: t.uid, texto: `Inmune a ${EFECTOS[acc.id].nombre}` }); return; }   // reliquia (p. ej. Escudo Hyliano)
     const inm = t.pasiva?.inmuneA;
     if (inm && (inm.includes(acc.id) || EFECTOS[acc.id].tags.some(tag => inm.includes(tag)))) { emitir('inmune', { a: t.uid, texto: `Inmune a ${EFECTOS[acc.id].nombre}` }); return; }
     const sa = stats(a);
