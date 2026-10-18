@@ -18,7 +18,7 @@ import { EFECTOS } from './motor/efectos.js';
 import { INVOCACIONES } from './datos/invocaciones.js';
 import { cargarCuenta, conCuenta } from './servicios/cuentaBatalla.js';
 import * as D from './servicios/datos.js';
-import { oleada, defsOleada } from './datos/horda/horda.js';
+import { oleada, defsOleada, HORDAS } from './datos/horda/horda.js';
 import { iniciarHorda, abrirHorda } from './ui/horda.js';
 import { RELIQUIAS, RAREZAS } from './datos/reliquias.js';
 
@@ -39,7 +39,8 @@ addEventListener('resize', modoMovil);
 // ---------------------------------------------------------------- carga
 await iniciarEscena($('#field'));
 await precargar(
-  OFICIALES.flatMap(p => { const l = [p.imagen]; for (let f = p.transformacion; f; f = f.transformacion) l.push(f.imagen); return l; }).concat(Object.values(INVOCACIONES).map(i => i.imagen)),
+  OFICIALES.flatMap(p => { const l = [p.imagen]; for (let f = p.transformacion; f; f = f.transformacion) l.push(f.imagen); return l; })
+    .concat(Object.values(INVOCACIONES).map(i => i.imagen), Object.values(HORDAS).flatMap(h => Object.values(h.enemigos).map(e => e.imagen))),   // + enemigos de la Horda
   INVOCACIONES,
   (n, total) => { $('#loading-bar').style.width = `${n / total * 100}%`; $('#loading-text').textContent = `Cargando imágenes ${n}/${total}`; },
 );
