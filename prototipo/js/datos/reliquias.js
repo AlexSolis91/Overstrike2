@@ -194,6 +194,7 @@ export const RELIQUIAS = {
   hachaBerserker: { name: 'Hacha del Berserker', rarity: 'Raro', type: 'Hacha', imagen: 'assets/reliquias/hachaBerserker.webp' },
   cotaMallaOxidada: { name: 'Cota de Malla Oxidada', rarity: 'Común', type: 'Pechera', imagen: 'assets/reliquias/cotaMallaOxidada.webp' },
   mascaraKitsune: { name: 'Máscara del Kitsune', rarity: 'Raro', type: 'Máscara', imagen: 'assets/reliquias/mascaraKitsune.webp' },
+  dagaViudaNegra: { name: 'Daga de la Viuda Negra', rarity: 'Épico', type: 'Daga', imagen: 'assets/reliquias/dagaViudaNegra.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
