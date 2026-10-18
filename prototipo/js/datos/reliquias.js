@@ -101,8 +101,8 @@ export const RELIQUIAS = {
   amuletoPantano: { name: 'Amuleto del Pantano', rarity: 'Épico', type: 'Amuleto', imagen: 'assets/reliquias/amuletoPantano.webp',
     legado: { flat: ['dmg', 17, 15, 22], rolls: [['dot', 0.12, 0.11, 0.14], ['dot', 0.14, 0.11, 0.14], ['dot', 0.13, 0.11, 0.14]] } },
   frostmourne: { name: 'Frostmourne', rarity: 'Legendario', type: 'Espada', imagen: 'assets/reliquias/frostmourne.webp', soloReceta: true,
-    passive: 'Si el portador elimina a uno o más enemigos con un ataque, revive a uno de ellos al azar como su aliado durante 2 rondas, con 50% de su HP máx. y sin habilidad de líder (una vez por ronda, máx. 2 por batalla). Al terminar vuelve a morir y ya no puede revivir.',
-    motor: { convertir: { hp: .5, rondas: 2, maxBatalla: 2 } },
+    passive: 'Si el portador elimina a uno o más enemigos con un ataque, revive a uno de ellos al azar como su aliado durante 2 rondas, con 50% de su HP máx. y sin habilidad de líder (una vez por ronda, máx. 2 por batalla). Al terminar vuelve a morir y ya no puede revivir. Cada golpe del portador tiene 15% de probabilidad de hacer daño triple o 50% de hacer daño doble (se multiplica con el crítico).',
+    motor: { convertir: { hp: .5, rondas: 2, maxBatalla: 2 }, multiGolpe: [[.15, 3], [.5, 2]] },
     legado: { flat: ['dmg', 35, 30, 35], rolls: [['critRate', 0.19, 0.15, 0.20], ['dmgPct', 0.23, 0.18, 0.25], ['critDmg', 0.27, 0.20, 0.27]] } },
   // motor: pasiva de reliquia que el motor ejecuta (pieza universal, ver combate.js → pasivasDeReliquia)
   shadowmourne: { name: 'Shadowmourne', rarity: 'Legendario', type: 'Hacha', imagen: 'assets/reliquias/shadowmourne.webp', soloReceta: true,

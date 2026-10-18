@@ -74,6 +74,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   //   convertir: { hp, rondas, maxBatalla }: si un ATAQUE suyo elimina enemigos, revive a uno de ellos al azar como su aliado
   //     (hp %, sin líder ni efectos) durante N rondas, una vez por ronda y hasta maxBatalla. Al terminar vuelve a morir del
   //     lado enemigo y ya no puede revivir. Si cae antes, queda muerto para siempre. Marca visible "Esclavo de la Runa".
+  //   multiGolpe: [[prob, mult], ...]: en cada golpe, UNA tirada excluyente (p. ej. 15% ×3, 50% ×2); se multiplica con el crítico
   const pasivasDeReliquia = p => (p.slots || []).filter(sl => !sl.locked && sl.relic?.motor).map(sl => sl.relic.motor);
   const cdDe = (p, cd) => {                              // cooldown real de un movimiento (reliquias que lo reducen)
     for (const m of pasivasDeReliquia(p)) if (m.cooldownPct != null) cd = Math.ceil(cd * m.cooldownPct);
@@ -711,6 +712,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (critico && a.pasiva?.rival?.orgulloAlCritico) ganarOrgullo(a, 1);
     if (critico && t.pasiva?.rival?.orgulloAlRecibirCritico && t.lado !== a.lado) ganarOrgullo(t, 1);
     if (critico) d *= 1 + danoCrit;
+    for (const m of pasivasDeReliquia(a)) if (m.multiGolpe && mov.categoria !== 'invocacion') {   // reliquia: daño doble/triple
+      let r = rng(), x = 1;
+      for (const [prob, mult] of [...m.multiGolpe].sort((u, v) => v[1] - u[1])) { if (r < prob) { x = mult; break; } r -= prob; }
+      if (x > 1) { d *= x; emitir('bonoVisible', { a: t.uid, texto: `¡Daño ×${x}!` }, t); }
+    }
     if (a.sellado && a.pasiva.sello.dano) d *= 1 + a.pasiva.sello.dano;   // sello: p. ej. Arrogante = −10% de daño
     if (get(a, 'fear')) d *= CONTROL.miedoDano;
     let quiebre = false;
