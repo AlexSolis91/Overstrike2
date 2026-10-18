@@ -192,6 +192,7 @@ export const RELIQUIAS = {
   egidaFaro: { name: 'Égida del Faro', rarity: 'Especial', type: 'Escudo', imagen: 'assets/reliquias/egidaFaro.webp' },
   espadaEscudero: { name: 'Espada del Escudero', rarity: 'Común', type: 'Espada', imagen: 'assets/reliquias/espadaEscudero.webp' },
   hachaBerserker: { name: 'Hacha del Berserker', rarity: 'Raro', type: 'Hacha', imagen: 'assets/reliquias/hachaBerserker.webp' },
+  cotaMallaOxidada: { name: 'Cota de Malla Oxidada', rarity: 'Común', type: 'Pechera', imagen: 'assets/reliquias/cotaMallaOxidada.webp' },
 };
 for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
