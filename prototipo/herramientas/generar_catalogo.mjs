@@ -20,7 +20,7 @@ ${filas.join(',\n')}
 on conflict (id) do update set nombre = excluded.nombre, starter = excluded.starter, sobres = excluded.sobres, activo = excluded.activo;
 -- ${OFICIALES.length} campeones
 
--- ============================================================ RELIQUIAS (requiere docs/sql/005_reliquias.sql)
+-- ============================================================ RELIQUIAS (requiere docs/sql/005_reliquias.sql y 006_horda.sql)
 insert into public.reliquia_tipos (tipo, categoria, planas, pcts) values
 ${Object.entries(TIPOS).map(([t, d]) => `  (${q(t)}, ${q(d.categoria)}, array[${d.plana.map(q).join(', ')}]::text[], array[${d.pct.map(q).join(', ')}]::text[])`).join(',\n')}
 on conflict (tipo) do update set categoria = excluded.categoria, planas = excluded.planas, pcts = excluded.pcts;
@@ -29,10 +29,10 @@ insert into public.reliquia_rangos (rareza, stat, minimo, maximo) values
 ${rangos.join(',\n')}
 on conflict (rareza, stat) do update set minimo = excluded.minimo, maximo = excluded.maximo;
 
-insert into public.reliquias_catalogo (id, nombre, rareza, tipo, en_sobre, solo_receta, activo) values
-${Object.entries(RELIQUIAS).map(([id, r]) => `  (${q(id)}, ${q(r.name)}, ${q(r.rarity)}, ${q(r.type)}, ${!!r.enSobre}, ${!!r.soloReceta}, true)`).join(',\n')}
+insert into public.reliquias_catalogo (id, nombre, rareza, tipo, en_sobre, solo_receta, activo, lote) values
+${Object.entries(RELIQUIAS).map(([id, r]) => `  (${q(id)}, ${q(r.name)}, ${q(r.rarity)}, ${q(r.type)}, ${!!r.enSobre}, ${!!r.soloReceta}, true, ${q(r.lote)})`).join(',\n')}
 on conflict (id) do update set nombre = excluded.nombre, rareza = excluded.rareza, tipo = excluded.tipo,
-  en_sobre = excluded.en_sobre, solo_receta = excluded.solo_receta, activo = excluded.activo;
+  en_sobre = excluded.en_sobre, solo_receta = excluded.solo_receta, activo = excluded.activo, lote = excluded.lote;
 -- ${Object.keys(RELIQUIAS).length} reliquias · ${Object.keys(TIPOS).length} tipos
 `;
 writeFileSync(path.join(aqui, '../../docs/sql/catalogo.sql'), sql, 'utf8');

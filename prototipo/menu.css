@@ -1,6 +1,6 @@
 /* ================================================================ PANTALLAS FUERA DE LA BATALLA (lobby, equipos, ficha, VS) */
 .pantalla { display: none; }
-body[data-pantalla="menu"] #pantalla-menu, body[data-pantalla="equipo"] #pantalla-equipo, body[data-pantalla="campana"] #pantalla-campana { display: flex; }
+body[data-pantalla="menu"] #pantalla-menu, body[data-pantalla="equipo"] #pantalla-equipo, body[data-pantalla="campana"] #pantalla-campana, body[data-pantalla="horda"] #pantalla-horda { display: flex; }
 body:not([data-pantalla="partida"]) #app { visibility: hidden; }
 .pantalla {
   position: fixed; inset: 0; z-index: 20; flex-direction: column; overflow: hidden;
@@ -810,3 +810,51 @@ body.eq-campana .eq-modo, body.eq-campana .eq-azar[data-lado="rival"], body.eq-c
 .tc-rel.legendaria, .tc-slot.lleno.legendaria { animation: tcLegend 1.8s ease-in-out infinite; }
 @keyframes tcLegend { 0%, 100% { box-shadow: 0 0 12px #fbbf24, 0 0 26px rgba(251, 191, 36, .45); } 50% { box-shadow: 0 0 22px #fde68a, 0 0 46px rgba(251, 191, 36, .75); } }
 @media (prefers-reduced-motion: reduce) { .tc-rel.legendaria, .tc-slot.lleno.legendaria { animation: none; box-shadow: 0 0 18px #fbbf24; } }
+
+/* ================================================================ HORDA */
+#pantalla-horda { gap: 10px; padding: max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
+.hd-runas { display: flex; gap: 12px; align-items: center; font: 800 14px Inter, sans-serif; color: var(--text); }
+.hd-runas img { width: 30px; height: 30px; object-fit: contain; vertical-align: middle; filter: drop-shadow(0 0 6px #3b82f6); }
+.hd-cuerpo { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 14px; }
+.hd-tarjeta { position: relative; border-radius: 16px; overflow: hidden; min-height: 320px; border: 1px solid rgba(132, 204, 22, .35);
+  background: #0b0f18 center/cover no-repeat; display: flex; flex-direction: column; justify-content: flex-end; box-shadow: 0 0 30px rgba(132, 204, 22, .15); }
+.hd-tarjeta::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 30%, rgba(5, 8, 14, .95)); }
+.hd-tarjeta > * { position: relative; }
+.hd-tarjeta h3 { margin: 0 16px; font: 900 28px Cinzel, serif; color: #bef264; text-shadow: 0 2px 12px #000; }
+.hd-tarjeta p { margin: 6px 16px 14px; color: #e5e7eb; font-size: 13px; }
+.hd-acciones { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 16px 16px; }
+.hd-btn { font: 900 15px Inter, sans-serif; padding: 12px 18px; border-radius: 12px; cursor: pointer; border: 0; color: #0b1407;
+  background: linear-gradient(180deg, #bef264, #65a30d); box-shadow: 0 4px 18px rgba(132, 204, 22, .35); }
+.hd-btn:disabled { filter: grayscale(1) brightness(.6); cursor: not-allowed; }
+.hd-btn.sec { color: var(--text); background: #1f2937; box-shadow: none; border: 1px solid rgba(255, 255, 255, .15); }
+.hd-info { border-radius: 16px; padding: 14px; background: rgba(8, 11, 18, .85); border: 1px solid rgba(255, 255, 255, .1); font-size: 13px; color: var(--muted); overflow-y: auto; }
+.hd-info h4 { margin: 8px 0 6px; font: 900 14px Cinzel, serif; color: var(--gold); }
+.hd-info b { color: var(--text); }
+.hd-info table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.hd-info td, .hd-info th { padding: 3px 6px; border-bottom: 1px solid rgba(255, 255, 255, .06); text-align: center; }
+.hd-record { font: 900 18px Cinzel, serif; color: var(--gold); margin: 0 16px 8px; }
+.hd-proximo { opacity: .55; filter: grayscale(.6); }
+/* entre oleadas */
+#horda-ov { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(3, 6, 12, .72); backdrop-filter: blur(3px); }
+#horda-ov.hidden { display: none; }
+.hov-caja { width: min(460px, 92vw); padding: 20px; border-radius: 18px; text-align: center; background: linear-gradient(180deg, #111827, #0b0f18);
+  border: 1px solid rgba(132, 204, 22, .45); box-shadow: 0 0 40px rgba(132, 204, 22, .25); }
+.hov-caja h2 { margin: 0 0 4px; font: 900 26px Cinzel, serif; color: #bef264; }
+.hov-caja .hov-sub { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+.hov-botin { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 10px 0; }
+.hov-item { min-width: 90px; padding: 8px 10px; border-radius: 12px; background: #0b0f18; border: 1px solid var(--rc, #374151); font: 800 13px Inter, sans-serif; color: var(--text); }
+.hov-item img { display: block; width: 64px; height: 64px; margin: 0 auto 4px; object-fit: contain; }
+.hov-total { font-size: 12px; color: var(--muted); margin: 8px 0 14px; }
+.hov-sig { font-size: 13px; color: #fca5a5; margin-bottom: 12px; font-weight: 800; }
+.hov-botones { display: flex; gap: 10px; justify-content: center; }
+@media (max-width: 760px) { .hd-cuerpo { grid-template-columns: 1fr; } .hd-tarjeta { min-height: 240px; } }
+
+/* Colección: Polvo Arcano, descomponer, fusionar, candado y mejorar */
+.tc-ico { width: 18px; height: 18px; object-fit: contain; vertical-align: -4px; }
+.tc-rel.marcada { outline: 3px solid var(--gold); outline-offset: 2px; transform: translateY(-2px); }
+.tc-rel-lock { position: absolute; right: 3px; top: 3px; font-style: normal; font-size: 13px; filter: drop-shadow(0 1px 2px #000); }
+.tc-herr button { font-size: 13px; }
+.tc-masiva { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin: 0 0 10px; padding: 10px; border-radius: 12px;
+  background: rgba(5, 8, 14, .6); border: 1px solid rgba(255, 255, 255, .1); font-size: 12px; color: var(--muted); }
+.tc-masiva > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.tc-mejorar { display: flex; flex-wrap: wrap; gap: 6px; }

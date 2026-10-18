@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=17">
-  <link rel="stylesheet" href="menu.css?v=26">
+  <link rel="stylesheet" href="menu.css?v=27">
 </head>
 <body data-pantalla="cargando">
   <!-- ============================================================ LOBBY -->
@@ -66,6 +66,16 @@
     <div id="cp-difs" class="cp-difs"></div>
     <div class="cp-cuerpo"><div id="cp-mapa" class="cp-mapa"></div><aside id="cp-detalle" class="cp-detalle"></aside></div>
     <div id="cp-aviso"></div>
+  </section>
+
+  <!-- ============================================================ HORDA -->
+  <section id="pantalla-horda" class="pantalla">
+    <header class="eq-top cp-top">
+      <button id="hd-volver" class="eq-btn">← Menú</button>
+      <h2>🧟 Hordas</h2>
+      <div id="hd-runas" class="hd-runas"></div>
+    </header>
+    <div id="hd-cuerpo" class="hd-cuerpo"></div>
   </section>
 
   <div id="guia" class="hidden">
@@ -175,6 +185,8 @@
       </aside>
 
       <div id="actionbar"></div>
+
+      <div id="horda-ov" class="hidden"><div class="hov-caja"></div></div>
 
       <div id="overlay" class="hidden">
         <div class="ov-box res-caja">

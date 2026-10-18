@@ -6,7 +6,7 @@ import { SOBRES } from '../datos/sobres.js';
 import { perfilActual } from './cuenta.js';
 import { revelarCartas } from './apertura.js';
 import * as D from '../servicios/datos.js';
-import { RAREZAS, ESPACIOS, instancia, calidad, motivoNoEquipar } from '../datos/reliquias.js';
+import { RAREZAS, ESPACIOS, STAT_META, instancia, calidad, motivoNoEquipar } from '../datos/reliquias.js';
 import { cartaReliquia } from './panel.js';
 
 const $ = s => document.querySelector(s);
@@ -22,6 +22,14 @@ let col = new Map();          // campeón → { copias, estrellas, espacios }
 let inv = { oro: 0, frag_runa: 0, frag_otros: 0, runas: 0, vales_sobre: 0, rel_sobres: 0 };
 let rels = [], sinReliquias = false;   // copias de reliquias del jugador (sinReliquias: falta docs/sql/005_reliquias.sql)
 let relFiltro = { cat: '', rareza: '' }, relSel = null, slotSel = null;   // pestaña Reliquias y espacio elegido en la ficha
+let relModo = 'ver', relMarcadas = new Set();   // pestaña Reliquias: 'ver' | 'descomponer' | 'fusionar' y las reliquias elegidas
+// Polvo Arcano y fusión (igual que en el servidor, docs/sql/006_horda.sql)
+const POLVO = { 'Común': 1, 'Raro': 5, 'Especial': 20, 'Épico': 100 };
+const COSTO_MEJORA = { 'Común': 2, 'Raro': 8, 'Especial': 25, 'Épico': 80, 'Legendario': 200 };
+const ORO_FUSION = { 'Común': 1000, 'Raro': 5000, 'Especial': 20000 };
+const SIG_RAREZA = { 'Común': 'Raro', 'Raro': 'Especial', 'Especial': 'Épico' };
+const hoyMx = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+const precioPortal = () => { const n = inv.portal_dia === hoyMx() ? inv.portal_compras || 0 : 0; return n === 0 ? 10000 : n === 1 ? 20000 : 40000; };
 let cfg = [];                 // sobres_config del servidor
 let pestana = 'tienda', detalle = null, elegidoPortal = null, ocupado = false;
 
@@ -60,7 +68,9 @@ function pintarInventario() {
     ${inv.vales_sobre ? `<span title="Vales de sobre (ábrelos gratis en la Tienda)">🎟️ <b>${num(inv.vales_sobre)}</b></span>` : ''}
     <span title="Runas de Invocación">🔮 <b>${num(inv.runas)}</b></span>
     <span class="tc-frag" title="Fragmentos de Runa de Invocación (${FRAG_POR_RUNA} = 1 Runa)">🧩 <b>${inv.frag_runa}/${FRAG_POR_RUNA}</b><i style="--p:${pct}%"></i></span>
-    <span title="Otros fragmentos (sus usos llegarán pronto)">💠 <b>${num(inv.frag_otros)}</b></span>`;
+    <span title="Otros fragmentos (sus usos llegarán pronto)">💠 <b>${num(inv.frag_otros)}</b></span>
+    ${inv.runas_portal != null ? `<span title="Runas de Portal (entrar a la Horda)"><img class="tc-ico" src="assets/items/runaPortal.png" alt=""> <b>${num(inv.runas_portal)}</b></span>` : ''}
+    ${inv.polvo_arcano != null ? `<span title="Polvo Arcano (mejorar valores de reliquias)"><img class="tc-ico" src="assets/items/polvoArcano.png" alt=""> <b>${num(inv.polvo_arcano)}</b></span>` : ''}`;
 }
 
 function sobresVisibles() {
@@ -75,8 +85,14 @@ function htmlTienda() {
   const orden = id => Object.keys(SOBRES).indexOf(id);
   const grupo = rel => lista.filter(c => (SOBRES[c.id].tipo === 'reliquias') === rel).sort((a, b) => orden(a.id) - orden(b.id));
   const campeones = grupo(false), reliquias = sinReliquias ? [] : grupo(true);
+  const precio = precioPortal();
+  const objetos = inv.runas_portal == null ? '' : `<h4 class="tc-seccion">Objetos</h4><div class="tc-sobres"><div class="tc-sobre" style="--c:#3b82f6">
+      <div class="tc-sobre-arte"><img src="assets/items/runaPortal.png" alt="Runa de Portal" style="object-fit:contain;padding:10px"></div>
+      <b>Runa de Portal</b>
+      <button class="eq-listo tc-abrir" data-comprarportal ${inv.oro >= precio ? '' : 'disabled'}>🪙 ${num(precio)}</button>
+      <em>Abre la Horda · el precio sube con cada compra del día (10,000 · 20,000 · 40,000)</em></div></div>`;
   return `${campeones.length ? `<h4 class="tc-seccion">Sobres de campeones</h4>${htmlSobres(campeones)}` : ''}
-    ${reliquias.length ? `<h4 class="tc-seccion">Sobres de reliquias</h4>${htmlSobres(reliquias)}` : ''}`;
+    ${reliquias.length ? `<h4 class="tc-seccion">Sobres de reliquias</h4>${htmlSobres(reliquias)}` : ''}${objetos}`;
 }
 function htmlSobres(lista) {
   return `<div class="tc-sobres">${lista.map(c => { const s = SOBRES[c.id], alcanza = inv.oro >= c.precio, esRel = s.tipo === 'reliquias';
@@ -101,9 +117,9 @@ function htmlGarantias() {
 const ordenRel = (a, b) => RAREZAS[b.rarity].orden - RAREZAS[a.rarity].orden || calidad(b) - calidad(a) || a.name.localeCompare(b.name);
 const dondeEsta = r => r.campeon ? `${porId(r.campeon)?.nombre || r.campeon} · ${ESPACIOS.find(e => e.id === r.espacio)?.label || ''}` : '';
 function miniaturaRel(r, attrs = '') {
-  return `<button class="tc-rel ${r.campeon ? 'puesta' : ''} ${r.rarity === 'Legendario' ? 'legendaria' : ''}" ${attrs} style="--rc:${RAREZAS[r.rarity].color}" title="${r.name} · ${r.rarity} · Calidad ${calidad(r)}%${r.campeon ? ` · en ${dondeEsta(r)}` : ''}">
+  return `<button class="tc-rel ${r.campeon ? 'puesta' : ''} ${r.rarity === 'Legendario' ? 'legendaria' : ''} ${relMarcadas.has(r.uid) ? 'marcada' : ''}" ${attrs} style="--rc:${RAREZAS[r.rarity].color}" title="${r.name} · ${r.rarity} · Calidad ${calidad(r)}%${r.campeon ? ` · en ${dondeEsta(r)}` : ''}">
     ${r.imagen ? `<img src="${r.imagen}" alt="" loading="lazy">` : `<span>${r.name}</span>`}
-    <i class="tc-rel-q">${calidad(r)}%</i>${r.campeon ? `<i class="tc-rel-en">${porId(r.campeon)?.emoji || '👤'}</i>` : ''}</button>`;
+    <i class="tc-rel-q">${calidad(r)}%</i>${r.campeon ? `<i class="tc-rel-en">${porId(r.campeon)?.emoji || '👤'}</i>` : ''}${r.bloqueada ? '<i class="tc-rel-lock">🔒</i>' : ''}</button>`;
 }
 function htmlReliquias() {
   if (sinReliquias) return '<p class="tc-vacio">Las reliquias se activan cuando se ejecute <b>docs/sql/005_reliquias.sql</b> en el servidor.</p>';
@@ -113,14 +129,56 @@ function htmlReliquias() {
     return `<button class="eq-btn tc-volver" data-rel-volver>← Reliquias</button>
       <div class="tc-rel-det">${cartaReliquia(r)}
         <div class="tc-rel-acc">${r.campeon ? `<p>Equipada en <b>${dondeEsta(r)}</b></p><button class="eq-btn" data-quitar="${r.uid}">Quitar</button>`
-          : '<p>Para equiparla, abre la ficha de un campeón en <b>Colección</b> y toca uno de sus espacios.</p>'}</div></div>`;
+          : '<p>Para equiparla, abre la ficha de un campeón en <b>Colección</b> y toca uno de sus espacios.</p>'}
+          ${inv.polvo_arcano != null ? `<button class="eq-btn" data-candado="${r.uid}">${r.bloqueada ? '🔓 Quitar candado' : '🔒 Poner candado'}</button>
+          <p class="tc-tenue">Con candado no se puede descomponer ni fusionar.</p>${htmlMejorar(r)}` : ''}</div></div>`;
   }
+  const herr = inv.polvo_arcano == null ? '' : `<div class="tc-filtros tc-herr">${[['ver', '👁️ Ver'], ['descomponer', '🧪 Descomponer'], ['fusionar', '⚗️ Fusionar']]
+    .map(([m, t]) => `<button class="${relModo === m ? 'on' : ''}" data-relmodo="${m}">${t}</button>`).join('')}</div>${htmlAccionMasiva()}`;
   const chips = (clave, lista) => lista.map(([v, t]) => `<button class="${relFiltro[clave] === v ? 'on' : ''}" data-filtro="${clave}" data-valor="${v}">${t}</button>`).join('');
   const lista = rels.filter(r => (!relFiltro.cat || r.category === relFiltro.cat) && (!relFiltro.rareza || r.rarity === relFiltro.rareza)).sort(ordenRel);
-  return `<div class="tc-filtros">${chips('cat', [['', 'Todas'], ['Arma', 'Armas'], ['Equipación', 'Equipación'], ['Accesorio', 'Accesorios']])}</div>
+  return `${herr}<div class="tc-filtros">${chips('cat', [['', 'Todas'], ['Arma', 'Armas'], ['Equipación', 'Equipación'], ['Accesorio', 'Accesorios']])}</div>
     <div class="tc-filtros">${chips('rareza', [['', 'Todas'], ...Object.keys(RAREZAS).map(k => [k, RAREZAS[k].plural])])}</div>
     <p class="tc-nota">Tienes <b>${rels.length}</b> reliquia${rels.length === 1 ? '' : 's'}${lista.length !== rels.length ? ` · mostrando ${lista.length}` : ''}. Consíguelas en el sobre <b>Relics of Power</b> de la Tienda.</p>
-    ${lista.length ? `<div class="tc-rels">${lista.map(r => miniaturaRel(r, `data-rel="${r.uid}"`)).join('')}</div>` : '<p class="tc-vacio">No hay reliquias aquí todavía.</p>'}`;
+    ${lista.length ? `<div class="tc-rels">${lista.map(r => miniaturaRel(r, relModo === 'ver' ? `data-rel="${r.uid}"` : bloqueoMasivo(r) ? `data-motivo="${bloqueoMasivo(r)}"` : `data-marcar="${r.uid}"`)).join('')}</div>` : '<p class="tc-vacio">No hay reliquias aquí todavía.</p>'}`;
+}
+// Descomponer / fusionar: qué reliquias no se pueden elegir y la barra con el botón de la acción
+function bloqueoMasivo(r) {
+  if (r.campeon) return 'Está equipada: quítala primero';
+  if (r.bloqueada) return 'Tiene candado';
+  if (relModo === 'descomponer' && r.rarity === 'Legendario') return 'Las Legendarias no se descomponen';
+  if (relModo === 'fusionar') {
+    if (!SIG_RAREZA[r.rarity]) return `Las ${RAREZAS[r.rarity].plural} no se fusionan`;
+    const otra = rels.find(x => relMarcadas.has(x.uid));
+    if (otra && otra.rarity !== r.rarity && !relMarcadas.has(r.uid)) return 'Las 10 deben ser de la misma rareza';
+  }
+  return '';
+}
+function htmlAccionMasiva() {
+  const marcadas = rels.filter(r => relMarcadas.has(r.uid));
+  if (relModo === 'descomponer') {
+    const polvo = marcadas.reduce((s, r) => s + (POLVO[r.rarity] || 0), 0);
+    return `<div class="tc-masiva"><span>Toca las reliquias que quieres romper: dan Polvo Arcano (Común 1 · Rara 5 · Especial 20 · Épica 100).</span>
+      <div><button class="eq-btn" data-marcartodas="Común">Todas las Comunes</button><button class="eq-btn" data-marcartodas="Raro">Todas las Raras</button>
+      <button class="eq-btn" data-desmarcar>Ninguna</button>
+      <button class="eq-listo" data-descomponer ${marcadas.length ? '' : 'disabled'}>🧪 Descomponer ${marcadas.length} (+${num(polvo)})</button></div></div>`;
+  }
+  if (relModo === 'fusionar') {
+    const rz = marcadas[0]?.rarity;
+    return `<div class="tc-masiva"><span>Elige 10 reliquias de la misma rareza: se convierten en 1 reliquia al azar de la rareza siguiente.
+      ${rz ? `Costo: 🪙 ${num(ORO_FUSION[rz])} → 1 ${SIG_RAREZA[rz]}.` : ''}</span>
+      <div><button class="eq-btn" data-desmarcar>Ninguna</button>
+      <button class="eq-listo" data-fusionar ${marcadas.length === 10 ? '' : 'disabled'}>⚗️ Fusionar (${marcadas.length}/10)</button></div></div>`;
+  }
+  return '';
+}
+// Mejorar valores con Polvo Arcano: cada línea (plana o una porcentual; las de 2–3 tiradas se sortean juntas)
+function htmlMejorar(r) {
+  const costo = COSTO_MEJORA[r.rarity], lineas = [['plana', STAT_META[r.flat[0]].label]];
+  for (const [k] of r.rolls) if (!lineas.some(l => l[0] === k)) lineas.push([k, STAT_META[k].label]);
+  return `<h5>🎲 Mejorar valores (${num(costo)} de Polvo por intento)</h5>
+    <p class="tc-tenue">Vuelve a sortear una línea dentro de su rango. El nuevo valor reemplaza al anterior, aunque salga más bajo.</p>
+    <div class="tc-mejorar">${lineas.map(([k, t]) => `<button class="eq-btn" data-mejorar="${k}" data-relid="${r.uid}" ${inv.polvo_arcano >= costo ? '' : 'disabled'}>${t}</button>`).join('')}</div>`;
 }
 
 // Espacios de reliquias de un campeón en su ficha: equipar, cambiar y quitar
@@ -267,12 +325,37 @@ async function abrirConVale(id) {
 async function ejecutar(e) {
   const t = e.target;
   if (t.id === 'tc' || t.closest('#tc-x')) return cerrarTC();
-  const tab = t.closest('.tc-tabs button'); if (tab) { pestana = tab.dataset.tab; detalle = null; relSel = null; slotSel = null; return pintar(); }
+  const tab = t.closest('.tc-tabs button'); if (tab) { pestana = tab.dataset.tab; detalle = null; relSel = null; slotSel = null; relModo = 'ver'; relMarcadas.clear(); return pintar(); }
   const gris = t.closest('button[data-motivo]'); if (gris) return aviso(gris.dataset.motivo, 'error');
   const b = t.closest('button'); if (!b || b.disabled) return;
   if (b.dataset.sobre) return abrirSobre(b.dataset.sobre);
   if ('reliquias' in b.dataset) return abrirReliquias();
   if (b.dataset.filtro) { relFiltro[b.dataset.filtro] = b.dataset.valor; return pintar(); }
+  if (b.dataset.relmodo) { relModo = b.dataset.relmodo; relMarcadas.clear(); return pintar(); }
+  if (b.dataset.marcar) { const id = b.dataset.marcar; if (relMarcadas.has(id)) relMarcadas.delete(id); else if (relModo !== 'fusionar' || relMarcadas.size < 10) relMarcadas.add(id); return pintar(); }
+  if (b.dataset.marcartodas) { for (const r of rels) if (r.rarity === b.dataset.marcartodas && !bloqueoMasivo(r)) relMarcadas.add(r.uid); return pintar(); }
+  if ('desmarcar' in b.dataset) { relMarcadas.clear(); return pintar(); }
+  if ('descomponer' in b.dataset) {
+    const ids = [...relMarcadas];
+    if (!confirm(`¿Descomponer ${ids.length} reliquia(s)? Esto no se puede deshacer.`)) return;
+    return accion(async () => { const polvo = await D.descomponerReliquias(ids); relMarcadas.clear(); await recargar(); pintar(); aviso(`Obtuviste ${num(polvo)} de Polvo Arcano.`); });
+  }
+  if ('fusionar' in b.dataset) {
+    const ids = [...relMarcadas], rz = rels.find(r => r.uid === ids[0])?.rarity;
+    if (!confirm(`¿Fusionar estas 10 reliquias ${RAREZAS[rz].plural} por ${num(ORO_FUSION[rz])} de oro? Esto no se puede deshacer.`)) return;
+    return accion(async () => {
+      const fila = await D.fusionarReliquias(ids); relMarcadas.clear();
+      await revelarCartas({ sobre: { nombre: 'Fusión', icono: '⚗️', color: RAREZAS[SIG_RAREZA[rz]].color }, reliquias: [instancia(fila)].filter(Boolean) });
+      await recargar(); pintar();
+    });
+  }
+  if (b.dataset.candado) { const r = rels.find(x => x.uid === b.dataset.candado); return accion(async () => { await D.bloquearReliquia(r.uid, !r.bloqueada); await recargar(); pintar(); }); }
+  if (b.dataset.mejorar) return accion(async () => { await D.mejorarReliquia(b.dataset.relid, b.dataset.mejorar); await recargar(); pintar(); aviso('¡Nuevo valor sorteado!'); });
+  if ('comprarportal' in b.dataset) {
+    const precio = precioPortal();
+    if (!confirm(`¿Comprar 1 Runa de Portal por ${num(precio)} de oro?`)) return;
+    return accion(async () => { const r = await D.comprarRunaPortal(); await recargar(); pintar(); aviso(`¡Runa de Portal comprada! Tienes ${r.runas}. La siguiente cuesta ${num(r.siguiente)}.`); });
+  }
   if (b.dataset.rel) { relSel = b.dataset.rel; return pintar(); }
   if ('relVolver' in b.dataset) { relSel = null; return pintar(); }
   if (b.dataset.slot) { slotSel = slotSel === b.dataset.slot ? null : b.dataset.slot; return pintar(); }

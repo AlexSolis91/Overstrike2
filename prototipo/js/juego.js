@@ -17,6 +17,10 @@ import { iniciarColeccion } from './ui/coleccion.js';
 import { EFECTOS } from './motor/efectos.js';
 import { INVOCACIONES } from './datos/invocaciones.js';
 import { cargarCuenta, conCuenta } from './servicios/cuentaBatalla.js';
+import * as D from './servicios/datos.js';
+import { oleada, defsOleada } from './datos/horda/horda.js';
+import { iniciarHorda, abrirHorda } from './ui/horda.js';
+import { RELIQUIAS, RAREZAS } from './datos/reliquias.js';
 
 const { gsap } = window;
 const $ = s => document.querySelector(s);
@@ -59,29 +63,40 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   P = combate.personajes;
   const serie = opciones?.serie || 0;                         // en una serie de repeticiones siempre va en Auto y ×2
   ui = { actual: null, inspeccionado: P[0].uid, miTurno: false, movSel: null, objetivosValidos: null, tipoObjetivo: null, ocupado: true, opciones: null,
-    camp: opciones?.campana || null, serie, auto: !!serie || autoActivo };
+    camp: opciones?.campana || null, horda: opciones?.horda || null, serie, auto: !!serie || autoActivo };
   setVelocidad(serie ? 2 : velocidad); marcarControles();
   vistas = {}; cartas = {};
-  for (const p of P) {
-    cartas[p.uid] = new Carta(p, colX(p.pos), p.lado === 'rival' ? 215 : 585, tocarCarta);
-    vistas[p.uid] = combate.vista(p);
-    cartas[p.uid].aplicar(vistas[p.uid], true);
-  }
+  for (const p of P) crearCarta(p);
   G.alTick = [(dt, T) => { for (const c of Object.values(cartas)) c.tick(dt, T, ui); }];
   window.__os2.combate = combate; window.__os2.ui = ui; window.__os2.cartas = cartas;
   irA('partida');
   relayout();
-  for (const [i, carta] of Object.values(cartas).entries()) {
+  entrarCartas(Object.values(cartas));
+  refrescarPanel();
+  actualizarJefe();
+  await wait(1100);
+  await anunciar();
+  await procesar(combate.iniciar());
+}
+function crearCarta(p) {
+  cartas[p.uid] = new Carta(p, colX(p.pos), p.lado === 'rival' ? 215 : 585, tocarCarta);
+  vistas[p.uid] = combate.vista(p);
+  cartas[p.uid].aplicar(vistas[p.uid], true);
+}
+function entrarCartas(lista) {
+  for (const [i, carta] of lista.entries()) {
     const desde = carta.p.lado === 'jugador' ? 1000 : -200;
     carta.c.y = desde; carta.c.alpha = 0;
     gsap.to(carta.c, { y: carta.hy, alpha: 1, duration: .6, delay: .15 + (i % 5) * .08 + (carta.p.lado === 'jugador' ? .2 : 0), ease: 'back.out(1.4)' });
   }
-  refrescarPanel();
-  actualizarJefe();
-  await wait(1100);
+}
+// Aviso al empezar: oleada de la Horda y/o jefe (Campaña y Horda)
+async function anunciar() {
+  const h = ui.horda;
+  if (h) { banner(`🧟 Oleada ${h.n}`, { size: 52, color: '#bef264', hold: .9 }); await wait(1300); }
   const jefe = P.find(p => p.lado === 'rival' && vistas[p.uid]?.jefe);
-  if (jefe) { banner(`⚠️ ${ui.camp?.etapa === 20 ? 'JEFE FINAL' : 'MINI-JEFE'}: ${jefe.nombre}`, { size: 46, color: '#fca5a5', hold: 1.3 }); shakeScene(8); await wait(1600); }
-  await procesar(combate.iniciar());
+  const tipo = h ? (h.rango === 'jefe' ? 'JEFE' : 'MINI-JEFE') : ui.camp?.etapa === 20 ? 'JEFE FINAL' : 'MINI-JEFE';
+  if (jefe) { banner(`⚠️ ${tipo}: ${jefe.nombre}`, { size: 46, color: '#fca5a5', hold: 1.3 }); shakeScene(8); await wait(1600); }
 }
 
 // Empezar una partida (Listo, Revancha). Sin recargar la página: se limpia la anterior, así el audio sigue activo.
@@ -109,7 +124,7 @@ function limpiarPartida() {
   $('#log').innerHTML = ''; logLeido();
   $('#overlay').classList.add('hidden');
 }
-function salirDePartida() { partida++; ui.miTurno = false; ui.ocupado = true; ui.serie = 0; clearTimeout(serieT); $('#overlay').classList.add('hidden'); setVelocidad(1); $('#jefe-barra').classList.add('hidden'); }
+function salirDePartida() { cerrarHorda(); $('#horda-ov').classList.add('hidden'); partida++; ui.miTurno = false; ui.ocupado = true; ui.serie = 0; clearTimeout(serieT); $('#overlay').classList.add('hidden'); setVelocidad(1); $('#jefe-barra').classList.add('hidden'); }
 
 // ---------------------------------------------------------------- Auto-batalla y velocidad (se recuerdan en este dispositivo)
 let autoActivo = false, velocidad = 1, serieT = null;
@@ -125,7 +140,7 @@ function actualizarJefe() {
   if (!j) return bar.classList.add('hidden');
   const v = vistas[j.uid];
   bar.classList.remove('hidden'); bar.classList.toggle('furia', !!v.jefe.furia); bar.classList.toggle('muerto', !!v.muerto);
-  bar.querySelector('.jb-nombre').textContent = `${ui.camp?.etapa === 20 ? '👑' : '💀'} ${j.nombre}${v.jefe.furia ? ' · 🔥 FURIA' : ''}`;
+  bar.querySelector('.jb-nombre').textContent = `${ui.camp?.etapa === 20 || ui.horda?.rango === 'jefe' ? '👑' : '💀'} ${j.nombre}${v.jefe.furia ? ' · 🔥 FURIA' : ''}`;
   bar.querySelector('i').style.width = `${Math.max(0, v.hp / v.maxHp * 100)}%`;
 }
 
@@ -448,6 +463,7 @@ async function jugarAuto(esta) {
 
 function terminar(fin) {
   ui.fin = fin; ui.miTurno = false; ui.actual = null; ui.ocupado = true; barra(); setHint('');
+  if (ui.horda && fin.ganador === 'jugador') return oleadaGanada();          // Horda: la batalla sigue con otra oleada
   // la ventana de resultados aparece a los 0.7 s; la música del menú entra 2 s después de la ventana
   finDePartida(fin.ganador === 'empate' ? null : fin.ganador === 'jugador', 700 + 2000);
   const personajes = combate.estadisticas().map(e => {
@@ -457,6 +473,7 @@ function terminar(fin) {
   const esta = partida, gano = fin.ganador === 'jugador';
   const base = { gano, empate: fin.ganador === 'empate', limite: !!fin.limite, ronda: fin.ronda, duracionMs: Date.now() - inicioPartida, personajes };
   botonesResultado(gano);
+  if (ui.horda) return void finHorda(base, false);
   if (!ui.camp) return void setTimeout(() => esta === partida && mostrarResultados({ ...base, recompensas: fin.recompensas || [] }), 700);
   // Campaña: estrellas y cobro en el servidor; luego (si es una serie) la siguiente repetición
   const muertosAliados = P.filter(p => p.lado === 'jugador' && vistas[p.uid]?.muerto).length;
@@ -468,12 +485,99 @@ function terminar(fin) {
   });
 }
 
+// ---------------------------------------------------------------- Horda: entre oleadas, retirarse y botín
+const miles = n => Math.round(n).toLocaleString('es-MX');
+async function cobrarOleada(h) {
+  if (!h.partida) return null;
+  try { return await D.hordaOleada(h.partida, h.n); }
+  catch (e) {                                            // el servidor pide 10 s entre oleadas: espera y reintenta una vez
+    if (!/rápido/i.test(e?.message || '')) throw e;
+    await wait(10500); return D.hordaOleada(h.partida, h.n);
+  }
+}
+async function oleadaGanada() {
+  const h = ui.horda, esta = partida;
+  let r = null, error = '';
+  try { r = await cobrarOleada(h); } catch (e) { error = D.mensajeError(e); }
+  if (esta !== partida) return;
+  if (r) { h.botin.oro += r.oro; if (r.reliquia) h.botin.reliquias.push(r.reliquia); h.botin.fragmentos += r.fragmentos; }
+  h.prox = oleada(h.n + 1);
+  const item = (img, txt, color = '#374151') => `<div class="hov-item" style="--rc:${color}">${img}${txt}</div>`;
+  const rel = r?.reliquia && RELIQUIAS[r.reliquia.reliquia];
+  const aviso = h.prox.rango === 'jefe' ? '⚠️ Siguiente: ¡JEFE!' : h.prox.rango === 'miniJefe' ? '⚠️ Siguiente: ¡MINI-JEFE!' : '';
+  $('#horda-ov .hov-caja').innerHTML = `
+    <h2>¡Oleada ${h.n} superada!</h2>
+    <div class="hov-sub">Botín de esta oleada</div>
+    <div class="hov-botin">
+      ${r ? item('<div style="font-size:34px">🪙</div>', `+${miles(r.oro)} de oro`) : ''}
+      ${rel ? item(`<img src="${rel.imagen}" alt="">`, `<span style="color:${RAREZAS[rel.rarity].color}">${rel.name}</span>`, RAREZAS[rel.rarity].color) : ''}
+      ${r?.fragmentos ? item('<div style="font-size:34px">🔷</div>', `+${r.fragmentos} Fragmento(s) de Runa`) : ''}
+      ${error ? `<div class="hov-sig">⚠️ ${error}</div>` : ''}
+    </div>
+    <div class="hov-total">Total: 🪙 ${miles(h.botin.oro)} · 💎 ${h.botin.reliquias.length} reliquia(s) · 🔷 ${h.botin.fragmentos}</div>
+    ${aviso ? `<div class="hov-sig">${aviso}</div>` : ''}
+    <div class="hov-botones"><button id="hov-seguir" class="hd-btn">⚔️ Oleada ${h.n + 1}</button><button id="hov-retirar" class="hd-btn sec">🏳️ Retirarse</button></div>`;
+  $('#horda-ov').classList.remove('hidden');
+}
+async function siguienteOleada() {
+  const h = ui.horda;
+  $('#horda-ov').classList.add('hidden');
+  h.n++; const o = h.prox; h.rango = o.rango;
+  for (const uid of Object.keys(cartas)) if (uid.startsWith('rival-')) {      // fuera la oleada anterior
+    const c = cartas[uid]; matarTweens(c.c); c.c.parent?.removeChild(c.c); if (!c.c.destroyed) c.c.destroy({ children: true });
+    delete cartas[uid]; delete vistas[uid];
+  }
+  const res = combate.siguienteOleada(defsOleada(o), o.opciones);
+  P = combate.personajes;
+  const nuevos = P.filter(p => p.uid.startsWith('rival-'));
+  for (const p of nuevos) crearCarta(p);
+  for (const p of P) { vistas[p.uid] = combate.vista(p); cartas[p.uid]?.aplicar(vistas[p.uid], true); }
+  ui.fin = null; ui.ocupado = true;
+  relayout(); entrarCartas(nuevos.map(p => cartas[p.uid]));
+  refrescarPanel(); actualizarJefe();
+  await wait(900);
+  await anunciar();
+  await procesar(res);
+}
+function cerrarHorda() {
+  const h = ui.horda;
+  if (!h || h.cerrada) return Promise.resolve(null);
+  h.cerrada = true;
+  return h.partida ? D.hordaTerminar(h.partida).catch(() => null) : Promise.resolve(null);
+}
+async function finHorda(base, retirado) {
+  const h = ui.horda, esta = partida;
+  $('#horda-ov').classList.add('hidden');
+  const [res] = await Promise.all([cerrarHorda(), wait(700)]);
+  if (esta !== partida) return;
+  const recompensas = [{ tipo: 'oro', cantidad: h.botin.oro },
+    ...h.botin.reliquias.map(f => { const c = RELIQUIAS[f.reliquia]; return { tipo: 'reliquia', cantidad: 1, rareza: c?.rarity, nombre: c?.name }; }),
+    ...(h.botin.fragmentos ? [{ tipo: 'fragmento', cantidad: h.botin.fragmentos, nombre: 'Fragmentos de Runa' }] : [])];
+  const superadas = retirado ? h.n : h.n - 1;
+  mostrarResultados({ ...base, gano: retirado, recompensas });
+  $('#ov-title').textContent = retirado ? '🏳️ Te retiraste' : '☠️ Tu equipo cayó';
+  $('#ov-sub').textContent = `Oleadas superadas: ${superadas}${res?.record ? ` · Tu récord: ${res.record}` : ''} · Te llevas todo el botín`;
+}
+function retirarse() {
+  const fin = ui.fin;
+  finDePartida(true, 700 + 2000);
+  const personajes = combate.estadisticas().map(e => { const p = por(e.uid); return { ...e, nombre: p.nombre, imagen: p.imagen, emoji: p.emoji, color: p.color }; });
+  botonesResultado(true);
+  finHorda({ gano: true, empate: false, limite: false, ronda: fin?.ronda || combate.ronda, duracionMs: Date.now() - inicioPartida, personajes }, true);
+}
+$('#horda-ov').addEventListener('click', e => {
+  if (e.target.closest('#hov-seguir')) siguienteOleada();
+  if (e.target.closest('#hov-retirar')) retirarse();
+});
+
 // Botones de la ventana de resultados: en Campaña son Siguiente etapa / Repetir / Cambiar equipo / Portal
 function botonesResultado(gano) {
   const camp = ui.camp;
+  const h = !!ui.horda;
+  $('#ov-revancha').classList.toggle('hidden', h); $('#ov-equipo').classList.toggle('hidden', h);
   $('#ov-siguiente').classList.toggle('hidden', !(camp && gano && siguienteEtapa(camp)));
   $('#ov-revancha').textContent = camp ? '🔁 Repetir' : '⚔️ Revancha';
-  $('#ov-menu').textContent = camp ? '🌀 Portal' : '🏠 Menú';
+  $('#ov-menu').textContent = camp ? '🌀 Portal' : h ? '🧟 Horda' : '🏠 Menú';
 }
 // Serie de repeticiones: espera lo que pida el servidor entre victorias (90 s) y lanza la siguiente batalla en Auto ×2
 function programarRepeticion(esta) {
@@ -593,7 +697,7 @@ $('#ov-equipo').addEventListener('click', () => {
   if (c) return elegirEquipoEtapa(c.dif, c.etapa);
   cargarSeleccion(ultima.jugador.map(porId), ultima.rival.map(porId), ultima.rivalModo); irA('equipo');
 });
-$('#ov-menu').addEventListener('click', () => { clearTimeout(serieT); irA(ultima.opciones?.campana ? 'campana' : 'menu'); });
+$('#ov-menu').addEventListener('click', () => { clearTimeout(serieT); irA(ultima.opciones?.campana ? 'campana' : ultima.opciones?.horda ? 'horda' : 'menu'); });
 $('#ov-siguiente').addEventListener('click', () => { clearTimeout(serieT); const c = ultima.opciones?.campana, e = c && siguienteEtapa(c); if (e) elegirEquipoEtapa(c.dif, e); });
 $('#overlay').addEventListener('click', e => {
   const b = e.target.closest('#res-serie-stop'); if (!b) return;
@@ -635,8 +739,9 @@ iniciarColeccion();
 document.addEventListener('click', e => { if (e.target.closest('button:not([disabled]):not(.act.off)')) sonar('clic'); }, true);
 
 // ---------------------------------------------------------------- inicio: menú, o directo a la partida si venimos de "Revancha"/"Jugar"
-iniciarMenu({ jugar: (j, r) => jugar(j, r, document.querySelector('.eq-modo button.on')?.dataset.modo || 'azar'), salirDePartida, abrirCampana });
+iniciarMenu({ jugar: (j, r) => jugar(j, r, document.querySelector('.eq-modo button.on')?.dataset.modo || 'azar'), salirDePartida, abrirCampana, abrirHorda });
 iniciarCampana({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
+iniciarHorda({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 let pendiente = null;
 try { pendiente = JSON.parse(sessionStorage.getItem('os2-partida') || 'null'); sessionStorage.removeItem('os2-partida'); } catch (e) { /* sin almacenamiento */ }
 const eqs = pendiente && [pendiente.jugador.map(porId), pendiente.rival.map(porId)];

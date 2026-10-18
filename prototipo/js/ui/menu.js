@@ -11,7 +11,7 @@ const MODOS = [
   { id: 'rapida', nombre: 'Partida rápida', icono: '⚔️', desc: 'Arma tu equipo y enfrenta a la IA', activo: true },
   { id: 'campana', nombre: 'Campaña', icono: '📜', desc: 'Cruza el Portal: 20 etapas y 3 dificultades', activo: true },
   { id: 'multi', nombre: 'Multijugador', icono: '🌐' },
-  { id: 'hordas', nombre: 'Hordas', icono: '🧟' },
+  { id: 'hordas', nombre: 'Hordas', icono: '🧟', desc: 'Oleadas sin fin: ¿hasta dónde llegas?', activo: true },
   { id: 'jefe', nombre: 'Jefe de Clan', icono: '🐲' },
   { id: 'arena', nombre: 'Arena', icono: '🏟️' },
 ];
@@ -26,7 +26,7 @@ const E = { jugador: [], rival: [], rivalModo: 'azar', editando: 'jugador', filt
 let alJugar = null;
 
 // ---------------------------------------------------------------- navegación entre pantallas (con el botón "atrás")
-const PANTALLAS = ['menu', 'equipo', 'partida', 'campana'];
+const PANTALLAS = ['menu', 'equipo', 'partida', 'campana', 'horda'];
 let alSalirDePartida = null;
 export function irA(p, { reemplazar = false } = {}) {
   if (reemplazar) history.replaceState(null, '', '#' + p); else if (location.hash !== '#' + p) history.pushState(null, '', '#' + p);
@@ -37,9 +37,10 @@ function mostrar(p) {
   document.body.dataset.pantalla = p;
   if (antes === 'partida' && p !== 'partida') alSalirDePartida?.();
   musica(p === 'partida' ? 'batalla' : 'menu');
-  fondo(p === 'menu' || p === 'campana' ? 'menu' : p === 'equipo' ? 'equipo' : null);
+  fondo(p === 'menu' || p === 'campana' || p === 'horda' ? 'menu' : p === 'equipo' ? 'equipo' : null);
   if (p === 'equipo') renderEquipo();
   if (p === 'campana') alAbrirCampana?.();
+  if (p === 'horda') alAbrirHorda?.();
   if (p === 'menu') E.campana = null;
 }
 addEventListener('popstate', () => {
@@ -112,7 +113,7 @@ function renderEquipo() {
   const camp = E.campana;
   document.body.classList.toggle('eq-campana', !!camp);
   $('#pantalla-equipo h2').textContent = camp ? camp.titulo : 'Construye tu equipo';
-  $('#eq-volver').textContent = camp ? '← Portal' : '← Menú';
+  $('#eq-volver').textContent = camp ? (camp.volverTxt || '← Portal') : '← Menú';
   if (camp) { E.editando = 'jugador'; E.rival = camp.rivales; }
   for (const lado of ['jugador', 'rival']) {
     const fila = $(`.eq-fila[data-lado="${lado}"]`);
@@ -219,13 +220,14 @@ export function presentarVS(eqJ, eqR) {
 }
 
 // ---------------------------------------------------------------- arranque
-let alAbrirCampana = null;
-export function iniciarMenu({ jugar, salirDePartida, abrirCampana }) {
-  alJugar = jugar; alSalirDePartida = salirDePartida; alAbrirCampana = abrirCampana;
+let alAbrirCampana = null, alAbrirHorda = null;
+export function iniciarMenu({ jugar, salirDePartida, abrirCampana, abrirHorda }) {
+  alJugar = jugar; alSalirDePartida = salirDePartida; alAbrirCampana = abrirCampana; alAbrirHorda = abrirHorda;
   renderMenu();
   $('#menu-modos').addEventListener('click', e => {
     if (e.target.closest('[data-modo="rapida"]')) { E.campana = null; irA('equipo'); }
     if (e.target.closest('[data-modo="campana"]')) irA('campana');
+    if (e.target.closest('[data-modo="hordas"]')) irA('horda');
   });
   $('#eq-volver').addEventListener('click', () => { if (E.campana) { const c = E.campana; E.campana = null; c.alVolver?.(); } else irA('menu'); });
   $('#pantalla-equipo').addEventListener('click', e => {
@@ -255,8 +257,8 @@ export function iniciarMenu({ jugar, salirDePartida, abrirCampana }) {
 export function cargarSeleccion(eqJ, eqR, rivalModo) { E.jugador = [...eqJ]; E.rival = rivalModo === 'construir' ? [...eqR] : []; E.rivalModo = rivalModo; E.editando = 'jugador'; }
 export const seleccion = () => ({ rivalModo: E.rivalModo });
 // Modo Campaña: abre la construcción de equipo con el rival fijo de la etapa y solo los campeones propios
-export function equipoCampana({ titulo, rivales, propios, alListo, alVolver }) {
-  E.campana = { titulo, rivales, propios, alListo, alVolver };
+export function equipoCampana({ titulo, rivales, propios, alListo, alVolver, volverTxt }) {
+  E.campana = { titulo, rivales, propios, alListo, alVolver, volverTxt };
   E.jugador = E.jugador.filter(p => propios.has(p.id));          // conserva la última selección (si sigue siendo suya)
   E.sel = null; E.filtro = null;
   irA('equipo');

@@ -235,7 +235,7 @@ export function instancia(fila) {
   const cat = RELIQUIAS[fila.reliquia];
   if (!cat) return null;
   const linea = (stat, v) => { const [mn, mx] = rango(stat, cat.rarity); return esPct(stat) ? [stat, v / 100, mn / 100, mx / 100] : [stat, v, mn, mx]; };
-  return { ...cat, uid: fila.id, campeon: fila.campeon || null, espacio: fila.espacio || null, obtenida: fila.obtenida,
+  return { ...cat, uid: fila.id, campeon: fila.campeon || null, espacio: fila.espacio || null, obtenida: fila.obtenida, bloqueada: !!fila.bloqueada,
     flat: linea(fila.plana_stat, fila.plana_valor), rolls: (fila.tiradas || []).map(([s, v]) => linea(s, v)) };
 }
 // Copia de ejemplo de las fichas (valores fijos de "legado")

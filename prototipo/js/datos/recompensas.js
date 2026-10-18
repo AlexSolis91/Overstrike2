@@ -10,6 +10,8 @@ export const TIPOS_RECOMPENSA = {
   experiencia: { nombre: 'Experiencia', icono: '✨' },
   vale:       { nombre: 'Vale de sobre', icono: '🎟️' },
   cofre:      { nombre: 'Cofre de estrellas', icono: '🎁' },
+  portal:     { nombre: 'Runa de Portal', icono: '🌀' },
+  polvo:      { nombre: 'Polvo Arcano', icono: '🧪' },
 };
 
 export const COLOR_RAREZA = {

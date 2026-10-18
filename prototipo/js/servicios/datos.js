@@ -16,7 +16,7 @@ async function conRespaldo(fn, completo, basico) {
 }
 export const miColeccion = () => conRespaldo(c => q(sb => sb.from('coleccion').select(c)), 'campeon, copias, estrellas, espacios, espacios_abiertos', 'campeon, copias, estrellas, espacios');
 export const miInventario = () => conRespaldo(c => q(sb => sb.from('inventario').select(c).maybeSingle()),
-  'oro, frag_runa, frag_otros, runas, vales_sobre, rel_sobres', 'oro, frag_runa, frag_otros, runas');
+  'oro, frag_runa, frag_otros, runas, vales_sobre, rel_sobres, runas_portal, polvo_arcano, portal_dia, portal_compras', 'oro, frag_runa, frag_otros, runas');
 export const configSobres = () => q(sb => sb.from('sobres_config').select('id, activo, precio, desde, hasta').order('id'));
 
 export const abrirStarter = id => rpc('abrir_starter', { p_starter: id });
@@ -29,10 +29,23 @@ export const invocarPortal = c => rpc('invocar_portal', { p_campeon: c });
 export const abrirSobreVale = id => rpc('abrir_sobre_vale', { p_sobre: id });
 
 // Reliquias (docs/sql/005_reliquias.sql): cada fila es una copia con sus valores sorteados por el servidor
-export const misReliquias = () => q(sb => sb.from('reliquias').select('id, reliquia, plana_stat, plana_valor, tiradas, campeon, espacio, obtenida').order('obtenida', { ascending: false }));
+export const misReliquias = () => conRespaldo(c => q(sb => sb.from('reliquias').select(c).order('obtenida', { ascending: false })),
+  'id, reliquia, plana_stat, plana_valor, tiradas, campeon, espacio, obtenida, bloqueada', 'id, reliquia, plana_stat, plana_valor, tiradas, campeon, espacio, obtenida');
 export const abrirSobreReliquias = () => rpc('abrir_sobre_reliquias');
 export const equiparReliquia = (id, campeon, espacio) => rpc('equipar_reliquia', { p_reliquia: id, p_campeon: campeon, p_espacio: espacio });
 export const desequiparReliquia = id => rpc('desequipar_reliquia', { p_reliquia: id });
+// Polvo Arcano y fusión (docs/sql/006_horda.sql)
+export const bloquearReliquia = (id, si) => rpc('bloquear_reliquia', { p_reliquia: id, p_bloquear: si });
+export const descomponerReliquias = ids => rpc('descomponer_reliquias', { p_ids: ids });
+export const mejorarReliquia = (id, linea) => rpc('mejorar_reliquia', { p_reliquia: id, p_linea: linea });
+export const fusionarReliquias = ids => rpc('fusionar_reliquias', { p_ids: ids });
+
+// Horda (docs/sql/006_horda.sql): entrar cuesta 1 Runa de Portal; el servidor cobra cada oleada y cierra la partida
+export const hordaEntrar = horda => rpc('horda_entrar', { p_horda: horda });
+export const hordaOleada = (partida, oleada) => rpc('horda_oleada', { p_partida: partida, p_oleada: oleada });
+export const hordaTerminar = partida => rpc('horda_terminar', { p_partida: partida });
+export const miRecordHorda = horda => q(sb => sb.from('horda_partidas').select('oleada').eq('horda', horda).order('oleada', { ascending: false }).limit(1));
+export const comprarRunaPortal = () => rpc('comprar_runa_portal');
 
 // Campaña: progreso (solo lectura) y cobrar una victoria (el servidor valida desbloqueo, tiempo entre repeticiones y paga)
 export const miCampana = area => q(sb => sb.from('campana_progreso').select('dificultad, etapa, estrellas, victorias, ultima').eq('area', area));
