@@ -225,6 +225,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'cargaElectrica': texto = `${e.valor} carga(s) de ${porUid(e.fuente)?.nombre || 'Baran'}: al completar sus cargas, Sobrecarga (Aturdido)`; n = e.valor; break;
         case 'destruccion': texto = `${e.valor} de Destrucción (máx. 10): +${e.valor * 3}% de daño · el Aliento de la Destrucción las consume`; n = e.valor; break;
         case 'esclavoRuna': texto = `Lucha para ${porUid(e.fuente)?.nombre || 'Frostmourne'} hasta el final de la ronda ${p.convertido?.hasta ?? ''} · luego vuelve a morir`; n = p.convertido ? Math.max(0, p.convertido.hasta - S.ronda + 1) : ''; break;
+        case 'escarchaSillad': texto = `Bendición de ${porUid(e.fuente)?.nombre || 'Sillad'}: ${Object.entries(e.bono || {}).map(([k, v]) => `+${Math.round(v * 100)}% ${{ dmgPct: 'Daño', hpPct: 'HP máx.', spdPct: 'Velocidad' }[k] || k}`).join(', ')}`; break;
         case 'emblemaFairyTail': texto = `Compañero de ${porUid(e.fuente)?.nombre || 'Natsu'}: ${Object.entries(e.bono || {}).map(([k, v]) => `+${Math.round(v * 100)}% ${{ dmgPct: 'Daño', hpPct: 'HP máx.', spdPct: 'Velocidad' }[k] || k}`).join(', ')}`; break;
         case 'llamaNatsu': texto = `${e.valor} Llama(s) del Dragón (máx. 5): +${e.valor * 5}% de daño · su Over las consume`; n = e.valor; break;
         case 'esperanzaTrunks': texto = `${e.valor} de Esperanza (máx. 5): con 5 se transforma en Super Saiyajin`; n = e.valor; break;

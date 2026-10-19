@@ -70,6 +70,8 @@ export const EFECTOS = {
     desc: 'Contador de Antares (máx. 10): gana 1 cada vez que cualquier Quemadura hace daño a un enemigo; cada una le da +3% de daño. El Aliento de la Destrucción las consume. No se disipa ni se limpia.' },
   esclavoRuna: { nombre: 'Esclavo de la Runa', icono: '❄️', color: 0x93c5fd, tipo: 'marca', tags: ['Marca'], noDisipable: true,
     desc: 'Revivido por Frostmourne: lucha para el equipo de su portador durante 2 rondas, sin habilidad de líder. Al terminar vuelve a morir y ya no puede revivir. No se disipa ni se limpia.' },
+  escarchaSillad: { nombre: 'Bendición de la Escarcha', icono: '🧊', color: 0x38bdf8, tipo: 'marca', tags: ['Marca'], noDisipable: true,
+    desc: 'Sillad, el Monarca de la Escarcha, bendice a cada aliado (incluido él) cuyos movimientos aplican Congelación con un bono de estadísticas todo el combate. No se disipa ni se limpia.' },
   emblemaFairyTail: { nombre: 'Emblema de Fairy Tail', icono: '🧚', color: 0xef4444, tipo: 'marca', tags: ['Marca'], noDisipable: true,
     desc: 'Natsu lucha por sus compañeros del gremio: cada aliado (incluido él) cuyos movimientos aplican Quemadura tiene un bono de estadísticas mientras dure el combate. No se disipa ni se limpia.' },
   llamaNatsu: { nombre: 'Llama del Dragón', icono: '🔥', color: 0xef4444, tipo: 'marca', tags: ['Carga'], noDisipable: true,
