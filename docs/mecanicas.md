@@ -243,7 +243,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
   - `final`: una vez al terminar el movimiento.
 - **Gatillos de pasiva:**
   - `alAcertarCritico`.
-  - `alDanoDoT`: cada vez que un DoT hace daño. Se puede filtrar por `tipo` y por lado (`en: 'enemigos'`).
+  - `alDanoDoT`: cada vez que un DoT hace daño. Se puede filtrar por `tipo` y por lado (`en: 'enemigos'`, o `en: 'propio'` = solo cuando el DoT lo daña a él mismo, p. ej. Shinobu se cura con su propio Veneno).
   - `alCurarAliado`: cada vez que un aliado **que no sea el dueño de la pasiva** recibe una curación real (incluye robo de HP).
   - `alEliminar`: cuando el personaje **o sus invocaciones** eliminan a un enemigo (no cuentan muertes por DoT).
   - `alIniciarTurno`: al empezar su turno, **solo si de verdad actúa** (no si pierde el turno por Control o Silencio; tampoco en turnos extra). Va después del DoT de inicio de turno.
@@ -299,6 +299,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Protector** (pasiva `protector { pct, cargas: { efecto, max } }`): mientras no tenga un Control que le quite el turno, recibe **en lugar** de su aliado ese % de cada **golpe** enemigo (ya mitigado por el aliado; luego aplica su propia Armadura y reducciones; se ve como daño amarillo). Cada vez gana 1 carga de ese tipo. P. ej. Protector de Eternia de He-Man: 25%, Poder de Grayskull ⚡ (máx. 5).
 - **Castigador de buffs** (pasiva): `cargasPorBuffEnemigo { efecto, max }` = cada buff que **recibe** un enemigo (por la vía normal; no los robados ni transferidos) le da 1 carga de ese tipo (p. ej. Poder Robado 💀 de Skeletor, máx. 10). `bonoPorBuffsObjetivo { pct, max }` = +pct de daño por cada buff activo del objetivo (sin contar invocaciones), hasta `max`.
 - **Efectos permanentes:** una pasiva puede declarar `efectosPermanentes: [ids]`: el personaje empieza con ese efecto **toda la partida** (sin duración, se ve con ∞). No se puede disipar ni robar, y otra aplicación del mismo efecto no lo cambia. P. ej. Lich King: Provocación permanente.
+- **Efecto propio persistente:** una pasiva puede declarar `efectoPropio: { id }` (p. ej. Shinobu con Veneno): el personaje empieza la partida con ese efecto aplicado a sí mismo y, si se le termina o se lo limpian, se le vuelve a aplicar al inicio de la ronda siguiente. A diferencia de `efectosPermanentes`, es un efecto normal (con su duración y su daño). Los movimientos pueden preguntar por él con la condición `propioTiene: <efecto>` (el que ejecuta lo tiene).
 - **Reducción para el equipo:** una pasiva puede declarar `reduccionAliados { pct, salvoSi }`: todo su equipo (incluido él) recibe −pct de **todo** el daño mientras viva y no tenga el efecto `salvoSi` (p. ej. Loki: −10% salvo con Desgaste).
 - **Reducción propia:** una pasiva puede declarar `reduccionPropia { categoria, pct }`: reduce el daño de esa categoría que recibe **él mismo** (p. ej. Aldebarán: −15% de golpes). Se suma a la de líderes (tope 90%).
 - **Cargas:** una pasiva puede declarar `cargasAlRecibirGolpe { max }`: cada golpe de un enemigo le da 1 carga (Furia Dorada 🐂, se ve en su carta con el número), hasta `max`. Con un Control que le quite turnos no gana cargas. Las cargas **no se pueden disipar** (`noDisipable`).

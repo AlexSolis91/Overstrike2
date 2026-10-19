@@ -306,6 +306,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       emitir('liderActua', { id: l.uid, nombre: l.lider.nombre });
       ejecutarAccion(l, l.lider.alIniciarRonda, {});
     }
+    for (const p of P) {                                    // pasiva "efectoPropio": empieza con ese efecto y, si se le termina o se lo limpian,
+      const ep = !p.muerto && p.pasiva?.efectoPropio;       // se le vuelve a aplicar al inicio de la ronda siguiente (p. ej. Veneno de Glicinia de Shinobu)
+      if (ep && !get(p, ep.id)) aplicarEfecto(p, p, { ...ep });
+    }
     for (const p of P) pasivas(p, 'alIniciarRonda', {});      // pasivas "al inicio de cada ronda" (p. ej. Modo Rikudo)
     for (const p of P) {                                    // zona: actúa al inicio de cada ronda mientras dure (p. ej. Luz de Dendera)
       const z = !p.muerto && get(p, 'zona');
@@ -1476,6 +1480,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (!cond) return true;
     if (cond.objetivoMarcaMin) { const { marca, min } = cond.objetivoMarcaMin; const e = ctx.objetivo?.estados.find(x => x.id === marca && x.fuente === ctx.ejecutor?.uid); return (e?.valor || 0) >= min; }
     if (cond.sellado !== undefined) return !!ctx.ejecutor && !!ctx.ejecutor.sellado === cond.sellado;   // p. ej. Enkidu: Mega Aturdimiento si ya va en serio
+    if (cond.propioTiene) return !!ctx.ejecutor && !!get(ctx.ejecutor, cond.propioTiene);   // el que ejecuta tiene ese efecto (p. ej. Shinobu envenenada)
     if (cond.objetivoTiene) return !!(ctx.objetivo && get(ctx.objetivo, cond.objetivoTiene));
     if (cond.objetivoTeniaAntes) return [].concat(cond.objetivoTeniaAntes).some(id => ctx.teniaAntes?.has(id));
     if (cond.rompioMega) return !!ctx.rompioMega;
@@ -1500,6 +1505,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (p.muerto || !pa || pa.gatillo !== gatillo) return;
     if (pa.filtro?.tipo && pa.filtro.tipo !== ctx.tipo) return;
     if (pa.filtro?.en === 'enemigos' && (!ctx.objetivo || ctx.objetivo.lado === p.lado)) return;
+    if (pa.filtro?.en === 'propio' && ctx.objetivo !== p) return;      // solo cuando le pasa a él mismo (p. ej. su propio Veneno lo daña)
     if (pa.filtro?.categorias && !pa.filtro.categorias.includes(ctx.categoria)) return;
     if (pa.filtro?.objetivoTiene && !(ctx.objetivo && get(ctx.objetivo, pa.filtro.objetivoTiene))) return;
     if (pa.filtro?.teniaAlMorir && !ctx.teniaAlMorir?.has(pa.filtro.teniaAlMorir)) return;
