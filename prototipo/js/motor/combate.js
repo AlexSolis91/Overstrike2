@@ -225,6 +225,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'cargaElectrica': texto = `${e.valor} carga(s) de ${porUid(e.fuente)?.nombre || 'Baran'}: al completar sus cargas, Sobrecarga (Aturdido)`; n = e.valor; break;
         case 'destruccion': texto = `${e.valor} de Destrucción (máx. 10): +${e.valor * 3}% de daño · el Aliento de la Destrucción las consume`; n = e.valor; break;
         case 'esclavoRuna': texto = `Lucha para ${porUid(e.fuente)?.nombre || 'Frostmourne'} hasta el final de la ronda ${p.convertido?.hasta ?? ''} · luego vuelve a morir`; n = p.convertido ? Math.max(0, p.convertido.hasta - S.ronda + 1) : ''; break;
+        case 'potencialGohan': texto = `${e.valor} de Potencial (máx. 3): con 3 despierta como Gohan Bestia`; n = e.valor; break;
         case 'iraBroly': texto = `${e.valor} de Ira (máx. 5): con 5 despierta al Super Saiyajin Legendario`; n = e.valor; break;
         case 'almasShadowmourne': texto = `${e.valor} Alma(s) de Shadowmourne (máx. 20): +${e.valor * 10} de Daño · toda la batalla`; n = e.valor; break;
         case 'cuervos': texto = `${e.valor} clon(es) de cuervo: cada uno absorbe un ataque enemigo contra Itachi`; n = e.valor; break;
