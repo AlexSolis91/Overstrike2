@@ -56,7 +56,7 @@ export const AREAS = {
       { tema: 'exploradores', poder: 1.51 },   // 1
       { tema: 'gotica', poder: 1.2 },   // 2
       { tema: 'fuego', poder: 1.1 },   // 3
-      { tema: 'mortal', poder: 1.29 },   // 4
+      { tema: 'mortal', poder: 1.34 },   // 4
       { tema: 'sayajin', poder: 1.19 },   // 5
       { tema: 'cazadores', poder: 1.2 },   // 6
       { tema: 'eternia', poder: 0.9 },   // 7
