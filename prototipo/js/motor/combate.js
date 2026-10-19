@@ -225,6 +225,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'cargaElectrica': texto = `${e.valor} carga(s) de ${porUid(e.fuente)?.nombre || 'Baran'}: al completar sus cargas, Sobrecarga (Aturdido)`; n = e.valor; break;
         case 'destruccion': texto = `${e.valor} de Destrucción (máx. 10): +${e.valor * 3}% de daño · el Aliento de la Destrucción las consume`; n = e.valor; break;
         case 'esclavoRuna': texto = `Lucha para ${porUid(e.fuente)?.nombre || 'Frostmourne'} hasta el final de la ronda ${p.convertido?.hasta ?? ''} · luego vuelve a morir`; n = p.convertido ? Math.max(0, p.convertido.hasta - S.ronda + 1) : ''; break;
+        case 'esperanzaTrunks': texto = `${e.valor} de Esperanza (máx. 5): con 5 se transforma en Super Saiyajin`; n = e.valor; break;
         case 'potencialGohan': texto = `${e.valor} de Potencial (máx. 3): con 3 despierta como Gohan Bestia`; n = e.valor; break;
         case 'iraBroly': texto = `${e.valor} de Ira (máx. 5): con 5 despierta al Super Saiyajin Legendario`; n = e.valor; break;
         case 'almasShadowmourne': texto = `${e.valor} Alma(s) de Shadowmourne (máx. 20): +${e.valor * 10} de Daño · toda la batalla`; n = e.valor; break;
@@ -858,7 +859,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     const ag = (tipo === 'poison' || tipo === 'bleed' || tipo === 'hemo') && get(t, 'aguja');   // Agujas Escarlata: +3% por aguja
     const db = t.pasiva?.debilidadA;                        // pasiva "debilidadA": recibe +pct de daño de esos DoT (p. ej. Venom: fuego)
     const debil = db && [].concat(db.efecto).includes(tipo) ? 1 + db.pct : 1;
-    const d = valor * maxHp(t) * (1 - reduccion(t, 'dot')) * (ag ? 1 + ag.valor * DEBUFFS.aguja : 1) * debil;
+    const aura = P.reduce((m, x) => m * (x.lado !== t.lado && !x.muerto && x.pasiva?.auraDoT ? 1 + x.pasiva.auraDoT : 1), 1);   // pasiva "auraDoT": los DoT de su equipo hacen +X% (p. ej. Trunks)
+    const d = valor * maxHp(t) * (1 - reduccion(t, 'dot')) * (ag ? 1 + ag.valor * DEBUFFS.aguja : 1) * debil * aura;
     t.hp -= d;
     emitir('dot', { a: t.uid, tipo, dano: d }, t);
     recibioDano(t, d, fuente);
@@ -1521,6 +1523,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     p.hp = ratio * maxHp(p);                          // se conserva el % de vida
     emitir('transformacion', { id: p.uid, nombre: f.nombre, color: f.color }, p);
     pasivas(p, 'alTransformarse', { objetivo: p }, pasivaAntes);   // usa la pasiva que tenía al transformarse
+    for (const x of aliadosDe(p)) if (x !== p && x.pasiva?.alTransformarseAliado) {   // pasiva de un aliado: reacciona cuando otro se transforma (p. ej. Trunks)
+      emitir('pasiva', { id: x.uid, nombre: x.pasiva.nombre });
+      for (const acc of [].concat(x.pasiva.alTransformarseAliado)) ejecutarAccion(x, acc, { objetivo: p });   // una acción o una lista
+    }
   }
   function revertir(p) {
     const ratio = p.hp / maxHp(p), b = p.formaBase;

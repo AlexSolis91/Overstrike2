@@ -70,6 +70,8 @@ export const EFECTOS = {
     desc: 'Contador de Antares (máx. 10): gana 1 cada vez que cualquier Quemadura hace daño a un enemigo; cada una le da +3% de daño. El Aliento de la Destrucción las consume. No se disipa ni se limpia.' },
   esclavoRuna: { nombre: 'Esclavo de la Runa', icono: '❄️', color: 0x93c5fd, tipo: 'marca', tags: ['Marca'], noDisipable: true,
     desc: 'Revivido por Frostmourne: lucha para el equipo de su portador durante 2 rondas, sin habilidad de líder. Al terminar vuelve a morir y ya no puede revivir. No se disipa ni se limpia.' },
+  esperanzaTrunks: { nombre: 'Esperanza', icono: '✨', color: 0xfacc15, tipo: 'marca', tags: ['Carga'], noDisipable: true,
+    desc: 'Contador de Trunks (máx. 5): gana 1 cuando un DoT daña a un enemigo (máx. 2 por ronda), 2 cuando un aliado se transforma y con sus ataques. Con 5 se transforma para siempre en Super Saiyajin. No se disipa ni se limpia.' },
   potencialGohan: { nombre: 'Potencial', icono: '🔥', color: 0x8b5cf6, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Contador de Gohan (máx. 3): gana 1 al proteger a su equipo y 3 si cae un aliado. Con 3 despierta para siempre como Gohan Bestia. No se disipa ni se limpia.' },
   iraBroly: { nombre: 'Ira', icono: '💢', color: 0x84cc16, tipo: 'marca', tags: ['Carga'], noDisipable: true,

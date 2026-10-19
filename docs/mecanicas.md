@@ -609,3 +609,8 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
   - **Títulos del top 3** de cada temporada (🥇 Campeón · 🥈 Subcampeón · 🥉 Tercer lugar + número de temporada): en tu Arena y con marco de color en el ranking. El puesto al cerrar semana o temporada cuenta también a quienes ya la cerraron (`_arena_puesto_temp`).
   - **Foto de los equipos** al empezar cada combate (`equipo_atk`, `equipo_def`) y la **Defensa de práctica la elige el servidor**.
   - **Verificación:** contra una Defensa, la IA juega con azar de semilla (`semillaIA`) y el juego envía todas las decisiones. Con `arena_config.verificar = true`, el resultado queda pendiente y la Edge Function `verificar-arena` (`docs/supabase/verificar-arena.ts`, importa el motor desde GitHub Pages) repite la batalla con `js/motor/verificar.js`: si el resultado o las decisiones de la Defensa no cuadran, cuenta como derrota. Si la batalla se jugó con otra versión del juego, se acepta. Probado: 60/60 batallas legítimas aceptadas y 60/60 resultados falsos detectados. La lógica pura para armar equipos y la versión viven en `js/datos/cuenta.js`.
+
+## Piezas nuevas de pasiva (2026-10-18)
+- `alTransformarseAliado: acción | [acciones]` (campo de la pasiva): se ejecuta cuando OTRO aliado se transforma (`objetivo` = ese aliado). Trunks: +2 Esperanza y Furia + Celeridad al que se transforma.
+- `auraDoT: pct`: mientras viva, los DoT que sufren sus enemigos hacen +pct de daño (se multiplica si hay varios). Trunks (+15%, Super Saiyajin +30%).
+- Marcas de campeón: Ira (Broly, máx. 5), Potencial (Gohan, máx. 3), Esperanza (Trunks, máx. 5): contadores que transforman para siempre al llenarse (`transformarConCargas`).
