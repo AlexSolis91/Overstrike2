@@ -52,8 +52,8 @@ insert into public.campeones (id, nombre, starter, sobres, activo) values
   ('hashirama', 'Hashirama Senju', null, array[]::text[], true),
   ('tobirama', 'Tobirama Senju', 'frostborn', array[]::text[], true),
   ('el-pinguino', 'El Pingüino', 'blazing', array['phantom']::text[], true),
-  ('natsu-dragneel', 'Natsu Dragneel', null, array[]::text[], true),
-  ('kyo-kusanagi', 'Kyo Kusanagi', null, array[]::text[], true),
+  ('natsu-dragneel', 'Natsu Dragneel', 'blazing', array[]::text[], true),
+  ('kyo-kusanagi', 'Kyo Kusanagi', 'blazing', array[]::text[], true),
   ('iori-yagami', 'Iori Yagami', null, array['bloodline', 'phantom']::text[], true)
 on conflict (id) do update set nombre = excluded.nombre, starter = excluded.starter, sobres = excluded.sobres, activo = excluded.activo;
 -- 54 campeones

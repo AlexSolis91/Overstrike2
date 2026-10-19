@@ -10,6 +10,7 @@ export default {
   nombre: 'Natsu Dragneel',
   rol: 'DoTer', rolSecundario: 'Daño',
   sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐲', color: '#ef4444', imagen: 'assets/personajes/natsu-dragneel.webp',
   base: { hp: 580, dmg: 53, spd: 92 },
   extra: {},

@@ -10,6 +10,7 @@ export default {
   nombre: 'Kyo Kusanagi',
   rol: 'DoTer', rolSecundario: 'Daño',
   sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🔥', color: '#ea580c', imagen: 'assets/personajes/kyo-kusanagi.webp',
   base: { hp: 640, dmg: 62, spd: 96 },
   extra: {},
