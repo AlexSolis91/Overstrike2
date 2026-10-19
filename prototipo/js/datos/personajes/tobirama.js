@@ -23,7 +23,7 @@ export default {
   },
   pasiva: {
     nombre: 'Sensor del Segundo Hokage',
-    desc: 'Por cada aliado (él incluido) cuyos movimientos aplican Congelación (máx. 4), todo su equipo gana +4% de Velocidad y +4% de Puntería mientras Tobirama viva. Todo su equipo hace +8% de daño a enemigos con Congelación.',
+    desc: 'Por cada otro aliado cuyos movimientos aplican Congelación (máx. 4), todo su equipo gana +4% de Velocidad y +4% de Puntería mientras Tobirama viva. Todo su equipo hace +8% de daño a enemigos con Congelación.',
     bonoPorAliadosQueAplican: { efecto: 'freeze', max: 4, bono: { spdPct: .04, acc: .04 } },
     auraContra: { efecto: 'freeze', pct: .08 },
   },
