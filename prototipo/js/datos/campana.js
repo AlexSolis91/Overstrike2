@@ -59,7 +59,7 @@ export const AREAS = {
       { tema: 'mortal', poder: 1.29 },   // 4
       { tema: 'sayajin', poder: 1.19 },   // 5
       { tema: 'cazadores', poder: 1.2 },   // 6
-      { tema: 'eternia', poder: 1.02 },   // 7
+      { tema: 'eternia', poder: 0.9 },   // 7
       { tema: 'hielo', poder: 1.1 },   // 8
       { tema: 'azeroth', poder: 1.05 },   // 9
       { tema: 'akatsuki', poder: 0.86, jefe: true },   // 10
