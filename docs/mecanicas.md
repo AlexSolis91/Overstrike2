@@ -161,6 +161,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | 📍 Aguja Escarlata | Aguja | (debuff, contador hasta 14) Cada aguja le quita **0.5%** del HP máx. al inicio de su turno y le hace recibir **+3%** de daño de Veneno, Sangrado y Hemorragia. Se clavan sin tirada (acción `clavarAgujas { n }`). Se puede limpiar. Un movimiento con `consumeAgujas { pct }` hace +pct por aguja del objetivo y las consume (Antares de Milo); la IA lo apunta al enemigo con más agujas |
 | 🚫 Bloquear Buffs | Bloqueo | (debuff) No puede recibir buffs **nuevos** mientras dure. No afecta a los que ya tiene, a los permanentes ni a las cargas |
 | ♨️ Aura de Fuego | Fuego | Cuando el portador recibe un **golpe** de un enemigo, tiene **50%** de probabilidad de aplicarle al atacante Quemadura 5% (1 turno), con Tirada de Puntería del portador |
+| 🦠 Infectar | Veneno | Cuando el portador recibe un **golpe** de un enemigo, el atacante recibe **Veneno sin tirada** (siempre entra, salvo inmunidad). Puede venir como buff permanente de una pasiva (`efectosPermanentes: ['infect']`, p. ej. Muzan) o con duración |
 | 🎯 Provocación | Provocación | Los enemigos deben dirigirle sus movimientos de **un objetivo** (incluidas invocaciones). No afecta AOE, objetivos al azar, movimientos a aliados, Confusión ni Posesión. Con varios, se elige entre ellos. Se puede Disipar |
 | ✦ Invocación | Invocación | Ver sección 9 |
 

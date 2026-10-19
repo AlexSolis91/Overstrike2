@@ -256,6 +256,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'expuesto': texto = `Recibe +${Math.round(DEBUFFS.expuesto * 100)}% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'camino': { const f = p.pasiva?.ciclo?.fases?.[e.valor]; texto = f ? `${f.nombre}: ${f.desc}` : ''; break; }
         case 'regen': texto = `Cura ${Math.round(BUFFS.regeneracion * 100)}% del HP máx. al inicio de su turno · ${e.permanente ? 'permanente' : `${e.dur} ronda(s)`}`; n = e.permanente ? '∞' : e.dur; break;
+        case 'infect': texto = `Quien lo golpee recibe Veneno sin tirada${e.permanente ? ' · permanente' : ` · ${e.dur} ronda(s)`}`; n = e.permanente ? '∞' : e.dur; break;
         case 'fireAura': texto = `Quema (5%, 1 turno) al enemigo que lo golpee · ${e.dur} ronda(s)`; n = e.dur; break;
       }
       const fase = e.id === 'camino' ? p.pasiva?.ciclo?.fases?.[e.valor] : e.id === 'sello' ? p.pasiva?.sello : e.id === 'zona' ? e.zona : null;      // ciclo: se ve el icono y el nombre de la fase activa
@@ -814,6 +815,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       emitir('auraFuego', { a: t.uid, de: a.uid });
       intentarEfecto(t, a, { id: 'burn', valor: .05, dur: 1, prob: PUNTERIA.auraFuego });
     }
+    if (get(t, 'infect') && !t.muerto && !a.muerto && t.lado !== a.lado) {   // Infectar: quien lo golpea recibe Veneno sin tirada
+      emitir('bonoVisible', { a: a.uid, texto: '🦠 ¡Infectado!' }, a);
+      intentarEfecto(t, a, { id: 'poison', irresistible: true });
+    }
     if (get(t, 'frostAura') && !t.muerto && !a.muerto && t.lado !== a.lado) {
       emitir('auraGelida', { a: t.uid, de: a.uid });
       intentarEfecto(t, a, { id: 'freeze', prob: PUNTERIA.auraGelida });
@@ -1116,7 +1121,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         texto = acc.mega ? def.mega : def.nombre;
         break;
       }
-      case 'confuse': case 'fear': case 'dmgUp': case 'taunt': case 'fireAura': case 'frostAura': case 'blockBuffs': case 'protect': case 'regen':
+      case 'confuse': case 'fear': case 'dmgUp': case 'taunt': case 'fireAura': case 'frostAura': case 'infect': case 'blockBuffs': case 'protect': case 'regen':
       case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'expuesto': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': case 'incite': case 'mirror': {
         if (acc.id === 'stealth' && get(t, 'taunt')) { emitir('sinEfecto', { a: t.uid, texto: 'Con Provocación no puede tener Sigilo' }); return; }
         if (acc.id === 'taunt' && get(t, 'stealth')) { quitar(t, get(t, 'stealth')); emitir('sigiloRoto', { a: t.uid }, t); }
@@ -1223,7 +1228,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         case 'curar': {
           const base = acc.base === 'hpMaxObjetivo' ? maxHp(t) : acc.base === 'curacion' ? (ctx.curacion || 0) : baseDe(a, acc.escala);
-          const veces = acc.porCada ? (ctx[acc.porCada] || 0) : 1;     // porCada: 'eliminados' = una vez por cada enemigo eliminado
+          const veces = acc.porCada ? (ctx[acc.porCada] || 0)     // porCada: 'eliminados' = una vez por cada enemigo eliminado
+            : acc.porEnemigoCon ? enemigosDe(a).filter(x => get(x, acc.porEnemigoCon)).length : 1;   // porEnemigoCon: una vez por cada enemigo con ese efecto (p. ej. Muzan)
           if (veces > 0) curar(a, t, base * acc.pct * veces);
           break;
         }

@@ -106,6 +106,8 @@ export const EFECTOS = {
     desc: `Recibe −${p(BUFFS.auraGelida)} de daño de los golpes enemigos. Quien lo golpee tiene ${p(PUNTERIA.auraGelida)} de probabilidad de recibir Congelación. 2 rondas.` },
   fireAura: { nombre: 'Aura de Fuego', icono: '♨️', color: 0xff6a3d, tipo: 'buff', tags: ['Fuego'],
     desc: `Quien lo golpee tiene ${p(PUNTERIA.auraFuego)} de probabilidad de recibir Quemadura 5% (1 turno).` },
+  infect: { nombre: 'Infectar', icono: '🦠', color: 0x84cc16, tipo: 'buff', tags: ['Veneno'],
+    desc: `Quien lo golpee recibe Veneno sin tirada (siempre entra, salvo inmunidad).` },
   aoeDodge: { nombre: 'Esquiva Área', icono: '💨', color: 0x93c5fd, tipo: 'buff', tags: ['Esquiva'],
     desc: `No lo alcanzan los movimientos de área de los enemigos: ni su daño ni sus efectos.` },
   stealth: { nombre: 'Sigilo',      icono: '👤', color: 0x94a3b8, tipo: 'buff', tags: ['Sigilo'],
