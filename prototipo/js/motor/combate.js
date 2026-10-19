@@ -252,7 +252,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'weaken': texto = `Recibe +${Math.round(DEBUFFS.debilitar * 100)}% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'expuesto': texto = `Recibe +${Math.round(DEBUFFS.expuesto * 100)}% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'camino': { const f = p.pasiva?.ciclo?.fases?.[e.valor]; texto = f ? `${f.nombre}: ${f.desc}` : ''; break; }
-        case 'regen': texto = `Cura ${Math.round(BUFFS.regeneracion * 100)}% del HP máx. al inicio de su turno · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'regen': texto = `Cura ${Math.round(BUFFS.regeneracion * 100)}% del HP máx. al inicio de su turno · ${e.permanente ? 'permanente' : `${e.dur} ronda(s)`}`; n = e.permanente ? '∞' : e.dur; break;
         case 'fireAura': texto = `Quema (5%, 1 turno) al enemigo que lo golpee · ${e.dur} ronda(s)`; n = e.dur; break;
       }
       const fase = e.id === 'camino' ? p.pasiva?.ciclo?.fases?.[e.valor] : e.id === 'sello' ? p.pasiva?.sello : e.id === 'zona' ? e.zona : null;      // ciclo: se ve el icono y el nombre de la fase activa
