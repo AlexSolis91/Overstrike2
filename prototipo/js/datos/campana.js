@@ -63,7 +63,7 @@ export const AREAS = {
       { tema: 'hielo', poder: 1.1 },   // 8
       { tema: 'azeroth', poder: 1.05 },   // 9
       { tema: 'akatsuki', poder: 0.86, jefe: true },   // 10
-      { tema: 'dragones', poder: 1.1 },   // 11
+      { tema: 'dragones', poder: 0.93 },   // 11
       { tema: 'santos', poder: 1.13 },   // 12
       { tema: 'konoha', poder: 1.05 },   // 13
       { tema: 'marvel', poder: 1.0 },   // 14
