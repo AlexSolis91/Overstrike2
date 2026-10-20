@@ -54,7 +54,7 @@ export const AREAS = {
     nombre: 'El Portal',
     etapas: [   // orden: del tema más débil al más fuerte (simulación); poder calibrado para ~95% → ~40% de victorias en Normal
       { tema: 'exploradores', poder: 1.51 },   // 1
-      { tema: 'gotica', poder: 1.2 },   // 2
+      { tema: 'gotica', poder: 1.1 },   // 2
       { tema: 'fuego', poder: 1.1 },   // 3
       { tema: 'mortal', poder: 1.34 },   // 4
       { tema: 'sayajin', poder: 1.19 },   // 5
