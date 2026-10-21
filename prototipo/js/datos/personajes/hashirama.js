@@ -11,7 +11,7 @@ export default {
   rol: 'Tanque', rolSecundario: 'Support',
   sobres: [],  // como los demás de Konoha: solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
   emoji: '🌳', color: '#65a30d', imagen: 'assets/personajes/hashirama.webp',
-  base: { hp: 900, dmg: 84, spd: 90 },
+  base: { hp: 750, dmg: 40, spd: 81 },
   extra: { res: .15 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -29,23 +29,23 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Estacas de Madera', objetivo: 'enemigo', estilo: 'ranged', color: 0x65a30d,
-      pct: 1.05, escala: 'dano', cd: 0,
-      desc: 'Causa 105% con 30% de probabilidad de Aturdir (la madera lo atrapa).',
+      pct: .85, escala: 'dano', cd: 0,
+      desc: 'Causa 85% con 30% de probabilidad de Aturdir (la madera lo atrapa).',
       efectos: [{ accion: { tipo: 'efecto', id: 'stun', prob: .30 } }],
     },
     {
       categoria: 'especial', nombre: 'Nacimiento de un Bosque Profundo', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x4d7c0f,
-      pct: .90, escala: 'dano', cd: 3,
-      desc: 'Un bosque brota del suelo: 90% a todos los enemigos, cada uno pierde 1 buff (la madera absorbe su chakra). Todos los aliados se curan 10% de su HP máx.',
+      pct: .70, escala: 'dano', cd: 3,
+      desc: 'Un bosque brota del suelo: 70% a todos los enemigos, cada uno pierde 1 buff (la madera absorbe su chakra). Todos los aliados se curan 8% de su HP máx.',
       efectos: [
         { accion: { tipo: 'disipar', cantidad: 1 } },
-        { cuando: 'final', accion: { tipo: 'curar', pct: .10, base: 'hpMaxObjetivo', a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'curar', pct: .08, base: 'hpMaxObjetivo', a: 'todosAliados' } },
       ],
     },
     {
       categoria: 'over', nombre: 'Buda de las Mil Manos', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfacc15,
-      pct: 1.80, escala: 'dano', cd: 5,
-      desc: 'Shinsūsenju: mil palmas gigantes caen sobre todos los enemigos: 180% a cada uno con 30% de probabilidad de Mega Aturdimiento.',
+      pct: 1.45, escala: 'dano', cd: 5,
+      desc: 'Shinsūsenju: mil palmas gigantes caen sobre todos los enemigos: 145% a cada uno con 30% de probabilidad de Mega Aturdimiento.',
       efectos: [{ accion: { tipo: 'efecto', id: 'stun', mega: true, prob: .30 } }],
     },
   ],

@@ -4,7 +4,7 @@ import { espacios } from '../reliquias.js';
 const dragonDeLaVida = {
   nombre: 'Dragón de la Vida',
   emoji: '🐉', color: '#dc2626', imagen: 'assets/transformaciones/dragon-de-la-vida.webp',
-  base: { hp: 600, dmg: 40, spd: 82 },
+  base: { hp: 650, dmg: 55, spd: 90 },
   extra: { armor: .25, res: .25 },                 // parte fija de "Aspecto Carmesí"
   pasiva: {
     nombre: 'Aspecto Carmesí',
@@ -15,9 +15,9 @@ const dragonDeLaVida = {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Aliento de Dragón', objetivo: 'todosAliados', estilo: 'support', color: 0xff6a3d, cd: 0,
-      desc: 'Cura a todos los aliados 5% de su HP máx. y les aplica Aura de Fuego (2 rondas).',
+      desc: 'Cura a todos los aliados 8% de su HP máx. y les aplica Aura de Fuego (2 rondas).',
       efectos: [
-        { accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .05 } },
+        { accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .08 } },
         { accion: { tipo: 'efecto', id: 'fireAura', dur: 2 } },
       ],
     },
@@ -45,8 +45,8 @@ export default {
   sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🌹', color: '#e11d48', imagen: 'assets/personajes/alexstrasza.webp',
-  base: { hp: 600, dmg: 40, spd: 82 },
-  extra: {},
+  base: { hp: 650, dmg: 55, spd: 90 },
+  extra: { res: .15, armor: .10 },
   slots: espacios('argonita', 'yelmo', 'anilloCobre', { label: 'Equipación 3', relic: null, bow: true }),
 
   pasiva: {
@@ -59,9 +59,9 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Fuego Vital', objetivo: 'aliado', estilo: 'support', color: 0xff8a5c, cd: 0,
-      desc: 'Cura al aliado 10% de su HP máx. y le aplica Aura de Fuego (2 rondas): quien lo golpee recibe Quemadura 5% (1 turno).',
+      desc: 'Cura al aliado 16% de su HP máx. y le aplica Aura de Fuego (2 rondas): quien lo golpee recibe Quemadura 5% (1 turno).',
       efectos: [
-        { accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .10 } },
+        { accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .16 } },
         { accion: { tipo: 'efecto', id: 'fireAura', dur: 2 } },
       ],
     },
@@ -72,11 +72,11 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Dragón de la Vida', objetivo: 'propio', estilo: 'support', color: 0xdc2626, cd: 5,
-      desc: 'Se transforma en el Dragón de la Vida (3 turnos). 80% de probabilidad de aplicar Quemadura 10% (3 rondas) a cada enemigo y cura a todos los aliados 10% de su HP máx.',
+      desc: 'Se transforma en el Dragón de la Vida (3 turnos). 80% de probabilidad de aplicar Quemadura 10% (3 rondas) a cada enemigo y cura a todos los aliados 16% de su HP máx.',
       efectos: [
         { cuando: 'final', accion: { tipo: 'transformar', turnos: 3, a: 'propio' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'burn', valor: .10, dur: 3, prob: .80, a: 'todosEnemigos' } },
-        { cuando: 'final', accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .10, a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .16, a: 'todosAliados' } },
       ],
     },
   ],

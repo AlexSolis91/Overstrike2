@@ -10,7 +10,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Tanque',
   sobres: ['bloodline'],
   emoji: '🕷️', color: '#cbd5e1', imagen: 'assets/personajes/venom.webp',
-  base: { hp: 780, dmg: 78, spd: 78 },
+  base: { hp: 750, dmg: 75, spd: 83 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

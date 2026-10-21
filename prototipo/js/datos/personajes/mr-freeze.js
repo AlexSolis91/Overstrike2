@@ -12,7 +12,7 @@ export default {
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🥶', color: '#67e8f9', imagen: 'assets/personajes/mr-freeze.webp',
-  base: { hp: 780, dmg: 57, spd: 82 },
+  base: { hp: 750, dmg: 40, spd: 80 },
   extra: { armor: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -25,14 +25,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Pistola Congelante', objetivo: 'enemigo', estilo: 'ranged', color: 0x67e8f9,
-      pct: 1.00, escala: 'dano', cd: 0,
-      desc: 'Un rayo criogénico: 100% con 35% de probabilidad de Congelación.',
+      pct: .60, escala: 'dano', cd: 0,
+      desc: 'Un rayo criogénico: 60% con 35% de probabilidad de Congelación.',
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .35 } }],
     },
     {
       categoria: 'especial', nombre: 'Ráfaga Criogénica', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xa5f3fc,
-      pct: .70, escala: 'dano', cd: 3,
-      desc: 'Barre el campo con su pistola: 70% a todos los enemigos con 40% de probabilidad de Congelación. Gana Provocación (2 rondas): los enemigos tienen que atacar su traje.',
+      pct: .40, escala: 'dano', cd: 3,
+      desc: 'Barre el campo con su pistola: 40% a todos los enemigos con 40% de probabilidad de Congelación. Gana Provocación (2 rondas): los enemigos tienen que atacar su traje.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'freeze', prob: .40 } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'taunt', dur: 2, a: 'propio' } },
@@ -40,8 +40,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Cero Absoluto', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xe0f2fe,
-      pct: 1.30, escala: 'dano', cd: 5,
-      desc: 'Lleva el campo de batalla al cero absoluto: 130% a todos los enemigos con 60% de probabilidad de Congelación (Mega Congelación si ya estaban congelados).',
+      pct: .80, escala: 'dano', cd: 5,
+      desc: 'Lleva el campo de batalla al cero absoluto: 80% a todos los enemigos con 60% de probabilidad de Congelación (Mega Congelación si ya estaban congelados).',
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .60 } }],
     },
   ],

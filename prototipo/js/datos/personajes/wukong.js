@@ -10,7 +10,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Control',
   sobres: ['sacred'],
   emoji: '🐒', color: '#f59e0b', imagen: 'assets/personajes/wukong.webp',
-  base: { hp: 640, dmg: 90, spd: 96 },
+  base: { hp: 500, dmg: 75, spd: 86 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -27,20 +27,20 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: '¡Te tengo!', objetivo: 'enemigo', estilo: 'melee', color: 0xfbbf24,
-      pct: 1.00, escala: 'dano', cd: 0,
-      desc: 'Causa 100% con 25% de probabilidad de Aturdir (50% si el enemigo tiene algún buff).',
+      pct: .85, escala: 'dano', cd: 0,
+      desc: 'Causa 85% con 25% de probabilidad de Aturdir (50% si el enemigo tiene algún buff).',
       efectos: [{ accion: { tipo: 'efecto', id: 'stun', prob: .25, probSiConBuff: .50 } }],
     },
     {
       categoria: 'especial', nombre: 'Bastón Prodigioso', objetivo: 'enemigo', estilo: 'melee', color: 0xf59e0b,
-      pct: 1.60, escala: 'dano', cd: 3, ignoraArmadura: .50, sinCritico: true, sobrante: true,
-      desc: 'Causa 160%, ignora 50 puntos de Armadura y no puede ser crítico. Si el objetivo muere, el daño sobrante pasa a otro enemigo. Si sobrevive y tiene algún buff, recibe Mega Aturdimiento (siempre entra).',
+      pct: 1.35, escala: 'dano', cd: 3, ignoraArmadura: .50, sinCritico: true, sobrante: true,
+      desc: 'Causa 135%, ignora 50 puntos de Armadura y no puede ser crítico. Si el objetivo muere, el daño sobrante pasa a otro enemigo. Si sobrevive y tiene algún buff, recibe Mega Aturdimiento (siempre entra).',
       efectos: [{ condicion: { objetivoConBuff: true }, accion: { tipo: 'efecto', id: 'stun', mega: true, irresistible: true } }],
     },
     {
       categoria: 'over', nombre: 'Ahora Nos Ves', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfde68a,
-      pct: 1.30, escala: 'dano', cd: 4,
-      desc: 'Antes de atacar, le roba todos los buffs a todos los enemigos. Causa 130% a todos y les aplica Bloquear Buffs (2 rondas).',
+      pct: 1.10, escala: 'dano', cd: 4,
+      desc: 'Antes de atacar, le roba todos los buffs a todos los enemigos. Causa 110% a todos y les aplica Bloquear Buffs (2 rondas).',
       efectos: [
         { cuando: 'antes', accion: { tipo: 'robarBuffs', cantidad: 99 } },
         { accion: { tipo: 'efecto', id: 'blockBuffs', dur: 2 } },

@@ -8,8 +8,8 @@ export default {
   rol: 'Control', rolSecundario: 'Support',
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🦇', color: '#334155', imagen: 'assets/personajes/batman.webp',
-  base: { hp: 600, dmg: 45, spd: 78 },
-  extra: {},
+  base: { hp: 700, dmg: 65, spd: 88 },
+  extra: { acc: .25, armor: .05 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
   lider: {
@@ -26,8 +26,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Batarang', objetivo: 'enemigo', estilo: 'ranged', color: 0x94a3b8,
-      pct: .70, escala: 'dano', cd: 0,
-      desc: 'Causa 70%. Si el objetivo tiene su Over listo para usar, tiene 20% de probabilidad de Aturdirlo.',
+      pct: 1.10, escala: 'dano', cd: 0,
+      desc: 'Causa 110%. Si el objetivo tiene su Over listo para usar, tiene 20% de probabilidad de Aturdirlo.',
       efectos: [{ condicion: { objetivoOverListo: true }, accion: { tipo: 'efecto', id: 'stun', prob: .20 } }],
     },
     {

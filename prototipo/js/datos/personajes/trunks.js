@@ -9,7 +9,7 @@ const DOTS = ['burn', 'poison', 'bleed', 'hemo'];
 const trunksSuperSaiyajin = {
   nombre: 'Trunks Super Saiyajin',
   emoji: '⚔️', color: '#facc15', imagen: 'assets/transformaciones/trunks-super-sayajin.webp',
-  base: { hp: 780, dmg: 100, spd: 104 },
+  base: { hp: 720, dmg: 77, spd: 105 },
   extra: { critRate: .10 },
   pasiva: {
     nombre: 'Esperanza del Futuro',
@@ -45,7 +45,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Support',
   sobres: [],  // como los demás Sayajin: solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
   emoji: '🗡️', color: '#8b5cf6', imagen: 'assets/personajes/trunks.webp',
-  base: { hp: 720, dmg: 90, spd: 98 },
+  base: { hp: 660, dmg: 69, spd: 99 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

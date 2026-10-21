@@ -7,7 +7,7 @@ import { espacios } from '../reliquias.js';
 const narutoModoBarion = {
   nombre: 'Naruto Modo Barión',
   emoji: '🦊', color: '#ea580c', imagen: 'assets/transformaciones/naruto-modo-barion.webp',
-  base: { hp: 760, dmg: 120, spd: 115 },
+  base: { hp: 880, dmg: 105, spd: 126 },
   extra: { res: .10 },
   pasiva: {
     nombre: 'Fusión con Kurama',
@@ -19,18 +19,18 @@ const narutoModoBarion = {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Golpe Barión', objetivo: 'enemigo', estilo: 'melee', color: 0xf97316,
-      pct: 1.40, escala: 'dano', cd: 0,
-      desc: 'Causa 140%.',
+      pct: 2.10, escala: 'dano', cd: 0,
+      desc: 'Causa 210%.',
     },
     {
       categoria: 'especial', nombre: 'Rasengan Barión', objetivo: 'enemigo', estilo: 'melee', color: 0xfb923c,
-      pct: 2.20, escala: 'dano', cd: 2,
-      desc: 'Causa 220%.',
+      pct: 3.30, escala: 'dano', cd: 2,
+      desc: 'Causa 330%.',
     },
     {
       categoria: 'over', nombre: 'Último Golpe de Kurama', objetivo: 'enemigo', estilo: 'melee', color: 0xea580c,
-      pct: 2.60, escala: 'dano', cd: 2,
-      desc: 'Causa 260%.',
+      pct: 3.90, escala: 'dano', cd: 2,
+      desc: 'Causa 390%.',
     },
   ],
 };
@@ -38,7 +38,7 @@ const narutoModoBarion = {
 const narutoModoRikudo = {
   nombre: 'Naruto Modo Rikudo',
   emoji: '☯️', color: '#facc15', imagen: 'assets/transformaciones/naruto-modo-rikudo.webp',
-  base: { hp: 700, dmg: 96, spd: 98 },
+  base: { hp: 810, dmg: 84, spd: 108 },
   extra: { res: .10 },
   pasiva: {
     nombre: 'Chakra de los Seis Caminos',
@@ -50,13 +50,13 @@ const narutoModoRikudo = {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Rasenshuriken', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x93c5fd,
-      pct: .70, escala: 'dano', cd: 0,
-      desc: 'Causa 70% a todos los enemigos.',
+      pct: 1.05, escala: 'dano', cd: 0,
+      desc: 'Causa 105% a todos los enemigos.',
     },
     {
       categoria: 'especial', nombre: 'Esferas Buscadoras de la Verdad', objetivo: 'azar', golpes: 3, estilo: 'ranged', color: 0x1f2937,
-      pct: 1.50, escala: 'dano', cd: 2,
-      desc: '3 golpes de 150% a enemigos al azar (pueden repetirse). Cada golpe disipa 1 buff del enemigo.',
+      pct: 2.25, escala: 'dano', cd: 2,
+      desc: '3 golpes de 225% a enemigos al azar (pueden repetirse). Cada golpe disipa 1 buff del enemigo.',
       efectos: [{ accion: { tipo: 'disipar', cantidad: 1 } }],
     },
     {
@@ -77,7 +77,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Invocador',
   sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
   emoji: '🍥', color: '#f97316', imagen: 'assets/personajes/naruto.webp',
-  base: { hp: 650, dmg: 86, spd: 92 },
+  base: { hp: 750, dmg: 75, spd: 101 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -90,8 +90,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Rasengan', objetivo: 'enemigo', estilo: 'melee', color: 0x60a5fa,
-      pct: 1.10, escala: 'dano', cd: 0,
-      desc: 'Causa 110% con 50% de probabilidad de invocar 1 Clon de Sombra.',
+      pct: 1.65, escala: 'dano', cd: 0,
+      desc: 'Causa 165% con 50% de probabilidad de invocar 1 Clon de Sombra.',
       efectos: [{ cuando: 'final', accion: { tipo: 'invocar', key: 'clonSombra', prob: .50, a: 'propio' } }],
     },
     {

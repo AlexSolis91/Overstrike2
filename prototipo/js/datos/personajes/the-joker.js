@@ -10,7 +10,7 @@ export default {
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🃏', color: '#7c3aed', imagen: 'assets/personajes/the-joker.webp',
-  base: { hp: 540, dmg: 50, spd: 90 },
+  base: { hp: 650, dmg: 60, spd: 99 },
   extra: {},
   slots: espacios('obsidiana', 'yelmo', 'anilloCobre'),
 
@@ -23,8 +23,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Naipes Impregnados', objetivo: 'enemigo', estilo: 'ranged', color: 0xa855f7,
-      pct: 1.00, escala: 'dano', cd: 0,
-      desc: 'Causa 100% y tiene 30% de probabilidad de aplicar Veneno. Si el objetivo tenía más HP actual que The Joker, intenta 2 Venenos más (30% cada uno), cada uno a un enemigo al azar (pueden caer en el mismo).',
+      pct: 1.60, escala: 'dano', cd: 0,
+      desc: 'Causa 160% y tiene 30% de probabilidad de aplicar Veneno. Si el objetivo tenía más HP actual que The Joker, intenta 2 Venenos más (30% cada uno), cada uno a un enemigo al azar (pueden caer en el mismo).',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison', prob: .30 } },
         { condicion: { objetivoMasHpQueYo: true }, accion: { tipo: 'efecto', id: 'poison', prob: .30, a: { azar: 2 } } },
@@ -32,8 +32,8 @@ export default {
     },
     {
       categoria: 'especial', nombre: 'Detonador del Caos', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x22c55e,
-      pct: .75, escala: 'dano', cd: 3,
-      desc: 'Causa 75% a todos los enemigos con 60% de probabilidad de aplicar Veneno a cada uno. Luego tiene 30% de probabilidad de aplicar Mega Aturdimiento a un enemigo al azar con 3 o más acumulaciones de Veneno.',
+      pct: 1.20, escala: 'dano', cd: 3,
+      desc: 'Causa 120% a todos los enemigos con 60% de probabilidad de aplicar Veneno a cada uno. Luego tiene 30% de probabilidad de aplicar Mega Aturdimiento a un enemigo al azar con 3 o más acumulaciones de Veneno.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison', prob: .60 } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'stun', mega: true, prob: .30, a: { azarCon: { efecto: 'poison', min: 3 } } } },
@@ -41,8 +41,8 @@ export default {
     },
     {
       categoria: 'over', nombre: '¿Por qué tan serio?', objetivo: 'azar', golpes: 3, estilo: 'ranged', color: 0xa3e635,
-      pct: .75, escala: 'vel', cd: 5,
-      desc: '3 golpes de 75% (escala por Velocidad) a enemigos al azar. Cada golpe que acierta a un enemigo con Veneno hace que todos los Venenos de todos los enemigos hagan su daño al instante (sin gastarse).',
+      pct: 1.20, escala: 'vel', cd: 5,
+      desc: '3 golpes de 120% (escala por Velocidad) a enemigos al azar. Cada golpe que acierta a un enemigo con Veneno hace que todos los Venenos de todos los enemigos hagan su daño al instante (sin gastarse).',
       efectos: [{ condicion: { objetivoTiene: 'poison' }, accion: { tipo: 'activarDoT', efecto: 'poison', a: 'todosEnemigos' } }],
     },
   ],

@@ -12,7 +12,7 @@ export default {
   sobres: ['phantom'],
   starter: 'noxious',
   emoji: '🐍', color: '#4d7c0f', imagen: 'assets/personajes/orochimaru.webp',
-  base: { hp: 660, dmg: 84, spd: 92 },
+  base: { hp: 550, dmg: 51, spd: 93 },
   extra: {},
   slots: espacios('obsidiana', 'yelmo', 'anilloCobre'),
 

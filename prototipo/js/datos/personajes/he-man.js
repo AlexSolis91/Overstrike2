@@ -10,7 +10,7 @@ export default {
   rol: 'Tanque', rolSecundario: 'Daño',
   sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
   emoji: '⚔️', color: '#f59e0b', imagen: 'assets/personajes/he-man.webp',
-  base: { hp: 850, dmg: 70, spd: 82 },
+  base: { hp: 750, dmg: 40, spd: 80 },
   extra: { armor: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -27,25 +27,25 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Espada del Poder', objetivo: 'enemigo', estilo: 'melee', color: 0x93c5fd,
-      pct: 1.00, escala: 'dano', cd: 0,
-      desc: 'Causa 100% y He-Man gana 1 de Poder de Grayskull.',
+      pct: .90, escala: 'dano', cd: 0,
+      desc: 'Causa 90% y He-Man gana 1 de Poder de Grayskull.',
       efectos: [{ cuando: 'final', accion: { tipo: 'ganarCargas', efecto: 'grayskull', max: 5, a: 'propio' } }],
     },
     {
       categoria: 'especial', nombre: '¡Por el Poder de Grayskull!', objetivo: 'enemigo', estilo: 'melee', color: 0xfacc15, cd: 3,
-      pct: 1.20, escala: 'dano',
-      desc: 'Causa 120%. He-Man gana Furia (+50% de daño) y Protección (+30% de Resistencia) por 2 rondas, y todos sus aliados ganan un Escudo del 20% del HP máx. de He-Man.',
+      pct: 1.10, escala: 'dano',
+      desc: 'Causa 110%. He-Man gana Furia (+50% de daño) y Protección (+30% de Resistencia) por 2 rondas, y todos sus aliados ganan un Escudo del 18% del HP máx. de He-Man.',
       efectos: [
         { cuando: 'final', accion: { tipo: 'efecto', id: 'dmgUp', dur: 2, a: 'propio' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'protect', dur: 2, a: 'propio' } },
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .20, escala: 'hpMax', a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: .18, escala: 'hpMax', a: 'todosAliados' } },
       ],
     },
     {
       categoria: 'over', nombre: 'Golpe de Grayskull', objetivo: 'enemigo', estilo: 'melee', color: 0xfde047,
-      pct: 2.20, escala: 'dano', cd: 4,
+      pct: 2.00, escala: 'dano', cd: 4,
       consumeCargas: { pct: .15, efecto: 'grayskull' },
-      desc: 'Causa 220% y consume todo su Poder de Grayskull: +15% de daño por cada uno (hasta +75%).',
+      desc: 'Causa 200% y consume todo su Poder de Grayskull: +15% de daño por cada uno (hasta +75%).',
     },
   ],
 };

@@ -11,7 +11,7 @@ export default {
   rol: 'Control', rolSecundario: 'Daño',
   sobres: [],  // solo en Unbreakable Force
   emoji: '🕸️', color: '#dc2626', imagen: 'assets/personajes/spider-man.webp',
-  base: { hp: 640, dmg: 74, spd: 96 },
+  base: { hp: 600, dmg: 59, spd: 94 },
   extra: { block: .20 },                     // Sentido Arácnido
   slots: espacios('obsidiana', 'botas', 'anilloCobre'),
 

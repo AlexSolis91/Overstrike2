@@ -9,8 +9,8 @@ export default {
   sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🔥', color: '#f97316', imagen: 'assets/personajes/rengoku.webp',
-  base: { hp: 750, dmg: 50, spd: 72 },
-  extra: {},
+  base: { hp: 850, dmg: 55, spd: 88 },
+  extra: { armor: .20, res: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
   lider: {
@@ -27,8 +27,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Sol Ascendente', objetivo: 'enemigo', estilo: 'melee', color: 0xff7a2a,
-      pct: .90, escala: 'hp', cd: 0,
-      desc: 'Causa 90% (escala por HP). 30% de probabilidad de aplicar Quemadura 5% (2 rondas). Rengoku gana Provocación (2 rondas).',
+      pct: 1.45, escala: 'hp', cd: 0,
+      desc: 'Causa 145% (escala por HP). 30% de probabilidad de aplicar Quemadura 5% (2 rondas). Rengoku gana Provocación (2 rondas).',
       efectos: [
         { accion: { tipo: 'efecto', id: 'burn', valor: .05, dur: 2, prob: .30 } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'taunt', dur: 2, a: 'propio' } },
@@ -36,14 +36,14 @@ export default {
     },
     {
       categoria: 'especial', nombre: 'Tigre de Fuego', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xff5a1a,
-      pct: .70, escala: 'hp', cd: 2,
-      desc: 'Causa 70% (escala por HP) a todos los enemigos. Si golpea al menos a un enemigo con Quemadura, Rengoku gana un Escudo igual al 60% del daño total causado.',
-      efectos: [{ cuando: 'final', condicion: { algunGolpeadoTenia: 'burn' }, accion: { tipo: 'escudo', base: 'danoCausado', pct: .60, a: 'propio' } }],
+      pct: 1.10, escala: 'hp', cd: 2,
+      desc: 'Causa 110% (escala por HP) a todos los enemigos. Si golpea al menos a un enemigo con Quemadura, Rengoku gana un Escudo igual al 96% del daño total causado.',
+      efectos: [{ cuando: 'final', condicion: { algunGolpeadoTenia: 'burn' }, accion: { tipo: 'escudo', base: 'danoCausado', pct: .96, a: 'propio' } }],
     },
     {
       categoria: 'over', nombre: 'Purgatorio', objetivo: 'enemigo', estilo: 'melee', color: 0xffb347,
-      pct: 2.50, escala: 'hp', cd: 5,
-      desc: 'Causa 250% (escala por HP). Propaga la Quemadura del objetivo (mismo valor y duración) a los demás enemigos, aunque el objetivo muera.',
+      pct: 4.00, escala: 'hp', cd: 5,
+      desc: 'Causa 400% (escala por HP). Propaga la Quemadura del objetivo (mismo valor y duración) a los demás enemigos, aunque el objetivo muera.',
       efectos: [{ cuando: 'final', accion: { tipo: 'propagar', efecto: 'burn', a: 'otrosEnemigos' } }],
     },
   ],

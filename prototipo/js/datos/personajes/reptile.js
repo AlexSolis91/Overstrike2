@@ -7,36 +7,36 @@ export default {
   id: 'reptile',
   franquicia: 'Mortal Kombat', grupos: ['outworld'],   // campaña: temas de las etapas
   nombre: 'Reptile',
-  rol: 'DoTer', rolSecundario: 'Daño',
+  rol: 'Asesino', rolSecundario: 'DoTer',
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦎', color: '#65a30d', imagen: 'assets/personajes/reptile.webp',
-  base: { hp: 620, dmg: 80, spd: 98 },
-  extra: { critRate: .05 },                       // Prob. Crítico 10%
+  base: { hp: 600, dmg: 90, spd: 108 },
+  extra: { critRate: .15, acc: .25 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
   pasiva: {
     nombre: 'Sangre Saurian',
-    desc: 'Inmune a Veneno. Sus golpes a enemigos con Veneno hacen +20% de daño. Cada vez que golpea a un enemigo con Veneno, gana Sigilo (2 rondas).',
+    desc: 'Inmune a Veneno. Sus golpes a enemigos con Veneno hacen +40% de daño. Cada vez que golpea a un enemigo con Veneno, gana Sigilo (2 rondas).',
     inmuneA: ['poison'],
-    bonoContra: { efecto: 'poison', pct: .20 },
+    bonoContra: { efecto: 'poison', pct: .40 },
     gatillo: 'alGolpear', filtro: { objetivoTiene: 'poison' },
     accion: { tipo: 'efecto', id: 'stealth', dur: 2, a: 'propio' },
   },
   movimientos: [
     {
       categoria: 'basico', nombre: 'Escupitajo Ácido', objetivo: 'enemigo', estilo: 'ranged', color: 0x84cc16,
-      pct: .90, escala: 'dano', cd: 0,
-      desc: 'Causa 90% con 30% de probabilidad de aplicar Veneno. Si el objetivo ya tenía Veneno, también tiene 20% de probabilidad de aplicar Desgaste.',
+      pct: 1.45, escala: 'dano', cd: 0,
+      desc: 'Causa 145% con 50% de probabilidad de aplicar Veneno. Si el objetivo ya tenía Veneno, también tiene 20% de probabilidad de aplicar Desgaste.',
       efectos: [
         { condicion: { objetivoTiene: 'poison' }, accion: { tipo: 'efecto', id: 'wear', prob: .20 } },   // se revisa ANTES de poner el nuevo Veneno
-        { accion: { tipo: 'efecto', id: 'poison', prob: .30 } },
+        { accion: { tipo: 'efecto', id: 'poison', prob: .50 } },
       ],
     },
     {
       categoria: 'especial', nombre: 'Bola de Fuerza', objetivo: 'enemigo', estilo: 'ranged', color: 0x4ade80,
-      pct: 1.30, escala: 'dano', cd: 3,
-      desc: 'Causa 130% con 40% de probabilidad de aplicar Debilitar (recibe +50% de daño) por 2 rondas. Si el objetivo ya tenía algún debuff, propaga uno de ellos al azar a otro enemigo al azar (misma intensidad y duración restante; tirada de Puntería).',
+      pct: 2.10, escala: 'dano', cd: 3,
+      desc: 'Causa 210% con 40% de probabilidad de aplicar Debilitar (recibe +50% de daño) por 2 rondas. Si el objetivo ya tenía algún debuff, propaga uno de ellos al azar a otro enemigo al azar (misma intensidad y duración restante; tirada de Puntería).',
       efectos: [
         { accion: { tipo: 'efecto', id: 'weaken', dur: 2, prob: .40 } },
         { cuando: 'final', accion: { tipo: 'propagar', efecto: 'azar', a: 'otroEnemigoAzar' } },
@@ -44,8 +44,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Fatality: Lengua Ácida', objetivo: 'enemigo', estilo: 'melee', color: 0xa3e635,
-      pct: 2.00, escala: 'dano', cd: 5, bonoPorAcumulacion: { efecto: 'poison', pct: .15, max: 5 },
-      desc: 'Causa 200%, +15% por cada acumulación de Veneno del objetivo (máx. +75%). Si elimina al objetivo, Reptile gana 1 turno extra.',
+      pct: 3.20, escala: 'dano', cd: 5, bonoPorAcumulacion: { efecto: 'poison', pct: .15, max: 5 },
+      desc: 'Causa 320%, +15% por cada acumulación de Veneno del objetivo (máx. +75%). Si elimina al objetivo, Reptile gana 1 turno extra.',
       efectos: [{ cuando: 'final', condicion: { objetivoEliminado: true }, accion: { tipo: 'turnoExtra', a: 'propio' } }],
     },
   ],

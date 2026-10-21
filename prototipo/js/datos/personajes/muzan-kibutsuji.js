@@ -8,34 +8,34 @@ import { espacios } from '../reliquias.js';
 const muzanFormaFinal = {
   nombre: 'Muzan, Forma Final',
   emoji: '🩸', color: '#be123c', imagen: 'assets/transformaciones/muzan-forma-final.webp',
-  base: { hp: 700, dmg: 56, spd: 92 },
+  base: { hp: 690, dmg: 57, spd: 83 },
   extra: {},
   pasiva: {
     nombre: 'Cuerpo del Rey Demonio',
-    desc: 'Conserva Infectar. Al inicio de cada ronda se cura 8% de su HP máx. por cada enemigo envenenado (regenera con la sangre de sus víctimas).',
+    desc: 'Conserva Infectar. Al inicio de cada ronda se cura 5% de su HP máx. por cada enemigo envenenado (regenera con la sangre de sus víctimas).',
     gatillo: 'alIniciarRonda',
-    accion: { tipo: 'curar', pct: .08, base: 'hpMaxObjetivo', porEnemigoCon: 'poison', a: 'propio' },
+    accion: { tipo: 'curar', pct: .05, base: 'hpMaxObjetivo', porEnemigoCon: 'poison', a: 'propio' },
   },
   movimientos: [
     {
       categoria: 'basico', nombre: 'Brazos Óseos', objetivo: 'azar', estilo: 'melee', color: 0xbe123c,
-      pct: .40, escala: 'dano', cd: 0, golpes: 3,
-      desc: '3 latigazos de 40% a enemigos al azar, cada uno con 35% de probabilidad de Veneno.',
+      pct: .25, escala: 'dano', cd: 0, golpes: 3,
+      desc: '3 latigazos de 25% a enemigos al azar, cada uno con 35% de probabilidad de Veneno.',
       efectos: [{ accion: { tipo: 'efecto', id: 'poison', prob: .35 } }],
     },
     {
       categoria: 'especial', nombre: 'Mar de Sangre', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x9f1239,
-      pct: .85, escala: 'dano', cd: 3,
-      desc: '85% a todos los enemigos con 55% de probabilidad de Veneno. Todos los aliados se curan 12% de su HP máx.',
+      pct: .50, escala: 'dano', cd: 3,
+      desc: '50% a todos los enemigos con 55% de probabilidad de Veneno. Todos los aliados se curan 7% de su HP máx.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison', prob: .55 } },
-        { cuando: 'final', accion: { tipo: 'curar', pct: .12, base: 'hpMaxObjetivo', a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'curar', pct: .07, base: 'hpMaxObjetivo', a: 'todosAliados' } },
       ],
     },
     {
       categoria: 'over', nombre: 'Mil Látigos del Rey Demonio', objetivo: 'azar', estilo: 'melee', color: 0xf43f5e,
-      pct: .40, escala: 'dano', cd: 5, golpes: 6,
-      desc: '6 latigazos de 40% a enemigos al azar, cada uno con 45% de probabilidad de Veneno. Todos los aliados ganan Regeneración (2 rondas).',
+      pct: .25, escala: 'dano', cd: 5, golpes: 6,
+      desc: '6 latigazos de 25% a enemigos al azar, cada uno con 45% de probabilidad de Veneno. Todos los aliados ganan Regeneración (2 rondas).',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison', prob: .45 } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'regen', dur: 2, a: 'todosAliados' } },
@@ -52,7 +52,7 @@ export default {
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🎩', color: '#881337', imagen: 'assets/personajes/muzan-kibutsuji.webp',
-  base: { hp: 560, dmg: 44, spd: 90 },
+  base: { hp: 550, dmg: 45, spd: 81 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -63,33 +63,33 @@ export default {
   },
   pasiva: {
     nombre: 'Sangre de Muzan',
-    desc: 'Tiene Infectar permanente: quien lo golpee recibe Veneno sin tirada. La primera vez que va a caer queda con 30% de HP y despierta para siempre su Forma Final.',
+    desc: 'Tiene Infectar permanente: quien lo golpee recibe Veneno sin tirada. La primera vez que va a caer queda con 15% de HP y despierta para siempre su Forma Final.',
     efectosPermanentes: ['infect'],
-    ultimoAliento: { hp: .30, transformar: true },
+    ultimoAliento: { hp: .15, transformar: true },
   },
   transformacion: muzanFormaFinal,
   movimientos: [
     {
       categoria: 'basico', nombre: 'Látigo de Carne', objetivo: 'enemigo', estilo: 'ranged', color: 0x9f1239,
-      pct: 1.00, escala: 'dano', cd: 0,
-      desc: 'Causa 100% con 35% de probabilidad de Veneno.',
+      pct: .60, escala: 'dano', cd: 0,
+      desc: 'Causa 60% con 35% de probabilidad de Veneno.',
       efectos: [{ accion: { tipo: 'efecto', id: 'poison', prob: .35 } }],
     },
     {
       categoria: 'especial', nombre: 'Sangre del Rey Demonio', objetivo: 'todosAliados', estilo: 'support', color: 0xe11d48, cd: 3,
-      desc: 'Comparte su sangre con los suyos: todos los aliados se curan 12% de su HP máx. y ganan Regeneración (2 rondas).',
+      desc: 'Comparte su sangre con los suyos: todos los aliados se curan 7% de su HP máx. y ganan Regeneración (2 rondas).',
       efectos: [
-        { cuando: 'final', accion: { tipo: 'curar', pct: .12, base: 'hpMaxObjetivo', a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'curar', pct: .07, base: 'hpMaxObjetivo', a: 'todosAliados' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'regen', dur: 2, a: 'todosAliados' } },
       ],
     },
     {
       categoria: 'over', nombre: 'Látigos de Sangre', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xf43f5e,
-      pct: 1.00, escala: 'dano', cd: 5,
-      desc: 'Látigos que salen de todo su cuerpo: 100% a todos los enemigos con 60% de probabilidad de Veneno. Todos los aliados se curan 10% de su HP máx.',
+      pct: .60, escala: 'dano', cd: 5,
+      desc: 'Látigos que salen de todo su cuerpo: 60% a todos los enemigos con 60% de probabilidad de Veneno. Todos los aliados se curan 6% de su HP máx.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison', prob: .60 } },
-        { cuando: 'final', accion: { tipo: 'curar', pct: .10, base: 'hpMaxObjetivo', a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'curar', pct: .06, base: 'hpMaxObjetivo', a: 'todosAliados' } },
       ],
     },
   ],

@@ -8,7 +8,7 @@ import { espacios } from '../reliquias.js';
 const sagaOscuro = {
   nombre: 'Saga Oscuro',
   emoji: '😈', color: '#7c3aed', imagen: 'assets/transformaciones/saga-oscuro.webp',
-  base: { hp: 760, dmg: 110, spd: 100 },
+  base: { hp: 630, dmg: 63, spd: 91 },
   extra: { acc: .20 },
   compartirCooldowns: true,
   pasiva: {
@@ -20,8 +20,8 @@ const sagaOscuro = {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Golpe de Ares', objetivo: 'enemigo', estilo: 'melee', color: 0xa855f7,
-      pct: 1.20, escala: 'dano', cd: 0,
-      desc: 'Causa 120% con 50% de probabilidad de Posesión. Si el objetivo ya estaba Poseído, se convierte en Mega Posesión.',
+      pct: 1.10, escala: 'dano', cd: 0,
+      desc: 'Causa 110% con 50% de probabilidad de Posesión. Si el objetivo ya estaba Poseído, se convierte en Mega Posesión.',
       efectos: [
         { condicion: { objetivoTeniaAntes: 'possess' }, accion: { tipo: 'efecto', id: 'possess', mega: true, prob: .50 } },
         { accion: { tipo: 'efecto', id: 'possess', prob: .50 } },
@@ -29,15 +29,15 @@ const sagaOscuro = {
     },
     {
       categoria: 'especial', nombre: 'Satán Imperial', objetivo: 'enemigo', estilo: 'ranged', color: 0x6d28d9,
-      pct: 1.40, escala: 'dano', cd: 3,
-      desc: 'Causa 140% y con 80% de probabilidad aplica Mega Posesión: el enemigo ataca a sus aliados durante 2 turnos.',
+      pct: 1.25, escala: 'dano', cd: 3,
+      desc: 'Causa 125% y con 80% de probabilidad aplica Mega Posesión: el enemigo ataca a sus aliados durante 2 turnos.',
       efectos: [{ accion: { tipo: 'efecto', id: 'possess', mega: true, prob: .80 } }],
     },
     {
       categoria: 'over', nombre: 'Explosión de Galaxias', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xc084fc,
-      pct: 2.40, escala: 'dano', cd: 6,
+      pct: 2.15, escala: 'dano', cd: 6,
       bonoContra: { efecto: ['confuse', 'possess'], pct: .30 },
-      desc: 'Ataque devastador: 240% a todos los enemigos, +30% contra los que tengan Confusión o Posesión. Cooldown 6 (comparte el de Saga de Géminis).',
+      desc: 'Ataque devastador: 215% a todos los enemigos, +30% contra los que tengan Confusión o Posesión. Cooldown 6 (comparte el de Saga de Géminis).',
     },
   ],
 };
@@ -49,7 +49,7 @@ export default {
   rol: 'Control', rolSecundario: 'Daño',
   sobres: ['phantom'],
   emoji: '♊', color: '#d4a017', imagen: 'assets/personajes/saga.webp',
-  base: { hp: 720, dmg: 88, spd: 95 },
+  base: { hp: 600, dmg: 50, spd: 86 },
   extra: { acc: .20 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -69,21 +69,21 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Puño Ilusorio', objetivo: 'enemigo', estilo: 'melee', color: 0xfde68a,
-      pct: 1.10, escala: 'dano', cd: 0,
-      desc: 'Causa 110% con 60% de probabilidad de Confusión (2 rondas).',
+      pct: 1.00, escala: 'dano', cd: 0,
+      desc: 'Causa 100% con 60% de probabilidad de Confusión (2 rondas).',
       efectos: [{ accion: { tipo: 'efecto', id: 'confuse', dur: 2, prob: .60 } }],
     },
     {
       categoria: 'especial', nombre: 'Laberinto de Géminis', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfacc15,
-      pct: 1.00, escala: 'dano', cd: 2,
-      desc: 'Causa 100% a todos los enemigos con 80% de probabilidad de Confusión (2 rondas) a cada uno.',
+      pct: .90, escala: 'dano', cd: 2,
+      desc: 'Causa 90% a todos los enemigos con 80% de probabilidad de Confusión (2 rondas) a cada uno.',
       efectos: [{ accion: { tipo: 'efecto', id: 'confuse', dur: 2, prob: .80 } }],
     },
     {
       categoria: 'over', nombre: 'Explosión de Galaxias', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfde047,
-      pct: 2.00, escala: 'dano', cd: 6, cdInicial: 6,
+      pct: 1.80, escala: 'dano', cd: 6, cdInicial: 6,
       bonoContra: { efecto: ['confuse', 'possess'], pct: .30 },
-      desc: 'Ataque devastador: 200% a todos los enemigos, +30% contra los que tengan Confusión o Posesión. Empieza con cooldown 6 y se recarga en 6.',
+      desc: 'Ataque devastador: 180% a todos los enemigos, +30% contra los que tengan Confusión o Posesión. Empieza con cooldown 6 y se recarga en 6.',
     },
   ],
 };

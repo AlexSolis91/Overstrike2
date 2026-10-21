@@ -12,7 +12,7 @@ export default {
   sobres: ['phantom', 'bloodline'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🌿', color: '#16a34a', imagen: 'assets/personajes/poison-ivy.webp',
-  base: { hp: 820, dmg: 96, spd: 100 },
+  base: { hp: 650, dmg: 60, spd: 110 },
   extra: { acc: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -26,14 +26,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Látigo de Espinas', objetivo: 'enemigo', estilo: 'ranged', color: 0x15803d,
-      pct: .60, escala: 'dano', cd: 0, golpes: 2,
-      desc: '2 latigazos de 60%, cada uno con 40% de probabilidad de Sangrado (si ya sangra, puede abrirse en Hemorragia).',
+      pct: .90, escala: 'dano', cd: 0, golpes: 2,
+      desc: '2 latigazos de 90%, cada uno con 40% de probabilidad de Sangrado (si ya sangra, puede abrirse en Hemorragia).',
       efectos: [{ accion: { tipo: 'efecto', id: 'bleed', prob: .40 } }],
     },
     {
       categoria: 'especial', nombre: 'Jardín Venenoso', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x22c55e,
-      pct: .95, escala: 'dano', cd: 3,
-      desc: 'Esporas tóxicas cubren el campo: 95% a todos los enemigos con 55% de probabilidad de Veneno. Las espinas abren las heridas: el Sangrado de cada enemigo se convierte en Hemorragia (sin tirada), y los que tienen Hemorragia reciben además 1 Veneno sin tirada.',
+      pct: 1.45, escala: 'dano', cd: 3,
+      desc: 'Esporas tóxicas cubren el campo: 145% a todos los enemigos con 55% de probabilidad de Veneno. Las espinas abren las heridas: el Sangrado de cada enemigo se convierte en Hemorragia (sin tirada), y los que tienen Hemorragia reciben además 1 Veneno sin tirada.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison', prob: .55 } },
         { condicion: { objetivoTiene: 'bleed' }, accion: { tipo: 'hemorragia' } },
@@ -42,8 +42,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Beso de la Hiedra', objetivo: 'enemigo', estilo: 'ranged', color: 0x4ade80,
-      pct: 2.30, escala: 'dano', cd: 5,
-      desc: 'Las enredaderas lo atrapan y le abren las heridas: 230%, su Sangrado se convierte en Hemorragia (sin tirada) y tiene 40% de probabilidad de Posesión por el beso venenoso.',
+      pct: 3.50, escala: 'dano', cd: 5,
+      desc: 'Las enredaderas lo atrapan y le abren las heridas: 350%, su Sangrado se convierte en Hemorragia (sin tirada) y tiene 40% de probabilidad de Posesión por el beso venenoso.',
       efectos: [
         { accion: { tipo: 'hemorragia' } },
         { accion: { tipo: 'efecto', id: 'possess', prob: .40 } },

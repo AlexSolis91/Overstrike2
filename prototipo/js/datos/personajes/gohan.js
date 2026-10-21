@@ -7,7 +7,7 @@ import { espacios } from '../reliquias.js';
 const gohanBestia = {
   nombre: 'Gohan Bestia',
   emoji: '🐺', color: '#c4b5fd', imagen: 'assets/transformaciones/gohan-bestia.webp',
-  base: { hp: 820, dmg: 90, spd: 94 },
+  base: { hp: 650, dmg: 59, spd: 94 },
   extra: { acc: .20 },
   pasiva: {
     nombre: 'Instinto de Bestia',
@@ -46,7 +46,7 @@ export default {
   rol: 'Support', rolSecundario: 'Control',
   sobres: [],  // como Goku, Vegeta y Broly: solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
   emoji: '🥋', color: '#7c3aed', imagen: 'assets/personajes/gohan.webp',
-  base: { hp: 760, dmg: 78, spd: 96 },
+  base: { hp: 600, dmg: 51, spd: 96 },
   extra: { acc: .15 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

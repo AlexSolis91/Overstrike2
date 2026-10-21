@@ -53,26 +53,26 @@ export const AREAS = {
   portal: {
     nombre: 'El Portal',
     etapas: [   // orden: del tema más débil al más fuerte (simulación); poder calibrado para ~95% → ~40% de victorias en Normal
-      { tema: 'exploradores', poder: 1.51 },   // 1
-      { tema: 'gotica', poder: 1.1 },   // 2
-      { tema: 'fuego', poder: 1.1 },   // 3
-      { tema: 'mortal', poder: 1.34 },   // 4
-      { tema: 'sayajin', poder: 1.19 },   // 5
-      { tema: 'cazadores', poder: 1.01 },   // 6
-      { tema: 'eternia', poder: 0.9 },   // 7
-      { tema: 'hielo', poder: 1.1 },   // 8
-      { tema: 'azeroth', poder: 1.05 },   // 9
-      { tema: 'akatsuki', poder: 0.86, jefe: true },   // 10
-      { tema: 'dragones', poder: 0.93 },   // 11
-      { tema: 'santos', poder: 1.13 },   // 12
-      { tema: 'konoha', poder: 1.05 },   // 13
-      { tema: 'marvel', poder: 1.0 },   // 14
-      { tema: 'caos', poder: 1.23 },   // 15
-      { tema: 'asgard', poder: 1.1 },   // 16
-      { tema: 'reyes', poder: 0.99 },   // 17
-      { tema: 'uchiha', poder: 1.24 },   // 18
-      { tema: 'servants', poder: 0.7 },   // 19
-      { tema: 'monarcas', poder: 0.99, jefe: true },   // 20
+      { tema: 'exploradores', poder: 1.01 },   // 1
+      { tema: 'gotica', poder: 1.01 },   // 2
+      { tema: 'fuego', poder: 0.93 },   // 3
+      { tema: 'mortal', poder: 1.03 },   // 4
+      { tema: 'sayajin', poder: 0.93 },   // 5
+      { tema: 'cazadores', poder: 1.05 },   // 6
+      { tema: 'eternia', poder: 1.12 },   // 7
+      { tema: 'hielo', poder: 0.79 },   // 8
+      { tema: 'azeroth', poder: 0.86 },   // 9
+      { tema: 'akatsuki', poder: 1.1, jefe: true },   // 10
+      { tema: 'dragones', poder: 0.79 },   // 11
+      { tema: 'santos', poder: 1.26 },   // 12
+      { tema: 'konoha', poder: 1.21 },   // 13
+      { tema: 'marvel', poder: 1.37 },   // 14
+      { tema: 'caos', poder: 1.21 },   // 15
+      { tema: 'asgard', poder: 1.43 },   // 16
+      { tema: 'reyes', poder: 1.37 },   // 17
+      { tema: 'uchiha', poder: 1.34 },   // 18
+      { tema: 'servants', poder: 1.34 },   // 19
+      { tema: 'monarcas', poder: 1.4, jefe: true },   // 20
     ],
   },
 };

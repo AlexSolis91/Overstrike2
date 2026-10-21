@@ -23,8 +23,15 @@ está aquí, primero se define y se agrega a este registro; nunca se programa "s
 - Estadística final = (base + suma de planos) × (1 + suma de %).
 - La ficha indica solo lo que se **suma** a la base común.
 
-**Rangos por rol:** Tanque 750–850 HP / 40–55 Daño · Luchador 650–750 / 60–75 · Asesino 500–600 / 75–90 ·
-DoTer 550–650 / 45–60 · Soporte 550–650 / 40–55.
+**Rangos por rol (estadísticas base, obligatorios):** Tanque 750–850 HP / 40–55 Daño · Luchador 650–750 / 60–75 ·
+Asesino 500–600 / 75–90 · DoTer 550–650 / 45–60 · Soporte 550–650 / 40–55 · Control 600–700 / 50–65 ·
+Invocador 500–700 / 55–70. Velocidad base 80–130 para todos. Rol "Daño": banda de Luchador (o de Asesino si es frágil).
+Las transformaciones escalan en proporción a su forma base. La fuerza que la banda no alcanza se da con el kit
+(multiplicadores, pasiva, efectos) o con estadísticas secundarias (Armadura, Resistencia, Puntería, Prob. Crítico).
+
+**Balance de la beta (2026-10-21):** todos los campeones oficiales quedaron entre ~46% y ~53% de victorias contra
+equipos al azar (simulación de 12,000 partidas 5 vs 5 entre todo el roster). En partidas al azar el promedio de todo el
+roster es siempre 50%; lo que decide es la estrategia, la sinergia y el equipamiento.
 
 ## 2. Movimientos
 

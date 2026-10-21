@@ -11,7 +11,7 @@ export default {
   sobres: ['bloodline'],
   starter: 'noxious',                         // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦂', color: '#dc2626', imagen: 'assets/personajes/milo.webp',
-  base: { hp: 640, dmg: 78, spd: 96 },
+  base: { hp: 550, dmg: 45, spd: 86 },
   extra: { dot: .30 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -24,26 +24,26 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Aguja Escarlata', objetivo: 'enemigo', golpes: 2, estilo: 'ranged', color: 0xef4444,
-      pct: .50, escala: 'dano', cd: 0,
-      desc: '2 golpes de 50%. Cada golpe clava 1 aguja y tiene 35% de probabilidad de Veneno.',
+      pct: .30, escala: 'dano', cd: 0,
+      desc: '2 golpes de 30%. Cada golpe clava 1 aguja y tiene 35% de probabilidad de Veneno.',
       efectos: [{ accion: { tipo: 'efecto', id: 'poison', prob: .35 } }],
     },
     {
       categoria: 'especial', nombre: 'Restricción y Punto Shinou', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfb7185,
-      pct: .70, escala: 'dano', cd: 3,
-      desc: 'Causa 70% a todos los enemigos, clava 2 agujas más en cada uno y aplica Sangrado (60%). Presiona el Punto Shinou del aliado más herido: lo cura 15% de su HP máx. y le limpia sus DoTs.',
+      pct: .40, escala: 'dano', cd: 3,
+      desc: 'Causa 40% a todos los enemigos, clava 2 agujas más en cada uno y aplica Sangrado (60%). Presiona el Punto Shinou del aliado más herido: lo cura 9% de su HP máx. y le limpia sus DoTs.',
       efectos: [
         { accion: { tipo: 'clavarAgujas', n: 2 } },
         { accion: { tipo: 'efecto', id: 'bleed', prob: .60 } },
         { cuando: 'final', accion: { tipo: 'limpiar', etiqueta: 'DoT', a: 'aliadoMasHerido' } },
-        { cuando: 'final', accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .15, a: 'aliadoMasHerido' } },
+        { cuando: 'final', accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .09, a: 'aliadoMasHerido' } },
       ],
     },
     {
       categoria: 'over', nombre: 'Antares', objetivo: 'enemigo', estilo: 'ranged', color: 0xb91c1c,
-      pct: 1.80, escala: 'dano', cd: 5,
+      pct: 1.10, escala: 'dano', cd: 5,
       consumeAgujas: { pct: .12 },
-      desc: 'La aguja número 15: causa 180% +12% por cada Aguja Escarlata del objetivo (las consume; con 14 agujas, +168%). Aplica Veneno y Sangrado.',
+      desc: 'La aguja número 15: causa 110% +12% por cada Aguja Escarlata del objetivo (las consume; con 14 agujas, +168%). Aplica Veneno y Sangrado.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison' } },
         { accion: { tipo: 'efecto', id: 'bleed' } },

@@ -10,7 +10,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Support',
   sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '⚡', color: '#3b82f6', imagen: 'assets/personajes/thor.webp',
-  base: { hp: 690, dmg: 86, spd: 91 },
+  base: { hp: 650, dmg: 60, spd: 82 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -28,14 +28,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Tormenta Creciente', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x60a5fa,
-      pct: .50, escala: 'dano', cd: 0,
-      desc: 'Causa 50% a todos los enemigos. Cada uno tiene 30% de probabilidad de recibir Debilitar (2 rondas).',
+      pct: .30, escala: 'dano', cd: 0,
+      desc: 'Causa 30% a todos los enemigos. Cada uno tiene 30% de probabilidad de recibir Debilitar (2 rondas).',
       efectos: [{ accion: { tipo: 'efecto', id: 'weaken', dur: 2, prob: .30 } }],
     },
     {
       categoria: 'especial', nombre: 'Impacto de Mjölnir', objetivo: 'enemigo', estilo: 'melee', color: 0x93c5fd,
-      pct: 1.70, escala: 'dano', cd: 3,
-      desc: 'Causa 170%. Todos los aliados ganan Celeridad y Furia (2 rondas).',
+      pct: 1.00, escala: 'dano', cd: 3,
+      desc: 'Causa 100%. Todos los aliados ganan Celeridad y Furia (2 rondas).',
       efectos: [
         { cuando: 'final', accion: { tipo: 'efecto', id: 'haste', dur: 2, a: 'todosAliados' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'dmgUp', dur: 2, a: 'todosAliados' } },
@@ -43,10 +43,10 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Explosión Divina', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xbfdbfe,
-      pct: 1.50, escala: 'dano', cd: 6,
-      desc: 'Causa 150% a todos los enemigos, +30% contra cada uno por cada tipo distinto de debuff que tenga. Thor se cura 20% de su HP máx. por cada enemigo eliminado.',
+      pct: .90, escala: 'dano', cd: 6,
+      desc: 'Causa 90% a todos los enemigos, +30% contra cada uno por cada tipo distinto de debuff que tenga. Thor se cura 12% de su HP máx. por cada enemigo eliminado.',
       bonoPorDebuffs: { pct: .30 },
-      efectos: [{ cuando: 'final', accion: { tipo: 'curar', pct: .20, escala: 'hpMax', porCada: 'eliminados', a: 'propio' } }],
+      efectos: [{ cuando: 'final', accion: { tipo: 'curar', pct: .12, escala: 'hpMax', porCada: 'eliminados', a: 'propio' } }],
     },
   ],
 };

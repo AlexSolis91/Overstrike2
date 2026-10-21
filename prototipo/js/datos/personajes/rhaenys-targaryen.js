@@ -11,8 +11,8 @@ export default {
   sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐉', color: '#dc2626', imagen: 'assets/personajes/rhaenys-targaryen.webp',
-  base: { hp: 620, dmg: 85, spd: 82 },
-  extra: {},
+  base: { hp: 600, dmg: 90, spd: 90 },
+  extra: { critRate: .15 },
   slots: espacios('argonita', 'yelmo', 'anilloCobre'),
 
   pasiva: {
@@ -24,8 +24,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Llamarada de Meleys', objetivo: 'enemigo', estilo: 'ranged', color: 0xef4444,
-      pct: .95, escala: 'dano', cd: 0,
-      desc: 'Causa 95%. Si el objetivo tiene Quemadura, la alarga 1 ronda y, si le quedan 4 rondas o más, tiene 15% de probabilidad de Aturdirlo. Además tiene 30% de probabilidad de aplicar Quemadura 5% (2 rondas).',
+      pct: 1.50, escala: 'dano', cd: 0,
+      desc: 'Causa 150%. Si el objetivo tiene Quemadura, la alarga 1 ronda y, si le quedan 4 rondas o más, tiene 15% de probabilidad de Aturdirlo. Además tiene 30% de probabilidad de aplicar Quemadura 5% (2 rondas).',
       efectos: [
         { condicion: { objetivoTiene: 'burn' }, accion: { tipo: 'extenderDuracion', efecto: 'burn', rondas: 1 } },
         { condicion: { objetivoEfectoDurMin: { efecto: 'burn', dur: 4 } }, accion: { tipo: 'efecto', id: 'stun', prob: .15 } },
@@ -34,8 +34,8 @@ export default {
     },
     {
       categoria: 'especial', nombre: 'Vuelo Infernal', objetivo: 'enemigo', golpes: 2, estilo: 'ranged', color: 0xf97316,
-      pct: .70, escala: 'dano', cd: 3,
-      desc: '2 golpes de 70% a un enemigo. Si golpea a un enemigo con Quemadura, Rhaenys gana Frenesí y Letalidad (2 rondas).',
+      pct: 1.10, escala: 'dano', cd: 3,
+      desc: '2 golpes de 110% a un enemigo. Si golpea a un enemigo con Quemadura, Rhaenys gana Frenesí y Letalidad (2 rondas).',
       efectos: [
         { cuando: 'final', condicion: { algunGolpeadoTenia: 'burn' }, accion: { tipo: 'efecto', id: 'frenzy', dur: 2, a: 'propio' } },
         { cuando: 'final', condicion: { algunGolpeadoTenia: 'burn' }, accion: { tipo: 'efecto', id: 'bloodlust', dur: 2, a: 'propio' } },
@@ -43,8 +43,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Erupción del Pozo Dragón', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xb91c1c,
-      pct: 1.40, escala: 'dano', cd: 5,
-      desc: 'Causa 140% a todos los enemigos. Cada enemigo con Quemadura tiene 40% de probabilidad de quedar Aturdido.',
+      pct: 2.25, escala: 'dano', cd: 5,
+      desc: 'Causa 225% a todos los enemigos. Cada enemigo con Quemadura tiene 40% de probabilidad de quedar Aturdido.',
       efectos: [{ condicion: { objetivoTiene: 'burn' }, accion: { tipo: 'efecto', id: 'stun', prob: .40 } }],
     },
   ],

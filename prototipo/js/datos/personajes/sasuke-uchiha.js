@@ -9,7 +9,7 @@ export default {
   rol: 'Daño', rolSecundario: 'DoTer',
   sobres: ['bloodline'],
   emoji: '⚡', color: '#7c3aed', imagen: 'assets/personajes/sasuke-uchiha.webp',
-  base: { hp: 620, dmg: 88, spd: 95 },
+  base: { hp: 500, dmg: 75, spd: 86 },
   extra: { dot: .30 },                          // Daño DoT 30%: Quemaduras y Sangrados más fuertes
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -23,21 +23,21 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Chidori', objetivo: 'enemigo', estilo: 'melee', color: 0x93c5fd,
-      pct: 1.00, escala: 'dano', cd: 0,
-      desc: 'Causa 100% con 45% de probabilidad de Sangrado.',
+      pct: .85, escala: 'dano', cd: 0,
+      desc: 'Causa 85% con 45% de probabilidad de Sangrado.',
       efectos: [{ accion: { tipo: 'efecto', id: 'bleed', prob: .45 } }],
     },
     {
       categoria: 'especial', nombre: 'Amaterasu', objetivo: 'enemigo', estilo: 'ranged', color: 0x1f2937,
-      pct: 1.20, escala: 'dano', cd: 3,
-      desc: 'Causa 120% y aplica Amaterasu: Quemadura de 15% (sube con Daño DoT) durante 3 rondas que no se puede limpiar.',
+      pct: 1.00, escala: 'dano', cd: 3,
+      desc: 'Causa 100% y aplica Amaterasu: Quemadura de 15% (sube con Daño DoT) durante 3 rondas que no se puede limpiar.',
       efectos: [{ accion: { tipo: 'efecto', id: 'burn', valor: .15, dur: 3, inextinguible: true } }],
     },
     {
       categoria: 'over', nombre: 'Kirin', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xa5b4fc,
-      pct: 1.50, escala: 'dano', cd: 5,
+      pct: 1.25, escala: 'dano', cd: 5,
       bonoContra: { efecto: 'burn', pct: .50 },
-      desc: 'Un dragón de rayo cae sobre todos los enemigos: 150%, +50% contra los que tengan Quemadura (Kirin usa el calor del fuego). 30% de probabilidad de Sangrado a cada uno.',
+      desc: 'Un dragón de rayo cae sobre todos los enemigos: 125%, +50% contra los que tengan Quemadura (Kirin usa el calor del fuego). 30% de probabilidad de Sangrado a cada uno.',
       efectos: [{ accion: { tipo: 'efecto', id: 'bleed', prob: .30 } }],
     },
   ],

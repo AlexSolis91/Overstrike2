@@ -8,8 +8,8 @@ export default {
   rol: 'Tanque', rolSecundario: 'Support',
   sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🪷', color: '#facc15', imagen: 'assets/personajes/shaka.webp',
-  base: { hp: 730, dmg: 65, spd: 75 },
-  extra: {},
+  base: { hp: 850, dmg: 55, spd: 88 },
+  extra: { armor: .25, res: .15 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
   lider: {
@@ -26,9 +26,9 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Kahn', objetivo: 'propio', estilo: 'support', color: 0xfde68a, cd: 0,
-      desc: 'Shaka se cura 5% de su HP máx. y da Protección (+30% Resistencia) o Regeneración (cura 10% HP máx.) por 1 ronda a 2 aliados al azar (puede incluirse y repetir).',
+      desc: 'Shaka se cura 8% de su HP máx. y da Protección (+30% Resistencia) o Regeneración (cura 10% HP máx.) por 1 ronda a 2 aliados al azar (puede incluirse y repetir).',
       efectos: [
-        { cuando: 'final', accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .05, a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .08, a: 'propio' } },
         { cuando: 'final', accion: { tipo: 'efecto', idAzar: ['protect', 'regen'], dur: 1, a: { aliadosAzar: 2 } } },
       ],
     },
@@ -42,8 +42,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Tesoro del Cielo', objetivo: 'enemigo', estilo: 'ranged', color: 0xfde047,
-      pct: 2.80, escala: 'hp', cd: 5,
-      desc: 'Causa 280% (escala por HP). Luego reparte al azar entre los enemigos daño por efecto igual al 20% de la suma de los Escudos de su equipo.',
+      pct: 4.50, escala: 'hp', cd: 5,
+      desc: 'Causa 450% (escala por HP). Luego reparte al azar entre los enemigos daño por efecto igual al 20% de la suma de los Escudos de su equipo.',
       efectos: [{ cuando: 'final', accion: { tipo: 'danoRepartido', base: 'escudosEquipo', pct: .20, paquetes: 10, a: 'propio' } }],
     },
   ],

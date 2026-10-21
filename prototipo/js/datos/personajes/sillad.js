@@ -12,7 +12,7 @@ export default {
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🧊', color: '#38bdf8', imagen: 'assets/personajes/sillad.webp',
-  base: { hp: 640, dmg: 54, spd: 90 },
+  base: { hp: 600, dmg: 50, spd: 81 },
   extra: { acc: .15 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -30,23 +30,23 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Lanza de la Escarcha', objetivo: 'enemigo', estilo: 'ranged', color: 0x7dd3fc,
-      pct: 1.00, escala: 'dano', cd: 0,
-      desc: 'Causa 100% con 35% de probabilidad de Congelación.',
+      pct: .70, escala: 'dano', cd: 0,
+      desc: 'Causa 70% con 35% de probabilidad de Congelación.',
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .35 } }],
     },
     {
       categoria: 'especial', nombre: 'Ventisca del Monarca', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xbae6fd, cd: 3,
-      pct: .75, escala: 'dano',
-      desc: 'Una ventisca helada: 75% a todos los enemigos con 40% de probabilidad de Congelación. Todos los aliados ganan un Escudo del 12% de su HP máx.',
+      pct: .55, escala: 'dano',
+      desc: 'Una ventisca helada: 55% a todos los enemigos con 40% de probabilidad de Congelación. Todos los aliados ganan un Escudo del 9% de su HP máx.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'freeze', prob: .40 } },
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .12, escala: 'hpMax', a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: .09, escala: 'hpMax', a: 'todosAliados' } },
       ],
     },
     {
       categoria: 'over', nombre: 'Reino de la Escarcha Eterna', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xe0f2fe,
-      pct: .90, escala: 'dano', cd: 5,
-      desc: 'Congela el campo de batalla: 90% a todos los enemigos con 50% de probabilidad de Congelación, y levanta su reino (3 rondas): su equipo tiene +10% de Resistencia, y al inicio de cada ronda cada enemigo tiene 15% de probabilidad de Congelarse.',
+      pct: .65, escala: 'dano', cd: 5,
+      desc: 'Congela el campo de batalla: 65% a todos los enemigos con 50% de probabilidad de Congelación, y levanta su reino (3 rondas): su equipo tiene +10% de Resistencia, y al inicio de cada ronda cada enemigo tiene 15% de probabilidad de Congelarse.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'freeze', prob: .50 } },
         { cuando: 'final', accion: { tipo: 'zona', dur: 3, a: 'propio', zona: {
