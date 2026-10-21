@@ -1,0 +1,21 @@
+<!-- Overstrike 2 · Plantilla del correo "Confirm signup" (Supabase → Authentication → Emails → Templates → Confirm signup).
+     Asunto sugerido: ⚔️ Confirma tu cuenta de Overstrike 2
+     Pega TODO lo de abajo en "Message body" (modo Source). {{ .ConfirmationURL }} lo reemplaza Supabase. -->
+<div style="margin:0;padding:32px 16px;background:#0b0f18;font-family:Arial,Helvetica,sans-serif;color:#e5e7eb;text-align:center">
+  <div style="max-width:480px;margin:0 auto;background:#111827;border:1px solid #3b3220;border-radius:16px;padding:32px 24px">
+    <h1 style="margin:0 0 8px;font-family:Georgia,serif;font-size:30px;letter-spacing:2px;color:#f5d27a">OVERSTRIKE II</h1>
+    <p style="margin:0 0 24px;font-size:13px;color:#9ca3af">Beta cerrada</p>
+    <h2 style="margin:0 0 12px;font-size:20px;color:#ffffff">¡Bienvenido, campeón!</h2>
+    <p style="margin:0 0 24px;font-size:15px;line-height:1.5">
+      Tu cuenta está casi lista. Confirma tu correo para entrar al juego, abrir tu Starter Pack y cruzar el Portal.
+    </p>
+    <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 28px;border-radius:12px;background:#f5d27a;color:#1a1205;font-weight:bold;font-size:16px;text-decoration:none">
+      ⚔️ Confirmar mi cuenta
+    </a>
+    <p style="margin:24px 0 0;font-size:12px;line-height:1.5;color:#9ca3af">
+      Si el botón no funciona, copia este enlace en tu navegador:<br>
+      <a href="{{ .ConfirmationURL }}" style="color:#f5d27a;word-break:break-all">{{ .ConfirmationURL }}</a>
+    </p>
+    <p style="margin:16px 0 0;font-size:12px;color:#6b7280">Si tú no creaste esta cuenta, ignora este correo.</p>
+  </div>
+</div>

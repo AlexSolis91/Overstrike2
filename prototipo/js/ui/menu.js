@@ -9,7 +9,7 @@ const $ = s => document.querySelector(s);
 const TAM = 5;                                   // los equipos siempre son de 5
 const MODOS = [
   { id: 'rapida', nombre: 'Partida rápida', icono: '⚔️', desc: 'Arma tu equipo y enfrenta a la IA', activo: true },
-  { id: 'campana', nombre: 'Campaña', icono: '📜', desc: 'Cruza el Portal: 20 etapas y 3 dificultades', activo: true },
+  { id: 'campana', nombre: 'Campaña', icono: '📜', desc: 'El Portal y el Abismo: 40 etapas y 3 dificultades', activo: true },
   { id: 'multi', nombre: 'Multijugador', icono: '🌐' },
   { id: 'hordas', nombre: 'Hordas', icono: '🧟', desc: 'Oleadas sin fin: ¿hasta dónde llegas?', activo: true },
   { id: 'jefe', nombre: 'Jefe de Clan', icono: '🐲' },
