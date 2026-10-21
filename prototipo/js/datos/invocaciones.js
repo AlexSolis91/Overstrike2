@@ -61,6 +61,19 @@ export const INVOCACIONES = {
     alAparecer: [{ tipo: 'efecto', id: 'stun', prob: .60, a: { distintos: 3 } }],
     acciones: [{ tipo: 'golpe', pct: .35, elegir: 'masFuerte' }],
   },
+  tusk: {   // la sombra de Kargalgan, el chamán de los Altos Orcos (jefe final de la Horda): Sed de Sangre, Bola de Fuego y Barrera de Sangre
+    nombre: 'Tusk', rareza: 'Épico', emoji: '🔮', color: 0xdc2626, imagen: 'assets/invocaciones/tusk.webp', dur: 2,
+    enfoque: [.53, .17],
+    desc: 'Lanza una Bola de Fuego a un enemigo al azar: 45% con 40% de probabilidad de Quemadura, y da a todos los aliados un Escudo (Barrera de Sangre) del 5% del HP máx. de Sun Jin Woo. Al aparecer, Sed de Sangre: todos los aliados ganan Celeridad y Frenesí (2 rondas).',
+    alAparecer: [
+      { tipo: 'efecto', id: 'haste', dur: 2, a: 'todosAliados' },
+      { tipo: 'efecto', id: 'frenzy', dur: 2, a: 'todosAliados' },
+    ],
+    acciones: [
+      { tipo: 'golpe', pct: .45, elegir: 'azar', efectos: [{ accion: { tipo: 'efecto', id: 'burn', prob: .40 } }] },
+      { tipo: 'escudo', pct: .05, escala: 'hpMax', a: 'todosAliados' },
+    ],
+  },
   kamish: {
     nombre: 'Kamish', rareza: 'Legendario', emoji: '🐲', color: 0x9333ea, imagen: 'assets/invocaciones/kamish.webp', dur: 1,
     enfoque: [.44, .16],
@@ -191,6 +204,7 @@ export const TABLAS_INVOCACION = {
     { key: 'shadowMingByung', peso: 18 },
     { key: 'kaisel', peso: 15 },
     { key: 'beru', peso: 9 },
+    { key: 'tusk', peso: 7 },
     { key: 'bellion', peso: 5 },
     { key: 'kamish', peso: 1 },
   ],

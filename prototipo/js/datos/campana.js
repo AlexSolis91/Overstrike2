@@ -58,7 +58,7 @@ export const AREAS = {
       { tema: 'fuego', poder: 1.1 },   // 3
       { tema: 'mortal', poder: 1.34 },   // 4
       { tema: 'sayajin', poder: 1.19 },   // 5
-      { tema: 'cazadores', poder: 1.24 },   // 6
+      { tema: 'cazadores', poder: 1.01 },   // 6
       { tema: 'eternia', poder: 0.9 },   // 7
       { tema: 'hielo', poder: 1.1 },   // 8
       { tema: 'azeroth', poder: 1.05 },   // 9
@@ -72,7 +72,7 @@ export const AREAS = {
       { tema: 'reyes', poder: 0.99 },   // 17
       { tema: 'uchiha', poder: 1.24 },   // 18
       { tema: 'servants', poder: 0.7 },   // 19
-      { tema: 'monarcas', poder: 1.14, jefe: true },   // 20
+      { tema: 'monarcas', poder: 0.99, jefe: true },   // 20
     ],
   },
 };
