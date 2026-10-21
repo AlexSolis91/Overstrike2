@@ -9,7 +9,7 @@ export default {
   nombre: 'Doctor Doom',
   rol: 'Support', rolSecundario: 'Tanque',
   sobres: ['phantom'],
-  emoji: '🛡️', color: '#22c55e', imagen: 'assets/personajes/doctor-doom.webp',
+  emoji: '🛡️', color: '#22c55e', imagen: 'assets/personajes/doctor-doom.webp?v=2',
   base: { hp: 630, dmg: 50, spd: 87 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
