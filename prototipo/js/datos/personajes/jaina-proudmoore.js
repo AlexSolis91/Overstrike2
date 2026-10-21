@@ -10,7 +10,7 @@ export default {
   sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🧙‍♀️', color: '#818cf8', imagen: 'assets/personajes/jaina-proudmoore.webp',
-  base: { hp: 600, dmg: 90, spd: 88 },
+  base: { hp: 540, dmg: 81, spd: 88 },
   extra: {},
   slots: espacios('argonita', 'yelmo', 'anilloCobre'),
 

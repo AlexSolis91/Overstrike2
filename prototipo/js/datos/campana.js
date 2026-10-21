@@ -27,6 +27,29 @@ export const TEMAS = {
   marvel:       { nombre: 'Amenazas de Marvel', temas: ['Marvel'], lider: 'doctor-doom', relleno: ['skeletor', 'the-joker'] },
   gotica:       { nombre: 'Ciudad Gótica', temas: ['DC'], lider: 'batman', relleno: ['scorpion', 'reptile', 'rengoku'] },
   servants:     { nombre: 'Servants del Grial', temas: ['servants'], lider: 'gilgamesh', relleno: ['saga', 'thor', 'he-man'] },
+  // ---- etapas de sinergia: equipos fijos (preferidos) armados para que su combinación sea la amenaza
+  sangre:       { nombre: 'Pacto de Sangre', temas: [], lider: 'carnage', preferidos: ['carnage', 'kratos', 'venom', 'milo', 'sasuke-uchiha'], relleno: [] },
+  // ---- Área 2 · El Abismo: las combinaciones más peligrosas del roster
+  infierno:     { nombre: 'Infierno', temas: [], lider: 'antares', preferidos: ['antares', 'natsu-dragneel', 'el-pinguino', 'kyo-kusanagi', 'daenerys-targaryen'], relleno: [] },
+  venenoLetal:  { nombre: 'Veneno Letal', temas: [], lider: 'muzan-kibutsuji', preferidos: ['muzan-kibutsuji', 'poison-ivy', 'shinobu-kocho', 'the-joker', 'orochimaru'], relleno: [] },
+  inviernoEterno: { nombre: 'Invierno Eterno', temas: [], lider: 'sillad', preferidos: ['sillad', 'tobirama', 'baruka', 'mr-freeze', 'aokiji'], relleno: [] },
+  titanes:      { nombre: 'Titanes', temas: [], lider: 'gilgamesh', preferidos: ['gilgamesh', 'ozymandias', 'thor', 'baran', 'itachi-uchiha'], relleno: [] },
+  hashira:      { nombre: 'Cazadores Legendarios', temas: [], lider: 'rengoku', preferidos: ['rengoku', 'shinobu-kocho', 'sun-jin-woo', 'minato', 'batman'], relleno: [] },
+  sayajinLeg:   { nombre: 'Sayajin Legendarios', temas: [], preferidos: ['goku', 'vegeta', 'broly', 'gohan', 'trunks'], relleno: [] },
+  hokages:      { nombre: 'Los Hokages', temas: [], lider: 'hashirama', preferidos: ['hashirama', 'tobirama', 'minato', 'naruto', 'gaara'], relleno: [] },
+  akatsukiSup:  { nombre: 'Akatsuki Supremo', temas: [], lider: 'pain', preferidos: ['pain', 'itachi-uchiha', 'obito-uchiha', 'sasori', 'deidara'], relleno: [] },
+  hemorragia:   { nombre: 'Sangre y Hemorragia', temas: [], lider: 'carnage', preferidos: ['carnage', 'kratos', 'venom', 'poison-ivy', 'rakan'], relleno: [] },
+  santosOro:    { nombre: 'Santos de Oro', temas: [], lider: 'saga', preferidos: ['saga', 'shaka', 'camus', 'milo', 'aldebaran'], relleno: [] },
+  crimen:       { nombre: 'Señores del Crimen', temas: [], lider: 'doctor-doom', preferidos: ['doctor-doom', 'the-joker', 'el-pinguino', 'poison-ivy', 'mr-freeze'], relleno: [] },
+  panteon:      { nombre: 'Panteón', temas: [], lider: 'thor', preferidos: ['thor', 'loki', 'kratos', 'wukong', 'shaka'], relleno: [] },
+  punosFuego:   { nombre: 'Puños de Fuego', temas: [], lider: 'scorpion', preferidos: ['scorpion', 'kyo-kusanagi', 'iori-yagami', 'natsu-dragneel', 'ghost-rider'], relleno: [] },
+  kombat:       { nombre: 'Kombat Mortal', temas: [], lider: 'scorpion', preferidos: ['scorpion', 'sub-zero', 'reptile', 'ermac', 'the-joker'], relleno: [] },
+  marvelDef:    { nombre: 'Marvel Definitivo', temas: [], lider: 'carnage', preferidos: ['carnage', 'venom', 'spider-man', 'loki', 'doctor-doom'], relleno: [] },
+  norte:        { nombre: 'Guardianes del Norte', temas: [], lider: 'bjorn-ironside', preferidos: ['bjorn-ironside', 'lich-king', 'jaina-proudmoore', 'sub-zero', 'camus'], relleno: [] },
+  furiaDragon:  { nombre: 'Furia de Dragón', temas: [], lider: 'daenerys-targaryen', preferidos: ['daenerys-targaryen', 'rhaenys-targaryen', 'alexstrasza', 'natsu-dragneel', 'antares'], relleno: [] },
+  ojosUchiha:   { nombre: 'Ojos del Uchiha', temas: [], lider: 'madara-uchiha', preferidos: ['madara-uchiha', 'itachi-uchiha', 'sasuke-uchiha', 'obito-uchiha', 'orochimaru'], relleno: [] },
+  reyesInm:     { nombre: 'Reyes Inmortales', temas: [], lider: 'gilgamesh', preferidos: ['gilgamesh', 'ozymandias', 'bjorn-ironside', 'lich-king', 'daenerys-targaryen'], relleno: [] },
+  monarcasAbismo: { nombre: 'Los Monarcas del Abismo', temas: [], lider: 'antares', preferidos: ['antares', 'sun-jin-woo', 'rakan', 'sillad', 'baran'], relleno: [] },
 };
 
 // Arma el equipo enemigo de un tema con el roster actual (orden fijo: no cambia entre partidas, solo cuando sale un campeón nuevo)
@@ -48,33 +71,60 @@ export const DIFICULTADES = {
   brutal:  { nombre: 'Brutal',  mult: 2.2, premio: 3, rival: { spdPct: .10 } },
 };
 
-// Área 1: el Portal. 20 etapas, mini-jefe en la 10 y jefe final en la 20. (Orden y poder calibrados con simulación.)
+// Área 1: el Portal · Área 2: el Abismo (se abre por dificultad al completar la etapa 20 del Portal; paga el doble).
+// 20 etapas cada una, mini-jefe en la 10 y jefe final en la 20. (Orden y poder calibrados con simulación.)
 export const AREAS = {
   portal: {
-    nombre: 'El Portal',
-    etapas: [   // orden: del tema más débil al más fuerte (simulación); poder calibrado para ~95% → ~40% de victorias en Normal
-      { tema: 'exploradores', poder: 1.01 },   // 1
-      { tema: 'gotica', poder: 1.01 },   // 2
-      { tema: 'fuego', poder: 0.93 },   // 3
-      { tema: 'mortal', poder: 1.03 },   // 4
-      { tema: 'sayajin', poder: 0.93 },   // 5
-      { tema: 'cazadores', poder: 1.05 },   // 6
-      { tema: 'eternia', poder: 1.12 },   // 7
-      { tema: 'hielo', poder: 0.79 },   // 8
-      { tema: 'azeroth', poder: 0.86 },   // 9
-      { tema: 'akatsuki', poder: 1.1, jefe: true },   // 10
-      { tema: 'dragones', poder: 0.79 },   // 11
-      { tema: 'santos', poder: 1.26 },   // 12
-      { tema: 'konoha', poder: 1.21 },   // 13
-      { tema: 'marvel', poder: 1.37 },   // 14
-      { tema: 'caos', poder: 1.21 },   // 15
-      { tema: 'asgard', poder: 1.43 },   // 16
-      { tema: 'reyes', poder: 1.37 },   // 17
-      { tema: 'uchiha', poder: 1.34 },   // 18
-      { tema: 'servants', poder: 1.34 },   // 19
-      { tema: 'monarcas', poder: 1.4, jefe: true },   // 20
+    nombre: 'El Portal', titulo: '🌀 El Portal',
+    etapas: [   // orden por fuerza (simulación 2026-10-21, Exploradores fijo en la 1); poder calibrado para ~95% → ~40% de victorias en Normal
+      { tema: 'exploradores', poder: 0.86 },   // 1
+      { tema: 'gotica', poder: 1.1 },   // 2
+      { tema: 'reyes', poder: 1.05 },   // 3
+      { tema: 'caos', poder: 1.01 },   // 4
+      { tema: 'marvel', poder: 1.1 },   // 5
+      { tema: 'sangre', poder: 1.1 },   // 6
+      { tema: 'uchiha', poder: 1.1 },   // 7
+      { tema: 'akatsuki', poder: 1.12 },   // 8
+      { tema: 'asgard', poder: 1.14 },   // 9
+      { tema: 'eternia', poder: 1.08, jefe: true },   // 10
+      { tema: 'monarcas', poder: 1.29 },   // 11
+      { tema: 'mortal', poder: 1.14 },   // 12
+      { tema: 'cazadores', poder: 1.19 },   // 13
+      { tema: 'santos', poder: 1.21 },   // 14
+      { tema: 'konoha', poder: 1.24 },   // 15
+      { tema: 'sayajin', poder: 1.16 },   // 16
+      { tema: 'fuego', poder: 1.11 },   // 17
+      { tema: 'azeroth', poder: 1.01 },   // 18
+      { tema: 'dragones', poder: 1.01 },   // 19
+      { tema: 'hielo', poder: 0.97, jefe: true },   // 20
     ],
   },
+  abismo: {
+    nombre: 'El Abismo', titulo: '🕳️ El Abismo',
+    etapas: [   // orden por fuerza (simulación 2026-10-21); poder calibrado para ~85% → ~30% de victorias en Normal
+      { tema: 'reyesInm', poder: 1.17 },   // 1
+      { tema: 'panteon', poder: 1.1 },   // 2
+      { tema: 'crimen', poder: 1.14 },   // 3
+      { tema: 'monarcasAbismo', poder: 1.14 },   // 4
+      { tema: 'akatsukiSup', poder: 1.13 },   // 5
+      { tema: 'hokages', poder: 1.1 },   // 6
+      { tema: 'titanes', poder: 1.19 },   // 7
+      { tema: 'ojosUchiha', poder: 1.25 },   // 8
+      { tema: 'marvelDef', poder: 1.19 },   // 9
+      { tema: 'kombat', poder: 1.1, jefe: true },   // 10
+      { tema: 'inviernoEterno', poder: 1.19 },   // 11
+      { tema: 'santosOro', poder: 1.19 },   // 12
+      { tema: 'hashira', poder: 1.29 },   // 13
+      { tema: 'sayajinLeg', poder: 1.19 },   // 14
+      { tema: 'hemorragia', poder: 1.24 },   // 15
+      { tema: 'punosFuego', poder: 1.14 },   // 16
+      { tema: 'venenoLetal', poder: 1.14 },   // 17
+      { tema: 'norte', poder: 1.1 },   // 18
+      { tema: 'furiaDragon', poder: 1.1 },   // 19
+      { tema: 'infierno', poder: 0.97, jefe: true },   // 20
+    ],
+  },
+
 };
 
 // Recompensas (se cobran en el servidor; esto es para mostrarlas). Se multiplican por el "premio" de la dificultad.

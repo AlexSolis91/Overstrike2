@@ -12,7 +12,7 @@ export default {
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐧', color: '#475569', imagen: 'assets/personajes/el-pinguino.webp',
-  base: { hp: 650, dmg: 60, spd: 92 },
+  base: { hp: 650, dmg: 60, spd: 95 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

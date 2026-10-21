@@ -10,7 +10,7 @@ export default {
   sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🥶', color: '#38bdf8', imagen: 'assets/personajes/sub-zero.webp',
-  base: { hp: 700, dmg: 65, spd: 88 },
+  base: { hp: 700, dmg: 65, spd: 94 },
   extra: {},
   slots: espacios('obsidiana', 'yelmo', 'anilloCobre'),
 

@@ -11,7 +11,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Control',
   sobres: ['phantom', 'bloodline'],
   emoji: '🩸', color: '#b91c1c', imagen: 'assets/personajes/carnage.webp',
-  base: { hp: 710, dmg: 75, spd: 93 },
+  base: { hp: 730, dmg: 75, spd: 94 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

@@ -534,7 +534,10 @@ Solo con sesión iniciada. Todo cambio lo valida el **servidor** (funciones de `
 - **Panel de administrador** (en 👤 Tu cuenta, solo rol admin): casilla de activo y precio de cada sobre (*Guardar sobres*) y *Dar oro* a un jugador por su nombre.
 - **Al agregar un campeón nuevo:** declarar `starter` y `sobres` en su ficha, correr `node herramientas/generar_catalogo.mjs` (desde `prototipo`) y ejecutar `docs/sql/catalogo.sql` en Supabase. Sin ese paso el servidor no lo puede dar en sobres.
 
-## 20. Modo Campaña: el Portal (Área 1)
+## 20. Modo Campaña: el Portal (Área 1) y el Abismo (Área 2)
+
+- **Área 2 · El Abismo (2026-10-21, `docs/sql/012_campana_abismo.sql`):** 20 etapas con las combinaciones más peligrosas del roster (equipos fijos por `preferidos`: Infierno, Veneno Letal, Invierno Eterno, Titanes, Hokages…). Cada dificultad del Abismo se abre al completar la etapa 20 del Portal en esa dificultad. Mismas reglas (estrellas, cofres, Runa de Portal); oro, fragmentos, vales y runas **×2**. Pestañas de área en la pantalla de Campaña.
+- **Orden (2026-10-21):** las etapas de las dos áreas van de la más fácil a la más difícil según su fuerza simulada (Exploradores fijo en la 1). Servants del Grial salió del Portal (le faltan campeones) y entró **Pacto de Sangre** (Carnage, Kratos, Venom, Milo, Sasuke). Curva Normal: Portal ~95% → ~40%, Abismo ~85% → ~30%.
 
 Solo con sesión iniciada. El progreso y los premios los valida y paga el **servidor** (`docs/sql/004_campana.sql`: `campana_completar` y `abrir_sobre_vale`). Datos en `js/datos/campana.js`, pantalla en `js/ui/campana.js`.
 
@@ -569,17 +572,18 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
   - `contador: { efecto, al: ['aoe', 'multigolpe'], max, bono }`: +1 por **movimiento** ejecutado de ese tipo (no por golpe; AOE = a todos los enemigos, multigolpe = 2+ golpes), hasta `max`; cada carga da `bono` (p. ej. `{ dmg: 10 }` = +10 de Daño plano). Es un contador visible (marca), no un buff: dura toda la batalla y no se disipa ni se limpia. Su bono cuenta en la capa de reliquias del panel.
   - `cooldownPct`: multiplica el cooldown de sus movimientos (redondeo hacia arriba: con 0.5 → 2→1, 3→2, 4→2, 5→3), incluida la espera inicial del Over (empieza disponible una ronda antes) y los efectos que reinician un cooldown.
   - `revivir: { hp }`: si el portador cae, revive **al final de la ronda siguiente** a la de su muerte con ese % de HP máx. (limpio, como cualquier revivir del motor). Una vez por batalla. Si otro efecto (pasiva, movimiento de un aliado) lo revive antes, el anillo no se gasta y la cuenta empieza de nuevo en su siguiente muerte. Si todo su equipo cae antes, la batalla termina normal.
-  - **Anillo del Tiempo** (Anillo Legendario): `cooldownPct: .5` + `revivir: { hp: 1 }`.
+  - **Anillo del Tiempo** (Anillo Legendario): `cooldownPct: .6` + `revivir: { hp: .5 }` (balance de la beta: antes .5 y 100%).
   - `inmuneA: [ids]`: esos efectos no se le pueden aplicar (aviso «Inmune a X»), incluidas sus versiones Mega.
   - `recuperaGolpes: X`: al final de cada ronda se **cura** X veces el HP que perdió **por golpes** en esa ronda (no cuenta DoT, Bombas ni lo absorbido por su Escudo). Es curación: la bloquean Plaga/Peste Negra y Quemadura Solar la vuelve daño. Tope: su HP máx. Si murió en la ronda, nada.
-  - **Escudo Hyliano** (Escudo Legendario): `inmuneA: ['stun', 'freeze', 'possess', 'confuse']` + `recuperaGolpes: 1.2`.
+  - **Escudo Hyliano** (Escudo Legendario): `inmuneA: ['stun', 'freeze', 'possess', 'confuse']` + `recuperaGolpes: .6` (antes 1.2).
   - `bono: { stat: v }`: bono fijo de estadística mientras esté equipada (se suma como las tiradas: `hpPct: .5` = +50% HP máx.).
   - `crece: { stat, valor, max }`: al final de cada ronda, si está vivo, suma `valor` a esa estadística hasta `max` (solo la parte que crece). Muerto no crece; si revive conserva lo acumulado. Con `hpPct` también gana la vida que sube su máximo. Sin contador visible.
   - **Armadura de Mithril** (Pechera Legendaria): `bono: { hpPct: .5 }` + `crece: { stat: 'hpPct', valor: .05, max: .5 }` (hasta +100% HP máx. en total).
   - `convertir: { hp, rondas, maxBatalla }`: si un **ataque** del portador elimina enemigos (y queda algún enemigo vivo), revive a uno de los eliminados al azar **en su equipo** con ese % de HP, sin habilidad de líder ni efectos, durante `rondas` rondas (hasta el final de la ronda actual + N). Una vez por ronda y hasta `maxBatalla`. Marca **Esclavo de la Runa**. Al terminar vuelve a su bando muerto y ya no puede revivir por nada; si cae antes, igual. Mientras está convertido no cuenta como vivo de su bando original.
   - `multiGolpe: [[prob, mult], ...]`: en cada golpe del portador, una sola tirada excluyente (el multiplicador mayor se revisa primero); multiplica el daño final y se combina con el crítico. Aviso «¡Daño ×N!».
-  - **Frostmourne** (Espada Legendaria): `convertir: { hp: .5, rondas: 2, maxBatalla: 2 }` + `multiGolpe: [[.15, 3], [.5, 2]]` (15% ×3, 50% ×2, 35% normal; +80% de daño promedio).
-  - **Shadowmourne** (Hacha Legendaria): `critDmgAoe: 1` + contador Almas de Shadowmourne (AOE o multigolpe, máx. 20, +10 de Daño cada una).
+  - **Frostmourne** (Espada Legendaria): `convertir: { hp: .3, rondas: 2, maxBatalla: 2 }` + `multiGolpe: [[.05, 3], [.25, 2]]` (5% ×3, 25% ×2; antes 50% de HP, 15% ×3 y 50% ×2).
+  - **Shadowmourne** (Hacha Legendaria): `critDmgAoe: 1` + contador Almas de Shadowmourne (AOE o multigolpe, máx. 20, +15 de Daño cada una).
+  - **Balance de las Legendarias (2026-10-21):** simulado con todo el roster con 6 Épicas y 5★; un equipo con UNA Legendaria gana contra uno sin ella: Escudo Hyliano ~63%, Frostmourne ~63%, Mithril ~61%, Anillo del Tiempo ~60%, Shadowmourne ~55% (antes hasta 70%).
 - **Lotes por contenido (`lote` en la ficha, `LOTES`):** cada Horda tiene su lote de reliquias y sus Comunes, Raras, Especiales y Épicas **solo caen como recompensa en esa Horda**, para que el jugador decida dónde farmear. Las 100 primeras son del lote **Horda de Orcos** (`orcos`, valor por defecto). Próximos lotes: Horda de Elfos Oscuros y Horda de Demonios, con reliquias exclusivas. Las Legendarias de cada lote se consiguen por receta. El sobre **Relics of Power** de la tienda incluye reliquias de **cualquier** lote; más adelante habrá sobres promocionales o de evento con contenidos específicos.
 - **Agregar una reliquia nueva:** (1) ficha en `RELIQUIAS` (nombre, rareza, tipo; en Legendarias su `passive`; `soloReceta` si solo se craftea); un tipo nuevo se agrega antes a `TIPOS`. (2) Imagen con Leonardo.ai en `assets/originales/reliquias/` y `python herramientas/marcos_reliquias.py`. (3) `node herramientas/generar_catalogo.mjs` y ejecutar `docs/sql/catalogo.sql` en Supabase.
 
@@ -593,6 +597,11 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - **Pantalla** (`js/ui/horda.js`, menú → Hordas): Runas de Portal, récord, reglas y tabla de rarezas. «Abrir portal» → elegir 5 campeones propios (rival de la oleada 1 visible) → el servidor descuenta la Runa (`horda_entrar`). Entre oleadas aparece el botín de la oleada (cobrado por `horda_oleada`; el servidor pide 10 s entre oleadas y el juego reintenta), el total y aviso de mini-jefe/jefe, con **Siguiente oleada** o **Retirarse**. Al caer o retirarse: resultados con todo el botín y el récord (`horda_terminar`). Salir a mitad cierra la partida (te llevas lo cobrado).
 - **Servidor:** `docs/sql/006_horda.sql` (Runas de Portal en inventario con 3 de regalo, partidas, recompensas, tienda de Runas con precio diario 10,000/20,000/40,000 hora de México, Polvo Arcano, candado, descomponer, mejorar, fusión y Runas de Portal en la Campaña: 1 la primera vez con 3★ y 15% al repetir). El catálogo de reliquias guarda su `lote`.
 
+- **Extras (2026-10-21, `docs/sql/011_horda_extras.sql`):**
+  - **Trofeos de Orco** 🏅: 1 por oleada superada (×3 mini-jefe, ×5 jefe).
+  - **Tienda de la Horda** (en la pantalla de la Horda): eliges exactamente la reliquia del lote de Orcos que quieres (no Legendarias): Común 10 · Rara 30 · Especial 120 · Épica 500 Trofeos (`tienda_horda_comprar`).
+  - **Primera vez** (una vez por cuenta y Horda, `horda_hitos`): oleada 10 → 2 Runas de Portal + 1 vale + 25 Trofeos · oleada 20 → 3 Runas + 2 vales + 75 Trofeos · oleada 30 → 1 Épica al azar del lote + 5 Runas + 150 Trofeos + la **Hazaña** (desbloquea las recetas de Legendarias).
+
 ## 23. Polvo Arcano, mejorar y fusión (Colección → Reliquias)
 - **Descomponer** (modo 🧪): toca reliquias o «Todas las Comunes/Raras» → Polvo Arcano (Común 1 · Rara 5 · Especial 20 · Épica 100). No se descomponen Legendarias, equipadas ni con candado.
 - **Candado** (ficha de la reliquia): protege de descomponer y fusionar.
@@ -603,6 +612,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 ## 24. Recetas de Legendarias (Colección → Recetas)
 - **Regla:** cada receta pide **siempre 10 Épicas**: Épicas definidas (×2 o ×3) + 2 o 3 comodines (cualquier Épica). Datos en `js/datos/recetas.js` (valida que sumen 10); el servidor forja con `forjar_legendaria` (`docs/sql/007_recetas.sql`, catálogo de recetas en catalogo.sql).
 - Shadowmourne: Bestiari ×3 + Guanteletes del Coloso ×2 + Daga de la Viuda Negra ×2 + 3 comodines · Armadura de Mithril: Cinturón Arcano ×3 + Máscara de Dragón ×2 + Celestia ×2 + 3 · Frostmourne: Nichirin ×3 + Corona del Rey Caído ×3 + Capa del Eclipse ×2 + 2 · Escudo Hyliano: Arco del Vacío Estelar ×3 + Botas del Trueno ×3 + Lanza de la Valquiria ×2 + 2 · Anillo del Tiempo: Anillo de la Luz ×3 + Piedra del Sol ×3 + Amuleto del Pantano ×2 + 2.
+- **Hazaña (2026-10-21, `docs/sql/011_horda_extras.sql`):** las Legendarias del lote de una Horda solo se forjan después de superar la **oleada 30** de esa Horda al menos una vez.
 - Recetas de todos y repetibles (cada Legendaria forjada sortea sus valores). Sin costo de oro. No entran Épicas equipadas ni con candado. El juego propone tus copias de menor calidad; tocas una Épica para quitarla o agregarla. Pendiente para la beta: proeza de la oleada 30.
 
 ## 25. Arena (Fase 1, 2026-10-18)
@@ -618,6 +628,9 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
   - **Títulos del top 3** de cada temporada (🥇 Campeón · 🥈 Subcampeón · 🥉 Tercer lugar + número de temporada): en tu Arena y con marco de color en el ranking. El puesto al cerrar semana o temporada cuenta también a quienes ya la cerraron (`_arena_puesto_temp`).
   - **Foto de los equipos** al empezar cada combate (`equipo_atk`, `equipo_def`) y la **Defensa de práctica la elige el servidor**.
   - **Verificación:** contra una Defensa, la IA juega con azar de semilla (`semillaIA`) y el juego envía todas las decisiones. Con `arena_config.verificar = true`, el resultado queda pendiente y la Edge Function `verificar-arena` (`docs/supabase/verificar-arena.ts`, importa el motor desde GitHub Pages) repite la batalla con `js/motor/verificar.js`: si el resultado o las decisiones de la Defensa no cuadran, cuenta como derrota. Si la batalla se jugó con otra versión del juego, se acepta. Probado: 60/60 batallas legítimas aceptadas y 60/60 resultados falsos detectados. La lógica pura para armar equipos y la versión viven en `js/datos/cuenta.js`.
+
+## Marcas (migración 2026-10-21)
+- Los estados exclusivos de un campeón son **marcas** (`tipo: 'marca'`): no se disipan, no se limpian y no cuentan como buff ni debuff. Se migraron los antiguos: Orgullo Sayajin (Vegeta), Oscuridad (Saga), Poder de Grayskull (He-Man), Poder Robado (Skeletor), Furia Dorada (Aldebarán) y Aguja Escarlata (Milo; antes era un debuff que se podía limpiar).
 
 ## Piezas nuevas de pasiva (2026-10-18)
 - `alTransformarseAliado: acción | [acciones]` (campo de la pasiva): se ejecuta cuando OTRO aliado se transforma (`objetivo` = ese aliado). Trunks: +2 Esperanza y Furia + Celeridad al que se transforma.

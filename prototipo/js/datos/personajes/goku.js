@@ -17,7 +17,7 @@ const sangreSayajin = {
 const gokuSuperSayajin3 = {
   nombre: 'Goku Super Sayajin 3',
   emoji: '⚡', color: '#fbbf24', imagen: 'assets/transformaciones/goku-super-sayajin-3.webp',
-  base: { hp: 680, dmg: 106, spd: 105 },
+  base: { hp: 680, dmg: 106, spd: 115 },
   extra: { critRate: .15, res: .20, pen: .20, armor: .20 },   // armor .20 = bono de "Super Saiyajin 3" (reemplaza al +10%)
   pasiva: {
     nombre: 'Leyenda Sayajin',
@@ -46,7 +46,7 @@ const gokuSuperSayajin3 = {
 const gokuSuperSayajin = {
   nombre: 'Goku Super Sayajin',
   emoji: '⚡', color: '#facc15', imagen: 'assets/transformaciones/goku-super-sayajin.webp',
-  base: { hp: 630, dmg: 95, spd: 103 },
+  base: { hp: 630, dmg: 95, spd: 113 },
   extra: { critRate: .05, res: .10, pen: .10, armor: .10 },   // armor .10 = bono de "Super Saiyajin"
   pasiva: sangreSayajin,
   transformacion: gokuSuperSayajin3,
@@ -77,7 +77,7 @@ export default {
   rol: 'Daño', rolSecundario: '',
   sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
   emoji: '🥋', color: '#f97316', imagen: 'assets/personajes/goku.webp',
-  base: { hp: 600, dmg: 90, spd: 101 },
+  base: { hp: 600, dmg: 90, spd: 111 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

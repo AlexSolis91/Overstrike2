@@ -12,7 +12,7 @@ export default {
   sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🌊', color: '#2563eb', imagen: 'assets/personajes/tobirama.webp',
-  base: { hp: 700, dmg: 65, spd: 112 },
+  base: { hp: 680, dmg: 63, spd: 112 },
   extra: { acc: .20 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

@@ -11,7 +11,7 @@ export default {
   sobres: ['phantom', 'sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐍', color: '#16a34a', imagen: 'assets/personajes/loki.webp',
-  base: { hp: 800, dmg: 53, spd: 92 },
+  base: { hp: 850, dmg: 55, spd: 101 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

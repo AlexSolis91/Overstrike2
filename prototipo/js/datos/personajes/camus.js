@@ -10,7 +10,7 @@ export default {
   sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🧊', color: '#22d3ee', imagen: 'assets/personajes/camus.webp',
-  base: { hp: 700, dmg: 65, spd: 103 },
+  base: { hp: 700, dmg: 65, spd: 113 },
   extra: { acc: .15 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

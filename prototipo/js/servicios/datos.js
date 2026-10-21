@@ -15,8 +15,9 @@ async function conRespaldo(fn, completo, basico) {
   catch (e) { if (!/column|does not exist|schema cache/i.test(e?.message || '')) throw e; return fn(basico); }
 }
 export const miColeccion = () => conRespaldo(c => q(sb => sb.from('coleccion').select(c)), 'campeon, copias, estrellas, espacios, espacios_abiertos', 'campeon, copias, estrellas, espacios');
-export const miInventario = () => conRespaldo(c => q(sb => sb.from('inventario').select(c).maybeSingle()),
-  'oro, frag_runa, frag_otros, runas, vales_sobre, rel_sobres, runas_portal, polvo_arcano, portal_dia, portal_compras', 'oro, frag_runa, frag_otros, runas');
+const INV = 'oro, frag_runa, frag_otros, runas, vales_sobre, rel_sobres, runas_portal, polvo_arcano, portal_dia, portal_compras';
+export const miInventario = () => conRespaldo(c => q(sb => sb.from('inventario').select(c).maybeSingle()), INV + ', trofeos_orco', INV)   // trofeos_orco: SQL 011
+  .catch(e => { if (!/column|does not exist|schema cache/i.test(e?.message || '')) throw e; return q(sb => sb.from('inventario').select('oro, frag_runa, frag_otros, runas').maybeSingle()); });
 export const configSobres = () => q(sb => sb.from('sobres_config').select('id, activo, precio, desde, hasta').order('id'));
 
 export const abrirStarter = id => rpc('abrir_starter', { p_starter: id });
@@ -47,6 +48,8 @@ export const hordaOleada = (partida, oleada) => rpc('horda_oleada', { p_partida:
 export const hordaTerminar = partida => rpc('horda_terminar', { p_partida: partida });
 export const miRecordHorda = horda => q(sb => sb.from('horda_partidas').select('oleada').eq('horda', horda).order('oleada', { ascending: false }).limit(1));
 export const comprarRunaPortal = () => rpc('comprar_runa_portal');
+export const tiendaHordaComprar = id => rpc('tienda_horda_comprar', { p_reliquia: id });   // docs/sql/011_horda_extras.sql
+export const misHitosHorda = horda => q(sb => sb.from('horda_hitos').select('oleada').eq('horda', horda));
 
 // Arena (docs/sql/008_arena.sql)
 export const arenaEstado = () => rpc('arena_estado');

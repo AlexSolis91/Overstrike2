@@ -11,7 +11,7 @@ export default {
   rol: 'Control', rolSecundario: 'Daño',
   sobres: ['phantom'],
   emoji: '🐦‍⬛', color: '#b91c1c', imagen: 'assets/personajes/itachi-uchiha.webp',
-  base: { hp: 600, dmg: 50, spd: 86 },
+  base: { hp: 600, dmg: 50, spd: 80 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

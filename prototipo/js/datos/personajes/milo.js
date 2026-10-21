@@ -11,13 +11,13 @@ export default {
   sobres: ['bloodline'],
   starter: 'noxious',                         // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦂', color: '#dc2626', imagen: 'assets/personajes/milo.webp',
-  base: { hp: 550, dmg: 45, spd: 86 },
+  base: { hp: 550, dmg: 45, spd: 84 },
   extra: { dot: .30 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
   pasiva: {
     nombre: 'Las 15 Estrellas de Escorpio',
-    desc: 'Cada golpe de Milo clava 1 Aguja Escarlata 📍 en el enemigo (máx. 14). Cada aguja le quita 0.5% de su HP máx. al inicio de su turno (14 agujas = 7%) y le hace recibir +3% de daño de Veneno y Sangrado (hasta +42%). Las agujas son un debuff: se pueden limpiar.',
+    desc: 'Cada golpe de Milo clava 1 Aguja Escarlata 📍 en el enemigo (máx. 14). Cada aguja le quita 0.5% de su HP máx. al inicio de su turno (14 agujas = 7%) y le hace recibir +3% de daño de Veneno y Sangrado (hasta +42%). Las agujas son una marca: no se disipan ni se limpian.',
     gatillo: 'alGolpear', filtro: { en: 'enemigos' },
     accion: { tipo: 'clavarAgujas', n: 1, a: 'objetivo' },
   },

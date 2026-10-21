@@ -10,7 +10,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Support',
   sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '⚡', color: '#3b82f6', imagen: 'assets/personajes/thor.webp',
-  base: { hp: 650, dmg: 60, spd: 82 },
+  base: { hp: 650, dmg: 60, spd: 81 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

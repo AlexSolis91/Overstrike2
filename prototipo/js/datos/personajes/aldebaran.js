@@ -10,7 +10,7 @@ export default {
   rol: 'Tanque', rolSecundario: 'Daño',
   sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🐂', color: '#eab308', imagen: 'assets/personajes/aldebaran.webp',
-  base: { hp: 850, dmg: 55, spd: 88 },
+  base: { hp: 850, dmg: 55, spd: 97 },
   extra: { armor: .50, res: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -23,23 +23,23 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Embestida del Toro', objetivo: 'enemigo', estilo: 'melee', color: 0xfacc15,
-      pct: 1.45, escala: 'hp', cd: 0,
-      desc: 'Causa 145% (escala por HP) y Aldebarán gana un Escudo del 10% de su HP máx.',
-      efectos: [{ cuando: 'final', accion: { tipo: 'escudo', pct: .10, escala: 'hpMax', a: 'propio' } }],
+      pct: 1.65, escala: 'hp', cd: 0,
+      desc: 'Causa 165% (escala por HP) y Aldebarán gana un Escudo del 11% de su HP máx.',
+      efectos: [{ cuando: 'final', accion: { tipo: 'escudo', pct: .11, escala: 'hpMax', a: 'propio' } }],
     },
     {
       categoria: 'especial', nombre: 'Gran Cuerno', objetivo: 'enemigo', estilo: 'ranged', color: 0xfde047,
-      pct: 2.55, escala: 'hp', cd: 3,
-      desc: 'Causa 255% (escala por HP). Consume todas sus cargas de Furia Dorada: +15% de daño por carga (máx. +75%). Si consumió 3 o más, tiene 40% de probabilidad de Aturdir.',
+      pct: 2.90, escala: 'hp', cd: 3,
+      desc: 'Causa 290% (escala por HP). Consume todas sus cargas de Furia Dorada: +15% de daño por carga (máx. +75%). Si consumió 3 o más, tiene 40% de probabilidad de Aturdir.',
       consumeCargas: { pct: .15 },
       efectos: [{ condicion: { cargasConsumidasMin: 3 }, accion: { tipo: 'efecto', id: 'stun', prob: .40 } }],
     },
     {
       categoria: 'over', nombre: 'Orgullo del Toro Dorado', objetivo: 'propio', estilo: 'support', color: 0xeab308,
       cd: 5,
-      desc: 'Gana Provocación (2 rondas) y un Escudo del 32% de su HP máx. Mientras dure esa Provocación, cada golpe le da 2 cargas. Al terminar, lanza automáticamente un Gran Cuerno contra el último enemigo que lo golpeó.',
+      desc: 'Gana Provocación (2 rondas) y un Escudo del 36% de su HP máx. Mientras dure esa Provocación, cada golpe le da 2 cargas. Al terminar, lanza automáticamente un Gran Cuerno contra el último enemigo que lo golpeó.',
       efectos: [
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .32, escala: 'hpMax', a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: .36, escala: 'hpMax', a: 'propio' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'taunt', dur: 2, cargasX: 2, a: 'propio',
           alTerminar: { tipo: 'usarMovimiento', categoria: 'especial', a: 'ultimoAtacante' } } },
       ],

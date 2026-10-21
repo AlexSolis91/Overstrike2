@@ -9,7 +9,7 @@ export default {
   rol: 'Daño', rolSecundario: 'DoTer',
   sobres: ['bloodline', 'sacred'],
   emoji: '🪓', color: '#dc2626', imagen: 'assets/personajes/kratos.webp',
-  base: { hp: 660, dmg: 70, spd: 86 },
+  base: { hp: 750, dmg: 75, spd: 95 },
   extra: { dot: .40 },                         // Daño DoT 40%: su Sangrado quita 7% por golpe
   // Por defecto lleva 2 Espadas (las Espadas del Caos) mientras no exista el inventario de reliquias de los jugadores
   slots: espacios('obsidiana', 'pechera', 'anilloCobre', { relic: 'katanaCarmesi' }),
@@ -24,8 +24,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Espadas del Caos', objetivo: 'enemigo', estilo: 'melee', color: 0xf97316,
-      pct: 1.00, escala: 'dano', cd: 0,
-      desc: 'Causa 100% con 60% de probabilidad de Sangrado. ⚔️ Con 2 Espadas equipadas: 2 golpes de 60%, cada uno con su tirada de Sangrado.',
+      pct: 1.10, escala: 'dano', cd: 0,
+      desc: 'Causa 110% con 60% de probabilidad de Sangrado. ⚔️ Con 2 Espadas equipadas: 2 golpes de 60%, cada uno con su tirada de Sangrado.',
       conEquipo: { equipo: { tipo: 'Espada', min: 2 }, cambios: { golpes: 2, pct: .60 } },
       efectos: [{ accion: { tipo: 'efecto', id: 'bleed', prob: .60 } }],
     },
@@ -42,8 +42,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Ira del Dios de la Guerra', objetivo: 'enemigo', estilo: 'melee', color: 0xb91c1c,
-      pct: 2.80, escala: 'dano', cd: 5,
-      desc: 'Causa 280%. Asesino de Dioses: +30% si el objetivo tiene más HP que Kratos. Si tenía Sangrado, se convierte en Hemorragia. 🔱 Con una Lanza equipada: la lanza explota y golpea (50%) a los demás enemigos que sangran.',
+      pct: 3.15, escala: 'dano', cd: 5,
+      desc: 'Causa 315%. Asesino de Dioses: +30% si el objetivo tiene más HP que Kratos. Si tenía Sangrado, se convierte en Hemorragia. 🔱 Con una Lanza equipada: la lanza explota y golpea (50%) a los demás enemigos que sangran.',
       bonoSiObjetivoMasHp: .30,
       efectos: [
         { condicion: { objetivoTeniaAntes: 'bleed' }, accion: { tipo: 'hemorragia' } },

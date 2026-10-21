@@ -8,7 +8,7 @@ import { espacios } from '../reliquias.js';
 const vegetaSuperSayajin = {
   nombre: 'Vegeta Super Sayajin',
   emoji: '⚡', color: '#facc15', imagen: 'assets/transformaciones/vegeta-super-sayajin.webp',
-  base: { hp: 640, dmg: 102, spd: 105 },
+  base: { hp: 640, dmg: 102, spd: 115 },
   extra: { critRate: .10, armor: .10 },
   pasiva: {
     nombre: 'Orgullo del Super Sayajin',
@@ -18,13 +18,13 @@ const vegetaSuperSayajin = {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Big Bang Attack', objetivo: 'enemigo', estilo: 'ranged', color: 0x93c5fd,
-      pct: 1.75, escala: 'dano', cd: 0,
-      desc: 'Causa 175%.',
+      pct: 1.85, escala: 'dano', cd: 0,
+      desc: 'Causa 185%.',
     },
     {
       categoria: 'especial', nombre: 'Poder Majin', objetivo: 'enemigo', estilo: 'melee', color: 0xfacc15,
-      pct: 2.90, escala: 'dano', cd: 3,
-      desc: 'Causa 290% y Vegeta gana Furia (+50% de daño) y Letalidad (+30% de Daño Crítico) por 2 rondas.',
+      pct: 3.05, escala: 'dano', cd: 3,
+      desc: 'Causa 305% y Vegeta gana Furia (+50% de daño) y Letalidad (+30% de Daño Crítico) por 2 rondas.',
       efectos: [
         { cuando: 'final', accion: { tipo: 'efecto', id: 'dmgUp', dur: 2, a: 'propio' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'bloodlust', dur: 2, a: 'propio' } },
@@ -32,8 +32,8 @@ const vegetaSuperSayajin = {
     },
     {
       categoria: 'over', nombre: 'Final Flash', objetivo: 'enemigo', estilo: 'ranged', color: 0xfde047,
-      pct: 4.50, escala: 'dano', cd: 4,
-      desc: 'Causa 450% y consume todo su Orgullo: +15% de daño por cada uno (hasta +75%).',
+      pct: 4.70, escala: 'dano', cd: 4,
+      desc: 'Causa 470% y consume todo su Orgullo: +15% de daño por cada uno (hasta +75%).',
       consumeCargas: { pct: .15, efecto: 'orgullo' },
     },
   ],
@@ -46,7 +46,7 @@ export default {
   rol: 'Daño', rolSecundario: '',
   sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
   emoji: '👑', color: '#2563eb', imagen: 'assets/personajes/vegeta.webp',
-  base: { hp: 600, dmg: 90, spd: 103 },
+  base: { hp: 600, dmg: 90, spd: 113 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -61,19 +61,19 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Galick Gun', objetivo: 'enemigo', estilo: 'ranged', color: 0xa855f7,
-      pct: 1.60, escala: 'dano', cd: 0,
-      desc: 'Causa 160%.',
+      pct: 1.70, escala: 'dano', cd: 0,
+      desc: 'Causa 170%.',
     },
     {
       categoria: 'especial', nombre: 'Big Bang Attack', objetivo: 'enemigo', estilo: 'ranged', color: 0x93c5fd,
-      pct: 2.55, escala: 'dano', cd: 2,
-      desc: 'Causa 255% y Vegeta gana Frenesí (+50% de Prob. Crítico) por 2 rondas.',
+      pct: 2.70, escala: 'dano', cd: 2,
+      desc: 'Causa 270% y Vegeta gana Frenesí (+50% de Prob. Crítico) por 2 rondas.',
       efectos: [{ cuando: 'final', accion: { tipo: 'efecto', id: 'frenzy', dur: 2, a: 'propio' } }],
     },
     {
       categoria: 'over', nombre: 'Final Flash', objetivo: 'enemigo', estilo: 'ranged', color: 0xfde047,
-      pct: 3.85, escala: 'dano', cd: 5,
-      desc: 'Causa 385% y consume todo su Orgullo: +15% de daño por cada uno (hasta +75%).',
+      pct: 4.05, escala: 'dano', cd: 5,
+      desc: 'Causa 405% y consume todo su Orgullo: +15% de daño por cada uno (hasta +75%).',
       consumeCargas: { pct: .15, efecto: 'orgullo' },
     },
   ],

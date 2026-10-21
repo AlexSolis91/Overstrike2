@@ -12,7 +12,7 @@ export default {
   sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐲', color: '#ef4444', imagen: 'assets/personajes/natsu-dragneel.webp',
-  base: { hp: 550, dmg: 45, spd: 83 },
+  base: { hp: 550, dmg: 45, spd: 80 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -28,8 +28,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Puño de Hierro del Dragón de Fuego', objetivo: 'enemigo', estilo: 'melee', color: 0xef4444,
-      pct: .75, escala: 'dano', cd: 0,
-      desc: 'Causa 75% con 35% de probabilidad de Quemadura.',
+      pct: .70, escala: 'dano', cd: 0,
+      desc: 'Causa 70% con 35% de probabilidad de Quemadura.',
       efectos: [{ accion: { tipo: 'efecto', id: 'burn', prob: .35 } }],
     },
     {
@@ -40,8 +40,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Rugido del Dragón de Fuego y Rayo', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xf0abfc,
-      pct: .90, escala: 'dano', cd: 5, consumeCargas: { pct: .10, efecto: 'llamaNatsu' },
-      desc: 'Modo Dragón de Fuego y Rayo: 90% a todos los enemigos con 50% de probabilidad de Quemadura y 25% de Aturdir. Consume sus Llamas del Dragón: +10% de daño por cada una.',
+      pct: .85, escala: 'dano', cd: 5, consumeCargas: { pct: .10, efecto: 'llamaNatsu' },
+      desc: 'Modo Dragón de Fuego y Rayo: 85% a todos los enemigos con 50% de probabilidad de Quemadura y 25% de Aturdir. Consume sus Llamas del Dragón: +10% de daño por cada una.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'burn', prob: .50 } },
         { accion: { tipo: 'efecto', id: 'stun', prob: .25 } },

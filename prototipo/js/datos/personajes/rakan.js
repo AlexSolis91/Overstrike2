@@ -10,7 +10,7 @@ export default {
   rol: 'Daño', rolSecundario: 'DoTer',
   sobres: ['bloodline'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🐺', color: '#b91c1c', imagen: 'assets/personajes/rakan.webp',
-  base: { hp: 650, dmg: 60, spd: 90 },
+  base: { hp: 650, dmg: 60, spd: 89 },
   extra: { critRate: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

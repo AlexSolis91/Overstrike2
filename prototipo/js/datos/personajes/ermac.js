@@ -12,7 +12,7 @@ export default {
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '👻', color: '#15803d', imagen: 'assets/personajes/ermac.webp',
-  base: { hp: 550, dmg: 45, spd: 83 },
+  base: { hp: 550, dmg: 45, spd: 80 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -25,14 +25,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Puño Telequinético', objetivo: 'enemigo', estilo: 'ranged', color: 0x22c55e,
-      pct: .85, escala: 'dano', cd: 0,
-      desc: 'Un golpe de energía de almas: 85% con 35% de probabilidad de Veneno.',
+      pct: .80, escala: 'dano', cd: 0,
+      desc: 'Un golpe de energía de almas: 80% con 35% de probabilidad de Veneno.',
       efectos: [{ accion: { tipo: 'efecto', id: 'poison', prob: .35 } }],
     },
     {
       categoria: 'especial', nombre: 'Levitación Telequinética', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x4ade80,
-      pct: .65, escala: 'dano', cd: 3,
-      desc: 'Levanta a todos los enemigos y los estrella contra el suelo: 65% a cada uno con 45% de probabilidad de Veneno y 25% de Aturdir.',
+      pct: .60, escala: 'dano', cd: 3,
+      desc: 'Levanta a todos los enemigos y los estrella contra el suelo: 60% a cada uno con 45% de probabilidad de Veneno y 25% de Aturdir.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison', prob: .45 } },
         { accion: { tipo: 'efecto', id: 'stun', prob: .25 } },

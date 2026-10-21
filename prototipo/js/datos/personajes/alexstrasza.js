@@ -4,7 +4,7 @@ import { espacios } from '../reliquias.js';
 const dragonDeLaVida = {
   nombre: 'Dragón de la Vida',
   emoji: '🐉', color: '#dc2626', imagen: 'assets/transformaciones/dragon-de-la-vida.webp',
-  base: { hp: 650, dmg: 55, spd: 90 },
+  base: { hp: 650, dmg: 55, spd: 99 },
   extra: { armor: .25, res: .25 },                 // parte fija de "Aspecto Carmesí"
   pasiva: {
     nombre: 'Aspecto Carmesí',
@@ -45,7 +45,7 @@ export default {
   sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🌹', color: '#e11d48', imagen: 'assets/personajes/alexstrasza.webp',
-  base: { hp: 650, dmg: 55, spd: 90 },
+  base: { hp: 650, dmg: 55, spd: 99 },
   extra: { res: .15, armor: .10 },
   slots: espacios('argonita', 'yelmo', 'anilloCobre', { label: 'Equipación 3', relic: null, bow: true }),
 

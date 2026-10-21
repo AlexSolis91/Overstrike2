@@ -13,7 +13,7 @@ export default {
   sobres: ['phantom'],
   starter: 'noxious',
   emoji: '🎭', color: '#b91c1c', imagen: 'assets/personajes/sasori.webp',
-  base: { hp: 620, dmg: 63, spd: 82 },
+  base: { hp: 700, dmg: 70, spd: 84 },
   extra: {},
   slots: espacios('argonita', 'pechera', 'amuletoPantano'),
 

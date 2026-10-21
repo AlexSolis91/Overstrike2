@@ -11,7 +11,7 @@ export default {
   rol: 'Tanque', rolSecundario: 'Support',
   sobres: ['sacred'],
   emoji: '⏳', color: '#c2410c', imagen: 'assets/personajes/gaara.webp',
-  base: { hp: 750, dmg: 40, spd: 80 },
+  base: { hp: 800, dmg: 43, spd: 80 },
   extra: { armor: .15 },                      // Armadura de Arena
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

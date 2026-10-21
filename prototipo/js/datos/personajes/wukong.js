@@ -10,7 +10,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Control',
   sobres: ['sacred'],
   emoji: '🐒', color: '#f59e0b', imagen: 'assets/personajes/wukong.webp',
-  base: { hp: 500, dmg: 75, spd: 86 },
+  base: { hp: 520, dmg: 78, spd: 86 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

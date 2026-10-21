@@ -8,7 +8,7 @@ import { espacios } from '../reliquias.js';
 const sagaOscuro = {
   nombre: 'Saga Oscuro',
   emoji: '😈', color: '#7c3aed', imagen: 'assets/transformaciones/saga-oscuro.webp',
-  base: { hp: 630, dmg: 63, spd: 91 },
+  base: { hp: 670, dmg: 67, spd: 91 },
   extra: { acc: .20 },
   compartirCooldowns: true,
   pasiva: {
@@ -49,7 +49,7 @@ export default {
   rol: 'Control', rolSecundario: 'Daño',
   sobres: ['phantom'],
   emoji: '♊', color: '#d4a017', imagen: 'assets/personajes/saga.webp',
-  base: { hp: 600, dmg: 50, spd: 86 },
+  base: { hp: 640, dmg: 53, spd: 86 },
   extra: { acc: .20 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

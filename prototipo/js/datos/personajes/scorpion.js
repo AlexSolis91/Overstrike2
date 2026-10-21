@@ -10,7 +10,7 @@ export default {
   sobres: ['bloodline', 'phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦂', color: '#f59e0b', imagen: 'assets/personajes/scorpion.webp',
-  base: { hp: 750, dmg: 75, spd: 88 },
+  base: { hp: 750, dmg: 75, spd: 92 },
   extra: { armor: .10, critRate: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

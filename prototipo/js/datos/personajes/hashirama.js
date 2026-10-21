@@ -11,7 +11,7 @@ export default {
   rol: 'Tanque', rolSecundario: 'Support',
   sobres: [],  // como los demás de Konoha: solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
   emoji: '🌳', color: '#65a30d', imagen: 'assets/personajes/hashirama.webp',
-  base: { hp: 750, dmg: 40, spd: 81 },
+  base: { hp: 780, dmg: 42, spd: 80 },
   extra: { res: .15 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

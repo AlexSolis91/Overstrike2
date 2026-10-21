@@ -11,7 +11,7 @@ export default {
   sobres: ['phantom'],
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '👑', color: '#60a5fa', imagen: 'assets/personajes/lich-king.webp',
-  base: { hp: 850, dmg: 55, spd: 88 },
+  base: { hp: 850, dmg: 55, spd: 97 },
   extra: { armor: .20, res: .20 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -30,8 +30,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Agonía de Escarcha', objetivo: 'enemigo', estilo: 'melee', color: 0x93c5fd, elemento: 'hielo',
-      pct: .50, escala: 'hp', cd: 0,
-      desc: 'Causa 50% (escala por HP) y roba 5% del HP máx. del objetivo. Si tenía Congelación antes del ataque, 80% de probabilidad de aplicar Posesión.',
+      pct: .55, escala: 'hp', cd: 0,
+      desc: 'Causa 55% (escala por HP) y roba 5% del HP máx. del objetivo. Si tenía Congelación antes del ataque, 80% de probabilidad de aplicar Posesión.',
       efectos: [
         { accion: { tipo: 'robarHP', pct: .05 } },
         { condicion: { objetivoTeniaAntes: 'freeze' }, accion: { tipo: 'efecto', id: 'possess', prob: .80 } },
@@ -39,8 +39,8 @@ export default {
     },
     {
       categoria: 'especial', nombre: 'Profanación de Vida', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x60a5fa, elemento: 'hielo',
-      pct: .25, escala: 'hp', cd: 2,
-      desc: 'Causa 25% (escala por HP) a todos los enemigos y roba 5% del HP máx. de cada uno que tenía Congelación, Mega Congelación o Posesión antes del ataque.',
+      pct: .30, escala: 'hp', cd: 2,
+      desc: 'Causa 30% (escala por HP) a todos los enemigos y roba 5% del HP máx. de cada uno que tenía Congelación, Mega Congelación o Posesión antes del ataque.',
       efectos: [{ condicion: { objetivoTeniaAntes: ['freeze', 'possess'] }, accion: { tipo: 'robarHP', pct: .05 } }],
     },
     {

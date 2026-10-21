@@ -10,7 +10,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Control',
   sobres: ['sacred'],
   emoji: '👑', color: '#eab308', imagen: 'assets/personajes/gilgamesh.webp',
-  base: { hp: 650, dmg: 60, spd: 84 },
+  base: { hp: 650, dmg: 60, spd: 80 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -37,14 +37,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Gate of Babylon', objetivo: 'azar', golpes: 3, estilo: 'ranged', color: 0xfacc15,
-      pct: .30, escala: 'dano', cd: 0,
-      desc: 'Abre los portales de su tesoro: 3 proyectiles de 30% a enemigos al azar. Cada uno tiene 30% de probabilidad de aplicar un efecto al azar: Sangrado, Quemadura 5% (2 rondas), Veneno, Debilitar (2 rondas) o Desgaste.',
+      pct: .25, escala: 'dano', cd: 0,
+      desc: 'Abre los portales de su tesoro: 3 proyectiles de 25% a enemigos al azar. Cada uno tiene 30% de probabilidad de aplicar un efecto al azar: Sangrado, Quemadura 5% (2 rondas), Veneno, Debilitar (2 rondas) o Desgaste.',
       efectos: [{ accion: { tipo: 'efecto', idAzar: ['bleed', 'burn', 'poison', 'weaken', 'wear'], valor: .05, dur: 2, prob: .30 } }],
     },
     {
       categoria: 'especial', nombre: 'Enkidu, Cadenas del Cielo', objetivo: 'enemigo', estilo: 'ranged', color: 0xe5e7eb,
-      pct: .80, escala: 'dano', cd: 3,
-      desc: 'Causa 80% y lo encadena: 60% de probabilidad de Aturdirlo. Si Gilgamesh ya va en serio, es Mega Aturdimiento (pierde 2 turnos).',
+      pct: .70, escala: 'dano', cd: 3,
+      desc: 'Causa 70% y lo encadena: 60% de probabilidad de Aturdirlo. Si Gilgamesh ya va en serio, es Mega Aturdimiento (pierde 2 turnos).',
       efectos: [
         { condicion: { sellado: true }, accion: { tipo: 'efecto', id: 'stun', prob: .60 } },
         { condicion: { sellado: false }, accion: { tipo: 'efecto', id: 'stun', mega: true, prob: .60 } },
@@ -52,8 +52,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Enuma Elish', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xdc2626,
-      pct: 2.10, escala: 'dano', cd: 4, rompeEscudo: true, ignoraArmadura: 1,
-      desc: 'La Espada de la Ruptura: antes de golpear destruye todo el Escudo de cada enemigo; luego causa 210% a todos e ignora su Armadura. Sellado hasta que Gilgamesh va en serio.',
+      pct: 1.80, escala: 'dano', cd: 4, rompeEscudo: true, ignoraArmadura: 1,
+      desc: 'La Espada de la Ruptura: antes de golpear destruye todo el Escudo de cada enemigo; luego causa 180% a todos e ignora su Armadura. Sellado hasta que Gilgamesh va en serio.',
     },
   ],
 };

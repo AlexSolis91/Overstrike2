@@ -9,7 +9,7 @@ export default {
   rol: 'Daño', rolSecundario: 'DoTer',
   sobres: ['bloodline'],
   emoji: '⚡', color: '#7c3aed', imagen: 'assets/personajes/sasuke-uchiha.webp',
-  base: { hp: 500, dmg: 75, spd: 86 },
+  base: { hp: 530, dmg: 80, spd: 87 },
   extra: { dot: .30 },                          // Daño DoT 30%: Quemaduras y Sangrados más fuertes
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

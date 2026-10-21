@@ -22,7 +22,8 @@ const estrellas = n => `<span class="tc-estrellas">${'★'.repeat(n)}<i>${'★'.
 
 let col = new Map();          // campeón → { copias, estrellas, espacios }
 let inv = { oro: 0, frag_runa: 0, frag_otros: 0, runas: 0, vales_sobre: 0, rel_sobres: 0 };
-let rels = [], sinReliquias = false;   // copias de reliquias del jugador (sinReliquias: falta docs/sql/005_reliquias.sql)
+let rels = [], sinReliquias = false, hazana = null;   // copias de reliquias del jugador; hazana: superó la oleada 30 de la Horda (null = sin SQL 011)
+// (sinReliquias: falta docs/sql/005_reliquias.sql)
 let relFiltro = { cat: '', rareza: '' }, relSel = null, slotSel = null;   // pestaña Reliquias y espacio elegido en la ficha
 let relModo = 'ver', relMarcadas = new Set();
 let recetaSel = null, recetaMarcadas = new Set();   // pestaña Recetas: Legendaria elegida y las 10 Épicas que se entregan   // pestaña Reliquias: 'ver' | 'descomponer' | 'fusionar' y las reliquias elegidas
@@ -48,6 +49,7 @@ export function aviso(texto, tipo = 'ok') {
 async function recargar() {
   const [c, i, s, r] = await Promise.all([D.miColeccion(), D.miInventario(), D.configSobres(),
     D.misReliquias().then(x => { sinReliquias = false; return x; }).catch(() => { sinReliquias = true; return []; })]);
+  hazana = await D.misHitosHorda('orcos').then(h => (h || []).some(x => x.oleada === 30)).catch(() => null);
   col = new Map((c || []).map(r => [r.campeon, r]));
   inv = i || inv; cfg = s || [];
   rels = (r || []).map(instancia).filter(Boolean);
@@ -123,6 +125,7 @@ function htmlRecetas() {
   if (recetaSel) return htmlReceta(recetaSel);
   const libres = epicasLibres();
   return `<p class="tc-nota">Cada receta pide <b>10 Épicas</b>: algunas definidas y otras <b>comodín</b> (cualquier Épica). Las equipadas o con candado no cuentan. Puedes forjar cada Legendaria las veces que quieras.</p>
+    ${hazana === false ? '<p class="tc-nota">🔒 <b>Hazaña requerida:</b> para forjar las Legendarias de la Horda de Orcos primero tienes que superar la <b>oleada 30</b> de la Horda (una vez).</p>' : hazana ? '<p class="tc-nota">🏆 Hazaña de la oleada 30 conseguida.</p>' : ''}
     <div class="tc-recetas">${Object.entries(RECETAS).map(([id, r]) => {
       const leg = RELIQUIAS[id], prop = proponerIngredientes(id, libres, calidad), ok = revisarReceta(id, prop).ok;
       return `<button class="tc-receta ${ok ? 'lista' : ''}" data-receta="${id}">
@@ -146,7 +149,8 @@ function htmlReceta(id) {
           return `<span class="${t >= n ? 'ok' : ''}">${t >= n ? '✔' : '✖'} ${RELIQUIAS[e].name} ${Math.min(t, n)}/${n}</span>`; }).join('')}
           <span class="${rev.ok ? 'ok' : ''}">${rev.ok ? '✔' : '✖'} Comodines (cualquier Épica) ${Math.max(0, rev.comodines)}/${r.comodines}</span></div>
         <p class="tc-tenue">Te propusimos tus copias de menor calidad. Toca una Épica para quitarla o agregarla.</p>
-        <button class="eq-listo" data-forjar="${id}" ${rev.ok ? '' : 'disabled'}>🔨 Forjar ${leg.name}</button>
+        ${hazana === false ? '<p class="tc-tenue">🔒 Necesitas la Hazaña: supera la oleada 30 de la Horda.</p>' : ''}
+        <button class="eq-listo" data-forjar="${id}" ${rev.ok && hazana !== false ? '' : 'disabled'}>🔨 Forjar ${leg.name}</button>
       </div></div>
     <div class="tc-rels">${libres.sort((a, b) => (b.id in r.definidas) - (a.id in r.definidas) || calidad(a) - calidad(b))
       .map(x => miniaturaRel(x, `data-ingrediente="${x.uid}"`).replace('class="tc-rel ', `class="tc-rel ${recetaMarcadas.has(x.uid) ? 'marcada' : ''} `)).join('')

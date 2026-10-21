@@ -10,7 +10,7 @@ export default {
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🃏', color: '#7c3aed', imagen: 'assets/personajes/the-joker.webp',
-  base: { hp: 650, dmg: 60, spd: 99 },
+  base: { hp: 650, dmg: 60, spd: 106 },
   extra: {},
   slots: espacios('obsidiana', 'yelmo', 'anilloCobre'),
 
