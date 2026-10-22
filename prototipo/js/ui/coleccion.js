@@ -8,6 +8,7 @@ import { revelarCartas } from './apertura.js';
 import * as D from '../servicios/datos.js';
 import { RAREZAS, ESPACIOS, STAT_META, instancia, calidad, motivoNoEquipar } from '../datos/reliquias.js';
 import { cartaReliquia } from './panel.js';
+import { activarTip, comparacion, hojaTactil, conCursor, ocultarTip, cerrarHoja } from './tipReliquia.js';
 import { RECETAS, revisarReceta, proponerIngredientes } from '../datos/recetas.js';
 import { RELIQUIAS } from '../datos/reliquias.js';
 
@@ -161,7 +162,8 @@ function htmlReceta(id) {
 const ordenRel = (a, b) => RAREZAS[b.rarity].orden - RAREZAS[a.rarity].orden || calidad(b) - calidad(a) || a.name.localeCompare(b.name);
 const dondeEsta = r => r.campeon ? `${porId(r.campeon)?.nombre || r.campeon} · ${ESPACIOS.find(e => e.id === r.espacio)?.label || ''}` : '';
 function miniaturaRel(r, attrs = '') {
-  return `<button class="tc-rel ${r.campeon ? 'puesta' : ''} ${r.rarity === 'Legendario' ? 'legendaria' : ''} ${relMarcadas.has(r.uid) ? 'marcada' : ''}" ${attrs} style="--rc:${RAREZAS[r.rarity].color}" title="${r.name} · ${r.rarity} · Calidad ${calidad(r)}%${r.campeon ? ` · en ${dondeEsta(r)}` : ''}">
+  const conTip = attrs.includes('data-tip');   // con ficha flotante: sin el título nativo del navegador
+  return `<button class="tc-rel ${r.campeon ? 'puesta' : ''} ${r.rarity === 'Legendario' ? 'legendaria' : ''} ${relMarcadas.has(r.uid) ? 'marcada' : ''}" data-uid="${r.uid}" ${attrs} style="--rc:${RAREZAS[r.rarity].color}" ${conTip ? 'data-x' : 'title'}=""${r.name} · ${r.rarity} · Calidad ${calidad(r)}%${r.campeon ? ` · en ${dondeEsta(r)}` : ''}">
     ${r.imagen ? `<img src="${r.imagen}" alt="" loading="lazy">` : `<span>${r.name}</span>`}
     <i class="tc-rel-q">${calidad(r)}%</i>${r.campeon ? `<i class="tc-rel-en">${porId(r.campeon)?.emoji || '👤'}</i>` : ''}${r.bloqueada ? '<i class="tc-rel-lock">🔒</i>' : ''}</button>`;
 }
@@ -225,6 +227,13 @@ function htmlMejorar(r) {
     <div class="tc-mejorar">${lineas.map(([k, t]) => `<button class="eq-btn" data-mejorar="${k}" data-relid="${r.uid}" ${inv.polvo_arcano >= costo ? '' : 'disabled'}>${t}</button>`).join('')}</div>`;
 }
 
+// Ficha de una reliquia del panel de equipar: su carta + comparación con la equipada en el espacio elegido (+ por qué no se puede, si está gris)
+function fichaEquipar(uid) {
+  const x = rels.find(r => r.uid === uid); if (!x || !detalle || !slotSel) return '';
+  const actual = equipoDe(detalle)[slotSel], motivo = motivoNoEquipar(x, slotSel, { equipo: equipoDe(detalle), abiertos: abiertosDe(col.get(detalle) || {}), estrellas: col.get(detalle)?.estrellas || 0 });
+  return `<div class="tip-doble">${cartaReliquia(x)}${comparacion(x, actual)}${motivo ? `<div class="tip-nota" style="color:#f87171">🔒 ${motivo}</div>` : ''}</div>`;
+}
+
 // Espacios de reliquias de un campeón en su ficha: equipar, cambiar y quitar
 function equipoDe(id) { const e = {}; for (const r of rels) if (r.campeon === id) e[r.espacio] = r; return e; }
 const abiertosDe = r => r.espacios_abiertos?.length || !r.espacios ? (r.espacios_abiertos || []) : ['arma2', 'equip2', 'acc2'].slice(0, r.espacios);
@@ -245,8 +254,9 @@ function htmlEspaciosReliquias(p, r) {
     panel = `<div class="tc-slot-panel">
       ${actual ? `<div class="tc-rel-det">${cartaReliquia(actual)}<div class="tc-rel-acc"><button class="eq-btn" data-quitar="${actual.uid}">Quitar</button></div></div>` : ''}
       <h5>${actual ? 'Cambiar por' : 'Elige una reliquia'}</h5>
-      ${opciones.length ? `<div class="tc-rels">${opciones.map(({ x, motivo }) => miniaturaRel(x, motivo ? `data-motivo="${motivo}"` : `data-equipar="${x.uid}"`)).join('')}</div>`
+      ${opciones.length ? `<div class="tc-rels">${opciones.map(({ x, motivo }) => miniaturaRel(x, (motivo ? `data-motivo="${motivo}"` : `data-equipar="${x.uid}"`) + ' data-tip')).join('')}</div>`
         : '<p class="tc-tenue">No tienes reliquias que vayan en este espacio.</p>'}
+      <p class="tc-tenue">${conCursor() ? 'Pasa el cursor por una reliquia para ver sus atributos y compararla con la equipada.' : 'Toca una reliquia para ver sus atributos y compararla con la equipada.'}</p>
       <p class="tc-tenue">Con ${r.estrellas}★ puede usar reliquias ${Object.entries(RAREZAS).filter(([, v]) => v.estrellas <= r.estrellas).map(([, v]) => v.plural).join(', ')}. Las grises necesitan más estrellas.</p></div>`;
   }
   return `<section class="tc-equipo"><h4>🗡️ Reliquias equipadas</h4><div class="tc-slots">${casillas}</div>${panel}</section>`;
@@ -315,6 +325,7 @@ function htmlPortal() {
 }
 
 function pintar() {
+  ocultarTip(); cerrarHoja();
   if ($('#tc').classList.contains('hidden')) return;
   pintarInventario();
   for (const b of document.querySelectorAll('.tc-tabs button')) b.classList.toggle('on', b.dataset.tab === pestana);
@@ -370,7 +381,9 @@ async function ejecutar(e) {
   const t = e.target;
   if (t.id === 'tc' || t.closest('#tc-x')) return cerrarTC();
   const tab = t.closest('.tc-tabs button'); if (tab) { pestana = tab.dataset.tab; detalle = null; relSel = null; slotSel = null; relModo = 'ver'; relMarcadas.clear(); recetaSel = null; recetaMarcadas.clear(); return pintar(); }
-  const gris = t.closest('button[data-motivo]'); if (gris) return aviso(gris.dataset.motivo, 'error');
+  const gris = t.closest('button[data-motivo]');
+  if (gris && gris.dataset.uid && 'tip' in gris.dataset && !conCursor()) return hojaTactil(fichaEquipar(gris.dataset.uid), '', null);   // táctil: ver la ficha (no se puede equipar)
+  if (gris) return aviso(gris.dataset.motivo, 'error');
   const b = t.closest('button'); if (!b || b.disabled) return;
   if (b.dataset.sobre) return abrirSobre(b.dataset.sobre);
   if ('reliquias' in b.dataset) return abrirReliquias();
@@ -415,6 +428,10 @@ async function ejecutar(e) {
   if (b.dataset.rel) { relSel = b.dataset.rel; return pintar(); }
   if ('relVolver' in b.dataset) { relSel = null; return pintar(); }
   if (b.dataset.slot) { slotSel = slotSel === b.dataset.slot ? null : b.dataset.slot; return pintar(); }
+  if (b.dataset.equipar && !conCursor() && !b.dataset.confirmado) {   // táctil: primer toque = ficha con botón Equipar
+    const uid = b.dataset.equipar;
+    return hojaTactil(fichaEquipar(uid), '🗡️ Equipar', () => { const x = document.createElement('button'); x.dataset.equipar = uid; x.dataset.confirmado = '1'; ejecutar({ target: x }); });
+  }
   if (b.dataset.equipar) return accion(async () => { await D.equiparReliquia(b.dataset.equipar, detalle, slotSel); await recargar(); slotSel = null; pintar(); aviso('Reliquia equipada.'); });
   if (b.dataset.quitar) return accion(async () => { await D.desequiparReliquia(b.dataset.quitar); await recargar(); pintar(); aviso('La reliquia volvió a tu inventario.'); });
   if (b.dataset.vale) return abrirConVale(b.dataset.vale);
@@ -485,6 +502,7 @@ export function iniciarColeccion() {
   $('#btn-tienda').addEventListener('click', () => abrirTC('tienda'));
   $('#btn-coleccion').addEventListener('click', () => abrirTC('coleccion'));
   $('#tc').addEventListener('click', ejecutar);
+  activarTip($('#tc'), '.tc-slot-panel [data-tip]', el => fichaEquipar(el.dataset.uid));
   $('#starter').addEventListener('click', e => {
     if (e.target.closest('#starter-x')) return $('#starter').classList.add('hidden');
     const p = e.target.closest('[data-st]'); if (p) { starterSel = p.dataset.st; return pintarStarter(); }

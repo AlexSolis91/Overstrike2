@@ -6,6 +6,7 @@ import { equipoCampana, irA } from './menu.js';
 import { HORDAS, oleada, defsOleada, oroOleada, TRAMOS_RAREZA } from '../datos/horda/horda.js';
 import { RELIQUIAS, RAREZAS } from '../datos/reliquias.js';
 import { ICONO_RUNA_PORTAL } from '../datos/recompensas.js';
+import { activarTip, cartaPosible, hojaTactil, conCursor, ocultarTip, cerrarHoja } from './tipReliquia.js';
 
 const $ = s => document.querySelector(s);
 const ICONO_PORTAL = 'assets/items/runaPortal.png';
@@ -36,6 +37,7 @@ async function cargar() {
 }
 
 function pintar() {
+  ocultarTip(); cerrarHoja();
   const runas = inv?.runas_portal ?? 0, h = HORDAS.orcos;
   const trofeos = inv?.trofeos_orco;
   $('#hd-runas').innerHTML = inv ? `<span title="Runas de Portal"><img src="${ICONO_PORTAL}" alt=""> ${runas}</span>${trofeos != null ? `<span title="Trofeos de Orco">🏅 ${trofeos}</span>` : ''}` : '';
@@ -59,9 +61,9 @@ function pintar() {
       </div>
       <div class="hd-panel">
         <h4>🏅 Tienda de la Horda <small>${trofeos != null ? `Tienes ${trofeos} Trofeos de Orco` : '(falta ejecutar docs/sql/011_horda_extras.sql)'}</small></h4>
-        <p class="hd-nota">Elige exactamente la reliquia de la Horda de Orcos que buscas. Ganas 1 Trofeo por oleada (×3 mini-jefe, ×5 jefe). <b>Épicas: 1 por semana</b> (se renueva el lunes).${filtro === 'Épico' && epicaUsada ? ' ✅ Ya compraste la de esta semana.' : ''}</p>
+        <p class="hd-nota">${conCursor() ? 'Pasa el cursor por una reliquia para ver qué atributos le pueden salir.' : 'Toca una reliquia para ver qué atributos le pueden salir.'} Elige exactamente la reliquia de la Horda de Orcos que buscas. Ganas 1 Trofeo por oleada (×3 mini-jefe, ×5 jefe). <b>Épicas: 1 por semana</b> (se renueva el lunes).${filtro === 'Épico' && epicaUsada ? ' ✅ Ya compraste la de esta semana.' : ''}</p>
         <div class="hd-filtros">${Object.keys(PRECIO_TROFEOS).map(rz => `<button class="hd-fil ${rz === filtro ? 'on' : ''}" data-rz="${rz}" style="--rc:${RAREZAS[rz].color}">${RAREZAS[rz].plural} · ${PRECIO_TROFEOS[rz]} 🏅</button>`).join('')}</div>
-        <div class="hd-tienda">${lista.map(r => `<div class="hd-rel" style="--rc:${RAREZAS[r.rarity].color}"><img src="${r.imagen}" alt=""><div class="hd-rel-n">${r.name}</div><div class="hd-rel-t">${r.type}</div>
+        <div class="hd-tienda">${lista.map(r => `<div class="hd-rel" data-id="${r.id}" style="--rc:${RAREZAS[r.rarity].color}"><img src="${r.imagen}" alt=""><div class="hd-rel-n">${r.name}</div><div class="hd-rel-t">${r.type}</div>
           <button class="hd-comprar" data-id="${r.id}" ${trofeos == null || trofeos < PRECIO_TROFEOS[r.rarity] || comprando || (r.rarity === 'Épico' && epicaUsada) ? 'disabled' : ''}>${PRECIO_TROFEOS[r.rarity]} 🏅</button></div>`).join('')}</div>
       </div>
       <div class="hd-tarjeta hd-proximo" style="min-height:90px;margin-top:10px"><h3 style="font-size:18px">Horda de Elfos Oscuros · Horda de Demonios</h3><p>Próximamente</p></div>
@@ -104,9 +106,9 @@ async function entrar() {
   });
 }
 
-async function comprar(id) {
+async function comprar(id, confirmado = false) {
   const r = RELIQUIAS[id];
-  if (comprando || !confirm(`¿Comprar ${r.name} (${r.rarity}) por ${PRECIO_TROFEOS[r.rarity]} Trofeos de Orco?`)) return;
+  if (comprando || (!confirmado && !confirm(`¿Comprar ${r.name} (${r.rarity}) por ${PRECIO_TROFEOS[r.rarity]} Trofeos de Orco?`))) return;
   comprando = true; pintar();
   try { await D.tiendaHordaComprar(id); alert(`✅ ${r.name} se agregó a tus reliquias (Colección → Reliquias).`); }
   catch (e) { alert(D.mensajeError(e)); }
@@ -116,9 +118,15 @@ async function comprar(id) {
 export function iniciarHorda(opc) {
   jugar = opc.jugar;
   $('#hd-volver').addEventListener('click', () => irA('menu'));
+  activarTip($('#pantalla-horda'), '.hd-rel', el => cartaPosible(el.dataset.id));
   $('#pantalla-horda').addEventListener('click', e => {
     if (e.target.closest('#hd-entrar')) return entrar();
     const f = e.target.closest('.hd-fil'); if (f) { filtro = f.dataset.rz; return pintar(); }
+    const card = e.target.closest('.hd-rel');
+    if (card && !conCursor()) {   // táctil: primer toque = ficha con lo que puede salir y su botón Comprar
+      const id = card.dataset.id, r = RELIQUIAS[id], puede = !card.querySelector('.hd-comprar')?.disabled;
+      return hojaTactil(cartaPosible(id), puede ? `Comprar · ${PRECIO_TROFEOS[r.rarity]} 🏅` : '', puede ? () => comprar(id, true) : null);
+    }
     const c = e.target.closest('.hd-comprar'); if (c) comprar(c.dataset.id);
   });
 }
