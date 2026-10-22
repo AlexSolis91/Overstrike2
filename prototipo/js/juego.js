@@ -1,4 +1,5 @@
 // Punto de entrada: une el motor (reglas) con la interfaz (animaciones y panel).
+import { ICONO_RUNA_PORTAL } from './datos/recompensas.js';
 import { iniciarEscena, G, W, wait, banner, relayout, shakeScene, setVelocidad } from './ui/graficos.js';
 import { iniciarCampana, abrirCampana, cerrarBatalla, siguienteEtapa, jugarEtapa, elegirEquipoEtapa, esperaRepeticion } from './ui/campana.js';
 import { precargar } from './ui/imagenes.js';
@@ -557,7 +558,7 @@ async function oleadaGanada() {
       ${rel ? item(`<img src="${rel.imagen}" alt="">`, `<span style="color:${RAREZAS[rel.rarity].color}">${rel.name}</span>`, RAREZAS[rel.rarity].color) : ''}
       ${r?.fragmentos ? item('<div style="font-size:34px">🔷</div>', `+${r.fragmentos} Fragmento(s) de Runa`) : ''}
       ${r?.trofeos ? item('<div style="font-size:34px">🏅</div>', `+${r.trofeos} Trofeo(s) de Orco`) : ''}
-      ${r?.hito ? item('<div style="font-size:34px">🎉</div>', `<b>¡Primera vez en la oleada ${r.hito.oleada}!</b><br>+${r.hito.runas_portal} Runas de Portal${r.hito.vales ? ` · +${r.hito.vales} vale(s) de sobre` : ''} · +${r.hito.trofeos} Trofeos${r.hito.epica ? ` · Épica: ${RELIQUIAS[r.hito.epica.reliquia]?.name || ''}` : ''}${r.hito.hazana ? '<br>🏆 <b>Hazaña conseguida:</b> ya puedes forjar Legendarias' : ''}`, '#f59e0b') : ''}
+      ${r?.hito ? item('<div style="font-size:34px">🎉</div>', `<b>¡Primera vez en la oleada ${r.hito.oleada}!</b><br>+${r.hito.runas_portal} ${ICONO_RUNA_PORTAL} Runas de Portal${r.hito.vales ? ` · +${r.hito.vales} vale(s) de sobre` : ''} · +${r.hito.trofeos} Trofeos${r.hito.epica ? ` · Épica: ${RELIQUIAS[r.hito.epica.reliquia]?.name || ''}` : ''}${r.hito.hazana ? '<br>🏆 <b>Hazaña conseguida:</b> ya puedes forjar Legendarias' : ''}`, '#f59e0b') : ''}
       ${error ? `<div class="hov-sig">⚠️ ${error}</div>` : ''}
     </div>
     <div class="hov-total">Total: 🪙 ${miles(h.botin.oro)} · 💎 ${h.botin.reliquias.length} reliquia(s) · 🔷 ${h.botin.fragmentos} · 🏅 ${h.botin.trofeos || 0}</div>

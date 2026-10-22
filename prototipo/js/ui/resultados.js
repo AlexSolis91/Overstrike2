@@ -20,7 +20,7 @@ function premios(lista) {
   return lista.map(r => {
     const t = TIPOS_RECOMPENSA[r.tipo] || { nombre: r.tipo, icono: '🎁' };
     return `<div class="res-premio" style="--rc:${COLOR_RAREZA[r.rareza] || '#f3d58a'}" title="${r.nombre || t.nombre}${r.rareza ? ` (${r.rareza})` : ''}">
-      <span class="res-premio-ico">${t.icono}</span><b>${miles(r.cantidad ?? 1)}</b></div>`;
+      <span class="res-premio-ico">${t.imagen ? `<img class="ico-runa" src="${t.imagen}" alt="${t.nombre}">` : t.icono}</span><b>${miles(r.cantidad ?? 1)}</b></div>`;
   }).join('');
 }
 

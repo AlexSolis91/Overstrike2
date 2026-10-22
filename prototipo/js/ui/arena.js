@@ -1,6 +1,7 @@
 // Pantalla de la Arena (Fase 1): liga y puntos, 5 ataques diarios, equipos de Ataque y Defensa (sin repetir campeones),
 // buscar rival (cuenta regresiva de 10 s; por ahora siempre contra una Defensa jugada por la IA), clasificación de liga,
 // ranking global, historial de defensas y recompensas. El servidor valida y paga (docs/sql/008_arena.sql).
+import { ICONO_RUNA_PORTAL } from '../datos/recompensas.js';
 import * as D from '../servicios/datos.js';
 import { perfilActual } from './cuenta.js';
 import { equipoCampana, irA } from './menu.js';
@@ -69,7 +70,7 @@ function htmlDefensas() {
 function htmlRecompensas() {
   return `<table class="ar-tabla"><tr><th>Liga</th><th>Desde</th><th>Oro por victoria</th><th>Cada semana</th><th>Fin de temporada</th></tr>
     ${LIGAS.map(l => { const s = SEMANAL[l.id]; return `<tr><td>${insignia(l.id)}</td><td>${l.nota ? 'Top 100 · 2,800+' : num(l.min)}</td><td>🪙 ${num(ORO_VICTORIA[l.id])}</td>
-      <td>🌀 ${s.runas} · 🪙 ${num(s.oro)}${s.frag ? ` · 🧩 ${s.frag}` : ''}${s.vales ? ` · 🎟️ ${s.vales}` : ''}</td><td>🪙 ${num(TEMPORADA[l.id])}</td></tr>`; }).join('')}</table>
+      <td>${ICONO_RUNA_PORTAL} ${s.runas} · 🪙 ${num(s.oro)}${s.frag ? ` · 🧩 ${s.frag}` : ''}${s.vales ? ` · 🎟️ ${s.vales}` : ''}</td><td>🪙 ${num(TEMPORADA[l.id])}</td></tr>`; }).join('')}</table>
     <p class="tc-tenue">Temporadas de 4 semanas: al terminar, todos vuelven a 0 puntos. 5 ataques diarios valen puntos completos; los extra, el 25% (tope +60 al día) y 10% del oro.
     Defensa exitosa: +10 (ataque diario) o +3 (extra), tope +100 al día. Si una batalla llega al límite de rondas, gana la Defensa.</p>`;
 }
@@ -85,11 +86,20 @@ function pintar() {
   cuerpo.innerHTML = pestana === 'arena' ? htmlArena() : pestana === 'defensas' ? htmlDefensas() : pestana === 'recompensas' ? htmlRecompensas() : htmlRanking();
 }
 
+// Aviso en pantalla (HTML, para poder mostrar imágenes como la Runa de Portal); se cierra con el botón
+function avisoHtml(html) {
+  const d = document.createElement('div');
+  d.className = 'aviso-modal';
+  d.innerHTML = `<div class="aviso-caja"><p>${html}</p><button class="eq-listo">Aceptar</button></div>`;
+  d.querySelector('button').addEventListener('click', () => d.remove());
+  document.body.append(d);
+}
+
 function mostrarAvisos() {
   for (const a of est?.avisos || []) {
     const txt = a.tipo === 'temporada' ? `🏁 Temporada ${a.temporada} terminada en ${liga(a.liga).icono} ${a.liga}: +🪙 ${num(a.oro)}${a.puesto ? ` · ¡${TITULO[a.puesto]} de la temporada!` : ''}`
-      : `📅 Recompensa semanal (${liga(a.liga).icono} ${a.liga}): 🌀 ${a.runas} · 🪙 ${num(a.oro)}${a.fragmentos ? ` · 🧩 ${a.fragmentos}` : ''}${a.vales ? ` · 🎟️ ${a.vales}` : ''}`;
-    alert(txt);
+      : `📅 Recompensa semanal (${liga(a.liga).icono} ${a.liga}): ${ICONO_RUNA_PORTAL} ${a.runas} · 🪙 ${num(a.oro)}${a.fragmentos ? ` · 🧩 ${a.fragmentos}` : ''}${a.vales ? ` · 🎟️ ${a.vales}` : ''}`;
+    avisoHtml(txt);
   }
 }
 

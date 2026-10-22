@@ -16,7 +16,8 @@ async function conRespaldo(fn, completo, basico) {
 }
 export const miColeccion = () => conRespaldo(c => q(sb => sb.from('coleccion').select(c)), 'campeon, copias, estrellas, espacios, espacios_abiertos', 'campeon, copias, estrellas, espacios');
 const INV = 'oro, frag_runa, frag_otros, runas, vales_sobre, rel_sobres, runas_portal, polvo_arcano, portal_dia, portal_compras';
-export const miInventario = () => conRespaldo(c => q(sb => sb.from('inventario').select(c).maybeSingle()), INV + ', trofeos_orco', INV)   // trofeos_orco: SQL 011
+export const miInventario = () => conRespaldo(c => q(sb => sb.from('inventario').select(c).maybeSingle()), INV + ', trofeos_orco, horda_epica_semana', INV + ', trofeos_orco')   // SQL 011 y 015
+  .catch(e => { if (!/column|does not exist|schema cache/i.test(e?.message || '')) throw e; return q(sb => sb.from('inventario').select(INV).maybeSingle()); })
   .catch(e => { if (!/column|does not exist|schema cache/i.test(e?.message || '')) throw e; return q(sb => sb.from('inventario').select('oro, frag_runa, frag_otros, runas').maybeSingle()); });
 export const configSobres = () => q(sb => sb.from('sobres_config').select('id, activo, precio, desde, hasta').order('id'));
 

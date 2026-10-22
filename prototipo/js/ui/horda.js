@@ -5,16 +5,20 @@ import { perfilActual } from './cuenta.js';
 import { equipoCampana, irA } from './menu.js';
 import { HORDAS, oleada, defsOleada, oroOleada, TRAMOS_RAREZA } from '../datos/horda/horda.js';
 import { RELIQUIAS, RAREZAS } from '../datos/reliquias.js';
+import { ICONO_RUNA_PORTAL } from '../datos/recompensas.js';
 
 const $ = s => document.querySelector(s);
 const ICONO_PORTAL = 'assets/items/runaPortal.png';
 let jugar = null, inv = null, record = 0, error = '', hitos = new Set(), filtro = 'Raro', comprando = false;
-// Tienda de la Horda (docs/sql/011_horda_extras.sql): precio en Trofeos de Orco por rareza; premios de primera vez
-export const PRECIO_TROFEOS = { 'Común': 10, 'Raro': 30, 'Especial': 120, 'Épico': 500 };
+// Tienda de la Horda (docs/sql/011 y 015): precio en Trofeos de Orco por rareza (Épicas: 1 por semana); premios de primera vez
+export const PRECIO_TROFEOS = { 'Común': 15, 'Raro': 60, 'Especial': 300, 'Épico': 1500 };
+// Lunes de esta semana en hora de México (igual que el servidor), como 'AAAA-MM-DD'
+const lunesMx = () => { const h = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' })); h.setDate(h.getDate() - (h.getDay() + 6) % 7);
+  return `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-${String(h.getDate()).padStart(2, '0')}`; };
 const HITOS = [
-  { oleada: 10, txt: '2 Runas de Portal · 1 vale de sobre · 25 Trofeos' },
-  { oleada: 20, txt: '3 Runas de Portal · 2 vales de sobre · 75 Trofeos' },
-  { oleada: 30, txt: '1 Épica al azar del lote · 5 Runas de Portal · 150 Trofeos · 🏆 Hazaña (desbloquea las recetas de Legendarias)' },
+  { oleada: 10, txt: `${ICONO_RUNA_PORTAL} 2 Runas de Portal · 1 vale de sobre · 25 Trofeos` },
+  { oleada: 20, txt: `${ICONO_RUNA_PORTAL} 3 Runas de Portal · 2 vales de sobre · 75 Trofeos` },
+  { oleada: 30, txt: `1 Épica al azar del lote · ${ICONO_RUNA_PORTAL} 5 Runas de Portal · 150 Trofeos · 🏆 Hazaña (desbloquea las recetas de Legendarias)` },
 ];
 const tienda = () => Object.entries(RELIQUIAS).filter(([, r]) => (r.lote || 'orcos') === 'orcos' && PRECIO_TROFEOS[r.rarity] && !r.soloReceta)
   .map(([id, r]) => ({ id, ...r }));
@@ -36,6 +40,7 @@ function pintar() {
   const trofeos = inv?.trofeos_orco;
   $('#hd-runas').innerHTML = inv ? `<span title="Runas de Portal"><img src="${ICONO_PORTAL}" alt=""> ${runas}</span>${trofeos != null ? `<span title="Trofeos de Orco">🏅 ${trofeos}</span>` : ''}` : '';
   const lista = tienda().filter(r => r.rarity === filtro);
+  const epicaUsada = inv?.horda_epica_semana === lunesMx();   // ya compró su Épica de esta semana
   const sinSesion = !perfilActual();
   $('#hd-cuerpo').innerHTML = `
     <section>
@@ -44,7 +49,7 @@ function pintar() {
         ${record ? `<div class="hd-record">🏆 Tu récord: oleada ${record}</div>` : ''}
         <p>Oleadas infinitas de 5 orcos, cada una más fuerte. Tu equipo conserva su vida entre oleadas. Retírate cuando quieras: te llevas todo tu botín.</p>
         <div class="hd-acciones">
-          <button id="hd-entrar" class="hd-btn" ${sinSesion || !runas || error ? 'disabled' : ''}>🌀 Abrir portal (1 Runa)</button>
+          <button id="hd-entrar" class="hd-btn" ${sinSesion || !runas || error ? 'disabled' : ''}>${ICONO_RUNA_PORTAL} Abrir portal (1 Runa)</button>
         </div>
         ${sinSesion ? '<p>⚠️ Inicia sesión para jugar la Horda.</p>' : error ? `<p>⚠️ ${error}</p>` : !runas ? '<p>No tienes Runas de Portal: cómpralas en la Tienda o gánalas en la Campaña.</p>' : ''}
       </div>
@@ -54,10 +59,10 @@ function pintar() {
       </div>
       <div class="hd-panel">
         <h4>🏅 Tienda de la Horda <small>${trofeos != null ? `Tienes ${trofeos} Trofeos de Orco` : '(falta ejecutar docs/sql/011_horda_extras.sql)'}</small></h4>
-        <p class="hd-nota">Elige exactamente la reliquia de la Horda de Orcos que buscas. Ganas 1 Trofeo por oleada (×3 mini-jefe, ×5 jefe).</p>
+        <p class="hd-nota">Elige exactamente la reliquia de la Horda de Orcos que buscas. Ganas 1 Trofeo por oleada (×3 mini-jefe, ×5 jefe). <b>Épicas: 1 por semana</b> (se renueva el lunes).${filtro === 'Épico' && epicaUsada ? ' ✅ Ya compraste la de esta semana.' : ''}</p>
         <div class="hd-filtros">${Object.keys(PRECIO_TROFEOS).map(rz => `<button class="hd-fil ${rz === filtro ? 'on' : ''}" data-rz="${rz}" style="--rc:${RAREZAS[rz].color}">${RAREZAS[rz].plural} · ${PRECIO_TROFEOS[rz]} 🏅</button>`).join('')}</div>
         <div class="hd-tienda">${lista.map(r => `<div class="hd-rel" style="--rc:${RAREZAS[r.rarity].color}"><img src="${r.imagen}" alt=""><div class="hd-rel-n">${r.name}</div><div class="hd-rel-t">${r.type}</div>
-          <button class="hd-comprar" data-id="${r.id}" ${trofeos == null || trofeos < PRECIO_TROFEOS[r.rarity] || comprando ? 'disabled' : ''}>${PRECIO_TROFEOS[r.rarity]} 🏅</button></div>`).join('')}</div>
+          <button class="hd-comprar" data-id="${r.id}" ${trofeos == null || trofeos < PRECIO_TROFEOS[r.rarity] || comprando || (r.rarity === 'Épico' && epicaUsada) ? 'disabled' : ''}>${PRECIO_TROFEOS[r.rarity]} 🏅</button></div>`).join('')}</div>
       </div>
       <div class="hd-tarjeta hd-proximo" style="min-height:90px;margin-top:10px"><h3 style="font-size:18px">Horda de Elfos Oscuros · Horda de Demonios</h3><p>Próximamente</p></div>
     </section>

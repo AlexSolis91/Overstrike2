@@ -599,7 +599,8 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 
 - **Extras (2026-10-21, `docs/sql/011_horda_extras.sql`):**
   - **Trofeos de Orco** 🏅: 1 por oleada superada (×3 mini-jefe, ×5 jefe).
-  - **Tienda de la Horda** (en la pantalla de la Horda): eliges exactamente la reliquia del lote de Orcos que quieres (no Legendarias): Común 10 · Rara 30 · Especial 120 · Épica 500 Trofeos (`tienda_horda_comprar`).
+  - **Tienda de la Horda** (en la pantalla de la Horda): eliges exactamente la reliquia del lote de Orcos que quieres (no Legendarias): Común 15 · Rara 60 · Especial 300 · Épica 1,500 Trofeos, **máximo 1 Épica por semana** (se renueva el lunes, hora de México; `docs/sql/015_tienda_horda_precios.sql`). Un jugador avanzado (oleada 30, ~48 Trofeos por partida) consigue como mucho 1 Épica por semana.
+- **Runa de Portal:** siempre se muestra con su imagen (`ICONO_RUNA_PORTAL` en `js/datos/recompensas.js`), nunca con el emoji 🌀 (el 🌀 queda para el área del Portal y la Confusión).
   - **Primera vez** (una vez por cuenta y Horda, `horda_hitos`): oleada 10 → 2 Runas de Portal + 1 vale + 25 Trofeos · oleada 20 → 3 Runas + 2 vales + 75 Trofeos · oleada 30 → 1 Épica al azar del lote + 5 Runas + 150 Trofeos + la **Hazaña** (desbloquea las recetas de Legendarias).
 
 ## 23. Polvo Arcano, mejorar y fusión (Colección → Reliquias)
