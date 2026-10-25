@@ -3,3 +3,4 @@ Pon aqui la musica del juego (MP3):
   batalla.mp3   - durante la partida (en bucle)
   victoria.mp3  - al ganar (corta)
   derrota.mp3   - al perder (corta)
+  horda-orcos.mp3 - partida del Modo Horda (Orcos), en bucle

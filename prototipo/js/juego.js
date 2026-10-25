@@ -1,4 +1,5 @@
 // Punto de entrada: une el motor (reglas) con la interfaz (animaciones y panel).
+import { MUSICA } from './datos/sonidos.js';
 import { ICONO_RUNA_PORTAL } from './datos/recompensas.js';
 import { iniciarEscena, G, W, wait, banner, relayout, shakeScene, setVelocidad } from './ui/graficos.js';
 import { iniciarCampana, abrirCampana, cerrarBatalla, siguienteEtapa, jugarEtapa, elegirEquipoEtapa, esperaRepeticion } from './ui/campana.js';
@@ -118,7 +119,8 @@ async function jugar(eqJ, eqR, rivalModo, opciones = null) {
   if (combate) limpiarPartida();
   nuevaPartida();
   const esta = ++arranques;
-  setTimeout(() => { if (esta === arranques) musica('batalla'); }, 2000);
+  const tema = opciones?.horda ? `horda${opciones.horda.horda[0].toUpperCase()}${opciones.horda.horda.slice(1)}` : 'batalla';   // Horda de Orcos → 'hordaOrcos'
+  setTimeout(() => { if (esta === arranques) musica(MUSICA[tema] ? tema : 'batalla'); }, 2000);
   await presentarVS(eqJ, eqR);
   await iniciarPartida(eqJ, eqR, opciones);
 }

@@ -25,6 +25,7 @@ export const MUSICA = {
     'assets/audio/batalla-2.mp3',  // Battle Theme #2 (Yu-Gi-Oh! Master Duel)
     'assets/audio/batalla-3.mp3',  // Keycard Theme #5 (Yu-Gi-Oh! Master Duel)
   ],
+  hordaOrcos: 'assets/audio/horda-orcos.mp3',   // partida del Modo Horda (Orcos): Epic Music Mix Orcs (WoW)
   victoria: 'assets/audio/victoria.mp3',
   derrota: 'assets/audio/derrota.mp3',
 };

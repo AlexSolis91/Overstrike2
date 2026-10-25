@@ -78,7 +78,7 @@ const rutaDe = nombre => {
 };
 function pista(nombre) {
   if (pistas[nombre]) return pistas[nombre];
-  const el = new Audio(); el.src = rutaDe(nombre); el.loop = nombre === 'menu' || nombre === 'batalla'; el.preload = 'auto'; el.crossOrigin = 'anonymous';
+  const el = new Audio(); el.src = rutaDe(nombre); el.loop = nombre === 'menu' || nombre === 'batalla' || nombre.startsWith('horda'); el.preload = 'auto'; el.crossOrigin = 'anonymous';
   const p = pistas[nombre] = { el, gain: ctx.createGain(), ok: true };
   p.gain.gain.value = 0;
   ctx.createMediaElementSource(el).connect(p.gain); p.gain.connect(busMusica);   // por Web Audio: el volumen funciona también en iPhone
@@ -89,7 +89,7 @@ function desvanecer(p, a, seg) {
   const t = ctx.currentTime;
   p.gain.gain.cancelScheduledValues(t); p.gain.gain.setValueAtTime(p.gain.gain.value, t); p.gain.gain.linearRampToValueAtTime(a, t + seg);
 }
-// Cambia la música de fondo ('menu' | 'batalla' | null para silencio), con transición suave
+// Cambia la música de fondo ('menu' | 'batalla' | 'hordaOrcos' | null para silencio), con transición suave
 export function musica(nombre) {
   deseada = nombre;
   if (!ctx || ctx.state !== 'running') return;
