@@ -89,6 +89,10 @@ function desvanecer(p, a, seg) {
   const t = ctx.currentTime;
   p.gain.gain.cancelScheduledValues(t); p.gain.gain.setValueAtTime(p.gain.gain.value, t); p.gain.gain.linearRampToValueAtTime(a, t + seg);
 }
+// Tema de la partida en curso ('batalla' o el de su modo, p. ej. 'hordaOrcos'): lo fija juego.js al empezar y lo usa la
+// pantalla de batalla al abrirse (antes pedía siempre 'batalla' y le ganaba al tema de la Horda)
+let tema = 'batalla';
+export function temaDePartida(t) { if (t) tema = t; return tema; }
 // Cambia la música de fondo ('menu' | 'batalla' | 'hordaOrcos' | null para silencio), con transición suave
 export function musica(nombre) {
   deseada = nombre;

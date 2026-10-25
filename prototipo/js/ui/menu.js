@@ -2,7 +2,7 @@
 import { OFICIALES } from '../datos/personajes/index.js';
 import { BASE_COMUN } from '../motor/reglas.js';
 import { imgHtml } from './imagenes.js';
-import { sonar, musica } from './audio.js';
+import { sonar, musica, temaDePartida } from './audio.js';
 import { FONDOS } from '../datos/fondos.js';
 
 const $ = s => document.querySelector(s);
@@ -36,7 +36,7 @@ function mostrar(p) {
   const antes = document.body.dataset.pantalla;
   document.body.dataset.pantalla = p;
   if (antes === 'partida' && p !== 'partida') alSalirDePartida?.();
-  musica(p === 'partida' ? 'batalla' : 'menu');
+  musica(p === 'partida' ? temaDePartida() : 'menu');
   fondo(p === 'menu' || p === 'campana' || p === 'horda' || p === 'arena' ? 'menu' : p === 'equipo' ? 'equipo' : null);
   if (p === 'equipo') renderEquipo();
   if (p === 'campana') alAbrirCampana?.();

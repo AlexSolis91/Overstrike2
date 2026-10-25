@@ -13,7 +13,7 @@ import { OFICIALES, porId } from './datos/personajes/index.js';
 import { iniciarMenu, irA, presentarVS, cargarSeleccion } from './ui/menu.js';
 import { iniciarGuia, cerrarGuia, guiaAbierta } from './ui/guia.js';
 import { mostrarResultados, iniciarResultados } from './ui/resultados.js';
-import { sonar, musica, finDePartida, nuevaPartida, iniciarAjustes, ajustesAbiertos, cerrarAjustes, ajustes } from './ui/audio.js';
+import { sonar, musica, finDePartida, nuevaPartida, iniciarAjustes, ajustesAbiertos, cerrarAjustes, ajustes, temaDePartida } from './ui/audio.js';
 import { iniciarCuenta } from './ui/cuenta.js';
 import { iniciarColeccion } from './ui/coleccion.js';
 import { EFECTOS } from './motor/efectos.js';
@@ -120,7 +120,8 @@ async function jugar(eqJ, eqR, rivalModo, opciones = null) {
   nuevaPartida();
   const esta = ++arranques;
   const tema = opciones?.horda ? `horda${opciones.horda.horda[0].toUpperCase()}${opciones.horda.horda.slice(1)}` : 'batalla';   // Horda de Orcos → 'hordaOrcos'
-  setTimeout(() => { if (esta === arranques) musica(MUSICA[tema] ? tema : 'batalla'); }, 2000);
+  temaDePartida(MUSICA[tema] ? tema : 'batalla');
+  setTimeout(() => { if (esta === arranques) musica(temaDePartida()); }, 2000);
   await presentarVS(eqJ, eqR);
   await iniciarPartida(eqJ, eqR, opciones);
 }
