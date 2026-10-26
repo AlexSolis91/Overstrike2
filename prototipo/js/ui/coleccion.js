@@ -93,7 +93,7 @@ function htmlTienda() {
   const campeones = grupo(false), reliquias = sinReliquias ? [] : grupo(true);
   const precio = precioPortal();
   const objetos = inv.runas_portal == null ? '' : `<h4 class="tc-seccion">Objetos</h4><div class="tc-sobres"><div class="tc-sobre" style="--c:#3b82f6">
-      <div class="tc-sobre-arte"><img src="assets/items/runaPortal.png" alt="Runa de Portal" style="object-fit:contain;padding:10px"></div>
+      <div class="tc-sobre-arte tc-objeto"><img src="assets/items/runaPortal.png" alt="Runa de Portal"></div>
       <b>Runa de Portal</b>
       <button class="eq-listo tc-abrir" data-comprarportal ${inv.oro >= precio ? '' : 'disabled'}>🪙 ${num(precio)}</button>
       <em>Abre la Horda · el precio sube con cada compra del día (10,000 · 20,000 · 40,000)</em></div></div>`;
