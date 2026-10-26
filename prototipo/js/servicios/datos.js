@@ -67,6 +67,10 @@ export const arenaVivoCancelar = () => rpc('arena_vivo_cancelar');
 export const arenaVivoResultado = (partida, ganador) => rpc('arena_vivo_resultado', { p_partida: partida, p_ganador: ganador });
 
 // Campaña: progreso (solo lectura) y cobrar una victoria (el servidor valida desbloqueo, tiempo entre repeticiones y paga)
+// Misiones diarias (docs/sql/016_misiones_runas.sql)
+export const misionesEstado = () => rpc('misiones_estado');
+export const misionesCobrar = id => rpc('misiones_cobrar', { p_id: id });
+
 export const miCampana = area => q(sb => sb.from('campana_progreso').select('dificultad, etapa, estrellas, victorias, ultima').eq('area', area));
 export const campanaCompletar = (area, dificultad, etapa, estrellas) => rpc('campana_completar', { p_area: area, p_dificultad: dificultad, p_etapa: etapa, p_estrellas: estrellas });
 

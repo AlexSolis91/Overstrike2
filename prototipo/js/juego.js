@@ -16,6 +16,7 @@ import { mostrarResultados, iniciarResultados } from './ui/resultados.js';
 import { sonar, musica, finDePartida, nuevaPartida, iniciarAjustes, ajustesAbiertos, cerrarAjustes, ajustes, temaDePartida } from './ui/audio.js';
 import { iniciarCuenta } from './ui/cuenta.js';
 import { iniciarColeccion } from './ui/coleccion.js';
+import { iniciarMisiones } from './ui/misiones.js';
 import { EFECTOS } from './motor/efectos.js';
 import { INVOCACIONES } from './datos/invocaciones.js';
 import { cargarCuenta, conCuenta, cuentaDesdeServidor } from './servicios/cuentaBatalla.js';
@@ -640,7 +641,7 @@ async function finArena(base, fin) {
     else error = D.mensajeError(e);
   }
   if (esta !== partida) return;
-  mostrarResultados({ ...base, gano, recompensas: res?.oro ? [{ tipo: 'oro', cantidad: res.oro }] : [] });
+  mostrarResultados({ ...base, gano, recompensas: [...(res?.oro ? [{ tipo: 'oro', cantidad: res.oro }] : []), ...(res?.runa_portal ? [{ tipo: 'portal', cantidad: res.runa_portal }] : [])] });
   $('#ov-title').textContent = res?.verificado === false ? '⚠️ Resultado no válido' : gano ? '🏆 Victoria' : fin.limite ? '🛡️ La Defensa resistió' : '💀 Derrota';
   $('#ov-sub').textContent = res ? `${res.delta >= 0 ? '+' : ''}${res.delta} puntos · ${res.puntos} puntos · ${res.liga}${res.diario ? ' · ataque diario' : ' · ataque extra (25%)'} · vs ${a.rival?.nombre || 'Defensa'}`
     : `⚠️ ${error || 'No se pudo guardar el resultado'}`;
@@ -834,6 +835,7 @@ iniciarResultados();
 iniciarAjustes();
 iniciarCuenta();
 iniciarColeccion();
+iniciarMisiones();
 // Clic de interfaz para todos los botones (los que tienen su propio sonido lo suman encima)
 document.addEventListener('click', e => { if (e.target.closest('button:not([disabled]):not(.act.off)')) sonar('clic'); }, true);
 

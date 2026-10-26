@@ -935,3 +935,27 @@ body.eq-sin-rival .eq-fila[data-lado="rival"], body.eq-sin-rival .eq-modo { disp
 .ar-titulo.p2 { background: #e5e7eb; } .ar-titulo.p3 { background: #d97706; color: #fff; }
 .ar-tabla tr.con-titulo td:first-child { box-shadow: inset 4px 0 0 #fbbf24; } .ar-tabla tr.con-titulo.p2 td:first-child { box-shadow: inset 4px 0 0 #e5e7eb; }
 .ar-tabla tr.con-titulo.p3 td:first-child { box-shadow: inset 4px 0 0 #d97706; }
+
+/* ---------------------------------------------------------------- Misiones diarias (js/ui/misiones.js) */
+#misiones { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 14px; background: rgba(3, 6, 12, .8); }
+#misiones.hidden { display: none; }
+.mi-caja { width: min(640px, 100%); max-height: min(860px, 100%); display: flex; flex-direction: column; border-radius: 16px; overflow: hidden;
+  background: linear-gradient(180deg, #121827, #0a0e17); border: 1px solid rgba(243, 213, 138, .4); box-shadow: 0 20px 60px rgba(0, 0, 0, .6); }
+#misiones-x { width: 32px; height: 32px; flex: none; border-radius: 10px; cursor: pointer; background: rgba(8, 11, 18, .9); color: var(--gold); border: 1px solid rgba(243, 213, 138, .4); }
+#mi-cont { flex: 1; overflow-y: auto; padding: 12px 14px 16px; }
+.mi-fila { display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin-bottom: 8px; border-radius: 12px; background: rgba(255, 255, 255, .03);
+  border: 1px solid rgba(255, 255, 255, .08); border-left: 3px solid var(--c); }
+.mi-fila.lista { border-color: color-mix(in srgb, var(--c) 60%, transparent); background: color-mix(in srgb, var(--c) 9%, transparent); }
+.mi-fila.hecha { opacity: .55; }
+.mi-info { flex: 1; min-width: 0; }
+.mi-txt { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.mi-dif { flex: none; font: 800 10.5px Inter, sans-serif; text-transform: uppercase; letter-spacing: .05em; color: var(--c); }
+.mi-barra { height: 6px; margin: 7px 0 5px; border-radius: 6px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+.mi-barra i { display: block; height: 100%; border-radius: 6px; background: var(--c); }
+.mi-sub { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.mi-premio { color: var(--text); display: flex; gap: 10px; align-items: center; }
+.mi-premio .ico-runa { width: 18px; height: 18px; vertical-align: -4px; }
+.mi-fila button { flex: none; min-width: 92px; }
+.mi-badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 99px;
+  font: 900 11px Inter, sans-serif; font-style: normal; color: #1a1205; background: var(--gold); }
+@media (max-width: 480px) { .mi-fila { flex-wrap: wrap; } .mi-fila button { width: 100%; } }

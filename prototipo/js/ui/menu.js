@@ -42,7 +42,7 @@ function mostrar(p) {
   if (p === 'campana') alAbrirCampana?.();
   if (p === 'horda') alAbrirHorda?.();
   if (p === 'arena') alAbrirArena?.();
-  if (p === 'menu') E.campana = null;
+  if (p === 'menu') { E.campana = null; dispatchEvent(new Event('menu:mostrar')); }
 }
 addEventListener('popstate', () => {
   const p = location.hash.slice(1);

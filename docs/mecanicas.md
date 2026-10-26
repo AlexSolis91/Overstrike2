@@ -536,7 +536,7 @@ Solo con sesión iniciada. Todo cambio lo valida el **servidor** (funciones de `
 
 ## 20. Modo Campaña: el Portal (Área 1) y el Abismo (Área 2)
 
-- **Área 2 · El Abismo (2026-10-21, `docs/sql/012_campana_abismo.sql`):** 20 etapas con las combinaciones más peligrosas del roster (equipos fijos por `preferidos`: Infierno, Veneno Letal, Invierno Eterno, Titanes, Hokages…). Cada dificultad del Abismo se abre al completar la etapa 20 del Portal en esa dificultad. Mismas reglas (estrellas, cofres, Runa de Portal); oro, fragmentos, vales y runas **×2**. Pestañas de área en la pantalla de Campaña.
+- **Área 2 · El Abismo (2026-10-21, `docs/sql/012_campana_abismo.sql`):** 20 etapas con las combinaciones más peligrosas del roster (equipos fijos por `preferidos`: Infierno, Veneno Letal, Invierno Eterno, Titanes, Hokages…). Cada dificultad del Abismo se abre al completar la etapa 20 del Portal en esa dificultad. Mismas reglas (estrellas, cofres, Fragmentos por 3★); oro, fragmentos, vales y runas **×2**. Pestañas de área en la pantalla de Campaña.
 - **Orden (2026-10-21):** las etapas de las dos áreas van de la más fácil a la más difícil según su fuerza simulada (Exploradores fijo en la 1). Servants del Grial salió del Portal (le faltan campeones) y entró **Pacto de Sangre** (Carnage, Kratos, Venom, Milo, Sasuke). Curva Normal: Portal ~95% → ~40%, Abismo ~85% → ~30%.
 
 Solo con sesión iniciada. El progreso y los premios los valida y paga el **servidor** (`docs/sql/004_campana.sql`: `campana_completar` y `abrir_sobre_vale`). Datos en `js/datos/campana.js`, pantalla en `js/ui/campana.js`.
@@ -595,7 +595,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - **Recompensas por oleada** (todas las Hordas, cada una con su lote): Oro 1,000 + 150 × (oleada − 1) (×3 mini-jefe, ×5 jefe); 30% de una reliquia del lote, con rareza según el tramo de la oleada (`TRAMOS_RAREZA`: 1–9 Común 95/Rara 5 · 10–19 75/22/Especial 3 · 20–29 50/38/11.5/Épica 0.5 · 30–39 30/45/23/2 · 40+ 20/45/32/3; la Épica nunca pasa de 3%); 2% de 1–3 fragmentos de Runa. Retirarse o caer: te llevas todo el botín. Entrar cuesta 1 **Runa de Portal**.
 - Pieza nueva del motor: gatillo de pasiva `alMorirAliado` (Almas Atadas de Gul'dan); `reanimar` sin `marca` solo revive.
 - **Pantalla** (`js/ui/horda.js`, menú → Hordas): Runas de Portal, récord, reglas y tabla de rarezas. «Abrir portal» → elegir 5 campeones propios (rival de la oleada 1 visible) → el servidor descuenta la Runa (`horda_entrar`). Entre oleadas aparece el botín de la oleada (cobrado por `horda_oleada`; el servidor pide 10 s entre oleadas y el juego reintenta), el total y aviso de mini-jefe/jefe, con **Siguiente oleada** o **Retirarse**. Al caer o retirarse: resultados con todo el botín y el récord (`horda_terminar`). Salir a mitad cierra la partida (te llevas lo cobrado).
-- **Servidor:** `docs/sql/006_horda.sql` (Runas de Portal en inventario con 3 de regalo, partidas, recompensas, tienda de Runas con precio diario 10,000/20,000/40,000 hora de México, Polvo Arcano, candado, descomponer, mejorar, fusión y Runas de Portal en la Campaña: 1 la primera vez con 3★ y 15% al repetir). El catálogo de reliquias guarda su `lote`.
+- **Servidor:** `docs/sql/006_horda.sql` (Runas de Portal en inventario con 3 de regalo, partidas, recompensas, tienda de Runas con precio diario 10,000/20,000/40,000 hora de México, Polvo Arcano, candado, descomponer, mejorar, fusión y Runas de Portal en la Campaña: 1 la primera vez con 3★ y 15% al repetir — **quitado en 016**: ahora las primeras 3★ dan 5 Fragmentos, ×2 en el Abismo). El catálogo de reliquias guarda su `lote`.
 
 - **Extras (2026-10-21, `docs/sql/011_horda_extras.sql`):**
   - **Trofeos de Orco** 🏅: 1 por oleada superada (×3 mini-jefe, ×5 jefe).
@@ -619,7 +619,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 ## 25. Arena (Fase 1, 2026-10-18)
 - **Equipos:** Ataque y Defensa de 5 campeones propios; un campeón no puede estar en ambos. Se desbloquea con 10 campeones. Pelean con sus estrellas y reliquias (la Defensa rival llega del servidor con las suyas: `cuentaDesdeServidor`).
 - **Buscar rival:** cuenta regresiva de 10 s y luego una Defensa de otro jugador de puntos parecidos (±150, ampliando), jugada por la IA; si no hay nadie, Defensa de práctica (bot, mitad de puntos). Fase 2: combate en vivo si otro jugador busca al mismo tiempo.
-- **Puntos (Elo, K 32):** ganar 15–30, perder 10–25. 5 ataques diarios a puntos completos; extra al 25% (tope +60/día) y 10% del oro. Defensa exitosa +10 (diario) / +3 (extra), tope +100/día; defensa vencida pierde la mitad (diario) o el 25% (extra) de lo que ganó el atacante. Límite de rondas: gana la Defensa.
+- **Puntos (Elo, K 32):** ganar 15–30, perder 10–25. 5 ataques diarios a puntos completos; extra al 25% (tope +60/día) y 10% del oro. Defensa exitosa +10 (diario) / +3 (extra), **sin tope diario** (desde 016); defensa vencida pierde la mitad (diario) o el 25% (extra) de lo que ganó el atacante. Límite de rondas: gana la Defensa.
 - **Ligas:** Bronce 0 · Plata 400 · Oro 800 · Platino 1,200 · Diamante 1,600 · Campeones 2,000 · Master 2,400 · Leyenda (top 100 con más de 2,800). `js/datos/arena.js`.
 - **Recompensas:** oro por victoria por liga; semanal por liga (Runas de Portal, oro, fragmentos, vales desde Diamante); fin de temporada (4 semanas desde el lunes 2026-10-19, todos vuelven a 0): oro por liga final (50,000 → 2,000,000). Se cobran al entrar a la Arena (avisos).
 - **Pantallas** (`js/ui/arena.js`): Arena, Mi liga, Ranking global (top 100 + tu puesto), Defensas (historial), Recompensas. Servidor: `docs/sql/008_arena.sql`.
@@ -640,3 +640,23 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - `alTransformarseAliado: acción | [acciones]` (campo de la pasiva): se ejecuta cuando OTRO aliado se transforma (`objetivo` = ese aliado). Trunks: +2 Esperanza y Furia + Celeridad al que se transforma.
 - `auraDoT: pct`: mientras viva, los DoT que sufren sus enemigos hacen +pct de daño (se multiplica si hay varios). Trunks (+15%, Super Saiyajin +30%).
 - Marcas de campeón: Ira (Broly, máx. 5), Potencial (Gohan, máx. 3), Esperanza (Trunks, máx. 5): contadores que transforman para siempre al llenarse (`transformarConCargas`).
+
+## 26. Misiones diarias y Runas de Portal (2026-10-26, `docs/sql/016_misiones_runas.sql`)
+- **Meta:** ~1 Runa de Portal al día por jugador activo.
+- **10 misiones diarias** (se renuevan a medianoche, hora de México; menú → 📜 Misiones, con contador de premios listos). Textos en `js/datos/misiones.js`, que debe coincidir con `public._misiones()`.
+
+| # | Misión | Dificultad | Premio |
+|---|---|---|---|
+| 1 | Gana 2 batallas de Campaña | Fácil | 3,000 oro |
+| 2 | Juega 3 combates de Arena | Fácil | 3,000 oro |
+| 3 | Equipa o cambia 1 reliquia | Fácil | 10 Polvo Arcano |
+| 4 | Gana 5 combates de Arena | Fácil | 1 Runa de Portal |
+| 5 | Abre 1 sobre | Media | 20 Polvo Arcano |
+| 6 | Gana 3 etapas de Campaña con 3★ | Media | 10 Fragmentos |
+| 7 | Supera la oleada 20 de la Horda | Media | 20 Trofeos de Orco |
+| 8 | Gana 10 combates de Arena | Difícil | 20,000 oro + 10 Fragmentos |
+| 9 | Supera la oleada 40 de la Horda | Difícil | 60 Trofeos + 20 Fragmentos |
+| 10 | Completa todas las misiones diarias | Final | 1 Vale de sobre |
+
+- **Contadores en el servidor** (tabla `misiones_diarias`, disparadores): aperturas de sobres (`sobre`, `vale`, `reliquias`), reliquias equipadas, oleada máxima del día en la Horda, ataques de Arena y Arena en vivo terminados; la Campaña suma desde `campana_completar`. La misión 10 cuenta las otras 9 completadas (no hace falta cobrarlas antes).
+- **Fuentes de Runa de Portal:** misión 4 (1/día) · Arena 3.3% por combate, ganes o pierdas (~1 cada 30; también en vivo, sin aviso en pantalla) · recompensas semanales de liga · primera vez en la Horda · Tienda (precio que sube) · regalo inicial de 3. La Campaña ya no da Runas de Portal.
