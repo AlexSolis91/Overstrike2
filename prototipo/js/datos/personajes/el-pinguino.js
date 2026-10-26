@@ -1,44 +1,49 @@
 import { espacios } from '../reliquias.js';
 
-// Ficha oficial #51 (2026-10-18, diseño "a tu criterio"). El Pingüino (Oswald Cobblepot): el Rey del Inframundo de Gótica,
-// dueño del Iceberg Lounge y traficante de armas. Pelea con su arsenal de paraguas (ametralladora y lanzallamas) y su
-// ejército de pingüinos con cohetes (Batman Returns). Quema al enemigo y arma a su equipo: más fuerte cuantos más aliados
-// aplican Quemadura. Exclusivo de Blazing Legion. Sin habilidad de líder.
+// Ficha oficial #51 (2026-10-18; rediseñado 2026-10-25 como DoTer de Bombas). El Pingüino (Oswald Cobblepot): el Rey del
+// Inframundo de Gótica y traficante de armas. Su paraguas ametralladora todavía escupe fuego (Quemadura, por eso sigue en
+// Blazing Legion), pero su sello son los explosivos: paraguas-bomba y su ejército de pingüinos con cohetes (Batman Returns).
+// Sus explosivos de contrabando potencian las Bombas que el enemigo ya llevaba encima (×1.5) y su Over las hace estallar.
+// Sinergia con Deidara (bombarderos). Sin habilidad de líder.
 export default {
   id: 'el-pinguino',
-  franquicia: 'DC', grupos: ['villanos-de-gotham'],   // campaña: Ciudad Gótica y Señores del Caos
+  franquicia: 'DC', grupos: ['villanos-de-gotham', 'bombarderos'],   // campaña: Ciudad Gótica y Señores del Caos
   nombre: 'El Pingüino',
-  rol: 'DoTer', rolSecundario: 'Support',
+  rol: 'DoTer', rolSecundario: 'Daño',
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐧', color: '#475569', imagen: 'assets/personajes/el-pinguino.webp',
-  base: { hp: 650, dmg: 60, spd: 95 },
+  base: { hp: 620, dmg: 55, spd: 92 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
   pasiva: {
-    nombre: 'Traficante de Armas de Gótica',
-    desc: 'Por cada otro aliado cuyos movimientos aplican Quemadura (máx. 4), todo su equipo gana +4% de Daño y +4% de Puntería mientras El Pingüino viva.',
-    bonoPorAliadosQueAplican: { efecto: 'burn', max: 4, bono: { dmgPct: .07, hpPct: .03 } },
+    nombre: 'Explosivos de Contrabando',
+    desc: 'Cuando golpea a un enemigo que ya tenía Bombas antes de su ataque, cada una de esas Bombas hace ×1.5 de daño al explotar (una vez por Bomba en cada ataque). Sus golpes hacen +10% de daño a enemigos con Bomba.',
+    potenciaBombas: { factor: 1.5 },
+    bonoContra: { efecto: 'bomb', pct: .10 },
   },
   movimientos: [
     {
       categoria: 'basico', nombre: 'Paraguas Ametralladora', objetivo: 'enemigo', estilo: 'ranged', color: 0x94a3b8,
       pct: .40, escala: 'dano', cd: 0, golpes: 3,
-      desc: '3 disparos de 40%, cada uno con 20% de probabilidad de Quemadura.',
+      desc: '3 disparos de 40%, cada uno con 20% de probabilidad de Quemadura (el paraguas también lanza fuego).',
       efectos: [{ accion: { tipo: 'efecto', id: 'burn', prob: .20 } }],
     },
     {
-      categoria: 'especial', nombre: 'Paraguas Lanzallamas', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xf97316,
-      pct: .75, escala: 'dano', cd: 3,
-      desc: 'Una llamarada desde la punta del paraguas: 75% a todos los enemigos con 55% de probabilidad de Quemadura.',
-      efectos: [{ accion: { tipo: 'efecto', id: 'burn', prob: .55 } }],
+      categoria: 'especial', nombre: 'Paraguas Explosivo', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xf97316,
+      pct: .60, escala: 'dano', cd: 3,
+      desc: 'Lanza paraguas-bomba sobre todo el campo: 60% a todos los enemigos con 55% de probabilidad de Bomba.',
+      efectos: [{ accion: { tipo: 'efecto', id: 'bomb', prob: .55 } }],
     },
     {
       categoria: 'over', nombre: 'Ejército de Pingüinos Cohete', objetivo: 'azar', golpes: 6, estilo: 'ranged', color: 0xfb923c,
-      pct: .45, escala: 'dano', cd: 5,
-      desc: 'Sus pingüinos con cohetes en la espalda caen sobre el campo: 6 explosiones de 45% a enemigos al azar, cada una con 30% de probabilidad de Quemadura.',
-      efectos: [{ accion: { tipo: 'efecto', id: 'burn', prob: .30 } }],
+      pct: .30, escala: 'dano', cd: 5,
+      desc: 'Sus pingüinos con cohetes en la espalda caen sobre el campo: 6 explosiones de 30% a enemigos al azar, cada una con 30% de probabilidad de Bomba. Al final detona todas las Bombas de los enemigos (las que ya tenían salen potenciadas ×1.5).',
+      efectos: [
+        { accion: { tipo: 'efecto', id: 'bomb', prob: .30 } },
+        { cuando: 'final', accion: { tipo: 'detonar', a: 'todosEnemigos' } },
+      ],
     },
   ],
 };

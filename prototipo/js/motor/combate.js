@@ -1696,6 +1696,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     let huboCritico = false;
     if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) { huboCritico = golpear(a, t, mov, ctxGolpe) || huboCritico; efectosDelGolpe(); }
     else efectosDelGolpe();
+    // pasiva "potenciaBombas": las Bombas que el enemigo YA tenía antes de este ataque hacen ×factor de daño (una vez por Bomba y ataque)
+    const pb = a.pasiva?.potenciaBombas;
+    if (pb && mov.pct && !t.muerto && t.lado !== a.lado && ctx.bombasPrevias) for (const b of todos(t, 'bomb')) {
+      if (!ctx.bombasPrevias.has(b) || ctx.bombasPotenciadas.has(b)) continue;
+      ctx.bombasPotenciadas.add(b); b.valor *= pb.factor;
+      emitir('bonoVisible', { a: t.uid, texto: `💣 ¡Bomba ×${pb.factor}!` }, t);
+    }
     // pasiva "roboSiObjetivoTiene": roba % del HP máx. a quien ya tenía ese efecto al ser atacado (1 vez por movimiento y objetivo)
     const rb = a.pasiva?.roboSiObjetivoTiene;
     if (rb && mov.pct && !t.muerto && ctxGolpe.teniaAntes.has(rb.efecto) && t.lado !== a.lado && !(ctx.robados ||= new Set()).has(t)) {
@@ -1769,7 +1776,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       const invocacionesAntes = todos(a, 'summon').length;    // invocaciones activas al ejecutar el movimiento
       const vivosAlEmpezar = new Set(objetivos.filter(t => !t.muerto));
       const previos = principal ? clonar(principal.estados) : [];    // para Propagar aunque el objetivo muera
-      const c = { ...ctx, acum: { dano: 0, tenian: new Set() } };
+      const c = { ...ctx, acum: { dano: 0, tenian: new Set() },
+        bombasPrevias: new Set(enemigosDe(a).flatMap(x => todos(x, 'bomb'))), bombasPotenciadas: new Set() };   // pasiva "potenciaBombas"
       if (mov.invocar) invocar(a, mov.invocar);
       else if (mov.desatar) desatar(a, mov);
       else if (azar) azar.forEach((t, i) => {

@@ -630,6 +630,9 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
   - **Foto de los equipos** al empezar cada combate (`equipo_atk`, `equipo_def`) y la **Defensa de práctica la elige el servidor**.
   - **Verificación:** contra una Defensa, la IA juega con azar de semilla (`semillaIA`) y el juego envía todas las decisiones. Con `arena_config.verificar = true`, el resultado queda pendiente y la Edge Function `verificar-arena` (`docs/supabase/verificar-arena.ts`, importa el motor desde GitHub Pages) repite la batalla con `js/motor/verificar.js`: si el resultado o las decisiones de la Defensa no cuadran, cuenta como derrota. Si la batalla se jugó con otra versión del juego, se acepta. Probado: 60/60 batallas legítimas aceptadas y 60/60 resultados falsos detectados. La lógica pura para armar equipos y la versión viven en `js/datos/cuenta.js`.
 
+## Pieza de pasiva: potenciar Bombas (2026-10-25)
+- `potenciaBombas: { factor }` (p. ej. El Pingüino, ×1.5): cuando el portador golpea a un enemigo, cada Bomba que ese enemigo **ya tenía antes de que empezara el ataque** multiplica su daño por `factor`. Una vez por Bomba en cada ataque (un movimiento de varios golpes no la multiplica varias veces). Las Bombas que pone el mismo ataque no se potencian. Combinado con `detonar`, el Over del Pingüino primero potencia y luego hace explotar.
+
 ## Marcas (migración 2026-10-21)
 - Los estados exclusivos de un campeón son **marcas** (`tipo: 'marca'`): no se disipan, no se limpian y no cuentan como buff ni debuff. Se migraron los antiguos: Orgullo Sayajin (Vegeta), Oscuridad (Saga), Poder de Grayskull (He-Man), Poder Robado (Skeletor), Furia Dorada (Aldebarán) y Aguja Escarlata (Milo; antes era un debuff que se podía limpiar).
 
