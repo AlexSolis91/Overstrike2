@@ -19,8 +19,11 @@ function premios(lista) {
   if (!lista?.length) return '<div class="res-sin">Esta partida no otorga recompensas</div>';
   return lista.map(r => {
     const t = TIPOS_RECOMPENSA[r.tipo] || { nombre: r.tipo, icono: '🎁' };
-    return `<div class="res-premio" style="--rc:${COLOR_RAREZA[r.rareza] || '#f3d58a'}" title="${r.nombre || t.nombre}${r.rareza ? ` (${r.rareza})` : ''}">
-      <span class="res-premio-ico">${t.imagen ? `<img class="ico-runa" src="${t.imagen}" alt="${t.nombre}">` : t.icono}</span><b>${miles(r.cantidad ?? 1)}</b></div>`;
+    // un premio puede traer su propia imagen (p. ej. el arte de la reliquia); si no, la del tipo o su ícono
+    const ico = r.imagen ? `<img class="res-premio-img" src="${r.imagen}" alt="${r.nombre || t.nombre}">`
+      : t.imagen ? `<img class="ico-runa" src="${t.imagen}" alt="${t.nombre}">` : t.icono;
+    return `<div class="res-premio${r.imagen ? ' con-img' : ''}${r.rareza === 'Legendario' ? ' legendaria' : ''}" style="--rc:${COLOR_RAREZA[r.rareza] || '#f3d58a'}" title="${r.nombre || t.nombre}${r.rareza ? ` (${r.rareza})` : ''}">
+      <span class="res-premio-ico">${ico}</span>${r.imagen && (r.cantidad ?? 1) === 1 ? '' : `<b>${miles(r.cantidad ?? 1)}</b>`}</div>`;
   }).join('');
 }
 

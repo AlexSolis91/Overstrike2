@@ -617,7 +617,7 @@ async function finHorda(base, retirado) {
   const [res] = await Promise.all([cerrarHorda(), wait(700)]);
   if (esta !== partida) return;
   const recompensas = [{ tipo: 'oro', cantidad: h.botin.oro },
-    ...h.botin.reliquias.map(f => { const c = RELIQUIAS[f.reliquia]; return { tipo: 'reliquia', cantidad: 1, rareza: c?.rarity, nombre: c?.name }; }),
+    ...h.botin.reliquias.map(f => { const c = RELIQUIAS[f.reliquia]; return { tipo: 'reliquia', cantidad: 1, rareza: c?.rarity, nombre: c?.name, imagen: c?.imagen }; }),
     ...(h.botin.fragmentos ? [{ tipo: 'fragmento', cantidad: h.botin.fragmentos, nombre: 'Fragmentos de Runa' }] : [])];
   const superadas = retirado ? h.n : h.n - 1;
   mostrarResultados({ ...base, gano: retirado, recompensas });
