@@ -19,6 +19,8 @@ export function elegirIA(combate, rnd = Math.random) {
     let objetivo = null;
 
     if (acciones.includes('potenciarInvocaciones') && invocaciones() < 2) continue;   // Dominio: vale la pena con 2+ sombras
+    const mc = mov.iaMinEnemigosCon;           // solo vale la pena si suficientes enemigos tienen ese efecto (p. ej. Mil Cortes Divinos)
+    if (mc) { const en = P.filter(p => p.lado !== a.lado && !p.muerto); if (en.filter(p => p.estados.some(e => e.id === mc.efecto)).length < Math.min(mc.min, en.length)) continue; }
     if (mov.invocar) {
       const def = INVOCACIONES[mov.invocar];
       if (invocaciones(mov.invocar) >= (def.max || 1) && invocaciones() >= 3) continue;

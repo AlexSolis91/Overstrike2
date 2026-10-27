@@ -98,6 +98,8 @@ export const EFECTOS = {
     desc: `Recibe +${p(DEBUFFS.expuesto)} de daño de golpes y daño por efecto (después de la Armadura).` },
   rival:   { nombre: 'Rival', icono: '👑', color: 0xfbbf24, tipo: 'marca', tags: ['Marca'], noDisipable: true,
     desc: 'Marca de Vegeta: recibe más daño de él y cada movimiento que usa le da Orgullo. No es un debuff: no se limpia ni cuenta como debuff.' },
+  marcaDemonio: { nombre: 'Marca del Demonio', icono: '😈', color: 0x7c3aed, tipo: 'marca', tags: ['Marca'], noDisipable: true, acumulaDano: true,
+    desc: 'Marca de Meliodas: acumula todo el daño que recibe. Al volver a usar Contra Venganza lo libera sobre un enemigo al azar (ignora Armadura) y la marca empieza de nuevo. No se disipa ni se limpia.' },
   theOne:  { nombre: 'The One', icono: '☀️', color: 0xfbbf24, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Marcas de Escanor: gana 1 cada vez que recibe daño (máx. 12) y cada una le da más HP máx. Con 12 es The One. No se disipan ni se limpian.' },
   cargas:  { nombre: 'Furia Dorada', icono: '🐂', color: 0xfbbf24, tipo: 'marca', tags: ['Carga'], noDisipable: true,

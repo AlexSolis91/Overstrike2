@@ -231,6 +231,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'esperanzaTrunks': texto = `${e.valor} de Esperanza (máx. 5): con 5 se transforma en Super Saiyajin`; n = e.valor; break;
         case 'potencialGohan': texto = `${e.valor} de Potencial (máx. 3): con 3 despierta como Gohan Bestia`; n = e.valor; break;
         case 'theOne': { const bc = p.pasiva?.bonoPorCarga; texto = `${e.valor} de The One (máx. 12)${bc ? `: +${Math.round(e.valor * bc.pct * 100)}% HP máx.` : ''}${e.valor >= 12 ? ' · ¡THE ONE!' : ''}`; n = e.valor; break; }
+        case 'marcaDemonio': texto = `Acumula el daño que recibe: ${Math.round(e.valor || 0)} · se libera al volver a usar Contra Venganza`; n = Math.round(e.valor || 0); break;
         case 'iraBroly': texto = `${e.valor} de Ira (máx. 5): con 5 despierta al Super Saiyajin Legendario`; n = e.valor; break;
         case 'almasShadowmourne': texto = `${e.valor} Alma(s) de Shadowmourne (máx. 20): +${e.valor * 15} de Daño · toda la batalla`; n = e.valor; break;
         case 'cuervos': texto = `${e.valor} clon(es) de cuervo: cada uno absorbe un ataque enemigo contra Itachi`; n = e.valor; break;
@@ -572,6 +573,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (rs?.hpMenor && t.hp > 0 && t.hp < rs.hpMenor * maxHp(t)) romperSello(t);
     const s = cantidad > 0 && !t.muerto && get(t, 'stealth');
     if (s) { quitar(t, s); emitir('sigiloRoto', { a: t.uid }, t); }
+    for (const e of t.estados) if (EFECTOS[e.id]?.acumulaDano && real > 0) { e.valor = (e.valor || 0) + real; emitir('actualizar', {}, t); }   // marca acumuladora (p. ej. Marca del Demonio)
     // pasiva "cargasAlRecibirDano": CUALQUIER daño recibido (golpe, DoT o efecto) le da 1 carga (p. ej. The One de Escanor)
     const cd = t.pasiva?.cargasAlRecibirDano;
     if (cd && cantidad > 0 && t.hp > 0 && !t.muerto) ganarCargas(t, 1, cd.max, cd.efecto);
@@ -584,6 +586,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   }
   const porUid = uid => uid && P.find(p => p.uid === uid);
   // tiene un Control que le quita turnos (aturdido, poseído o con hielo sin romper)
+  // un movimiento con "iaMinEnemigosCon { efecto, min }" solo conviene si al menos min enemigos vivos (o todos, si quedan menos) tienen ese
+  // efecto (p. ej. Mil Cortes Divinos cura a los enemigos: solo vale la pena con Quemadura Solar). Lo usan la IA y los contraataques.
+  const movimientoConviene = (a, m) => { const c = m.iaMinEnemigosCon; if (!c) return true; const en = enemigosDe(a); return en.filter(x => get(x, c.efecto)).length >= Math.min(c.min, en.length); };
   const conControl = p => p.estados.some(e => CONTROL.pierdeTurno.includes(e.id) && (e.id !== 'freeze' || e.capas > 0));
   function ganarCargas(p, n, max, id = 'cargas') {          // id: tipo de carga ('cargas' = Furia Dorada, 'orgullo' = Orgullo Sayajin…)
     let e = get(p, id);
@@ -922,13 +927,25 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   const puedeCurarse = t => !get(t, 'plague') && !get(t, 'blackPlague') && !get(t, 'solarBurn');
   function curar(a, t, cantidad, silencioso = false) {
     if (t.muerto) return;
-    if (get(t, 'solarBurn')) { danoSolar(t, cantidad); return; }      // Quemadura Solar: la curación hace daño (gana a la Peste)
+    if (get(t, 'solarBurn')) { curacionEnemiga(t); danoSolar(t, cantidad); return; }      // Quemadura Solar: la curación hace daño (gana a la Peste)
     if (!puedeCurarse(t)) { emitir('sinEfecto', { a: t.uid, texto: '🦠 No puede curarse' }); return; }
     const real = Math.max(0, Math.min(cantidad, maxHp(t) - t.hp));
+    if (real > 0) curacionEnemiga(t);
     t.hp += real;
     a.est.curacion += real;                                         // solo lo que realmente sanó
     emitir('curacion', { de: a.uid, a: t.uid, cantidad: real, robo: silencioso }, t);
     if (real > 0) for (const p of aliadosDe(t)) if (p !== t) pasivas(p, 'alCurarAliado', { objetivo: t, curacion: real });
+  }
+
+  // pasiva "bonoPorCuracionEnemiga": cada curación que recibe un enemigo (también la que la Quemadura Solar vuelve daño)
+  // le da un bono permanente, con tope (p. ej. Dragón de la Ira de Meliodas: +1% de Daño, hasta +50%)
+  function curacionEnemiga(t) {
+    for (const p of enemigosDe(t)) {
+      const bc = p.pasiva?.bonoPorCuracionEnemiga;
+      if (!bc) continue;
+      const actual = p.permanente[bc.stat] || 0;
+      if (actual < bc.tope - 1e-9) p.permanente[bc.stat] = Math.min(bc.tope, actual + bc.pct);
+    }
   }
 
   // Quemadura Solar: el monto COMPLETO de la curación se vuelve daño. Ignora Armadura y Escudo, no se bloquea ni es crítico,
@@ -1177,6 +1194,19 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     emitir('efecto', { a: t.uid, id, texto }, t);
     if (t.lado !== a.lado) liderAlAplicar(a, t, id);
     if (def.tipo === 'debuff' && a !== t) reacciones.push(() => pasivas(t, 'alRecibirDebuff', { atacante: a, efecto: id }));
+    // líder "copiarDebuffAliado": un debuff que un enemigo le pone a un aliado se copia (misma intensidad y duración) en un enemigo al azar,
+    // con Tirada de Puntería del líder. Las copias no se vuelven a copiar (evita cadenas entre dos líderes).
+    if (def.tipo === 'debuff' && a.lado !== t.lado && !acc.copiaLider) for (const l of lideresDe(t)) if (l.lider?.copiarDebuffAliado) {
+      const e = get(t, id), pr = l.lider.copiarDebuffAliado.prob;    // prob: probabilidad de copiarlo (por defecto siempre)
+      if (!e || (pr != null && rng() >= pr)) continue;
+      const copia = { ...copiaDe(e), copiaLider: true };
+      reacciones.push(() => {
+        const d = !l.muerto && rng.elegir(enemigosDe(l));
+        if (!d) return;
+        emitir('bonoVisible', { a: l.uid, texto: l.lider.texto || '¡Contraataque!' }, l);
+        intentarEfecto(l, d, copia);
+      });
+    }
     const ca = a.pasiva?.cargasAlAplicar;          // pasiva "cargasAlAplicar": gana cargas al aplicar esos debuffs a enemigos (p. ej. Saga)
     if (ca && t.lado !== a.lado && ca.efectos.includes(acc.id)) ganarCargas(a, 1, ca.max, ca.efecto);
     if (def.tipo === 'buff') for (const p of enemigosDe(t)) {      // pasiva "cargasPorBuffEnemigo": cada buff que recibe un enemigo le da 1 carga
@@ -1258,7 +1288,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           }
           break;
         case 'curar': {
-          const base = acc.base === 'hpMaxObjetivo' ? maxHp(t) : acc.base === 'curacion' ? (ctx.curacion || 0) : baseDe(a, acc.escala);
+          const base = acc.base === 'hpMaxObjetivo' ? maxHp(t) : acc.base === 'hpMaxGolpeado' ? (ctx.objetivo ? maxHp(ctx.objetivo) : 0) : acc.base === 'curacion' ? (ctx.curacion || 0) : baseDe(a, acc.escala);
           const veces = acc.porCada ? (ctx[acc.porCada] || 0)     // porCada: 'eliminados' = una vez por cada enemigo eliminado
             : acc.porEnemigoCon ? enemigosDe(a).filter(x => get(x, acc.porEnemigoCon)).length : 1;   // porEnemigoCon: una vez por cada enemigo con ese efecto (p. ej. Muzan)
           if (veces > 0) curar(a, t, base * acc.pct * veces);
@@ -1462,14 +1492,30 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'usarMovimiento': {            // usa uno de sus movimientos sobre el objetivo (funciona igual que el normal)
-          const mov = a.movimientos.find(m => m.categoria === acc.categoria);
-          const usar = d => { if (mov && !a.muerto && d && !d.muerto && get(a, 'silence')?.categoria !== acc.categoria) ejecutarMovimiento(a, mov, d, { reaccion: true, contraataque: !!acc.contraataque }); };
+          // categoria 'disponible': uno al azar entre los que no están en cooldown ni silenciados (y que la IA usaría)
+          const mov = acc.categoria === 'disponible' ? rng.elegir(a.movimientos.filter(m => !(a.cds[m.categoria] > 0) && get(a, 'silence')?.categoria !== m.categoria && movimientoConviene(a, m)))
+            : a.movimientos.find(m => m.categoria === acc.categoria);
+          const usar = d => {
+            if (!mov || a.muerto || !d || d.muerto || get(a, 'silence')?.categoria === mov.categoria) return;
+            if (acc.gastaCooldown) a.cds[mov.categoria] = cdDe(a, mov.cd || 0);     // gastaCooldown: entra en cooldown como si lo hubiera usado
+            ejecutarMovimiento(a, mov, d, { reaccion: true, contraataque: !!acc.contraataque });
+          };
           // despues: espera a que termine el movimiento en curso; si su objetivo cayó, va a otro enemigo al azar
           if (acc.despues) reacciones.push(() => usar(t.muerto ? rng.elegir(enemigosDe(a)) : t));
           else usar(t);
           break;
         }
         case 'danoEfecto': danoEfecto(a, t, (ctx.dano || 0) * acc.fraccion, 0xc084fc); break;
+        case 'liberarAcumulado': {   // libera el daño de su marca acumuladora en un enemigo al azar y pone una marca nueva (en 0)
+          const e = get(t, acc.marca), d = rng.elegir(enemigosDe(t));
+          if (e?.valor > 0 && d) {
+            emitir('bonoVisible', { a: t.uid, texto: acc.texto || '¡Libera el daño!' }, t);
+            danoEfecto(t, d, e.valor * (acc.pct ?? 1), EFECTOS[acc.marca].color, { sinArmadura: !!acc.sinArmadura });
+          }
+          if (e) quitar(t, e);
+          if (!t.muerto) { t.estados.push({ id: acc.marca, valor: 0, permanente: true, fuente: t.uid }); emitir('efecto', { a: t.uid, id: acc.marca, texto: EFECTOS[acc.marca].nombre }, t); }
+          break;
+        }
         case 'replicarDoT': {
           const e = ctx.objetivo && get(ctx.objetivo, acc.efecto);
           if (e) danoEfecto(a, t, e.valor * acc.factor * maxHp(t), EFECTOS[acc.efecto].color);
@@ -1877,6 +1923,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         pasivas(d, 'alSerAtacado', { objetivo: a, atacante: a });
       });
     }
+    // gatillo "alGolpeAliado": un enemigo usó un movimiento de UN objetivo que golpea contra él o un aliado (p. ej. Dragón de la Ira de Meliodas)
+    if (!ctx.contraataque && !ctx.forzado && mov.objetivo === 'enemigo' && mov.pct && objetivo && objetivo.lado !== a.lado)
+      for (const d of aliadosDe(objetivo)) if (d.pasiva?.gatillo === 'alGolpeAliado') reacciones.push(() => {
+        if (a.muerto || d.muerto || conControl(d)) return;        // con Control no contraataca
+        pasivas(d, 'alGolpeAliado', { objetivo: a, atacante: a });
+      });
     if (!ctx.forzado && !a.muerto) for (const p of enemigosDe(a)) pasivas(p, 'alUsarMovimientoEnemigo', { objetivo: a, categoria: mov.categoria });
     if (!ctx.forzado) for (const p of enemigosDe(a)) if (p.pasiva?.rival && esRival(p, a)) ganarOrgullo(p, 1);
   }

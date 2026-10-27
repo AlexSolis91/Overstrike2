@@ -653,6 +653,15 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - Movimiento `bonoPorHpGanado { pct, si }`: suma al golpe `pct` × el HP máx. que ganó con `bonoPorCarga` (con `si`, solo si cumple esa condición). P. ej. Lanza Divina de Escanor: 25% con 12 marcas.
 - Marca nueva: **The One ☀️** (contador de Escanor, máx. 12).
 
+## Piezas nuevas (2026-10-27, Meliodas)
+- **Líder** `copiarDebuffAliado { prob }`: cuando un **enemigo** le aplica un debuff a un aliado (incluido el líder), con `prob` el líder aplica una **copia exacta** (misma intensidad y duración, como Propagar) a un enemigo al azar, con su Tirada de Puntería. Las copias no se vuelven a copiar (evita cadenas entre dos líderes así). Meliodas: 30%.
+- Gatillo de pasiva `alGolpeAliado`: un enemigo usa un movimiento de **un objetivo** que golpea contra el dueño o un aliado. Se ejecuta como reacción, después del movimiento; no con Control que quite turnos; un contraataque no provoca otro. `ctx.atacante` = el enemigo.
+- Acción `usarMovimiento` con `categoria: 'disponible'`: usa uno de sus movimientos al azar entre los que no están en cooldown ni silenciados (y que convienen según `iaMinEnemigosCon`). Con `gastaCooldown: true`, ese movimiento entra en su cooldown como si lo hubiera usado.
+- `bonoPorCuracionEnemiga { stat, pct, tope }` (pasiva): cada curación que recibe un **enemigo** (que cure algo, o que la Quemadura Solar convierta en daño) le suma `pct` permanente a `stat`, hasta `tope`. Meliodas: +1% de Daño, máx. +50%.
+- Marca acumuladora (efecto con `acumulaDano: true`): suma todo el daño que recibe su portador. Acción `liberarAcumulado { marca, pct, sinArmadura, texto }`: libera ese daño (× `pct`, 100% por defecto) como **daño por efecto** sobre un enemigo al azar y pone una marca nueva en 0 (la primera vez solo pone la marca). Marca **Marca del Demonio 😈** (Meliodas, ignora Armadura, sin tope).
+- Acción `curar` con `base: 'hpMaxGolpeado'`: la curación es un % del HP máx. del objetivo del golpe (no del curado). Con `a: 'todosEnemigos'` puede curar al equipo rival (Mil Cortes Divinos: 5% por golpe; con Quemadura Solar les hace daño).
+- Movimiento `iaMinEnemigosCon { efecto, min }`: la IA (y `usarMovimiento` 'disponible') solo lo usa si al menos `min` enemigos vivos (o todos, si quedan menos) tienen ese efecto.
+
 ## 26. Misiones diarias y Runas de Portal (2026-10-26, `docs/sql/016_misiones_runas.sql`)
 - **Meta:** ~1 Runa de Portal al día por jugador activo.
 - **10 misiones diarias** (se renuevan a medianoche, hora de México; menú → 📜 Misiones, con contador de premios listos). Textos en `js/datos/misiones.js`, que debe coincidir con `public._misiones()`.
