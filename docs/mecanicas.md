@@ -600,6 +600,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - **Extras (2026-10-21, `docs/sql/011_horda_extras.sql`):**
   - **Trofeos de Orco** 🏅: 1 por oleada superada (×3 mini-jefe, ×5 jefe).
   - **Tienda de la Horda** (en la pantalla de la Horda): eliges exactamente la reliquia del lote de Orcos que quieres (no Legendarias): Común 15 · Rara 60 · Especial 300 · Épica 1,500 Trofeos, **máximo 1 Épica por semana** (se renueva el lunes, hora de México; `docs/sql/015_tienda_horda_precios.sql`). Un jugador avanzado (oleada 30, ~48 Trofeos por partida) consigue como mucho 1 Épica por semana.
+- **Entre oleadas:** el botín se cobra solo y a los **5 s** arranca sola la siguiente oleada (cuenta regresiva en el botón). «⏸ Esperar» detiene la cuenta; «Retirarse» termina la partida.
 - **Runa de Portal:** siempre se muestra con su imagen (`ICONO_RUNA_PORTAL` en `js/datos/recompensas.js`), nunca con el emoji 🌀 (el 🌀 queda para el área del Portal y la Confusión).
   - **Primera vez** (una vez por cuenta y Horda, `horda_hitos`): oleada 10 → 2 Runas de Portal + 1 vale + 25 Trofeos · oleada 20 → 3 Runas + 2 vales + 75 Trofeos · oleada 30 → 1 Épica al azar del lote + 5 Runas + 150 Trofeos + la **Hazaña** (desbloquea las recetas de Legendarias).
 
@@ -661,3 +662,9 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 
 - **Contadores en el servidor** (tabla `misiones_diarias`, disparadores): aperturas de sobres (`sobre`, `vale`, `reliquias`), reliquias equipadas, oleada máxima del día en la Horda, ataques de Arena y Arena en vivo terminados; la Campaña suma desde `campana_completar`. La misión 10 cuenta las otras 9 completadas (no hace falta cobrarlas antes).
 - **Fuentes de Runa de Portal:** misión 4 (1/día) · Arena 3.3% por combate, ganes o pierdas (~1 cada 30; también en vivo, sin aviso en pantalla) · recompensas semanales de liga · primera vez en la Horda · Tienda (precio que sube) · regalo inicial de 3. La Campaña ya no da Runas de Portal.
+
+## 27. Juego en segundo plano (2026-10-27)
+- Con la ventana oculta, tapada o minimizada el navegador deja de dibujar y frena los temporizadores de la página. `js/ui/graficos.js` crea un **Worker** (`reloj`) que no sufre ese freno:
+  - `temporizar(fn, ms)` (y `wait`) usan su reloj; devuelve una función para cancelar. Úsalo en vez de `setTimeout` en todo lo que mueve la partida (esperas, series de Campaña, VS, turno en vivo, oleadas de la Horda).
+  - Si GSAP lleva más de 150 ms sin cuadro, el Worker lo empuja con `gsap.ticker.tick()` (unas 5 veces por segundo): las animaciones terminan a tiempo real y la batalla sigue en Auto. Con la ventana a la vista no hace nada.
+- Para jugar sin mirar: Auto encendido + Horda (sigue sola) o una serie de repeticiones de Campaña.

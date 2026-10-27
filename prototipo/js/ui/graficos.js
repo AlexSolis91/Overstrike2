@@ -6,7 +6,33 @@ export const EMOJI_FONT = '"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoj
 // Velocidad de la batalla (×1 / ×2): acelera las esperas y todas las animaciones de GSAP
 export let VELOCIDAD = 1;
 export function setVelocidad(v) { VELOCIDAD = v; gsap.globalTimeline.timeScale(v); }
-export const wait = ms => new Promise(r => setTimeout(r, ms / VELOCIDAD));
+export const wait = ms => new Promise(r => temporizar(r, ms / VELOCIDAD));
+
+// ---------------------------------------------------------------- segundo plano
+// Con la ventana oculta, tapada o minimizada el navegador deja de dibujar (requestAnimationFrame) y frena los setTimeout
+// de la página hasta 1 por minuto. Un Worker no sufre ese freno: da el reloj de las esperas y, si GSAP lleva más de
+// 150 ms sin cuadro (la ventana no se está dibujando), lo empuja (gsap.ticker.tick) para que las animaciones terminen a
+// tiempo real y la batalla siga sola. Con la ventana a la vista no hace nada: GSAP sigue con su dibujo normal.
+const reloj = (() => {
+  try {
+    const w = new Worker(URL.createObjectURL(new Blob([`
+      setInterval(() => postMessage(0), 50);
+      onmessage = e => setTimeout(() => postMessage(e.data.id), e.data.ms);`], { type: 'text/javascript' })));
+    const pendientes = new Map(); let n = 0, ultimoCuadro = performance.now();
+    gsap.ticker.add(() => { ultimoCuadro = performance.now(); });
+    w.onmessage = e => {
+      if (e.data === 0) { if (performance.now() - ultimoCuadro > 150) gsap.ticker.tick(); return; }
+      const f = pendientes.get(e.data); pendientes.delete(e.data); f?.();
+    };
+    return { w, pendientes, nuevo: () => ++n };
+  } catch (e) { return null; }
+})();
+// setTimeout que no se frena con la ventana oculta; devuelve una función para cancelarlo
+export function temporizar(fn, ms) {
+  if (!reloj) { const t = setTimeout(fn, ms); return () => clearTimeout(t); }
+  const id = reloj.nuevo(); reloj.pendientes.set(id, fn); reloj.w.postMessage({ id, ms: Math.max(0, ms) });
+  return () => reloj.pendientes.delete(id);
+}
 export const rand = (a, b) => a + Math.random() * (b - a);
 export const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 // HP que se muestra: si está vivo con una fracción (p. ej. 0.3), se ve 1, nunca 0

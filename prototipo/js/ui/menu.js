@@ -4,6 +4,7 @@ import { BASE_COMUN } from '../motor/reglas.js';
 import { imgHtml } from './imagenes.js';
 import { sonar, musica, temaDePartida } from './audio.js';
 import { FONDOS } from '../datos/fondos.js';
+import { temporizar } from './graficos.js';
 
 const $ = s => document.querySelector(s);
 const TAM = 5;                                   // los equipos siempre son de 5
@@ -218,7 +219,7 @@ export function presentarVS(eqJ, eqR) {
   $('#vs-j').innerHTML = lado(eqJ); $('#vs-r').innerHTML = lado(eqR);
   const vs = $('#pantalla-vs'); vs.classList.remove('hidden', 'sale'); void vs.offsetWidth; vs.classList.add('entra');
   fondo('equipo'); document.body.classList.add('vs-activo');
-  return new Promise(r => setTimeout(() => { vs.classList.add('sale'); setTimeout(() => { vs.classList.add('hidden'); vs.classList.remove('entra', 'sale'); document.body.classList.remove('vs-activo'); r(); }, 450); }, 1900));
+  return new Promise(r => temporizar(() => { vs.classList.add('sale'); temporizar(() => { vs.classList.add('hidden'); vs.classList.remove('entra', 'sale'); document.body.classList.remove('vs-activo'); r(); }, 450); }, 1900));
 }
 
 // ---------------------------------------------------------------- arranque

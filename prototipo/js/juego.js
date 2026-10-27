@@ -1,7 +1,7 @@
 // Punto de entrada: une el motor (reglas) con la interfaz (animaciones y panel).
 import { MUSICA } from './datos/sonidos.js';
 import { ICONO_RUNA_PORTAL } from './datos/recompensas.js';
-import { iniciarEscena, G, W, wait, banner, relayout, shakeScene, setVelocidad } from './ui/graficos.js';
+import { iniciarEscena, G, W, wait, temporizar, banner, relayout, shakeScene, setVelocidad } from './ui/graficos.js';
 import { iniciarCampana, abrirCampana, cerrarBatalla, siguienteEtapa, jugarEtapa, elegirEquipoEtapa, esperaRepeticion } from './ui/campana.js';
 import { precargar } from './ui/imagenes.js';
 import { Carta } from './ui/carta.js';
@@ -122,7 +122,7 @@ async function jugar(eqJ, eqR, rivalModo, opciones = null) {
   const esta = ++arranques;
   const tema = opciones?.horda ? `horda${opciones.horda.horda[0].toUpperCase()}${opciones.horda.horda.slice(1)}` : 'batalla';   // Horda de Orcos → 'hordaOrcos'
   temaDePartida(MUSICA[tema] ? tema : 'batalla');
-  setTimeout(() => { if (esta === arranques) musica(temaDePartida()); }, 2000);
+  temporizar(() => { if (esta === arranques) musica(temaDePartida()); }, 2000);
   await presentarVS(eqJ, eqR);
   await iniciarPartida(eqJ, eqR, opciones);
 }
@@ -140,7 +140,7 @@ function limpiarPartida() {
   $('#log').innerHTML = ''; logLeido();
   $('#overlay').classList.add('hidden');
 }
-function salirDePartida() { if (ui.vivo && !ui.fin) { D.arenaVivoResultado(ui.arena.partida, ui.arena.soy === 'a' ? 'b' : 'a').catch(() => null); } ui.vivo?.cerrar(); ui.vivo = null; cerrarHorda(); $('#horda-ov').classList.add('hidden'); partida++; ui.miTurno = false; ui.ocupado = true; ui.serie = 0; clearTimeout(serieT); $('#overlay').classList.add('hidden'); setVelocidad(1); $('#jefe-barra').classList.add('hidden'); }
+function salirDePartida() { if (ui.vivo && !ui.fin) { D.arenaVivoResultado(ui.arena.partida, ui.arena.soy === 'a' ? 'b' : 'a').catch(() => null); } ui.vivo?.cerrar(); ui.vivo = null; cerrarHorda(); $('#horda-ov').classList.add('hidden'); partida++; ui.miTurno = false; ui.ocupado = true; ui.serie = 0; serieT?.(); serieT = null; $('#overlay').classList.add('hidden'); setVelocidad(1); $('#jefe-barra').classList.add('hidden'); }
 
 // ---------------------------------------------------------------- Auto-batalla y velocidad (se recuerdan en este dispositivo)
 let autoActivo = false, velocidad = 1, serieT = null;
@@ -482,7 +482,7 @@ async function procesar(res) {
 
 // En vivo: si el jugador no elige en 25 s, la IA juega su turno (y la decisión se envía igual)
 function relojTurno(esta, n) {
-  setTimeout(() => {
+  temporizar(() => {
     if (esta !== partida || !ui.vivo || !ui.miTurno || ui.ocupado || ui.vivo.turno !== n) return;
     cancelarObjetivo(); const d = elegirIA(combate); ejecutar(d.categoria, d.objetivo);
   }, 25000);
@@ -522,7 +522,7 @@ function terminar(fin) {
   botonesResultado(gano);
   if (ui.horda) return void finHorda(base, false);
   if (ui.arena) return void finArena(base, fin);
-  if (!ui.camp) return void setTimeout(() => esta === partida && mostrarResultados({ ...base, recompensas: fin.recompensas || [] }), 700);
+  if (!ui.camp) return void temporizar(() => esta === partida && mostrarResultados({ ...base, recompensas: fin.recompensas || [] }), 700);
   // Campaña: estrellas y cobro en el servidor; luego (si es una serie) la siguiente repetición
   const muertosAliados = P.filter(p => p.lado === 'jugador' && vistas[p.uid]?.muerto).length;
   Promise.all([cerrarBatalla({ campana: ui.camp, gano, muertosAliados, rondas: fin.ronda }), wait(700)]).then(([res]) => {
@@ -567,11 +567,26 @@ async function oleadaGanada() {
     </div>
     <div class="hov-total">Total: 🪙 ${miles(h.botin.oro)} · 💎 ${h.botin.reliquias.length} reliquia(s) · 🔷 ${h.botin.fragmentos} · 🏅 ${h.botin.trofeos || 0}</div>
     ${aviso ? `<div class="hov-sig">${aviso}</div>` : ''}
-    <div class="hov-botones"><button id="hov-seguir" class="hd-btn">⚔️ Oleada ${h.n + 1}</button><button id="hov-retirar" class="hd-btn sec">🏳️ Retirarse</button></div>`;
+    <div class="hov-botones"><button id="hov-seguir" class="hd-btn">⚔️ Oleada ${h.n + 1} <span id="hov-cuenta"></span></button><button id="hov-esperar" class="hd-btn sec">⏸ Esperar</button><button id="hov-retirar" class="hd-btn sec">🏳️ Retirarse</button></div>`;
   $('#horda-ov').classList.remove('hidden');
+  cuentaOleada(esta, 5);
 }
+// El botín ya lo cobró el servidor: a los 5 s sigue sola la siguiente oleada (para jugar sin estar pendiente de la pantalla).
+// «Esperar» detiene la cuenta; «Retirarse» o salir de la partida también.
+let cuentaT = null;
+function cuentaOleada(esta, s) {
+  const c = $('#hov-cuenta'); if (c) c.textContent = `(${s})`;
+  cuentaT = temporizar(() => {
+    cuentaT = null;
+    if (esta !== partida || $('#horda-ov').classList.contains('hidden') || ui.fin?.ganador !== 'jugador') return;
+    if (s > 1) cuentaOleada(esta, s - 1); else siguienteOleada();
+  }, 1000);
+}
+const pararCuenta = () => { cuentaT?.(); cuentaT = null; const c = $('#hov-cuenta'); if (c) c.textContent = ''; $('#hov-esperar')?.remove(); };
 async function siguienteOleada() {
   const h = ui.horda;
+  if ($('#horda-ov').classList.contains('hidden')) return;          // ya arrancó (botón o cuenta regresiva)
+  pararCuenta();
   $('#horda-ov').classList.add('hidden');
   h.n++; const o = h.prox; h.rango = o.rango;
   for (const uid of Object.keys(cartas)) if (uid.startsWith('rival-')) {      // fuera la oleada anterior
@@ -618,7 +633,8 @@ function retirarse() {
 }
 $('#horda-ov').addEventListener('click', e => {
   if (e.target.closest('#hov-seguir')) siguienteOleada();
-  if (e.target.closest('#hov-retirar')) retirarse();
+  if (e.target.closest('#hov-esperar')) pararCuenta();
+  if (e.target.closest('#hov-retirar')) { pararCuenta(); retirarse(); }
 });
 
 // ---------------------------------------------------------------- Arena: el servidor cobra el resultado (puntos y oro)
@@ -684,7 +700,7 @@ function programarRepeticion(esta) {
     if (esta !== partida) return;
     const s = esperaRepeticion() + 2;
     const t = document.querySelector('#res-serie-t'); if (t) t.textContent = `Siguiente batalla en ${s} s · quedan ${quedan}`;
-    serieT = setTimeout(s > 2 ? tick : () => { if (esta === partida) jugarEtapa(camp.dif, camp.etapa, eqJ, quedan); }, s > 2 ? 1000 : 2000);
+    serieT = temporizar(s > 2 ? tick : () => { if (esta === partida) jugarEtapa(camp.dif, camp.etapa, eqJ, quedan); }, s > 2 ? 1000 : 2000);
   };
   tick();
 }
@@ -790,18 +806,18 @@ addEventListener('keydown', e => {
   else if (!$('#log-panel').classList.contains('hidden')) alternar('#log-panel', '#btn-log');
   else if (!$('#test-panel').classList.contains('hidden')) alternar('#test-panel', '#btn-test');
 });
-$('#ov-revancha').addEventListener('click', () => { clearTimeout(serieT); jugar(ultima.jugador.map(porId), ultima.rival.map(porId), ultima.rivalModo, ultima.opciones ? { ...ultima.opciones, serie: 0 } : null); });
+$('#ov-revancha').addEventListener('click', () => { serieT?.(); jugar(ultima.jugador.map(porId), ultima.rival.map(porId), ultima.rivalModo, ultima.opciones ? { ...ultima.opciones, serie: 0 } : null); });
 $('#ov-equipo').addEventListener('click', () => {
-  clearTimeout(serieT);
+  serieT?.();
   const c = ultima.opciones?.campana;
   if (c) return elegirEquipoEtapa(c.dif, c.etapa);
   cargarSeleccion(ultima.jugador.map(porId), ultima.rival.map(porId), ultima.rivalModo); irA('equipo');
 });
-$('#ov-menu').addEventListener('click', () => { clearTimeout(serieT); irA(ultima.opciones?.campana ? 'campana' : ultima.opciones?.horda ? 'horda' : ultima.opciones?.arena ? 'arena' : 'menu'); });
-$('#ov-siguiente').addEventListener('click', () => { clearTimeout(serieT); const c = ultima.opciones?.campana, e = c && siguienteEtapa(c); if (e) elegirEquipoEtapa(c.dif, e); });
+$('#ov-menu').addEventListener('click', () => { serieT?.(); serieT = null; irA(ultima.opciones?.campana ? 'campana' : ultima.opciones?.horda ? 'horda' : ultima.opciones?.arena ? 'arena' : 'menu'); });
+$('#ov-siguiente').addEventListener('click', () => { serieT?.(); const c = ultima.opciones?.campana, e = c && siguienteEtapa(c); if (e) elegirEquipoEtapa(c.dif, e); });
 $('#overlay').addEventListener('click', e => {
   const b = e.target.closest('#res-serie-stop'); if (!b) return;
-  clearTimeout(serieT); ui.serie = 0; b.parentElement.textContent = '⏹ Serie detenida';
+  serieT?.(); ui.serie = 0; b.parentElement.textContent = '⏹ Serie detenida';
 });
 $('#btn-auto').addEventListener('click', () => {
   ui.auto = !ui.auto;

@@ -874,7 +874,7 @@ body.eq-campana .eq-modo, body.eq-campana .eq-azar[data-lado="rival"], body.eq-c
 .hov-item img { display: block; width: 64px; height: 64px; margin: 0 auto 4px; object-fit: contain; }
 .hov-total { font-size: 12px; color: var(--muted); margin: 8px 0 14px; }
 .hov-sig { font-size: 13px; color: #fca5a5; margin-bottom: 12px; font-weight: 800; }
-.hov-botones { display: flex; gap: 10px; justify-content: center; }
+.hov-botones { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 @media (max-width: 760px) { .hd-cuerpo { grid-template-columns: 1fr; } .hd-tarjeta { min-height: 240px; } }
 
 /* Colección: Polvo Arcano, descomponer, fusionar, candado y mejorar */
