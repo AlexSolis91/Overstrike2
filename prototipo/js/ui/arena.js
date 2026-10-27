@@ -47,6 +47,7 @@ function htmlArena() {
     </section>
     <section class="ar-panel">
       <h4>⚔️ Equipo de Ataque</h4>${fila(est.ataque)}<button class="eq-btn" data-editar="ataque">Editar Ataque</button>
+      ${est.ataque?.length === 5 && est.defensa?.length === 5 ? '<button class="eq-btn ar-cambiar" data-intercambiar title="El Ataque pasa a Defensa y la Defensa a Ataque">⇅ Intercambiar Ataque y Defensa</button>' : ''}
       <h4>🛡️ Equipo de Defensa</h4>${fila(est.defensa)}<button class="eq-btn" data-editar="defensa">${est.defensa?.length === 5 ? 'Editar Defensa' : 'Publicar Defensa'}</button>
       <p class="tc-tenue">Un campeón no puede estar en los dos equipos. Tu Defensa pelea (con la IA) cuando otros te atacan: cada defensa exitosa te da puntos.</p>
     </section></div>`;
@@ -132,6 +133,14 @@ function editar(tipo) {
   });
 }
 
+// Pasa el Ataque a Defensa y la Defensa a Ataque en un solo paso (docs/sql/017_arena_intercambiar.sql)
+async function intercambiar() {
+  if (!confirm('¿Intercambiar tus equipos? Tu Ataque pasará a ser tu Defensa y tu Defensa tu Ataque.')) return;
+  try { await D.arenaIntercambiarEquipos(); }
+  catch (e) { return alert(/arena_intercambiar_equipos/i.test(e?.message || '') ? 'Falta ejecutar docs/sql/017_arena_intercambiar.sql en el servidor.' : D.mensajeError(e)); }
+  await cargar(); pintar();
+}
+
 // Buscar rival: cuenta regresiva de 10 s (en la Fase 2 aquí entra el combate en vivo); luego, una Defensa jugada por la IA
 async function buscar() {
   if (buscando) return;
@@ -180,6 +189,7 @@ export function iniciarArena(opc) {
   $('#pantalla-arena').addEventListener('click', e => {
     const t = e.target.closest('[data-artab]'); if (t) return cambiarPestana(t.dataset.artab);
     const ed = e.target.closest('[data-editar]'); if (ed) return editar(ed.dataset.editar);
+    if (e.target.closest('[data-intercambiar]')) return intercambiar();
     const vg = e.target.closest('[data-vengar]'); if (vg) return vengar(vg.dataset.vengar);
     if (e.target.closest('#ar-buscar')) return buscar();
   });
