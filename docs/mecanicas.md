@@ -643,6 +643,16 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - `auraDoT: pct`: mientras viva, los DoT que sufren sus enemigos hacen +pct de daño (se multiplica si hay varios). Trunks (+15%, Super Saiyajin +30%).
 - Marcas de campeón: Ira (Broly, máx. 5), Potencial (Gohan, máx. 3), Esperanza (Trunks, máx. 5): contadores que transforman para siempre al llenarse (`transformarConCargas`).
 
+## Piezas nuevas de pasiva y movimiento (2026-10-27, Escanor)
+- `cargasAlRecibirDano { efecto, max }` (pasiva): **cualquier** daño que reciba (golpe, DoT, daño por efecto, Quemadura Solar…) le da 1 carga de ese contador, aunque tenga Control. A diferencia de `cargasAlRecibirGolpe`, que solo cuenta golpes enemigos.
+- `bonoPorCarga { efecto, stat, pct }` (pasiva): cada carga ganada de ese contador suma `pct` permanente a `stat` (capa permanente). Con `hpPct` el HP actual sube lo mismo, y queda guardado cuánto HP ganó así (`bonoPorHpGanado`).
+- `alMaxCargas { efecto, accion, texto }` (pasiva): la **primera** vez que el contador llega a su máximo ejecuta la acción (una o una lista). P. ej. Escanor: Provocación permanente.
+- Acción `efecto` con `permanente: true`: aplica el efecto sin duración (se ve con ∞, no se disipa). Si ya lo tenía con duración, lo vuelve permanente.
+- `curaAlRecibirDe { efecto, pct, siPropio, texto }` (pasiva): cuando un enemigo que tiene `efecto` le hace daño (golpe o daño por efecto; no DoT), se cura `pct` del daño recibido. Con `siPropio`, solo mientras él tenga ese otro efecto. Es curación normal (Peste la bloquea; con Quemadura Solar propia le hace daño). P. ej. Escanor: 50% contra enemigos con Quemadura Solar mientras tenga Provocación.
+- Condición `propioCargasMin { efecto, min }`: el ejecutor tiene al menos `min` cargas de ese contador.
+- Movimiento `bonoPorHpGanado { pct, si }`: suma al golpe `pct` × el HP máx. que ganó con `bonoPorCarga` (con `si`, solo si cumple esa condición). P. ej. Lanza Divina de Escanor: 25% con 12 marcas.
+- Marca nueva: **The One ☀️** (contador de Escanor, máx. 12).
+
 ## 26. Misiones diarias y Runas de Portal (2026-10-26, `docs/sql/016_misiones_runas.sql`)
 - **Meta:** ~1 Runa de Portal al día por jugador activo.
 - **10 misiones diarias** (se renuevan a medianoche, hora de México; menú → 📜 Misiones, con contador de premios listos). Textos en `js/datos/misiones.js`, que debe coincidir con `public._misiones()`.

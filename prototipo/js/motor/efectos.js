@@ -98,6 +98,8 @@ export const EFECTOS = {
     desc: `Recibe +${p(DEBUFFS.expuesto)} de daño de golpes y daño por efecto (después de la Armadura).` },
   rival:   { nombre: 'Rival', icono: '👑', color: 0xfbbf24, tipo: 'marca', tags: ['Marca'], noDisipable: true,
     desc: 'Marca de Vegeta: recibe más daño de él y cada movimiento que usa le da Orgullo. No es un debuff: no se limpia ni cuenta como debuff.' },
+  theOne:  { nombre: 'The One', icono: '☀️', color: 0xfbbf24, tipo: 'marca', tags: ['Carga'], noDisipable: true,
+    desc: 'Marcas de Escanor: gana 1 cada vez que recibe daño (máx. 12) y cada una le da más HP máx. Con 12 es The One. No se disipan ni se limpian.' },
   cargas:  { nombre: 'Furia Dorada', icono: '🐂', color: 0xfbbf24, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: `Cargas que gana al recibir golpes; un movimiento que las consume hace más daño. No se disipan ni se limpian.` },
   taunt:   { nombre: 'Provocación', icono: '🎯', color: 0xf97316, tipo: 'buff', tags: ['Provocación'],

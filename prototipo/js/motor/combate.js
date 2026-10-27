@@ -230,6 +230,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'llamaNatsu': texto = `${e.valor} Llama(s) del Dragón (máx. 5): +${e.valor * 5}% de daño · su Over las consume`; n = e.valor; break;
         case 'esperanzaTrunks': texto = `${e.valor} de Esperanza (máx. 5): con 5 se transforma en Super Saiyajin`; n = e.valor; break;
         case 'potencialGohan': texto = `${e.valor} de Potencial (máx. 3): con 3 despierta como Gohan Bestia`; n = e.valor; break;
+        case 'theOne': { const bc = p.pasiva?.bonoPorCarga; texto = `${e.valor} de The One (máx. 12)${bc ? `: +${Math.round(e.valor * bc.pct * 100)}% HP máx.` : ''}${e.valor >= 12 ? ' · ¡THE ONE!' : ''}`; n = e.valor; break; }
         case 'iraBroly': texto = `${e.valor} de Ira (máx. 5): con 5 despierta al Super Saiyajin Legendario`; n = e.valor; break;
         case 'almasShadowmourne': texto = `${e.valor} Alma(s) de Shadowmourne (máx. 20): +${e.valor * 15} de Daño · toda la batalla`; n = e.valor; break;
         case 'cuervos': texto = `${e.valor} clon(es) de cuervo: cada uno absorbe un ataque enemigo contra Itachi`; n = e.valor; break;
@@ -571,6 +572,15 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (rs?.hpMenor && t.hp > 0 && t.hp < rs.hpMenor * maxHp(t)) romperSello(t);
     const s = cantidad > 0 && !t.muerto && get(t, 'stealth');
     if (s) { quitar(t, s); emitir('sigiloRoto', { a: t.uid }, t); }
+    // pasiva "cargasAlRecibirDano": CUALQUIER daño recibido (golpe, DoT o efecto) le da 1 carga (p. ej. The One de Escanor)
+    const cd = t.pasiva?.cargasAlRecibirDano;
+    if (cd && cantidad > 0 && t.hp > 0 && !t.muerto) ganarCargas(t, 1, cd.max, cd.efecto);
+    // pasiva "curaAlRecibirDe": el daño de un enemigo que tiene ese efecto lo cura un % (con `siPropio`: solo si él tiene ese otro efecto)
+    const cr = t.pasiva?.curaAlRecibirDe, at = fuente && !Array.isArray(fuente) ? fuente : null;
+    if (cr && cantidad > 0 && t.hp > 0 && !t.muerto && at && at.lado !== t.lado && get(at, cr.efecto) && (!cr.siPropio || get(t, cr.siPropio))) {
+      emitir('bonoVisible', { a: t.uid, texto: cr.texto || '¡Absorbe el daño!' }, t);
+      curar(t, t, real * cr.pct);
+    }
   }
   const porUid = uid => uid && P.find(p => p.uid === uid);
   // tiene un Control que le quita turnos (aturdido, poseído o con hielo sin romper)
@@ -580,6 +590,19 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (!e) { e = { id, valor: 0 }; p.estados.push(e); }
     const antes = e.valor; e.valor = Math.min(max, e.valor + n);
     if (e.valor !== antes) emitir('actualizar', {}, p);
+    const bc = p.pasiva?.bonoPorCarga;         // pasiva "bonoPorCarga": cada carga ganada da un bono permanente (si es HP máx., el actual sube lo mismo)
+    if (bc && bc.efecto === id && e.valor > antes) {
+      const hpAntes = maxHp(p);
+      p.permanente[bc.stat] = (p.permanente[bc.stat] || 0) + (e.valor - antes) * bc.pct;
+      const sube = maxHp(p) - hpAntes;
+      if (sube > 0) { p.hp += sube; p.hpGanadoCargas = (p.hpGanadoCargas || 0) + sube; }
+    }
+    const am = p.pasiva?.alMaxCargas;          // pasiva "alMaxCargas": al llegar al máximo por primera vez, ejecuta una acción (p. ej. Provocación permanente)
+    if (am && am.efecto === id && e.valor >= max && antes < max && !p.maxCargasHecho) {
+      p.maxCargasHecho = true;
+      if (am.texto) emitir('bonoVisible', { a: p.uid, texto: am.texto }, p);
+      for (const acc of [].concat(am.accion)) ejecutarAccion(p, acc, { objetivo: p, ejecutor: p });
+    }
     const tc = p.pasiva?.transformarConCargas;       // al juntar N cargas: se transforma (consume las cargas); p. ej. Saga → Saga Oscuro
     if (tc && tc.efecto === id && e.valor >= tc.cargas && !p.forma && p.transformacion && !p.transformando && (!tc.soloLider || p.esLider)) {   // soloLider: solo si es el líder del equipo
       p.transformando = true;
@@ -671,6 +694,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (agujas) { d *= 1 + agujas.valor * mov.consumeAgujas.pct; quitar(t, agujas); emitir('bono', { id: a.uid, texto: `📍 Antares ×${agujas.valor}` }, a, t); }
     if (mov.bonoSiObjetivoMasHp && t.hp > a.hp) d *= 1 + mov.bonoSiObjetivoMasHp;   // p. ej. Asesino de Dioses
     if (mov.bonoPorEscudoPropio) d += a.escudo * mov.bonoPorEscudoPropio;   // + % de su propio Escudo (no lo gasta)
+    const bh = mov.bonoPorHpGanado;          // + % del HP máx. que ganó con sus cargas (con `si`: solo si cumple esa condición)
+    if (bh && a.hpGanadoCargas && cumple(bh.si, { ejecutor: a, objetivo: t })) d += a.hpGanadoCargas * bh.pct;
     const dv = a.pasiva?.danoPorVelocidad;     // pasiva: +X% de daño por cada punto de Velocidad que le saca al objetivo (con tope)
     if (dv && t.lado !== a.lado) { const dif = stats(a).spd - stats(t).spd; if (dif > 0) d *= 1 + Math.min(dif * dv.pct, dv.max); }
     const bb = a.pasiva?.bonoPorBuffsObjetivo;   // pasiva: +X% de daño por cada buff activo del objetivo (sin contar invocaciones), con tope
@@ -1135,7 +1160,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         const extra = {};                     // alTerminar: acción al terminar el efecto por duración · cargasX: multiplica cargas ganadas
         if (acc.alTerminar) { extra.alTerminar = acc.alTerminar; extra.duenoTerminar = a.uid; }
         if (acc.cargasX) extra.cargasX = acc.cargasX;
-        if (e) { e.dur = Math.max(e.dur, acc.dur ?? 2); if (acc.valor) e.valor = Math.max(e.valor || 0, acc.valor); if (acc.id === 'incite') e.fuente = a.uid; Object.assign(e, extra); }
+        if (e && acc.permanente) { e.permanente = true; delete e.dur; }
+        else if (e) { e.dur = Math.max(e.dur, acc.dur ?? 2); if (acc.valor) e.valor = Math.max(e.valor || 0, acc.valor); if (acc.id === 'incite') e.fuente = a.uid; Object.assign(e, extra); }
+        else if (acc.permanente) t.estados.push({ id: acc.id, permanente: true, valor: acc.valor, fuente: a.uid });   // permanente: sin duración, no se disipa
         else t.estados.push({ id: acc.id, dur: acc.dur ?? 2, valor: acc.valor, fuente: a.uid, ...extra });
         if (acc.id === 'dmgUp') texto = `+${Math.round((acc.valor || 0) * 100)}% Daño`;
         break;
@@ -1480,6 +1507,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (!cond) return true;
     if (cond.objetivoMarcaMin) { const { marca, min } = cond.objetivoMarcaMin; const e = ctx.objetivo?.estados.find(x => x.id === marca && x.fuente === ctx.ejecutor?.uid); return (e?.valor || 0) >= min; }
     if (cond.sellado !== undefined) return !!ctx.ejecutor && !!ctx.ejecutor.sellado === cond.sellado;   // p. ej. Enkidu: Mega Aturdimiento si ya va en serio
+    if (cond.propioCargasMin) return !!ctx.ejecutor && (get(ctx.ejecutor, cond.propioCargasMin.efecto)?.valor || 0) >= cond.propioCargasMin.min;   // p. ej. Escanor con 12 de The One
     if (cond.propioTiene) return !!ctx.ejecutor && !!get(ctx.ejecutor, cond.propioTiene);   // el que ejecuta tiene ese efecto (p. ej. Shinobu envenenada)
     if (cond.objetivoTiene) return !!(ctx.objetivo && get(ctx.objetivo, cond.objetivoTiene));
     if (cond.objetivoTeniaAntes) return [].concat(cond.objetivoTeniaAntes).some(id => ctx.teniaAntes?.has(id));
