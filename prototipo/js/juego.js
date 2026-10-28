@@ -694,14 +694,15 @@ function botonesResultado(gano) {
   $('#ov-revancha').textContent = camp ? '🔁 Repetir' : '⚔️ Revancha';
   $('#ov-menu').textContent = camp ? '🌀 Portal' : h ? '🧟 Horda' : ar ? '🏟️ Arena' : '🏠 Menú';
 }
-// Serie de repeticiones: espera lo que pida el servidor entre victorias (90 s) y lanza la siguiente batalla en Auto ×2
+// Serie de repeticiones: 5 s entre batallas (o lo que aún pida el servidor entre cobros) y lanza la siguiente en Auto ×2
 function programarRepeticion(esta) {
   const camp = ui.camp, quedan = ui.serie - 1, eqJ = ultima.jugador.map(porId);
+  let s = Math.max(5, esperaRepeticion());
   const tick = () => {
     if (esta !== partida) return;
-    const s = esperaRepeticion() + 2;
+    if (s <= 0) { serieT = null; return void jugarEtapa(camp.dif, camp.etapa, eqJ, quedan); }
     const t = document.querySelector('#res-serie-t'); if (t) t.textContent = `Siguiente batalla en ${s} s · quedan ${quedan}`;
-    serieT = temporizar(s > 2 ? tick : () => { if (esta === partida) jugarEtapa(camp.dif, camp.etapa, eqJ, quedan); }, s > 2 ? 1000 : 2000);
+    s--; serieT = temporizar(tick, 1000);
   };
   tick();
 }

@@ -191,7 +191,7 @@ export function elegirEquipoEtapa(d, e) { dif = d; sel = e; elegirEquipo(e); }
 // Segundos que faltan para poder cobrar otra repetición (el servidor exige 90 s entre victorias)
 export function esperaRepeticion() {
   const ultima = Math.max(0, ...[...progAreas.portal.values(), ...progAreas.abismo.values()].map(v => v.ultima || 0));
-  return Math.max(0, Math.ceil((ultima + 90000 - Date.now()) / 1000));
+  return Math.max(0, Math.ceil((ultima + 5000 - Date.now()) / 1000));   // el servidor exige 5 s entre cobros de repeticiones (018)
 }
 
 // ---------------------------------------------------------------- arranque
