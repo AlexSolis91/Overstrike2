@@ -963,4 +963,5 @@ body.eq-sin-rival .eq-fila[data-lado="rival"], body.eq-sin-rival .eq-modo { disp
 .mi-badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 99px;
   font: 900 11px Inter, sans-serif; font-style: normal; color: #1a1205; background: var(--gold); }
 @media (max-width: 480px) { .mi-fila { flex-wrap: wrap; } .mi-fila button { width: 100%; } }
+.ar-acciones { justify-self: center; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .ar-cambiar { justify-self: center; color: var(--gold); border-color: rgba(243, 213, 138, .45); }

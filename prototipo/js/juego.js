@@ -70,6 +70,7 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   const cuenta = vivo ? cuentaDesdeServidor(opciones.arena.equipoMio) : await cargarCuenta();   // tus estrellas y reliquias pelean contigo
   eqJ = eqJ.map(d => conCuenta(d, cuenta));
   if (opciones?.arena?.equipoRival) { const cr = cuentaDesdeServidor(opciones.arena.equipoRival); eqR = eqR.map(d => conCuenta(d, cr)); }   // la Defensa de otro jugador con sus estrellas y reliquias
+  if (opciones?.practicaArena) eqR = eqR.map(d => conCuenta(d, cuenta));     // práctica de Arena: tu propia Defensa, con tus estrellas y reliquias
   combate = crearCombate({ equipoJugador: eqJ, equipoRival: eqR, rival: opciones?.rival, invertido: !!opciones?.invertido, ...(opciones?.semilla != null ? { semilla: opciones.semilla } : {}) });
   P = combate.personajes;
   const serie = opciones?.serie || 0;                         // en una serie de repeticiones siempre va en Auto y ×2
@@ -687,8 +688,8 @@ async function finVivo(base, fin) {
 // Botones de la ventana de resultados: en Campaña son Siguiente etapa / Repetir / Cambiar equipo / Portal
 function botonesResultado(gano) {
   const camp = ui.camp;
-  const h = !!ui.horda, ar = !!ui.arena;
-  $('#ov-revancha').classList.toggle('hidden', h || ar); $('#ov-equipo').classList.toggle('hidden', h || ar);
+  const h = !!ui.horda, pr = !!ultima?.opciones?.practicaArena, ar = !!ui.arena || pr;
+  $('#ov-revancha').classList.toggle('hidden', h || (ar && !pr)); $('#ov-equipo').classList.toggle('hidden', h || ar);
   $('#ov-siguiente').classList.toggle('hidden', !(camp && gano && siguienteEtapa(camp)));
   $('#ov-revancha').textContent = camp ? '🔁 Repetir' : '⚔️ Revancha';
   $('#ov-menu').textContent = camp ? '🌀 Portal' : h ? '🧟 Horda' : ar ? '🏟️ Arena' : '🏠 Menú';
@@ -813,7 +814,7 @@ $('#ov-equipo').addEventListener('click', () => {
   if (c) return elegirEquipoEtapa(c.dif, c.etapa);
   cargarSeleccion(ultima.jugador.map(porId), ultima.rival.map(porId), ultima.rivalModo); irA('equipo');
 });
-$('#ov-menu').addEventListener('click', () => { serieT?.(); serieT = null; irA(ultima.opciones?.campana ? 'campana' : ultima.opciones?.horda ? 'horda' : ultima.opciones?.arena ? 'arena' : 'menu'); });
+$('#ov-menu').addEventListener('click', () => { serieT?.(); serieT = null; irA(ultima.opciones?.campana ? 'campana' : ultima.opciones?.horda ? 'horda' : ultima.opciones?.arena || ultima.opciones?.practicaArena ? 'arena' : 'menu'); });
 $('#ov-siguiente').addEventListener('click', () => { serieT?.(); const c = ultima.opciones?.campana, e = c && siguienteEtapa(c); if (e) elegirEquipoEtapa(c.dif, e); });
 $('#overlay').addEventListener('click', e => {
   const b = e.target.closest('#res-serie-stop'); if (!b) return;

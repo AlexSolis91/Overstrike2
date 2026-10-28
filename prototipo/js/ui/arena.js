@@ -47,7 +47,8 @@ function htmlArena() {
     </section>
     <section class="ar-panel">
       <h4>⚔️ Equipo de Ataque</h4>${fila(est.ataque)}<button class="eq-btn" data-editar="ataque">Editar Ataque</button>
-      ${est.ataque?.length === 5 && est.defensa?.length === 5 ? '<button class="eq-btn ar-cambiar" data-intercambiar title="El Ataque pasa a Defensa y la Defensa a Ataque">⇅ Intercambiar Ataque y Defensa</button>' : ''}
+      ${est.ataque?.length === 5 && est.defensa?.length === 5 ? `<div class="ar-acciones"><button class="eq-btn ar-cambiar" data-intercambiar title="El Ataque pasa a Defensa y la Defensa a Ataque">⇅ Intercambiar Ataque y Defensa</button>
+        <button class="eq-btn ar-cambiar" data-practica title="Tu Ataque contra tu Defensa (la IA la juega), los dos con sus estrellas y reliquias. No da puntos ni recompensas">🎯 Práctica: Ataque vs Defensa</button></div>` : ''}
       <h4>🛡️ Equipo de Defensa</h4>${fila(est.defensa)}<button class="eq-btn" data-editar="defensa">${est.defensa?.length === 5 ? 'Editar Defensa' : 'Publicar Defensa'}</button>
       <p class="tc-tenue">Un campeón no puede estar en los dos equipos. Tu Defensa pelea (con la IA) cuando otros te atacan: cada defensa exitosa te da puntos.</p>
     </section></div>`;
@@ -190,6 +191,7 @@ export function iniciarArena(opc) {
     const t = e.target.closest('[data-artab]'); if (t) return cambiarPestana(t.dataset.artab);
     const ed = e.target.closest('[data-editar]'); if (ed) return editar(ed.dataset.editar);
     if (e.target.closest('[data-intercambiar]')) return intercambiar();
+    if (e.target.closest('[data-practica]')) return jugar(est.ataque.map(porId), est.defensa.map(porId), { practicaArena: true });   // práctica: sin puntos ni recompensas
     const vg = e.target.closest('[data-vengar]'); if (vg) return vengar(vg.dataset.vengar);
     if (e.target.closest('#ar-buscar')) return buscar();
   });
