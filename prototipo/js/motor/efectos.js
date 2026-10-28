@@ -27,6 +27,8 @@ export const EFECTOS = {
     desc: `En su turno ataca a un aliado suyo al azar con su Básico. Mega Posesión: 2 turnos.` },
   confuse: { nombre: 'Confusión',    icono: '🌀', color: 0xf0abfc, tipo: 'debuff', tags: ['Control'],
     desc: `${p(CONTROL.confusionProb)} de que sus movimientos de un objetivo vayan a un personaje al azar (aliado o enemigo).` },
+  agotar:  { nombre: 'Agotar', icono: '🥱', color: 0x94a3b8, tipo: 'debuff', tags: ['Estadística'],
+    desc: `−${p(DEBUFFS.agotar)} de Daño.` },
   weaken:  { nombre: 'Debilitar',   icono: '💔', color: 0xf87171, tipo: 'debuff', tags: ['Estadística'],
     desc: `Recibe +${p(DEBUFFS.debilitar)} de daño de golpes y daño por efecto (después de la Armadura).` },
   silence: { nombre: 'Silencio',     icono: '🔇', color: 0xa78bfa, tipo: 'debuff', tags: ['Control'],

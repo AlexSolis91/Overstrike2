@@ -161,6 +161,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | 🦠 Peste | Peste | No puede recibir **ninguna** curación (incluye robo de vida, Robar HP, Regeneración y pasivas). Sí recibe escudos. Peste sobre Peste = Peste Negra |
 | ☠️ Peste Negra | Peste | Igual que Peste y además, al final de cada turno del portador (también si lo perdió), pierde **5% del HP máx. original** (piso: 25%). No es daño: el HP actual solo baja si queda por encima del nuevo máximo. La pérdida es **permanente** aunque se limpie (solo la recuperan futuras mecánicas de aumento de HP máx.) |
 | 🔆 Quemadura Solar | Quemadura Solar | Toda curación que reciba (movimientos, Regeneración, robo de vida, Robar HP, pasivas) se vuelve **daño por el monto completo**, aunque tenga el HP lleno. Ignora Armadura y Escudo, no se bloquea ni es crítico, le afectan las reducciones de DoT, rompe Sigilo y nadie recibe crédito si mata. Gana a la Peste. **No** cuenta como Quemadura. Las pasivas "solo si cura" no se activan sobre él y la IA no lo cura con curaciones de un objetivo. Se puede limpiar |
+| 🥱 Agotar | Estadística | **−15% de Daño** (dura rondas). Valor en `reglas.js → DEBUFFS.agotar`. P. ej. Revival Jam de Marik |
 | 💔 Debilitar | Estadística | Recibe **+50% de daño** de golpes y daño por efecto, calculado **después** de la Armadura (no afecta DoT ni Robar HP) |
 | 🎯 Expuesto | Estadística | Recibe **+25% de daño** de golpes y daño por efecto, después de la Armadura (como Debilitar, pero menor; se suman si tiene los dos). P. ej. Shinra Tensei: Pain queda Expuesto 1 ronda (aplicado con `irresistible` sobre sí mismo) |
 | 🪞 Espejismo | Reflejo | Cada **golpe** que recibe de un enemigo le devuelve al atacante el **30%** del daño recibido (HP + Escudo), como **daño por efecto**: no es golpe (no rebota entre dos Espejismos ni activa Sangrado/contraataques), no es crítico ni se bloquea. El portador recibe el golpe completo. No refleja DoT ni daño por efecto. Se puede Disipar |
@@ -382,6 +383,17 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | Rinoceronte Gigante | Raro | 16 | 2 | 30% a todos · al aparecer: Escudo 10% del HP máx. de Pain |
 | Pájaro Taladro | Épico | 12 | 2 | 55% a un enemigo al azar + 40% de Debilitar (2 rondas) |
 | Perro Cerbero | Épico | 10 | 2 | 35% a un enemigo al azar · 50% de dividirse cada turno (otro Perro, máx. 3) |
+
+### Monstruos de Marik Ishtar (tabla `monstruosMarik`)
+| Monstruo | Rareza | Peso | Dura | Rol |
+|---|---|---|---|---|
+| Revival Jam | Común | 24 | 3 | 60% a un enemigo al azar + Agotar (2 rondas) |
+| Dios Egipcio de Slime | Común | 24 | 3 | 65% a un enemigo al azar + −5 de Puntería permanente (hasta −25) |
+| Rueda de las Pesadillas | Raro | 18 | 3 | 65% a un enemigo al azar + 30% de Aturdir |
+| Cofre de las Pesadillas | Raro | 16 | 3 | 60% a un enemigo al azar · al aparecer: 50% de Confusión (2 rondas) a 2 enemigos |
+| Lava Golem | Épico | 10 | 3 | 75% a un enemigo al azar · al aparecer: 5% de la suma del HP máx. enemigo, repartido al azar |
+| Huevo del Sol | Épico | 8 | 3 | No ataca · al aparecer: 60% de Quemadura Solar (2 rondas) a cada enemigo |
+| Dragón Alado de Ra | Legendario | — | 3 | Solo con el Over de Marik (sacrificio). 100% a cada enemigo; +1 turno si golpea a alguien con Quemadura Solar (1 vez por turno). `protegida`: ninguna invocación lo reemplaza |
 
 ## 10. Líder
 
@@ -662,6 +674,20 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - Marca acumuladora (efecto con `acumulaDano: true`): suma todo el daño que recibe su portador. Acción `liberarAcumulado { marca, pct, sinArmadura, texto }`: libera ese daño (× `pct`, 100% por defecto) como **daño por efecto** sobre un enemigo al azar y pone una marca nueva en 0 (la primera vez solo pone la marca). Marca **Marca del Demonio 😈** (Meliodas, ignora Armadura, sin tope).
 - Acción `curar` con `base: 'hpMaxGolpeado'`: la curación es un % del HP máx. del objetivo del golpe (no del curado). Con `a: 'todosEnemigos'` puede curar al equipo rival (Mil Cortes Divinos: 5% por golpe; con Quemadura Solar les hace daño).
 - Movimiento `iaMinEnemigosCon { efecto, min }`: la IA (y `usarMovimiento` 'disponible') solo lo usa si al menos `min` enemigos vivos (o todos, si quedan menos) tienen ese efecto.
+
+## Piezas nuevas (2026-10-28, Marik Ishtar)
+- **Líder** `cooldownAlGolpear { prob, cantidad, categorias }`: cuando un aliado golpea a un enemigo con un movimiento de **un objetivo** o de **golpes al azar** (no de área ni invocaciones), con `prob` le suma `cantidad` turnos de cooldown a uno al azar de esos movimientos (Marik: Especial u Over, nunca el Básico). Una tirada por movimiento y enemigo. Acción `sumarCooldown { cantidad, categorias }`.
+- Acción `reducirStat { stat, valor, tope }`: baja una estadística del objetivo para el resto de la partida, acumulable hasta `tope` (p. ej. Slime: −5 Puntería, hasta −25).
+- Acción `sacrificarInvocar { sacrificio, o, key }`: quita la invocación `sacrificio` (o, si no la tiene, `o` invocaciones) e invoca `key`. Movimiento `requiereInvocaciones { key, o }`: solo se puede usar si tiene esa invocación o al menos `o` (el panel muestra «🥚 Sin invocaciones para sacrificar»).
+- `potenciarInvocaciones` con `conAparecer: true`: cada invocación repite también su efecto al aparecer antes de atacar (Ataque Directo de Marik).
+- Golpe de invocación con `extenderSi: <efecto>`: +1 de duración si golpea a alguien con ese efecto (1 vez por acción). Invocación `protegida: true`: al invocar con 3 activas, nunca es la que sale.
+- `danoRepartido` con `base: 'hpMaxEnemigos'`: total = pct × suma del HP máx. de los enemigos (Lava Golem: 5%).
+- Pasiva `transformarSi { hpMenor, invocacion, consumir, hp }`: al terminar la acción en curso, si su HP está en `hpMenor` o menos y tiene esa invocación activa, se transforma (permanente si no hay `turnos`). Con `consumir` la invocación desaparece; con `hp` renace con ese % de vida (Ra Modo Fénix: 100%).
+- **Una forma puede traer su propio líder** (`lider` en la transformación): al transformarse lo reemplaza (Ra Modo Fénix: Dios Definitivo del Sol).
+- **Líder** `curaPorQuemaduraSolar`: el daño que la Quemadura Solar le hace a un enemigo se reparte como curación entre los aliados vivos del líder (sin cadenas entre dos líderes así).
+- `inmuneA: ['debuff']`: inmune a todos los debuffs. `acumulaCriticoContra` con `efecto: 'debuff'` (cualquier debuff) y `stats: ['critDmg']` (solo esa estadística).
+- Pasiva `alDanoDoT` + `curar` con `base: 'dano'`: cura (o, con Quemadura Solar, daña) por el daño que activó la pasiva. Ra Modo Fénix: cada Quemadura sobre un enemigo con Quemadura Solar le hace el doble.
+- `reducirHpMax` con `porDebuffs: true`: el % se multiplica por los tipos de debuff que el objetivo tenía antes del movimiento (Cañón de las Llamas del Sol: 3% cada uno, máx. −30%).
 
 ## 26. Misiones diarias y Runas de Portal (2026-10-26, `docs/sql/016_misiones_runas.sql`)
 - **Meta:** ~1 Runa de Portal al día por jugador activo.

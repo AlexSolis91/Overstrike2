@@ -124,6 +124,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       if (e.id === 'keen') sec.acc += BUFFS.agudeza;
       if (e.id === 'pierce') sec.pen += BUFFS.perforacion;
       if (e.id === 'blind') sec.acc -= DEBUFFS.ceguera;
+      if (e.id === 'agotar') pct.dmg -= DEBUFFS.agotar;
       if (e.id === 'wear') sec.armor -= e.valor;
       if (e.id === 'freeze') pct.spd -= CONTROL.congelacionVel * (e.mega ? 2 : 1);
     }
@@ -254,6 +255,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'haste': texto = `+${Math.round(BUFFS.celeridad * 100)}% Velocidad · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'bloodlust': texto = `+${Math.round(BUFFS.letalidad * 100)}% Daño Crítico · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'keen': texto = `+${Math.round(BUFFS.agudeza * 100)}% Puntería · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'agotar': texto = `−${Math.round(DEBUFFS.agotar * 100)}% de Daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'weaken': texto = `Recibe +${Math.round(DEBUFFS.debilitar * 100)}% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'expuesto': texto = `Recibe +${Math.round(DEBUFFS.expuesto * 100)}% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'camino': { const f = p.pasiva?.ciclo?.fases?.[e.valor]; texto = f ? `${f.nombre}: ${f.desc}` : ''; break; }
@@ -522,6 +524,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
 
   // Incitar: quien lo aplicó (si sigue vivo); mientras dure, solo puede usar el Básico y solo contra él
   const incitadoPor = p => { const e = get(p, 'incite'); const f = e && porUid(e.fuente); return f && !f.muerto && f.lado !== p.lado ? f : null; };
+  // requiereInvocaciones { key, o }: tiene esa invocación, o al menos `o` invocaciones activas
+  const puedeSacrificar = (p, r) => { const l = todos(p, 'summon'); return l.some(e => e.key === r.key) || l.length >= r.o; };
   function opciones(p) {
     const inc = incitadoPor(p);
     return p.movimientos.map(m => ({
@@ -529,8 +533,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       agotado: !!(m.unaVez && p.usados?.has(m.nombre)),     // unaVez: solo se puede usar una vez por partida
       sellado: !!(p.sellado && p.pasiva.sello.categoria === m.categoria),
       sinCaidos: !!(m.requiereAliadoCaido && !P.some(x => x.lado === p.lado && x.muerto && x !== p)),   // p. ej. Edo Tensei
+      sinSacrificio: !!(m.requiereInvocaciones && !puedeSacrificar(p, m.requiereInvocaciones)),          // p. ej. Canto del Dios del Sol
       disponible: !(p.sellado && p.pasiva.sello.categoria === m.categoria) && !(m.requiereAliadoCaido && !P.some(x => x.lado === p.lado && x.muerto && x !== p)) && (p.cds[m.categoria] || 0) === 0 && get(p, 'silence')?.categoria !== m.categoria && (!inc || m.categoria === 'basico')
-        && !(m.unaVez && p.usados?.has(m.nombre)),
+        && !(m.unaVez && p.usados?.has(m.nombre)) && !(m.requiereInvocaciones && !puedeSacrificar(p, m.requiereInvocaciones)),
       cd: p.cds[m.categoria] || 0,
       objetivos: objetivosValidos(p, m).map(t => t.uid),
     }));
@@ -563,6 +568,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     const ultimo = reparto.filter(([f]) => f && f.lado !== t.lado).sort((x, y) => y[1] - x[1])[0];
     if (ultimo) t.ultimoDanoDe = ultimo[0];
     if (t.pasiva?.rival && cantidad > 0 && !t.muerto) revisarTransformacion(t);
+    if (t.pasiva?.transformarSi && cantidad > 0 && !t.muerto && t.hp > 0) revisarTransformarSi(t);
     if (t.jefe && !t.jefe.furia && t.hp > 0 && t.hp < t.jefe.umbral * maxHp(t)) {   // Jefe: entra en furia una vez
       t.jefe.furia = true;
       t.campana.dmgPct = (t.campana.dmgPct || 0) + t.jefe.dmgPct;
@@ -644,6 +650,23 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       p.transformando = true;
       reacciones.push(() => { p.transformando = false; if (!p.forma && !p.muerto) transformar(p); });
     }
+  }
+  // pasiva "transformarSi { hpMenor, invocacion, consumir }": se transforma (al terminar la acción en curso) si su HP está en hpMenor o menos
+  // y tiene esa invocación activa; con consumir, la invocación desaparece (p. ej. Marik → Ra Modo Fénix con el Dragón Alado de Ra)
+  function revisarTransformarSi(p) {
+    const ti = p.pasiva?.transformarSi;
+    if (!ti || p.forma || p.muerto || !p.transformacion || p.transformando) return;
+    if (p.hp / maxHp(p) > ti.hpMenor || !todos(p, 'summon').some(e => e.key === ti.invocacion)) return;
+    p.transformando = true;
+    reacciones.push(() => {
+      p.transformando = false;
+      if (p.forma || p.muerto) return;
+      const e = todos(p, 'summon').find(x => x.key === ti.invocacion);
+      if (!e || p.hp / maxHp(p) > ti.hpMenor) return;
+      if (ti.consumir) { quitar(p, e); emitir('invocacionRetira', { de: p.uid, key: e.key }, p); }
+      transformar(p, ti.turnos);
+      if (ti.hp) { p.hp = Math.max(p.hp, maxHp(p) * ti.hp); emitir('actualizar', {}, p); }   // hp: renace con ese % de vida (p. ej. el Fénix)
+    });
   }
   function revivir(x, hpPct) {
     if (x.noRevivir) return;                         // p. ej. un esclavo de Frostmourne que ya cumplió su tiempo
@@ -744,16 +767,16 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       for (const m of pasivasDeReliquia(a)) danoCrit += m.critDmgAoe || 0;
     const acc = a.pasiva?.acumulaCriticoContra;   // pasiva: cada golpe a un enemigo con X sube Prob. y Daño Crítico (permanente, con tope)
     if (acc && t.lado !== a.lado) {
-      const e = get(t, acc.efecto);
+      const e = acc.efecto === 'debuff' ? t.estados.find(x => EFECTOS[x.id]?.tipo === 'debuff') : get(t, acc.efecto);   // 'debuff': cualquier debuff
       if (e) {
         const inc = e.mega && acc.valorMega != null ? acc.valorMega : acc.valor;
         let subio = 0;
-        for (const k of ['critRate', 'critDmg']) {
+        for (const k of acc.stats || ['critRate', 'critDmg']) {          // stats: solo esas (p. ej. Ra: solo Daño Crítico)
           const antes = a.permanente[k] || 0, nuevo = Math.min(acc.tope, antes + inc);
           a.permanente[k] = nuevo; subio = Math.max(subio, nuevo - antes);
           if (k === 'critRate') probCrit += nuevo - antes; else danoCrit += nuevo - antes;
         }
-        if (subio > 0) emitir('bonoVisible', { a: a.uid, texto: `+${Math.round(subio * 100)}% Prob. y Daño Crítico` }, a);
+        if (subio > 0) emitir('bonoVisible', { a: a.uid, texto: `+${Math.round(subio * 100)}% ${acc.stats?.length === 1 ? NOMBRE_STAT[acc.stats[0]] || acc.stats[0] : 'Prob. y Daño Crítico'}` }, a);
       }
     }
     const critico = !mov.sinCritico && (ctx.forzarCritico || garantizado || rng() < probCrit);   // sinCritico: este ataque no puede ser crítico
@@ -830,6 +853,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     const cg = t.pasiva?.cargasAlRecibirGolpe;
     if (cg && !t.muerto && t.lado !== a.lado && !conControl(t)) ganarCargas(t, get(t, 'taunt')?.cargasX || 1, cg.max);
     pasivas(a, 'alGolpear', { objetivo: t });          // gatillo "cada vez que golpea" (filtro opcional: el objetivo tiene X)
+    // líder "cooldownAlGolpear": cuando un aliado golpea con un movimiento de un objetivo o de golpes al azar (no de área ni invocaciones),
+    // prob de +cantidad turnos de cooldown a uno de esos movimientos del golpeado (una tirada por movimiento y objetivo)
+    if (t.lado !== a.lado && !t.muerto && mov.objetivo !== 'todosEnemigos' && CATEGORIAS.includes(mov.categoria)) for (const l of lideresDe(a)) {
+      const cl = l.lider?.cooldownAlGolpear, k = `${movId}:${l.uid}`;
+      if (!cl || t.cdLiderMov === k) continue;
+      t.cdLiderMov = k;
+      if (rng() < cl.prob) ejecutarAccion(l, { tipo: 'sumarCooldown', cantidad: cl.cantidad || 1, categorias: cl.categorias, a: 'objetivo' }, { objetivo: t });
+    }
     if (t.lado !== a.lado && aHp + aEsc > 0) pasivas(t, 'alRecibirGolpe', { atacante: a, recibido: aHp + aEsc });   // p. ej. Doom
     if (aEsc > 0) perdioEscudo(t);
     if (t.hp <= 0) {
@@ -957,6 +988,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     emitir('dot', { a: t.uid, tipo: 'solarBurn', dano: d }, t);
     recibioDano(t, d, fuentesDe([get(t, 'solarBurn')].filter(Boolean)));
     if (t.hp <= 0) morir(t);
+    // líder "curaPorQuemaduraSolar": ese daño cura a su equipo, repartido entre los vivos (sin cadenas de Quemadura Solar)
+    if (!S.curaSolar) for (const l of P) if (l.lider?.curaPorQuemaduraSolar && l.esLider && !l.muerto && l.lado !== t.lado) {
+      const al = aliadosDe(l); if (!al.length) continue;
+      S.curaSolar = true;
+      for (const x of al) curar(l, x, d / al.length);
+      S.curaSolar = false;
+    }
   }
 
   function morir(t, asesino = null) {
@@ -1064,7 +1102,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (t.inmune && (CONTROL.pierdeTurno.includes(acc.id) || acc.id === 'silence')) { emitir('inmune', { a: t.uid }); return; }
     for (const m of pasivasDeReliquia(t)) if (m.inmuneA?.includes(acc.id)) { emitir('inmune', { a: t.uid, texto: `Inmune a ${EFECTOS[acc.id].nombre}` }); return; }   // reliquia (p. ej. Escudo Hyliano)
     const inm = t.pasiva?.inmuneA;
-    if (inm && (inm.includes(acc.id) || EFECTOS[acc.id].tags.some(tag => inm.includes(tag)))) { emitir('inmune', { a: t.uid, texto: `Inmune a ${EFECTOS[acc.id].nombre}` }); return; }
+    if (inm && (inm.includes(acc.id) || EFECTOS[acc.id].tags.some(tag => inm.includes(tag)) || (inm.includes('debuff') && EFECTOS[acc.id].tipo === 'debuff'))) { emitir('inmune', { a: t.uid, texto: `Inmune a ${EFECTOS[acc.id].nombre}` }); return; }
     const sa = stats(a);
     const def = EFECTOS[acc.id];
     if (def.tipo === 'buff' && get(t, 'blockBuffs')) { emitir('sinEfecto', { a: t.uid, texto: '🚫 Buffs bloqueados' }); return; }
@@ -1168,7 +1206,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         break;
       }
       case 'confuse': case 'fear': case 'dmgUp': case 'taunt': case 'fireAura': case 'frostAura': case 'infect': case 'blockBuffs': case 'protect': case 'regen':
-      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'expuesto': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': case 'incite': case 'mirror': {
+      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'agotar': case 'expuesto': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': case 'incite': case 'mirror': {
         if (acc.id === 'stealth' && get(t, 'taunt')) { emitir('sinEfecto', { a: t.uid, texto: 'Con Provocación no puede tener Sigilo' }); return; }
         if (acc.id === 'taunt' && get(t, 'stealth')) { quitar(t, get(t, 'stealth')); emitir('sigiloRoto', { a: t.uid }, t); }
         if (acc.id === 'dmgUp') acc = { ...acc, valor: BUFFS.furia };      // Furia siempre +50%
@@ -1288,7 +1326,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           }
           break;
         case 'curar': {
-          const base = acc.base === 'hpMaxObjetivo' ? maxHp(t) : acc.base === 'hpMaxGolpeado' ? (ctx.objetivo ? maxHp(ctx.objetivo) : 0) : acc.base === 'curacion' ? (ctx.curacion || 0) : baseDe(a, acc.escala);
+          const base = acc.base === 'dano' ? (ctx.dano || 0) : acc.base === 'hpMaxObjetivo' ? maxHp(t) : acc.base === 'hpMaxGolpeado' ? (ctx.objetivo ? maxHp(ctx.objetivo) : 0) : acc.base === 'curacion' ? (ctx.curacion || 0) : baseDe(a, acc.escala);
           const veces = acc.porCada ? (ctx[acc.porCada] || 0)     // porCada: 'eliminados' = una vez por cada enemigo eliminado
             : acc.porEnemigoCon ? enemigosDe(a).filter(x => get(x, acc.porEnemigoCon)).length : 1;   // porEnemigoCon: una vez por cada enemigo con ese efecto (p. ej. Muzan)
           if (veces > 0) curar(a, t, base * acc.pct * veces);
@@ -1375,7 +1413,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           for (const sub of acc.acciones) ejecutarAccion(a, { ...sub, a: 'objetivo' }, { ...ctx, objetivo: t });
           break;
         case 'danoRepartido': {     // un total de daño por efecto repartido al azar (desigual) entre los enemigos
-          const total = (acc.base === 'escudosEquipo' ? aliadosDe(a).reduce((s, x) => s + x.escudo, 0) : 0) * acc.pct;
+          const total = (acc.base === 'escudosEquipo' ? aliadosDe(a).reduce((s, x) => s + x.escudo, 0)
+            : acc.base === 'hpMaxEnemigos' ? enemigosDe(a).reduce((s, x) => s + maxHp(x), 0) : 0) * acc.pct;   // hpMaxEnemigos: p. ej. Lava Golem
           if (total < 1) { emitir('sinEfecto', { a: a.uid, texto: 'Sin escudos en el equipo' }); break; }
           const n = acc.paquetes || 10, porEnemigo = new Map();
           for (let i = 0; i < n; i++) { const e = rng.elegir(enemigosDe(a)); if (e) porEnemigo.set(e, (porEnemigo.get(e) || 0) + total / n); }
@@ -1383,7 +1422,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'invocarAzar': invocarAzar(t, acc.tabla, acc.rarezas, acc.renueva); break;
-        case 'potenciarInvocaciones': potenciarInvocaciones(t, acc.potencia || 1, acc.renovar, acc.veces || 1); break;
+        case 'potenciarInvocaciones': potenciarInvocaciones(t, acc.potencia || 1, acc.renovar, acc.veces || 1, acc.conAparecer); break;
         case 'escudo': {
           const c = (acc.base === 'danoCausado' ? (ctx.danoCausado || 0) : acc.base === 'recibido' ? (ctx.recibido || 0) : baseDe(a, acc.escala)) * acc.pct;
           if (c <= 0) break;
@@ -1430,7 +1469,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'ganarCargas': ganarCargas(t, acc.cantidad || 1, acc.max || 5, acc.efecto); break;   // p. ej. Espada del Poder
         case 'invocar': if (acc.prob == null || rng() < acc.prob) invocar(t, acc.key); break;   // p. ej. Clon de Sombra
         case 'reducirHpMax': {         // baja el HP máx. del objetivo para el resto de la partida (con tope); p. ej. Modo Barión
-          const baja = Math.min(acc.pct, (acc.tope ?? 1) - (t.hpMaxReducido || 0));
+          const nd = acc.porDebuffs ? [...(ctx.teniaAntes || [])].filter(id => EFECTOS[id]?.tipo === 'debuff').length : 1;   // porDebuffs: × debuffs que tenía antes
+          const baja = Math.min(acc.pct * nd, (acc.tope ?? 1) - (t.hpMaxReducido || 0));
           if (baja <= 1e-9) break;
           t.hpMaxReducido = (t.hpMaxReducido || 0) + baja;
           t.permanente.hpPct = (t.permanente.hpPct || 0) - baja;
@@ -1506,6 +1546,31 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'danoEfecto': danoEfecto(a, t, (ctx.dano || 0) * acc.fraccion, 0xc084fc); break;
+        case 'sumarCooldown': {        // +N turnos de cooldown a uno al azar de esos movimientos del objetivo (p. ej. El Reino de las Sombras)
+          const cats = (acc.categorias || CATEGORIAS).filter(c => t.movimientos.some(m => m.categoria === c));
+          const c = rng.elegir(cats); if (!c) break;
+          t.cds[c] = (t.cds[c] || 0) + (acc.cantidad || 1);
+          emitir('bonoVisible', { a: t.uid, texto: `⏳ ${NOMBRE_CAT[c]} +${acc.cantidad || 1} cooldown` }, t);
+          break;
+        }
+        case 'reducirStat': {          // baja una estadística del objetivo para el resto de la partida, acumulable hasta un tope (p. ej. Slime: −5 Puntería)
+          t.reducido ||= {};
+          const baja = Math.min(acc.valor, acc.tope - (t.reducido[acc.stat] || 0));
+          if (baja <= 1e-9) break;
+          t.reducido[acc.stat] = (t.reducido[acc.stat] || 0) + baja;
+          t.permanente[acc.stat] = (t.permanente[acc.stat] || 0) - baja;
+          emitir('bonoVisible', { a: t.uid, texto: `−${Math.round(baja * 100)} ${NOMBRE_STAT[acc.stat] || acc.stat}` }, t);
+          break;
+        }
+        case 'sacrificarInvocar': {    // consume la invocación `sacrificio` (o, si no la tiene, `o` invocaciones) e invoca `key` (p. ej. Dragón Alado de Ra)
+          const lista = todos(t, 'summon'), sac = lista.find(e => e.key === acc.sacrificio);
+          const quitan = sac ? [sac] : lista.length >= acc.o ? lista.slice(0, acc.o) : null;
+          if (!quitan) { emitir('sinEfecto', { a: t.uid, texto: 'Sin invocaciones para sacrificar' }); break; }
+          t.estados = t.estados.filter(e => !quitan.includes(e));
+          for (const e of quitan) emitir('invocacionRetira', { de: t.uid, key: e.key }, t);
+          invocar(t, acc.key);
+          break;
+        }
         case 'liberarAcumulado': {   // libera el daño de su marca acumuladora en un enemigo al azar y pone una marca nueva (en 0)
           const e = get(t, acc.marca), d = rng.elegir(enemigosDe(t));
           if (e?.valor > 0 && d) {
@@ -1605,6 +1670,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (!p.formaBase) p.formaBase = { base: p.base, extra: p.extra, pasiva: p.pasiva, movimientos: p.movimientos, cds: p.cds, transformacion: p.transformacion };
     p.base = f.base; p.extra = f.extra || {}; p.pasiva = f.pasiva || null; p.movimientos = clonar(f.movimientos);
     p.transformacion = f.transformacion || null;
+    if (f.lider) p.lider = f.lider;                   // la forma trae su propio líder (p. ej. Ra Modo Fénix); esLider no cambia
     if (!f.compartirCooldowns) p.cds = { basico: 0, especial: 0, over: p.movimientos.find(m => m.categoria === 'over')?.cd || 0 };   // el Over empieza con su cooldown completo (salvo formas que comparten cooldowns)
     const permanente = !turnos;
     p.forma = { nombre: f.nombre, imagen: f.imagen, emoji: f.emoji, color: f.color, turnos: turnos || 0, total: turnos || 0, permanente, recien: true };
@@ -1646,7 +1712,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     }
     const activas = todos(a, 'summon');
     if (activas.length >= MAX_INVOCACIONES) {
-      const sale = activas.reduce((x, y) => x.dur < y.dur ? x : y);
+      const cand = activas.filter(x => !INVOCACIONES[x.key].protegida);   // protegida: nunca la reemplaza otra (p. ej. Dragón Alado de Ra)
+      const sale = (cand.length ? cand : activas).reduce((x, y) => x.dur < y.dur ? x : y);
       a.estados = a.estados.filter(e => e !== sale);
       emitir('invocacionRetira', { de: a.uid, key: sale.key }, a);
     }
@@ -1655,6 +1722,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     a.estados.push(e);
     emitir('invocacion', { de: a.uid, key, idx: todos(a, 'summon').length - 1, rareza: def.rareza }, a);
     for (const acc of def.alAparecer || []) accionInvocacion(a, e, acc, 1);
+    revisarTransformarSi(a);
   }
 
   // Invocación aleatoria por pesos; nunca repite una que ya esté activa (si no se permiten varias de ese tipo)
@@ -1684,8 +1752,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     const def = INVOCACIONES[e.key];
     const idx = todos(a, 'summon').indexOf(e);
     if (acc.tipo === 'golpe') {
+      let extendida = false;                 // extenderSi: +1 de duración si golpea a alguien con ese efecto (1 vez por acción; p. ej. Dragón Alado de Ra)
       for (const t of forzados || elegirObjetivos(a, acc.elegir)) {
         if (t.muerto) continue;
+        if (acc.extenderSi && !extendida && get(t, acc.extenderSi) && todos(a, 'summon').includes(e)) {
+          extendida = true; e.dur++; emitir('bonoVisible', { a: a.uid, texto: `${def.emoji} ${def.nombre} +1 turno` }, a);
+        }
         emitir('invocacionAtaca', { de: a.uid, key: e.key, idx, a: t.uid });
         const extra = acc.golpeExtraSi && get(t, acc.golpeExtraSi) ? 1 : 0;   // p. ej. Drogon: 2.º golpe si tiene Quemadura
         resolverSobreObjetivo(a, t, { nombre: def.nombre, categoria: 'invocacion', pct: acc.pct * potencia, escala: acc.escala || 'dano',
@@ -1713,12 +1785,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
 
   // Dominio del Monarca: todas actúan de inmediato con potencia extra y (opcional) renuevan su duración
   // veces: cuántas veces actúa cada invocación (en rondas: todas una vez, luego todas otra vez)
-  function potenciarInvocaciones(a, potencia, renovar, veces = 1) {
+  // conAparecer: también repiten su efecto al aparecer (p. ej. Ataque Directo de Marik)
+  function potenciarInvocaciones(a, potencia, renovar, veces = 1, conAparecer = false) {
     const lista = todos(a, 'summon');
     if (!lista.length) { emitir('sinEfecto', { a: a.uid, texto: 'Sin invocaciones' }); return; }
     emitir('dominio', { id: a.uid, potencia, veces }, a);
     for (let v = 0; v < veces; v++) for (const e of lista) {
       if (a.muerto || S.fin || !enemigosDe(a).length) break;
+      if (conAparecer) for (const acc of INVOCACIONES[e.key].alAparecer || []) accionInvocacion(a, e, acc, 1);
       actuarInvocacion(a, e, potencia);
     }
     if (renovar) for (const e of lista) duracionCompleta(a, e);

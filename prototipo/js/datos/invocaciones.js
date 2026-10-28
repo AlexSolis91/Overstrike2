@@ -181,6 +181,45 @@ export const INVOCACIONES = {
       { tipo: 'invocar', key: 'perroCerbero', prob: .50, a: 'propio' },
     ],
   },
+  // ---------------------------------------------------------------- Monstruos de Marik Ishtar (tabla `monstruosMarik`; Ra solo con su Over)
+  revivalJam: {
+    nombre: 'Revival Jam', rareza: 'Común', emoji: '👻', color: 0x60a5fa, imagen: 'assets/invocaciones/revival-jam.webp', dur: 3,
+    desc: 'Golpea 60% a un enemigo al azar y le aplica Agotar (2 rondas).',
+    acciones: [{ tipo: 'golpe', pct: .60, elegir: 'azar', efectos: [{ accion: { tipo: 'efecto', id: 'agotar', dur: 2 } }] }],
+  },
+  slimeEgipcio: {
+    nombre: 'Dios Egipcio de Slime', rareza: 'Común', emoji: '🫠', color: 0x94a3b8, imagen: 'assets/invocaciones/dios-egipcio-de-slime.webp', dur: 3,
+    desc: 'Golpea 65% a un enemigo al azar y le baja 5 puntos de Puntería para toda la partida (acumulable hasta −25).',
+    acciones: [{ tipo: 'golpe', pct: .65, elegir: 'azar', efectos: [{ accion: { tipo: 'reducirStat', stat: 'acc', valor: .05, tope: .25 } }] }],
+  },
+  ruedaPesadillas: {
+    nombre: 'Rueda de las Pesadillas', rareza: 'Raro', emoji: '☸️', color: 0xa1a1aa, imagen: 'assets/invocaciones/rueda-de-las-pesadillas.webp', dur: 3, luminosa: true,
+    desc: 'Golpea 65% a un enemigo al azar con 30% de probabilidad de Aturdirlo.',
+    acciones: [{ tipo: 'golpe', pct: .65, elegir: 'azar', efectos: [{ accion: { tipo: 'efecto', id: 'stun', prob: .30 } }] }],
+  },
+  cofrePesadillas: {
+    nombre: 'Cofre de las Pesadillas', rareza: 'Raro', emoji: '🧰', color: 0xa855f7, imagen: 'assets/invocaciones/cofre-de-las-pesadillas.webp', dur: 3,
+    desc: 'Golpea 60% a un enemigo al azar. Al aparecer: 50% de probabilidad de Confundir (2 rondas) a 2 enemigos al azar.',
+    alAparecer: [{ tipo: 'efecto', id: 'confuse', dur: 2, prob: .50, a: { distintos: 2 } }],
+    acciones: [{ tipo: 'golpe', pct: .60, elegir: 'azar' }],
+  },
+  lavaGolem: {
+    nombre: 'Lava Golem', rareza: 'Épico', emoji: '🌋', color: 0xf97316, imagen: 'assets/invocaciones/lava-golem.webp', dur: 3,
+    desc: 'Golpea 75% a un enemigo al azar. Al aparecer: daño igual al 5% de la suma del HP máx. de los enemigos, repartido al azar entre ellos.',
+    alAparecer: [{ tipo: 'danoRepartido', base: 'hpMaxEnemigos', pct: .05, paquetes: 10 }],
+    acciones: [{ tipo: 'golpe', pct: .75, elegir: 'azar' }],
+  },
+  huevoSol: {
+    nombre: 'Huevo del Sol', rareza: 'Épico', emoji: '🥚', color: 0xfbbf24, imagen: 'assets/invocaciones/huevo-del-sol.webp', dur: 3,
+    desc: 'No ataca. Al aparecer: 60% de probabilidad de aplicar Quemadura Solar (2 rondas) a cada enemigo. El Canto del Dios del Sol lo sacrifica para invocar al Dragón Alado de Ra.',
+    alAparecer: [{ tipo: 'efecto', id: 'solarBurn', dur: 2, prob: .60, a: 'todosEnemigos' }],
+    acciones: [],
+  },
+  raAlado: {
+    nombre: 'Dragón Alado de Ra', rareza: 'Legendario', emoji: '🐉', color: 0xfacc15, imagen: 'assets/invocaciones/dragon-alado-de-ra.webp', dur: 3, luminosa: true, protegida: true,
+    desc: 'Golpea 100% a cada enemigo. Si golpea a alguno con Quemadura Solar, dura 1 turno más (1 vez por turno). Solo aparece con el Canto del Dios del Sol y ninguna otra invocación lo reemplaza.',
+    acciones: [{ tipo: 'golpe', pct: 1.00, elegir: 'todos', extenderSi: 'solarBurn' }],
+  },
 };
 
 // Tablas de invocación aleatoria (peso = probabilidad relativa)
@@ -189,6 +228,14 @@ export const TABLAS_INVOCACION = {
     { key: 'rhaegal', peso: 40 },
     { key: 'viserion', peso: 35 },
     { key: 'drogon', peso: 25 },
+  ],
+  monstruosMarik: [
+    { key: 'revivalJam', peso: 24 },
+    { key: 'slimeEgipcio', peso: 24 },
+    { key: 'ruedaPesadillas', peso: 18 },
+    { key: 'cofrePesadillas', peso: 16 },
+    { key: 'lavaGolem', peso: 10 },
+    { key: 'huevoSol', peso: 8 },
   ],
   animalesPain: [
     { key: 'ciempiesGigante', peso: 22 },
