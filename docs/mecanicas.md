@@ -402,7 +402,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - Las habilidades de líder que afectan a "los aliados" **incluyen al propio líder** (p. ej. Gakido protege también a Madara).
 - **Piezas de líder disponibles:**
   - `reduccion { categoria, pct }`: reduce el daño recibido por los aliados.
-  - `bonoPorEfecto { efecto, stat, valor }`: todo su equipo gana +valor a esa estadística por cada **enemigo** con ese efecto (p. ej. Daenerys: +4% Puntería por enemigo quemado).
+  - `bonoPorEfecto { efecto, stat, valor }`: todo su equipo gana +valor a esa estadística por cada **enemigo** con ese efecto (p. ej. Daenerys: +4% Puntería por enemigo quemado). También como **pasiva** (solo para él): p. ej. Mundo Transparente de Yorichi, +5% de Daño Crítico por cada enemigo con Quemadura Solar.
   - `bonoDano`: los aliados ganan +X% de Daño (p. ej. Scorpion: +15%).
   - `bonoStat { stat: valor }`: los aliados ganan esos puntos fijos (p. ej. Thor: +15% Armadura).
   - `acumulaPorDoT { tipo, stat, valor }`: cada vez que un **enemigo** recibe daño de ese DoT, los aliados ganan +valor en esa estadística, **sin tope**. Se pierde si el líder muere (p. ej. Scorpion: +2% Daño Crítico por cada daño de Quemadura).

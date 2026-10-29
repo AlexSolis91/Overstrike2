@@ -89,7 +89,7 @@ export const AREAS = {
       { tema: 'eternia', poder: 1.08, jefe: true },   // 10
       { tema: 'monarcas', poder: 1.29 },   // 11
       { tema: 'mortal', poder: 1.14 },   // 12
-      { tema: 'cazadores', poder: 1.19 },   // 13
+      { tema: 'cazadores', poder: 1.16 },   // 13 (2026-10-29: entra Yorichi, sale Minato)
       { tema: 'santos', poder: 1.21 },   // 14
       { tema: 'konoha', poder: 1.24 },   // 15
       { tema: 'sayajin', poder: 1.16 },   // 16

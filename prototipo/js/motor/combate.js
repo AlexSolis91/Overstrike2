@@ -153,6 +153,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       const ac = l.lider?.acumulaPorDoT;                                                   // líder "acumulaPorDoT": lo ganado hasta ahora
       if (ac && l.acumLider) sec[ac.stat] = (sec[ac.stat] || 0) + l.acumLider;
     }
+    const bpe = p.pasiva?.bonoPorEfecto;                 // pasiva "bonoPorEfecto": como el líder, pero solo para él (p. ej. Mundo Transparente de Yorichi)
+    if (capas.buffs && bpe) sec[bpe.stat] = (sec[bpe.stat] || 0) + bpe.valor * enemigosDe(p).filter(x => get(x, bpe.efecto)).length;
     if (capas.permanente) for (const [k, v] of Object.entries(p.campana || {})) {     // poder del rival en modos como Campaña (y la furia del Jefe)
       if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
     }
