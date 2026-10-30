@@ -1064,10 +1064,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   }
 
   function explotarBomba(t, b, soloSalpicadura) {
-    const d = b.valor * maxHp(t);
+    const d = b.valor * maxHp(t) * (S.factorBombas || 1);     // movimiento "potenciaBombas": las que estallan durante él hacen ×factor
+    let total = 0;
     emitir('explosion', { a: t.uid, soloSalpicadura });
     if (!soloSalpicadura && !t.muerto) {
       const real = d * (1 - reduccion(t, 'dot'));
+      total += real;
       t.hp -= real;
       emitir('dot', { a: t.uid, tipo: 'bomb', dano: real }, t);
       recibioDano(t, real, porUid(b.fuente));
@@ -1076,10 +1078,17 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     for (const x of aliadosDe(t)) {
       if (x === t) continue;
       const s = d * DOT.salpicaduraBomba * (1 - reduccion(x, 'dot'));
+      total += s;
       x.hp -= s;
       emitir('salpicadura', { a: x.uid, dano: s }, x);
       recibioDano(x, s, porUid(b.fuente));
       if (x.hp <= 0) morir(x);
+    }
+    // líder "escudoPorBomba": el daño de cada Bomba enemiga (con salpicadura) se vuelve Escudo para su equipo, repartido entre los vivos
+    if (total > 0) for (const l of P) if (l.lider?.escudoPorBomba && l.esLider && !l.muerto && l.lado !== t.lado) {
+      const al = aliadosDe(l); if (!al.length) continue;
+      const c = total * l.lider.escudoPorBomba.pct / al.length;
+      for (const x of al) { x.escudo += c; l.est.escudo += c; emitir('escudo', { de: l.uid, a: x.uid, cantidad: c }, x); }
     }
   }
 
@@ -1321,7 +1330,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       switch (acc.tipo) {
         case 'efecto':
           for (let i = 0; i < (acc.veces || 1); i++) {
-            if (!acc.idAzar) { intentarEfecto(a, t, acc); continue; }
+            if (!acc.idAzar) {
+              const antes = acc.alAcertar && new Set(t.estados);
+              intentarEfecto(a, t, acc);
+              // alAcertar: acción por cada efecto que de verdad quedó puesto (p. ej. +5% Armadura por Bomba de Tengen)
+              if (antes && t.estados.some(e => e.id === acc.id && !antes.has(e))) ejecutarAccion(a, acc.alAcertar, { ...ctx, objetivo: t });
+              continue;
+            }
             const ids = acc.sinRepetir ? acc.idAzar.filter(id => !get(t, id)) : acc.idAzar;   // sinRepetir: no elige uno que ya tenga
             if (!ids.length) { emitir('sinEfecto', { a: t.uid, texto: 'Ya tiene todos' }); continue; }
             intentarEfecto(a, t, { ...acc, id: rng.elegir(ids) });
@@ -1928,6 +1943,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       const previos = principal ? clonar(principal.estados) : [];    // para Propagar aunque el objetivo muera
       const c = { ...ctx, acum: { dano: 0, tenian: new Set() },
         bombasPrevias: new Set(enemigosDe(a).flatMap(x => todos(x, 'bomb'))), bombasPotenciadas: new Set() };   // pasiva "potenciaBombas"
+      const factorBombasAntes = S.factorBombas;      // movimiento "potenciaBombas": las Bombas que estallen durante él hacen ×factor
+      if (mov.potenciaBombas) S.factorBombas = mov.potenciaBombas.factor;
       if (mov.invocar) invocar(a, mov.invocar);
       else if (mov.desatar) desatar(a, mov);
       else if (azar) azar.forEach((t, i) => {
@@ -1961,6 +1978,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         debuffsPrevios: previos.filter(e => EFECTOS[e.id]?.tipo === 'debuff'),
       };
       for (const ef of mov.efectos || []) if (ef.cuando === 'final' && cumple(ef.condicion, final)) ejecutarAccion(a, ef.accion, final);
+      S.factorBombas = factorBombasAntes;
       const fa = a.faseActiva;                         // ciclo: efecto final de la fase activa (solo en su turno, con su propio movimiento)
       if (fa?.alFinal && S.actual === a && !ctx.forzado && !ctx.reaccion && !mov.recorreCiclo && !a.muerto) {
         const dest = mov.objetivo === 'enemigo' && principal && !principal.muerto && principal.lado !== a.lado ? principal : rng.elegir(sobrevivientes);

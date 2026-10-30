@@ -649,6 +649,9 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 
 ## Pieza de pasiva: potenciar Bombas (2026-10-25)
 - `potenciaBombas: { factor }` (p. ej. El Pingüino, ×1.5): cuando el portador golpea a un enemigo, cada Bomba que ese enemigo **ya tenía antes de que empezara el ataque** multiplica su daño por `factor`. Una vez por Bomba en cada ataque (un movimiento de varios golpes no la multiplica varias veces). Las Bombas que pone el mismo ataque no se potencian. Combinado con `detonar`, el Over del Pingüino primero potencia y luego hace explotar.
+- **Movimiento** `potenciaBombas: { factor }` (p. ej. Sinfonía Estridente de Tengen, ×2): todas las Bombas que estallen **mientras se ejecuta ese movimiento** (por `detonar`, por una pasiva al golpear o al morir el portador) hacen ×factor de daño, también su salpicadura.
+- **Acción `efecto` con `alAcertar: acción`**: ejecuta esa acción una vez por cada efecto que de verdad quedó puesto (falla por Puntería, resistencia o máximo de Bombas = no cuenta). P. ej. Tengen: +5% Armadura permanente por cada Bomba colocada (`bonoPermanente` con tope).
+- **Líder** `escudoPorBomba: { pct }` (Tengen, 20%): cada vez que una Bomba hace daño a un enemigo del líder (explosión + salpicadura), su equipo gana un Escudo de pct × ese daño, repartido entre los aliados vivos.
 
 ## Marcas (migración 2026-10-21)
 - Los estados exclusivos de un campeón son **marcas** (`tipo: 'marca'`): no se disipan, no se limpian y no cuentan como buff ni debuff. Se migraron los antiguos: Orgullo Sayajin (Vegeta), Oscuridad (Saga), Poder de Grayskull (He-Man), Poder Robado (Skeletor), Furia Dorada (Aldebarán) y Aguja Escarlata (Milo; antes era un debuff que se podía limpiar).
