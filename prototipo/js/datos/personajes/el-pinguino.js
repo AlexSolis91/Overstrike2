@@ -26,20 +26,20 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Paraguas Ametralladora', objetivo: 'enemigo', estilo: 'ranged', color: 0x94a3b8,
-      pct: .40, escala: 'dano', cd: 0, golpes: 3,
-      desc: '3 disparos de 40%, cada uno con 20% de probabilidad de Quemadura (el paraguas también lanza fuego).',
+      pct: .43, escala: 'dano', cd: 0, golpes: 3,
+      desc: '3 disparos de 43%, cada uno con 20% de probabilidad de Quemadura (el paraguas también lanza fuego).',
       efectos: [{ accion: { tipo: 'efecto', id: 'burn', prob: .20 } }],
     },
     {
       categoria: 'especial', nombre: 'Paraguas Explosivo', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xf97316,
-      pct: .60, escala: 'dano', cd: 3,
-      desc: 'Lanza paraguas-bomba sobre todo el campo: 60% a todos los enemigos con 55% de probabilidad de Bomba.',
+      pct: .65, escala: 'dano', cd: 3,
+      desc: 'Lanza paraguas-bomba sobre todo el campo: 65% a todos los enemigos con 55% de probabilidad de Bomba.',
       efectos: [{ accion: { tipo: 'efecto', id: 'bomb', prob: .55 } }],
     },
     {
       categoria: 'over', nombre: 'Ejército de Pingüinos Cohete', objetivo: 'azar', golpes: 6, estilo: 'ranged', color: 0xfb923c,
-      pct: .30, escala: 'dano', cd: 5,
-      desc: 'Sus pingüinos con cohetes en la espalda caen sobre el campo: 6 explosiones de 30% a enemigos al azar, cada una con 30% de probabilidad de Bomba. Al final detona todas las Bombas de los enemigos (las que ya tenían salen potenciadas ×1.5).',
+      pct: .32, escala: 'dano', cd: 5,
+      desc: 'Sus pingüinos con cohetes en la espalda caen sobre el campo: 6 explosiones de 32% a enemigos al azar, cada una con 30% de probabilidad de Bomba. Al final detona todas las Bombas de los enemigos (las que ya tenían salen potenciadas ×1.5).',
       efectos: [
         { accion: { tipo: 'efecto', id: 'bomb', prob: .30 } },
         { cuando: 'final', accion: { tipo: 'detonar', a: 'todosEnemigos' } },

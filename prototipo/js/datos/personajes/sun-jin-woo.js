@@ -23,8 +23,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Daga del Monarca', objetivo: 'enemigo', estilo: 'melee', color: 0xc4b5fd,
-      pct: .65, escala: 'dano', cd: 0, golpes: 2,
-      desc: '2 cortes de 65% con las Dagas del Monarca a un enemigo.',
+      pct: .47, escala: 'dano', cd: 0, golpes: 2,
+      desc: '2 cortes de 47% con las Dagas del Monarca a un enemigo.',
     },
     {
       categoria: 'especial', nombre: '¡Arise!', objetivo: 'propio', estilo: 'support', color: 0x8b5cf6, cd: 2,

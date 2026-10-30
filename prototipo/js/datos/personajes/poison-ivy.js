@@ -26,14 +26,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Látigo de Espinas', objetivo: 'enemigo', estilo: 'ranged', color: 0x15803d,
-      pct: .90, escala: 'dano', cd: 0, golpes: 2,
-      desc: '2 latigazos de 90%, cada uno con 40% de probabilidad de Sangrado (si ya sangra, puede abrirse en Hemorragia).',
+      pct: 1.3, escala: 'dano', cd: 0, golpes: 2,
+      desc: '2 latigazos de 130%, cada uno con 40% de probabilidad de Sangrado (si ya sangra, puede abrirse en Hemorragia).',
       efectos: [{ accion: { tipo: 'efecto', id: 'bleed', prob: .40 } }],
     },
     {
       categoria: 'especial', nombre: 'Jardín Venenoso', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x22c55e,
-      pct: 1.45, escala: 'dano', cd: 3,
-      desc: 'Esporas tóxicas cubren el campo: 145% a todos los enemigos con 55% de probabilidad de Veneno. Las espinas abren las heridas: el Sangrado de cada enemigo se convierte en Hemorragia (sin tirada), y los que tienen Hemorragia reciben además 1 Veneno sin tirada.',
+      pct: 2.05, escala: 'dano', cd: 3,
+      desc: 'Esporas tóxicas cubren el campo: 205% a todos los enemigos con 55% de probabilidad de Veneno. Las espinas abren las heridas: el Sangrado de cada enemigo se convierte en Hemorragia (sin tirada), y los que tienen Hemorragia reciben además 1 Veneno sin tirada.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison', prob: .55 } },
         { condicion: { objetivoTiene: 'bleed' }, accion: { tipo: 'hemorragia' } },
@@ -42,8 +42,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Beso de la Hiedra', objetivo: 'enemigo', estilo: 'ranged', color: 0x4ade80,
-      pct: 3.50, escala: 'dano', cd: 5,
-      desc: 'Las enredaderas lo atrapan y le abren las heridas: 350%, su Sangrado se convierte en Hemorragia (sin tirada) y tiene 40% de probabilidad de Posesión por el beso venenoso.',
+      pct: 5.00, escala: 'dano', cd: 5,
+      desc: 'Las enredaderas lo atrapan y le abren las heridas: 500%, su Sangrado se convierte en Hemorragia (sin tirada) y tiene 40% de probabilidad de Posesión por el beso venenoso.',
       efectos: [
         { accion: { tipo: 'hemorragia' } },
         { accion: { tipo: 'efecto', id: 'possess', prob: .40 } },

@@ -33,15 +33,15 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Cadena Infernal', objetivo: 'enemigo', estilo: 'melee', color: 0xf97316,
-      pct: .70, escala: 'dano', cd: 0,
+      pct: .5, escala: 'dano', cd: 0,
       salta: { veces: 1, pct: .45, texto: '⛓️ ¡Cadena!' },
-      desc: 'Causa 70% y la cadena salta a otro enemigo al azar con 45%. 35% de probabilidad de Quemadura 8% (2 rondas) a cada uno.',
+      desc: 'Causa 50% y la cadena salta a otro enemigo al azar con 45%. 35% de probabilidad de Quemadura 8% (2 rondas) a cada uno.',
       efectos: [{ accion: { tipo: 'efecto', id: 'burn', valor: .08, dur: 2, prob: .35 } }],
     },
     {
       categoria: 'especial', nombre: 'Mirada de Penitencia', objetivo: 'enemigo', estilo: 'ranged', color: 0xfb923c,
-      pct: 1.15, escala: 'dano', cd: 3, ignoraProvocacion: true,
-      desc: 'Elige a cualquier enemigo (ignora Provocación y Sigilo). Causa 115%: si tenía Quemadura, siente todo su dolor (la Quemadura hace su daño al instante, sin gastarse) y 60% de probabilidad de Miedo (2 rondas) que no se puede resistir.',
+      pct: .8, escala: 'dano', cd: 3, ignoraProvocacion: true,
+      desc: 'Elige a cualquier enemigo (ignora Provocación y Sigilo). Causa 80%: si tenía Quemadura, siente todo su dolor (la Quemadura hace su daño al instante, sin gastarse) y 60% de probabilidad de Miedo (2 rondas) que no se puede resistir.',
       efectos: [
         { condicion: { objetivoTeniaAntes: 'burn' }, accion: { tipo: 'activarDoT', efecto: 'burn' } },
         { condicion: { objetivoTeniaAntes: 'burn' }, accion: { tipo: 'efecto', id: 'fear', dur: 2, prob: .60, irresistible: true } },
@@ -49,8 +49,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Jinete del Infierno', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xef4444,
-      pct: .95, escala: 'dano', cd: 4,
-      desc: 'Arrasa al equipo rival con su motocicleta infernal: 95% a todos los enemigos con 75% de probabilidad de Quemadura 12% (3 rondas) a cada uno.',
+      pct: .7, escala: 'dano', cd: 4,
+      desc: 'Arrasa al equipo rival con su motocicleta infernal: 70% a todos los enemigos con 75% de probabilidad de Quemadura 12% (3 rondas) a cada uno.',
       efectos: [{ accion: { tipo: 'efecto', id: 'burn', valor: .12, dur: 3, prob: .75 } }],
     },
   ],

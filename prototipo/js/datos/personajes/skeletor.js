@@ -29,14 +29,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Rayo del Bastón del Caos', objetivo: 'enemigo', estilo: 'ranged', color: 0xa855f7,
-      pct: 1.45, escala: 'dano', cd: 0,
-      desc: 'Causa 145% y disipa 2 buffs del objetivo.',
+      pct: 1.7, escala: 'dano', cd: 0,
+      desc: 'Causa 170% y disipa 2 buffs del objetivo.',
       efectos: [{ accion: { tipo: 'disipar', cantidad: 2 } }],
     },
     {
       categoria: 'especial', nombre: 'Maldición de la Montaña de la Serpiente', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x6d28d9,
-      pct: 1.35, escala: 'dano', cd: 2,
-      desc: 'Antes de atacar, le roba 1 buff a cada enemigo. Causa 135% a todos y les aplica Bloquear Buffs (2 rondas).',
+      pct: 1.6, escala: 'dano', cd: 2,
+      desc: 'Antes de atacar, le roba 1 buff a cada enemigo. Causa 160% a todos y les aplica Bloquear Buffs (2 rondas).',
       efectos: [
         { cuando: 'antes', accion: { tipo: 'robarBuffs', cantidad: 1 } },
         { accion: { tipo: 'efecto', id: 'blockBuffs', dur: 2 } },
@@ -44,9 +44,9 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Poder de Grayskull', objetivo: 'enemigo', estilo: 'ranged', color: 0xc084fc,
-      pct: 2.65, escala: 'dano', cd: 4,
+      pct: 3.1, escala: 'dano', cd: 4,
       consumeCargas: { pct: .20, efecto: 'poderRobado' },
-      desc: 'Causa 265% y consume todo su Poder Robado: +20% de daño por cada uno (hasta +200%). Después le arranca TODOS los buffs al objetivo (siempre, sin tirada).',
+      desc: 'Causa 310% y consume todo su Poder Robado: +20% de daño por cada uno (hasta +200%). Después le arranca TODOS los buffs al objetivo (siempre, sin tirada).',
       efectos: [{ accion: { tipo: 'disipar', sinTirada: true } }],
     },
   ],

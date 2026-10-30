@@ -30,7 +30,7 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Ataúd de Arena', objetivo: 'enemigo', estilo: 'ranged', color: 0xd97706,
-      pct: .70, escala: 'hp', cd: 0,
+      pct: .7, escala: 'hp', cd: 0,
       desc: 'Causa 70% (escala por HP) con 25% de probabilidad de Aturdimiento.',
       efectos: [{ accion: { tipo: 'efecto', id: 'stun', prob: .25 } }],
     },
@@ -45,7 +45,7 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Funeral de la Cascada de Arena', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xb45309,
-      pct: .70, escala: 'hp', cd: 4,
+      pct: .7, escala: 'hp', cd: 4,
       desc: 'Causa 70% a todos los enemigos (escala por HP) con 30% de probabilidad de Aturdimiento. Luego la arena reparte al azar entre los enemigos daño igual al 50% de la suma de los Escudos de su equipo.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'stun', prob: .30 } },

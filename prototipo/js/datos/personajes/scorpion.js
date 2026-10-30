@@ -30,14 +30,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Venganza Eterna', objetivo: 'enemigo', estilo: 'melee', color: 0xf59e0b,
-      pct: 1.35, escala: 'dano', cd: 0,
-      desc: 'Causa 135%. Si es crítico, golpea una vez más (si el objetivo murió, a un enemigo al azar).',
+      pct: 1.45, escala: 'dano', cd: 0,
+      desc: 'Causa 145%. Si es crítico, golpea una vez más (si el objetivo murió, a un enemigo al azar).',
       golpeExtraSiCritico: true,
     },
     {
       categoria: 'especial', nombre: 'Spear', objetivo: 'enemigo', estilo: 'ranged', color: 0xfbbf24,
-      pct: 2.55, escala: 'dano', cd: 3,
-      desc: 'Causa 255% con 50% de probabilidad de aplicar Incitar (1 ronda). Además causa daño por efecto igual al 2% del HP máx. de cada enemigo con Quemadura.',
+      pct: 2.7, escala: 'dano', cd: 3,
+      desc: 'Causa 270% con 50% de probabilidad de aplicar Incitar (1 ronda). Además causa daño por efecto igual al 2% del HP máx. de cada enemigo con Quemadura.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'incite', dur: 1, prob: .50 } },
         { accion: { tipo: 'danoSegunEnemigos', efecto: 'burn', pct: .02 } },
@@ -45,8 +45,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Fatality: Cráneo Incendiario', objetivo: 'enemigo', estilo: 'melee', color: 0xef4444,
-      pct: 4.15, escala: 'dano', cd: 4,
-      desc: 'Causa 415%. Si el objetivo sobrevive, 75% de probabilidad de aplicar Quemadura 15% (3 rondas).',
+      pct: 4.4, escala: 'dano', cd: 4,
+      desc: 'Causa 440%. Si el objetivo sobrevive, 75% de probabilidad de aplicar Quemadura 15% (3 rondas).',
       efectos: [{ accion: { tipo: 'efecto', id: 'burn', valor: .15, dur: 3, prob: .75 } }],
     },
   ],

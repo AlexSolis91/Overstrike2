@@ -46,13 +46,13 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: "Bansho Ten'in", objetivo: 'enemigo', estilo: 'ranged', color: 0xa855f7,
-      pct: 1.00, escala: 'dano', cd: 0, ignoraProvocacion: true,
-      desc: 'Atrae a cualquier enemigo y le causa 100%. Puede elegir a cualquiera: ignora Provocación y Sigilo.',
+      pct: 1.2, escala: 'dano', cd: 0, ignoraProvocacion: true,
+      desc: 'Atrae a cualquier enemigo y le causa 120%. Puede elegir a cualquiera: ignora Provocación y Sigilo.',
     },
     {
       categoria: 'especial', nombre: 'Shinra Tensei', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xc4b5fd,
-      pct: 1.10, escala: 'dano', cd: 3,
-      desc: 'Repele a todos: causa 110% a todos los enemigos y les disipa 1 buff a cada uno. Intervalo de 5 segundos: Pain queda Expuesto (recibe +25% de daño) por 1 ronda.',
+      pct: 1.35, escala: 'dano', cd: 3,
+      desc: 'Repele a todos: causa 135% a todos los enemigos y les disipa 1 buff a cada uno. Intervalo de 5 segundos: Pain queda Expuesto (recibe +25% de daño) por 1 ronda.',
       efectos: [
         { accion: { tipo: 'disipar', cantidad: 1 } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'expuesto', dur: 1, irresistible: true, a: 'propio' } },
@@ -60,8 +60,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Seis Caminos del Dolor', objetivo: 'azar', golpes: 6, estilo: 'ranged', color: 0x7c3aed,
-      pct: .65, escala: 'dano', cd: 5, recorreCiclo: true,
-      desc: 'Los seis cuerpos atacan a la vez: 6 golpes de 65% a enemigos al azar. Cada golpe lleva el efecto de un Camino distinto, en orden (Deva, Asura, Humano, Animal, Preta, Naraka). No cambia su Camino activo.',
+      pct: .8, escala: 'dano', cd: 5, recorreCiclo: true,
+      desc: 'Los seis cuerpos atacan a la vez: 6 golpes de 80% a enemigos al azar. Cada golpe lleva el efecto de un Camino distinto, en orden (Deva, Asura, Humano, Animal, Preta, Naraka). No cambia su Camino activo.',
     },
   ],
 };

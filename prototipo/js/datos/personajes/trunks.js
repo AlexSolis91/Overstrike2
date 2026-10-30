@@ -26,14 +26,14 @@ const trunksSuperSaiyajin = {
     },
     {
       categoria: 'especial', nombre: 'Masenko Ha', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfacc15,
-      pct: 1.10, escala: 'dano', cd: 3, bonoPorDebuffs: { pct: .20 },
-      desc: '110% a todos los enemigos, +20% contra cada uno por tipo distinto de debuff. Todos los aliados ganan Furia (2 rondas).',
+      pct: 1.15, escala: 'dano', cd: 3, bonoPorDebuffs: { pct: .20 },
+      desc: '115% a todos los enemigos, +20% contra cada uno por tipo distinto de debuff. Todos los aliados ganan Furia (2 rondas).',
       efectos: [{ cuando: 'final', accion: { tipo: 'efecto', id: 'dmgUp', dur: 2, a: 'todosAliados' } }],
     },
     {
       categoria: 'over', nombre: 'Shining Sword Attack', objetivo: 'enemigo', estilo: 'melee', color: 0xfef08a,
-      pct: 2.40, escala: 'dano', cd: 5, bonoPorDebuffs: { pct: .25 },
-      desc: 'Lo corta en pedazos y lo remata con una ráfaga: 240%, +25% por cada tipo distinto de debuff del objetivo.',
+      pct: 2.5, escala: 'dano', cd: 5, bonoPorDebuffs: { pct: .25 },
+      desc: 'Lo corta en pedazos y lo remata con una ráfaga: 250%, +25% por cada tipo distinto de debuff del objetivo.',
     },
   ],
 };
@@ -64,19 +64,19 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Corte del Futuro', objetivo: 'enemigo', estilo: 'melee', color: 0xa78bfa,
-      pct: 1.10, escala: 'dano', cd: 0, bonoPorDebuffs: { pct: .15 },
-      desc: 'Causa 110%, +15% por cada tipo distinto de debuff del objetivo.',
+      pct: 1.15, escala: 'dano', cd: 0, bonoPorDebuffs: { pct: .15 },
+      desc: 'Causa 115%, +15% por cada tipo distinto de debuff del objetivo.',
     },
     {
       categoria: 'especial', nombre: 'Burning Attack', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfacc15,
-      pct: .90, escala: 'dano', cd: 3, bonoPorDebuffs: { pct: .15 },
-      desc: '90% a todos los enemigos, +15% contra cada uno por tipo distinto de debuff. Gana 1 de Esperanza.',
+      pct: .95, escala: 'dano', cd: 3, bonoPorDebuffs: { pct: .15 },
+      desc: '95% a todos los enemigos, +15% contra cada uno por tipo distinto de debuff. Gana 1 de Esperanza.',
       efectos: [{ cuando: 'final', accion: { tipo: 'ganarCargas', cantidad: 1, max: 5, efecto: 'esperanzaTrunks', a: 'propio' } }],
     },
     {
       categoria: 'over', nombre: 'Heat Dome Attack', objetivo: 'enemigo', estilo: 'ranged', color: 0xfde68a,
-      pct: 2.00, escala: 'dano', cd: 5, bonoPorDebuffs: { pct: .20 },
-      desc: '200%, +20% por cada tipo distinto de debuff del objetivo. Gana 2 de Esperanza.',
+      pct: 2.05, escala: 'dano', cd: 5, bonoPorDebuffs: { pct: .20 },
+      desc: '205%, +20% por cada tipo distinto de debuff del objetivo. Gana 2 de Esperanza.',
       efectos: [{ cuando: 'final', accion: { tipo: 'ganarCargas', cantidad: 2, max: 5, efecto: 'esperanzaTrunks', a: 'propio' } }],
     },
   ],

@@ -24,14 +24,14 @@ const reyDragon = {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Garras del Rey Dragón', objetivo: 'enemigo', estilo: 'melee', color: 0xdc2626,
-      pct: 1.40, escala: 'dano', cd: 0,
-      desc: 'Causa 140% con 60% de probabilidad de aplicar Quemadura 10% (2 rondas).',
+      pct: 1.3, escala: 'dano', cd: 0,
+      desc: 'Causa 130% con 60% de probabilidad de aplicar Quemadura 10% (2 rondas).',
       efectos: [{ accion: { tipo: 'efecto', id: 'burn', valor: .10, dur: 2, prob: .60 } }],
     },
     {
       categoria: 'especial', nombre: 'Aliento del Rey Dragón', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xf97316,
-      pct: 1.20, escala: 'dano', cd: 3,
-      desc: 'Causa 120% a todos los enemigos con 80% de probabilidad de Quemadura 10% (3 rondas) a cada uno. Los que ya tenían Quemadura tienen además 40% de probabilidad de Miedo (2 rondas).',
+      pct: 1.1, escala: 'dano', cd: 3,
+      desc: 'Causa 110% a todos los enemigos con 80% de probabilidad de Quemadura 10% (3 rondas) a cada uno. Los que ya tenían Quemadura tienen además 40% de probabilidad de Miedo (2 rondas).',
       efectos: [
         { condicion: { objetivoTeniaAntes: 'burn' }, accion: { tipo: 'efecto', id: 'fear', dur: 2, prob: .40 } },
         { accion: { tipo: 'efecto', id: 'burn', valor: .10, dur: 3, prob: .80 } },
@@ -80,14 +80,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Llamas de la Destrucción', objetivo: 'enemigo', estilo: 'ranged', color: 0xef4444,
-      pct: 1.00, escala: 'dano', cd: 0,
-      desc: 'Causa 100% con 50% de probabilidad de aplicar Quemadura 8% (2 rondas).',
+      pct: .95, escala: 'dano', cd: 0,
+      desc: 'Causa 95% con 50% de probabilidad de aplicar Quemadura 8% (2 rondas).',
       efectos: [{ accion: { tipo: 'efecto', id: 'burn', valor: .08, dur: 2, prob: .50 } }],
     },
     {
       categoria: 'especial', nombre: 'Miedo del Rey Dragón', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xf97316,
-      pct: .70, escala: 'dano', cd: 3,
-      desc: 'Ruge y lanza fuego a todos: 70% a todos los enemigos con 50% de probabilidad de Quemadura 5% (2 rondas) a cada uno. Los que ya tenían Quemadura tienen además 40% de probabilidad de Miedo (2 rondas).',
+      pct: .65, escala: 'dano', cd: 3,
+      desc: 'Ruge y lanza fuego a todos: 65% a todos los enemigos con 50% de probabilidad de Quemadura 5% (2 rondas) a cada uno. Los que ya tenían Quemadura tienen además 40% de probabilidad de Miedo (2 rondas).',
       efectos: [
         { condicion: { objetivoTeniaAntes: 'burn' }, accion: { tipo: 'efecto', id: 'fear', dur: 2, prob: .40 } },
         { accion: { tipo: 'efecto', id: 'burn', valor: .05, dur: 2, prob: .50 } },

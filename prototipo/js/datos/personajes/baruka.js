@@ -24,14 +24,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Dagas de Baruka', objetivo: 'enemigo', estilo: 'melee', color: 0x60a5fa,
-      pct: .50, escala: 'dano', cd: 0, golpes: 2,
-      desc: '2 cortes de 50% con sus dagas heladas, cada uno con 25% de probabilidad de Congelación.',
+      pct: .65, escala: 'dano', cd: 0, golpes: 2,
+      desc: '2 cortes de 65% con sus dagas heladas, cada uno con 25% de probabilidad de Congelación.',
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .25 } }],
     },
     {
       categoria: 'especial', nombre: 'Tormenta de Hielo', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x93c5fd,
-      pct: .70, escala: 'dano', cd: 3,
-      desc: 'Una ventisca de los Elfos de Hielo: 70% a todos los enemigos con 40% de probabilidad de Congelación. A cada enemigo congelado le roba 5% de Velocidad para siempre (tope total 30%).',
+      pct: .9, escala: 'dano', cd: 3,
+      desc: 'Una ventisca de los Elfos de Hielo: 90% a todos los enemigos con 40% de probabilidad de Congelación. A cada enemigo congelado le roba 5% de Velocidad para siempre (tope total 30%).',
       efectos: [
         { accion: { tipo: 'efecto', id: 'freeze', prob: .40 } },
         { condicion: { objetivoTiene: 'freeze' }, accion: { tipo: 'robarVelocidad', pct: .05, tope: .30 } },
@@ -39,8 +39,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Danza de las Dagas Heladas', objetivo: 'enemigo', estilo: 'melee', color: 0xbfdbfe,
-      pct: .55, escala: 'dano', cd: 5, golpes: 4, criticoSiObjetivoTiene: 'freeze',
-      desc: 'Desaparece y reaparece a su espalda: 4 cortes de 55%, crítico seguro si el objetivo está Congelado, cada uno con 30% de probabilidad de Congelación (Mega si ya lo estaba).',
+      pct: .7, escala: 'dano', cd: 5, golpes: 4, criticoSiObjetivoTiene: 'freeze',
+      desc: 'Desaparece y reaparece a su espalda: 4 cortes de 70%, crítico seguro si el objetivo está Congelado, cada uno con 30% de probabilidad de Congelación (Mega si ya lo estaba).',
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .30 } }],
     },
   ],

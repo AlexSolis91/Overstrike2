@@ -26,8 +26,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Batarang', objetivo: 'enemigo', estilo: 'ranged', color: 0x94a3b8,
-      pct: 1.55, escala: 'dano', cd: 0,
-      desc: 'Causa 155%. Si el objetivo tiene su Over listo para usar, tiene 20% de probabilidad de Aturdirlo.',
+      pct: 2.15, escala: 'dano', cd: 0,
+      desc: 'Causa 215%. Si el objetivo tiene su Over listo para usar, tiene 20% de probabilidad de Aturdirlo.',
       efectos: [{ condicion: { objetivoOverListo: true }, accion: { tipo: 'efecto', id: 'stun', prob: .20 } }],
     },
     {

@@ -29,8 +29,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Danza de la Mariposa: Capricho', objetivo: 'enemigo', estilo: 'melee', color: 0xc084fc,
-      pct: .50, escala: 'dano', cd: 0, golpes: 3,
-      desc: 'Chō no Mai: Tawamure. 3 aguijones de 50%, cada uno con 30% de probabilidad de Veneno. Si Shinobu está envenenada, el último aguijón inyecta además 1 Veneno sin tirada.',
+      pct: .8, escala: 'dano', cd: 0, golpes: 3,
+      desc: 'Chō no Mai: Tawamure. 3 aguijones de 80%, cada uno con 30% de probabilidad de Veneno. Si Shinobu está envenenada, el último aguijón inyecta además 1 Veneno sin tirada.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison', prob: .30 } },
         { cuando: 'final', condicion: { propioTiene: 'poison' }, accion: { tipo: 'efecto', id: 'poison', irresistible: true, a: 'objetivo' } },
@@ -38,17 +38,17 @@ export default {
     },
     {
       categoria: 'especial', nombre: 'Danza de la Libélula: Hexágono de Ojo Compuesto', objetivo: 'enemigo', estilo: 'melee', color: 0xa855f7,
-      pct: .35, escala: 'dano', cd: 3, golpes: 6,
-      desc: 'Seirei no Mai: Fukugan Rokkaku. 6 aguijones de 35% al mismo enemigo, cada uno con 35% de probabilidad de Veneno. Luego se cura 17% de su HP máx.',
+      pct: .56, escala: 'dano', cd: 3, golpes: 6,
+      desc: 'Seirei no Mai: Fukugan Rokkaku. 6 aguijones de 56% al mismo enemigo, cada uno con 35% de probabilidad de Veneno. Luego se cura 27% de su HP máx.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison', prob: .35 } },
-        { cuando: 'final', accion: { tipo: 'curar', pct: .17, base: 'hpMaxObjetivo', a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'curar', pct: .27, base: 'hpMaxObjetivo', a: 'propio' } },
       ],
     },
     {
       categoria: 'over', nombre: 'Danza de la Abeja: Picadura Verdadera', objetivo: 'enemigo', estilo: 'melee', color: 0xe9d5ff,
-      pct: 2.10, escala: 'dano', cd: 5,
-      desc: 'Hachi Kiba no Mai: Makoto Hayai. Un aguijón a velocidad imposible: 210%. Si Shinobu está envenenada, le inyecta 3 Venenos sin tirada y todos los Venenos del objetivo hacen su daño al instante.',
+      pct: 3.35, escala: 'dano', cd: 5,
+      desc: 'Hachi Kiba no Mai: Makoto Hayai. Un aguijón a velocidad imposible: 335%. Si Shinobu está envenenada, le inyecta 3 Venenos sin tirada y todos los Venenos del objetivo hacen su daño al instante.',
       efectos: [
         { cuando: 'final', condicion: { propioTiene: 'poison' }, accion: { tipo: 'efecto', id: 'poison', irresistible: true, a: 'objetivo' } },
         { cuando: 'final', condicion: { propioTiene: 'poison' }, accion: { tipo: 'efecto', id: 'poison', irresistible: true, a: 'objetivo' } },

@@ -28,20 +28,20 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Puño de Hierro del Dragón de Fuego', objetivo: 'enemigo', estilo: 'melee', color: 0xef4444,
-      pct: .70, escala: 'dano', cd: 0,
-      desc: 'Causa 70% con 35% de probabilidad de Quemadura.',
+      pct: .49, escala: 'dano', cd: 0,
+      desc: 'Causa 49% con 35% de probabilidad de Quemadura.',
       efectos: [{ accion: { tipo: 'efecto', id: 'burn', prob: .35 } }],
     },
     {
       categoria: 'especial', nombre: 'Rugido del Dragón de Fuego', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xf97316,
-      pct: .60, escala: 'dano', cd: 3,
-      desc: 'Un torrente de fuego desde su boca: 60% a todos los enemigos con 50% de probabilidad de Quemadura.',
+      pct: .42, escala: 'dano', cd: 3,
+      desc: 'Un torrente de fuego desde su boca: 42% a todos los enemigos con 50% de probabilidad de Quemadura.',
       efectos: [{ accion: { tipo: 'efecto', id: 'burn', prob: .50 } }],
     },
     {
       categoria: 'over', nombre: 'Rugido del Dragón de Fuego y Rayo', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xf0abfc,
-      pct: .85, escala: 'dano', cd: 5, consumeCargas: { pct: .10, efecto: 'llamaNatsu' },
-      desc: 'Modo Dragón de Fuego y Rayo: 85% a todos los enemigos con 50% de probabilidad de Quemadura y 25% de Aturdir. Consume sus Llamas del Dragón: +10% de daño por cada una.',
+      pct: .6, escala: 'dano', cd: 5, consumeCargas: { pct: .10, efecto: 'llamaNatsu' },
+      desc: 'Modo Dragón de Fuego y Rayo: 60% a todos los enemigos con 50% de probabilidad de Quemadura y 25% de Aturdir. Consume sus Llamas del Dragón: +10% de daño por cada una.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'burn', prob: .50 } },
         { accion: { tipo: 'efecto', id: 'stun', prob: .25 } },

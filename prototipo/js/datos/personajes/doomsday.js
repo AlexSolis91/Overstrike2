@@ -28,20 +28,20 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Puños de Hueso', objetivo: 'enemigo', estilo: 'melee', color: 0x94a3b8,
-      pct: 1.00, escala: 'dano', cd: 0,
-      desc: 'Golpea con sus espolones de hueso: 100% con 30% de probabilidad de Sangrado.',
+      pct: .95, escala: 'dano', cd: 0,
+      desc: 'Golpea con sus espolones de hueso: 95% con 30% de probabilidad de Sangrado.',
       efectos: [{ accion: { tipo: 'efecto', id: 'bleed', prob: .30 } }],
     },
     {
       categoria: 'especial', nombre: 'Embestida Imparable', objetivo: 'todosEnemigos', estilo: 'melee', color: 0x64748b,
-      pct: .80, escala: 'dano', cd: 3,
-      desc: 'Arrasa todo a su paso: 80% a todos los enemigos y gana Provocación (2 rondas): quiere que lo golpeen para seguir adaptándose.',
+      pct: .75, escala: 'dano', cd: 3,
+      desc: 'Arrasa todo a su paso: 75% a todos los enemigos y gana Provocación (2 rondas): quiere que lo golpeen para seguir adaptándose.',
       efectos: [{ cuando: 'final', accion: { tipo: 'efecto', id: 'taunt', dur: 2, a: 'propio' } }],
     },
     {
       categoria: 'over', nombre: 'El Día del Juicio', objetivo: 'enemigo', estilo: 'melee', color: 0xef4444,
-      pct: 2.40, escala: 'dano', cd: 5,
-      desc: 'El golpe que derribó a Superman: 240% con 40% de probabilidad de Mega Aturdimiento.',
+      pct: 2.3, escala: 'dano', cd: 5,
+      desc: 'El golpe que derribó a Superman: 230% con 40% de probabilidad de Mega Aturdimiento.',
       efectos: [{ accion: { tipo: 'efecto', id: 'stun', mega: true, prob: .40 } }],
     },
   ],

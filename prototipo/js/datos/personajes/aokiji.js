@@ -26,20 +26,20 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Ice Block: Partisan', objetivo: 'enemigo', estilo: 'ranged', color: 0x7dd3fc,
-      pct: .65, escala: 'dano', cd: 0, golpes: 2,
-      desc: 'Lanza picas de hielo: 2 impactos de 65%, cada uno con 25% de probabilidad de Congelación.',
+      pct: .75, escala: 'dano', cd: 0, golpes: 2,
+      desc: 'Lanza picas de hielo: 2 impactos de 75%, cada uno con 25% de probabilidad de Congelación.',
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .25 } }],
     },
     {
       categoria: 'especial', nombre: 'Ice Time', objetivo: 'enemigo', estilo: 'melee', color: 0xbae6fd,
-      pct: 1.90, escala: 'dano', cd: 3,
-      desc: 'Lo toca y lo congela de pies a cabeza: 190% con 55% de probabilidad de Mega Congelación.',
+      pct: 2.15, escala: 'dano', cd: 3,
+      desc: 'Lo toca y lo congela de pies a cabeza: 215% con 55% de probabilidad de Mega Congelación.',
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', mega: true, prob: .55 } }],
     },
     {
       categoria: 'over', nombre: 'Ice Age', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xe0f2fe,
-      pct: 1.75, escala: 'dano', cd: 5,
-      desc: 'Congela todo el campo de batalla: 175% a todos los enemigos con 60% de probabilidad de Congelación (Mega si ya estaban congelados).',
+      pct: 2.00, escala: 'dano', cd: 5,
+      desc: 'Congela todo el campo de batalla: 200% a todos los enemigos con 60% de probabilidad de Congelación (Mega si ya estaban congelados).',
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .60 } }],
     },
   ],

@@ -29,20 +29,20 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Luz de Dendera', objetivo: 'enemigo', estilo: 'ranged', color: 0xfde68a,
-      pct: .55, escala: 'dano', cd: 0,
-      desc: 'El rayo de la Gran Bombilla de Dendera: causa 55% con 30% de probabilidad de aplicar Ceguera (2 rondas).',
+      pct: .42, escala: 'dano', cd: 0,
+      desc: 'El rayo de la Gran Bombilla de Dendera: causa 42% con 30% de probabilidad de aplicar Ceguera (2 rondas).',
       efectos: [{ accion: { tipo: 'efecto', id: 'blind', dur: 2, prob: .30 } }],
     },
     {
       categoria: 'especial', nombre: 'Esfinge Wehem-Mesut', objetivo: 'enemigo', estilo: 'melee', color: 0xeab308,
-      pct: .45, escala: 'dano', cd: 3,
-      desc: 'Causa 45% e invoca una Esfinge Wehem-Mesut (2 turnos): golpea 50% al enemigo más fuerte y da Protección al aliado más herido.',
+      pct: .34, escala: 'dano', cd: 3,
+      desc: 'Causa 34% e invoca una Esfinge Wehem-Mesut (2 turnos): golpea 50% al enemigo más fuerte y da Protección al aliado más herido.',
       efectos: [{ cuando: 'final', accion: { tipo: 'invocar', key: 'esfingeWehemMesut', a: 'propio' } }],
     },
     {
       categoria: 'over', nombre: 'Ramesseum Tentyris', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfacc15,
-      pct: .60, escala: 'dano', cd: 5, cdInicial: 0,
-      desc: 'Listo desde el inicio de la partida. Levanta el Gran Templo Resplandeciente (3 rondas) y causa 60% a todos los enemigos. Mientras el Templo siga en pie: todo su equipo hace +15% de daño y tiene +15% de Resistencia, al inicio de cada ronda la Luz de Dendera golpea 40% a todos los enemigos, y Ozymandias no puede caer (no baja de 1 HP).',
+      pct: .46, escala: 'dano', cd: 5, cdInicial: 0,
+      desc: 'Listo desde el inicio de la partida. Levanta el Gran Templo Resplandeciente (3 rondas) y causa 46% a todos los enemigos. Mientras el Templo siga en pie: todo su equipo hace +15% de daño y tiene +15% de Resistencia, al inicio de cada ronda la Luz de Dendera golpea 40% a todos los enemigos, y Ozymandias no puede caer (no baja de 1 HP).',
       efectos: [{ cuando: 'final', accion: { tipo: 'zona', dur: 3, a: 'propio', zona: {
         nombre: 'Ramesseum Tentyris', icono: '🏛️',
         desc: 'su equipo +15% Daño y +15% Resistencia; Luz de Dendera (40% a todos) al inicio de cada ronda; Ozymandias no puede caer',

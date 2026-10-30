@@ -31,23 +31,23 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Zarpazo Simbionte', objetivo: 'enemigo', estilo: 'melee', color: 0x334155,
-      pct: .95, escala: 'dano', cd: 0,
-      desc: 'Causa 95% con 40% de probabilidad de aplicar Sangrado.',
+      pct: .9, escala: 'dano', cd: 0,
+      desc: 'Causa 90% con 40% de probabilidad de aplicar Sangrado.',
       efectos: [{ accion: { tipo: 'efecto', id: 'bleed', prob: .40 } }],
     },
     {
       categoria: 'especial', nombre: 'Tentáculos Simbiontes', objetivo: 'todosEnemigos', estilo: 'melee', color: 0x475569,
-      pct: .70, escala: 'dano', cd: 3,
-      desc: 'Causa 70% a todos los enemigos con 50% de probabilidad de Sangrado a cada uno.',
+      pct: .65, escala: 'dano', cd: 3,
+      desc: 'Causa 65% a todos los enemigos con 50% de probabilidad de Sangrado a cada uno.',
       efectos: [{ accion: { tipo: 'efecto', id: 'bleed', prob: .50 } }],
     },
     {
       categoria: 'over', nombre: '¡Te Devoraremos!', objetivo: 'enemigo', estilo: 'melee', color: 0xdc2626,
-      pct: 2.60, escala: 'dano', cd: 4,
-      desc: 'Causa 260% y le roba 8% de su HP máx. Si lo mata, se lo come: se cura 20% de su HP máx. y gana +5% de Daño permanente (máx. +20%).',
+      pct: 2.45, escala: 'dano', cd: 4,
+      desc: 'Causa 245% y le roba 8% de su HP máx. Si lo mata, se lo come: se cura 19% de su HP máx. y gana +5% de Daño permanente (máx. +20%).',
       efectos: [
         { accion: { tipo: 'robarHP', pct: .08 } },
-        { cuando: 'final', condicion: { objetivoEliminado: true }, accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .20, a: 'propio' } },
+        { cuando: 'final', condicion: { objetivoEliminado: true }, accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .19, a: 'propio' } },
         { cuando: 'final', condicion: { objetivoEliminado: true }, accion: { tipo: 'bonoPermanente', stat: 'dmgPct', pct: .05, tope: .20, a: 'propio' } },
       ],
     },

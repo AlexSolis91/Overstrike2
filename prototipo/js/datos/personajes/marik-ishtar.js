@@ -25,8 +25,8 @@ const raModoFenix = {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Fuego Negro', objetivo: 'enemigo', estilo: 'ranged', color: 0xf59e0b,
-      pct: 1.10, cd: 0,
-      desc: 'Causa 110%. Si el objetivo tenía Quemadura Solar, le aplica Quemadura 10% (2 rondas); si tenía Quemadura, le aplica Quemadura Solar (2 rondas).',
+      pct: 1.75, cd: 0,
+      desc: 'Causa 175%. Si el objetivo tenía Quemadura Solar, le aplica Quemadura 10% (2 rondas); si tenía Quemadura, le aplica Quemadura Solar (2 rondas).',
       efectos: [
         { condicion: { objetivoTeniaAntes: 'solarBurn' }, accion: { tipo: 'efecto', id: 'burn', valor: .10, dur: 2 } },
         { condicion: { objetivoTeniaAntes: 'burn' }, accion: { tipo: 'efecto', id: 'solarBurn', dur: 2 } },
@@ -34,14 +34,14 @@ const raModoFenix = {
     },
     {
       categoria: 'especial', nombre: 'Cañón de las Llamas del Sol', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfbbf24,
-      pct: 1.10, cd: 2,
-      desc: 'Causa 110% a todos los enemigos y les baja 3% de HP máx. por cada debuff que tenían (para toda la partida; máx. −30% en total).',
+      pct: 1.75, cd: 2,
+      desc: 'Causa 175% a todos los enemigos y les baja 3% de HP máx. por cada debuff que tenían (para toda la partida; máx. −30% en total).',
       efectos: [{ accion: { tipo: 'reducirHpMax', pct: .03, porDebuffs: true, tope: .30 } }],
     },
     {
       categoria: 'over', nombre: 'Incineración de Fénix Divino', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xef4444,
-      pct: 1.80, cd: 4,
-      desc: 'Causa 180% a todos los enemigos y activa al instante el daño de sus Quemaduras. Si alguno tenía Quemadura Solar, después lanza un Fuego Negro a un enemigo al azar.',
+      pct: 2.9, cd: 4,
+      desc: 'Causa 290% a todos los enemigos y activa al instante el daño de sus Quemaduras. Si alguno tenía Quemadura Solar, después lanza un Fuego Negro a un enemigo al azar.',
       efectos: [
         { accion: { tipo: 'activarDoT', efecto: 'burn' } },
         { cuando: 'final', condicion: { algunGolpeadoTenia: 'solarBurn' }, accion: { tipo: 'usarMovimiento', categoria: 'basico', despues: true, a: { azar: 1 } } },
@@ -76,22 +76,22 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Golpe de las Sombras', objetivo: 'enemigo', estilo: 'melee', color: 0xa855f7,
-      pct: 1.00, cd: 0,
-      desc: 'Causa 100% e invoca un monstruo al azar.',
+      pct: 1.6, cd: 0,
+      desc: 'Causa 160% e invoca un monstruo al azar.',
       efectos: [{ cuando: 'final', accion: { tipo: 'invocarAzar', tabla: 'monstruosMarik', a: 'propio' } }],
     },
     {
       categoria: 'especial', nombre: 'Ataque Directo', objetivo: 'enemigo', estilo: 'melee', color: 0x7c3aed,
-      pct: 1.60, cd: 2,
-      desc: 'Causa 160%. Todas sus invocaciones repiten su efecto al aparecer y atacan de inmediato.',
+      pct: 2.55, cd: 2,
+      desc: 'Causa 255%. Todas sus invocaciones repiten su efecto al aparecer y atacan de inmediato.',
       efectos: [{ cuando: 'final', accion: { tipo: 'potenciarInvocaciones', conAparecer: true, a: 'propio' } }],
     },
     {
       categoria: 'over', nombre: 'Canto del Dios del Sol', objetivo: 'propio', estilo: 'support', color: 0xfacc15,
       cd: 1, requiereInvocaciones: { key: 'huevoSol', o: 3 },
-      desc: 'Se cura 5% de su HP máx. Sacrifica el Huevo del Sol (o, si no lo tiene, 3 invocaciones) e invoca al Dragón Alado de Ra. Requiere el Huevo del Sol o 3 invocaciones.',
+      desc: 'Se cura 8% de su HP máx. Sacrifica el Huevo del Sol (o, si no lo tiene, 3 invocaciones) e invoca al Dragón Alado de Ra. Requiere el Huevo del Sol o 3 invocaciones.',
       efectos: [
-        { cuando: 'final', accion: { tipo: 'curar', pct: .05, escala: 'hpMax', a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'curar', pct: .08, escala: 'hpMax', a: 'propio' } },
         { cuando: 'final', accion: { tipo: 'sacrificarInvocar', sacrificio: 'huevoSol', o: 3, key: 'raAlado', a: 'propio' } },
       ],
     },

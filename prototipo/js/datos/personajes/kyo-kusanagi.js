@@ -26,20 +26,20 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: '100 Shiki: Oniyaki', objetivo: 'enemigo', estilo: 'melee', color: 0xf97316,
-      pct: .60, escala: 'dano', cd: 0, golpes: 2,
-      desc: 'Un gancho ascendente envuelto en llamas: 2 golpes de 60%, cada uno con 25% de probabilidad de Quemadura.',
+      pct: .45, escala: 'dano', cd: 0, golpes: 2,
+      desc: 'Un gancho ascendente envuelto en llamas: 2 golpes de 45%, cada uno con 25% de probabilidad de Quemadura.',
       efectos: [{ accion: { tipo: 'efecto', id: 'burn', prob: .25 } }],
     },
     {
       categoria: 'especial', nombre: 'Combo Aragami · Konokizu · Yanosabi', objetivo: 'enemigo', estilo: 'melee', color: 0xfb923c,
-      pct: .55, escala: 'dano', cd: 3, golpes: 3,
-      desc: 'Su cadena de combo clásica: 3 golpes de 55% al mismo enemigo, cada uno con 40% de probabilidad de Quemadura.',
+      pct: .41, escala: 'dano', cd: 3, golpes: 3,
+      desc: 'Su cadena de combo clásica: 3 golpes de 41% al mismo enemigo, cada uno con 40% de probabilidad de Quemadura.',
       efectos: [{ accion: { tipo: 'efecto', id: 'burn', prob: .40 } }],
     },
     {
       categoria: 'over', nombre: 'Ura 108 Shiki: Orochinagi', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfacc15,
-      pct: 1.40, escala: 'dano', cd: 5,
-      desc: 'Carga las llamas sagradas y las desata en una ola: 140% a todos los enemigos con 60% de probabilidad de Quemadura. Todos los aliados ganan Furia y Celeridad (2 rondas).',
+      pct: 1.05, escala: 'dano', cd: 5,
+      desc: 'Carga las llamas sagradas y las desata en una ola: 105% a todos los enemigos con 60% de probabilidad de Quemadura. Todos los aliados ganan Furia y Celeridad (2 rondas).',
       efectos: [
         { accion: { tipo: 'efecto', id: 'burn', prob: .60 } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'dmgUp', dur: 2, a: 'todosAliados' } },

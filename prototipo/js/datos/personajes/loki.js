@@ -34,14 +34,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Daga del Embaucador', objetivo: 'enemigo', estilo: 'melee', color: 0x22c55e,
-      pct: .90, escala: 'hp', cd: 0,
-      desc: 'Causa 90% (escala por HP) con 30% de probabilidad de aplicar Miedo (2 rondas). Contra enemigos envenenados el Miedo no se puede resistir.',
+      pct: 1.25, escala: 'hp', cd: 0,
+      desc: 'Causa 125% (escala por HP) con 30% de probabilidad de aplicar Miedo (2 rondas). Contra enemigos envenenados el Miedo no se puede resistir.',
       efectos: [{ accion: { tipo: 'efecto', id: 'fear', dur: 2, prob: .30, irresistibleSi: 'poison' } }],
     },
     {
       categoria: 'especial', nombre: 'Truco de la Serpiente', objetivo: 'enemigo', estilo: 'ranged', color: 0x4ade80,
-      pct: 1.40, escala: 'hp', cd: 3,
-      desc: 'Causa 140% (escala por HP), +10% por cada Veneno del objetivo (máx. +50%). Si el objetivo está envenenado, le roba 1 buff al azar y tiene 40% de probabilidad de Aturdirlo.',
+      pct: 1.95, escala: 'hp', cd: 3,
+      desc: 'Causa 195% (escala por HP), +10% por cada Veneno del objetivo (máx. +50%). Si el objetivo está envenenado, le roba 1 buff al azar y tiene 40% de probabilidad de Aturdirlo.',
       bonoPorAcumulacion: { efecto: 'poison', pct: .10, max: 5 },
       efectos: [
         { condicion: { objetivoTiene: 'poison' }, accion: { tipo: 'robarBuffs', cantidad: 1 } },

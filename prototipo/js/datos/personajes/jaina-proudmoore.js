@@ -22,20 +22,20 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Descarga de Escarcha', objetivo: 'enemigo', estilo: 'ranged', color: 0xa5b4fc, elemento: 'hielo',
-      pct: 1.65, escala: 'dano', cd: 0,
-      desc: 'Causa 165%. 20% de probabilidad de golpear también (165%) a otro enemigo con Congelación.',
+      pct: 1.75, escala: 'dano', cd: 0,
+      desc: 'Causa 175%. 20% de probabilidad de golpear también (175%) a otro enemigo con Congelación.',
       golpeExtraContra: { efecto: 'freeze', prob: .20 },
     },
     {
       categoria: 'especial', nombre: 'Anillo de Hielo', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x7dd3fc, elemento: 'hielo',
-      pct: 1.35, escala: 'dano', cd: 3,
-      desc: 'Causa 135% a todos los enemigos. Si rompe al menos una capa de Mega Congelación, lanza 2 Descargas de Escarcha a 2 enemigos al azar (una vez por uso).',
+      pct: 1.45, escala: 'dano', cd: 3,
+      desc: 'Causa 145% a todos los enemigos. Si rompe al menos una capa de Mega Congelación, lanza 2 Descargas de Escarcha a 2 enemigos al azar (una vez por uso).',
       efectos: [{ cuando: 'final', condicion: { rompioMega: true }, accion: { tipo: 'usarMovimiento', categoria: 'basico', despues: true, a: { distintos: 2 } } }],
     },
     {
       categoria: 'over', nombre: 'Invierno sin Remordimientos', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xe0e7ff, elemento: 'hielo',
-      pct: 2.20, escala: 'dano', cd: 4,
-      desc: 'Causa 220% a todos los enemigos. Si golpea a alguno con Congelación, 3 aliados al azar ganan Aura Gélida (2 rondas): −20% de daño de golpes y 50% de Congelar a quien los golpee.',
+      pct: 2.35, escala: 'dano', cd: 4,
+      desc: 'Causa 235% a todos los enemigos. Si golpea a alguno con Congelación, 3 aliados al azar ganan Aura Gélida (2 rondas): −20% de daño de golpes y 50% de Congelar a quien los golpee.',
       efectos: [{ cuando: 'final', condicion: { algunGolpeadoTenia: 'freeze' }, accion: { tipo: 'efecto', id: 'frostAura', dur: 2, a: { aliadosDistintos: 3 } } }],
     },
   ],

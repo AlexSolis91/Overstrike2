@@ -23,20 +23,20 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Arcilla Explosiva C1', objetivo: 'azar', golpes: 2, estilo: 'ranged', color: 0xfde68a,
-      pct: .40, escala: 'dano', cd: 0,
-      desc: '2 aves de arcilla de 40% a enemigos al azar (pueden repetirse), cada una con 45% de probabilidad de Bomba.',
+      pct: .3, escala: 'dano', cd: 0,
+      desc: '2 aves de arcilla de 30% a enemigos al azar (pueden repetirse), cada una con 45% de probabilidad de Bomba.',
       efectos: [{ accion: { tipo: 'efecto', id: 'bomb', prob: .45 } }],
     },
     {
       categoria: 'especial', nombre: 'C2: Dragón de Arcilla', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xf59e0b,
-      pct: .55, escala: 'dano', cd: 3,
-      desc: 'Causa 55% a todos los enemigos con 60% de probabilidad de Bomba a cada uno.',
+      pct: .42, escala: 'dano', cd: 3,
+      desc: 'Causa 42% a todos los enemigos con 60% de probabilidad de Bomba a cada uno.',
       efectos: [{ accion: { tipo: 'efecto', id: 'bomb', prob: .60 } }],
     },
     {
       categoria: 'over', nombre: '¡Katsu! C4 Karura', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xef4444,
-      pct: .80, escala: 'dano', cd: 4,
-      desc: 'Causa 80% a todos los enemigos con 40% de probabilidad de Bomba. Al final detona todas las Bombas de todos los enemigos (también las de sus aliados): cada una explota al instante y salpica a los aliados del portador.',
+      pct: .6, escala: 'dano', cd: 4,
+      desc: 'Causa 60% a todos los enemigos con 40% de probabilidad de Bomba. Al final detona todas las Bombas de todos los enemigos (también las de sus aliados): cada una explota al instante y salpica a los aliados del portador.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'bomb', prob: .40 } },
         { cuando: 'final', accion: { tipo: 'detonar', a: 'todosEnemigos' } },

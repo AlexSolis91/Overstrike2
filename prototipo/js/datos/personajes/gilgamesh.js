@@ -37,14 +37,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Gate of Babylon', objetivo: 'azar', golpes: 3, estilo: 'ranged', color: 0xfacc15,
-      pct: .25, escala: 'dano', cd: 0,
-      desc: 'Abre los portales de su tesoro: 3 proyectiles de 25% a enemigos al azar. Cada uno tiene 30% de probabilidad de aplicar un efecto al azar: Sangrado, Quemadura 5% (2 rondas), Veneno, Debilitar (2 rondas) o Desgaste.',
+      pct: .24, escala: 'dano', cd: 0,
+      desc: 'Abre los portales de su tesoro: 3 proyectiles de 24% a enemigos al azar. Cada uno tiene 30% de probabilidad de aplicar un efecto al azar: Sangrado, Quemadura 5% (2 rondas), Veneno, Debilitar (2 rondas) o Desgaste.',
       efectos: [{ accion: { tipo: 'efecto', idAzar: ['bleed', 'burn', 'poison', 'weaken', 'wear'], valor: .05, dur: 2, prob: .30 } }],
     },
     {
       categoria: 'especial', nombre: 'Enkidu, Cadenas del Cielo', objetivo: 'enemigo', estilo: 'ranged', color: 0xe5e7eb,
-      pct: .70, escala: 'dano', cd: 3,
-      desc: 'Causa 70% y lo encadena: 60% de probabilidad de Aturdirlo. Si Gilgamesh ya va en serio, es Mega Aturdimiento (pierde 2 turnos).',
+      pct: .65, escala: 'dano', cd: 3,
+      desc: 'Causa 65% y lo encadena: 60% de probabilidad de Aturdirlo. Si Gilgamesh ya va en serio, es Mega Aturdimiento (pierde 2 turnos).',
       efectos: [
         { condicion: { sellado: true }, accion: { tipo: 'efecto', id: 'stun', prob: .60 } },
         { condicion: { sellado: false }, accion: { tipo: 'efecto', id: 'stun', mega: true, prob: .60 } },
@@ -52,8 +52,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Enuma Elish', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xdc2626,
-      pct: 1.80, escala: 'dano', cd: 4, rompeEscudo: true, ignoraArmadura: 1,
-      desc: 'La Espada de la Ruptura: antes de golpear destruye todo el Escudo de cada enemigo; luego causa 180% a todos e ignora su Armadura. Sellado hasta que Gilgamesh va en serio.',
+      pct: 1.7, escala: 'dano', cd: 4, rompeEscudo: true, ignoraArmadura: 1,
+      desc: 'La Espada de la Ruptura: antes de golpear destruye todo el Escudo de cada enemigo; luego causa 170% a todos e ignora su Armadura. Sellado hasta que Gilgamesh va en serio.',
     },
   ],
 };

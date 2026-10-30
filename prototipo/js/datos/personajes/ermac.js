@@ -25,14 +25,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Puño Telequinético', objetivo: 'enemigo', estilo: 'ranged', color: 0x22c55e,
-      pct: .80, escala: 'dano', cd: 0,
+      pct: .8, escala: 'dano', cd: 0,
       desc: 'Un golpe de energía de almas: 80% con 35% de probabilidad de Veneno.',
       efectos: [{ accion: { tipo: 'efecto', id: 'poison', prob: .35 } }],
     },
     {
       categoria: 'especial', nombre: 'Levitación Telequinética', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x4ade80,
-      pct: .60, escala: 'dano', cd: 3,
-      desc: 'Levanta a todos los enemigos y los estrella contra el suelo: 60% a cada uno con 45% de probabilidad de Veneno y 25% de Aturdir.',
+      pct: .58, escala: 'dano', cd: 3,
+      desc: 'Levanta a todos los enemigos y los estrella contra el suelo: 58% a cada uno con 45% de probabilidad de Veneno y 25% de Aturdir.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison', prob: .45 } },
         { accion: { tipo: 'efecto', id: 'stun', prob: .25 } },
@@ -40,8 +40,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Tormenta de Almas', objetivo: 'azar', estilo: 'ranged', color: 0x86efac,
-      pct: .40, escala: 'dano', cd: 5, golpes: 6,
-      desc: 'Libera las almas que lo forman: 6 impactos de 40% a enemigos al azar, cada uno con 35% de probabilidad de Veneno. Al final les arranca la vida: roba 5% del HP máx. de cada enemigo.',
+      pct: .39, escala: 'dano', cd: 5, golpes: 6,
+      desc: 'Libera las almas que lo forman: 6 impactos de 39% a enemigos al azar, cada uno con 35% de probabilidad de Veneno. Al final les arranca la vida: roba 5% del HP máx. de cada enemigo.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison', prob: .35 } },
         { cuando: 'final', accion: { tipo: 'robarHP', pct: .05, a: 'todosEnemigos' } },

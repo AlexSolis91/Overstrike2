@@ -25,14 +25,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Cola de Hiruko', objetivo: 'enemigo', estilo: 'melee', color: 0x7c2d12,
-      pct: 1.00, escala: 'dano', cd: 0, bonoPorAcumulacion: { efecto: 'poison', pct: .15, max: 5 },
-      desc: 'Causa 100% (+15% por cada Veneno del objetivo, máx. 5) con 50% de probabilidad de Veneno.',
+      pct: 1.05, escala: 'dano', cd: 0, bonoPorAcumulacion: { efecto: 'poison', pct: .15, max: 5 },
+      desc: 'Causa 105% (+15% por cada Veneno del objetivo, máx. 5) con 50% de probabilidad de Veneno.',
       efectos: [{ accion: { tipo: 'efecto', id: 'poison', prob: .50 } }],
     },
     {
       categoria: 'especial', nombre: 'Marioneta del Tercer Kazekage', objetivo: 'enemigo', estilo: 'ranged', color: 0x57534e,
-      pct: .90, escala: 'dano', cd: 3, bonoPorAcumulacion: { efecto: 'poison', pct: .15, max: 5 },
-      desc: 'Causa 90% (+15% por cada Veneno del objetivo) con 50% de probabilidad de Veneno e invoca a la Marioneta del Tercer Kazekage (3 turnos): cada turno, Arena de Hierro a todos los enemigos (60%) con 60% de probabilidad de Veneno a cada uno.',
+      pct: .95, escala: 'dano', cd: 3, bonoPorAcumulacion: { efecto: 'poison', pct: .15, max: 5 },
+      desc: 'Causa 95% (+15% por cada Veneno del objetivo) con 50% de probabilidad de Veneno e invoca a la Marioneta del Tercer Kazekage (3 turnos): cada turno, Arena de Hierro a todos los enemigos (60%) con 60% de probabilidad de Veneno a cada uno.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison', prob: .50 } },
         { cuando: 'final', accion: { tipo: 'invocar', key: 'tercerKazekage', a: 'propio' } },
@@ -40,8 +40,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Ejército de las Cien Marionetas', objetivo: 'azar', golpes: 8, estilo: 'ranged', color: 0xb91c1c,
-      pct: .30, escala: 'dano', cd: 4, bonoPorAcumulacion: { efecto: 'poison', pct: .15, max: 5 },
-      desc: '8 golpes de 30% a enemigos al azar (+15% por cada Veneno del objetivo), cada uno con 30% de probabilidad de Veneno. Al final, todos los Venenos de todos los enemigos hacen su daño al instante (todas sus acumulaciones, sin gastarse).',
+      pct: .32, escala: 'dano', cd: 4, bonoPorAcumulacion: { efecto: 'poison', pct: .15, max: 5 },
+      desc: '8 golpes de 32% a enemigos al azar (+15% por cada Veneno del objetivo), cada uno con 30% de probabilidad de Veneno. Al final, todos los Venenos de todos los enemigos hacen su daño al instante (todas sus acumulaciones, sin gastarse).',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison', prob: .30 } },
         { cuando: 'final', accion: { tipo: 'activarDoT', efecto: 'poison', a: 'todosEnemigos' } },

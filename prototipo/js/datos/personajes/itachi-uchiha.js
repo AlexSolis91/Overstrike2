@@ -27,14 +27,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Genjutsu de Cuervos', objetivo: 'enemigo', golpes: 2, estilo: 'ranged', color: 0x7f1d1d,
-      pct: .50, escala: 'dano', cd: 0,
-      desc: '2 golpes de 50% con 30% de probabilidad de Miedo (actúa al final de la ronda y hace −25% de daño).',
+      pct: .37, escala: 'dano', cd: 0,
+      desc: '2 golpes de 37% con 30% de probabilidad de Miedo (actúa al final de la ronda y hace −25% de daño).',
       efectos: [{ accion: { tipo: 'efecto', id: 'fear', dur: 2, prob: .30 } }],
     },
     {
       categoria: 'especial', nombre: 'Tsukuyomi', objetivo: 'enemigo', estilo: 'ranged', color: 0xdc2626,
-      pct: 1.20, escala: 'dano', cd: 3,
-      desc: 'Causa 120% y con 70% de probabilidad atrapa al enemigo en el Tsukuyomi: Mega Aturdimiento (pierde 2 turnos). Si cae, sale mentalmente destrozado: Debilitar (2 rondas).',
+      pct: .9, escala: 'dano', cd: 3,
+      desc: 'Causa 90% y con 70% de probabilidad atrapa al enemigo en el Tsukuyomi: Mega Aturdimiento (pierde 2 turnos). Si cae, sale mentalmente destrozado: Debilitar (2 rondas).',
       efectos: [
         { accion: { tipo: 'efecto', id: 'stun', mega: true, prob: .70 } },
         { condicion: { objetivoTiene: 'stun' }, accion: { tipo: 'efecto', id: 'weaken', dur: 2 } },
@@ -42,12 +42,12 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Susanoo', objetivo: 'enemigo', estilo: 'melee', color: 0xef4444,
-      pct: 2.20, escala: 'dano', cd: 5,
-      desc: 'La Espada de Totsuka causa 220% y sella el Over del objetivo (lo pone en su cooldown completo). El Espejo de Yata le da a Itachi Espejismo (2 rondas: devuelve el 30% del daño de cada golpe) y un Escudo del 20% de su HP máx.',
+      pct: 1.65, escala: 'dano', cd: 5,
+      desc: 'La Espada de Totsuka causa 165% y sella el Over del objetivo (lo pone en su cooldown completo). El Espejo de Yata le da a Itachi Espejismo (2 rondas: devuelve el 30% del daño de cada golpe) y un Escudo del 15% de su HP máx.',
       efectos: [
         { accion: { tipo: 'activarCooldown', categoria: 'over' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'mirror', dur: 2, a: 'propio' } },
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .20, escala: 'hpMax', a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: .15, escala: 'hpMax', a: 'propio' } },
       ],
     },
   ],

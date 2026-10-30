@@ -23,21 +23,21 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Chidori', objetivo: 'enemigo', estilo: 'melee', color: 0x93c5fd,
-      pct: .85, escala: 'dano', cd: 0,
-      desc: 'Causa 85% con 45% de probabilidad de Sangrado.',
+      pct: .51, escala: 'dano', cd: 0,
+      desc: 'Causa 51% con 45% de probabilidad de Sangrado.',
       efectos: [{ accion: { tipo: 'efecto', id: 'bleed', prob: .45 } }],
     },
     {
       categoria: 'especial', nombre: 'Amaterasu', objetivo: 'enemigo', estilo: 'ranged', color: 0x1f2937,
-      pct: 1.00, escala: 'dano', cd: 3,
-      desc: 'Causa 100% y aplica Amaterasu: Quemadura de 15% (sube con Daño DoT) durante 3 rondas que no se puede limpiar.',
+      pct: .6, escala: 'dano', cd: 3,
+      desc: 'Causa 60% y aplica Amaterasu: Quemadura de 15% (sube con Daño DoT) durante 3 rondas que no se puede limpiar.',
       efectos: [{ accion: { tipo: 'efecto', id: 'burn', valor: .15, dur: 3, inextinguible: true } }],
     },
     {
       categoria: 'over', nombre: 'Kirin', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xa5b4fc,
-      pct: 1.25, escala: 'dano', cd: 5,
+      pct: .75, escala: 'dano', cd: 5,
       bonoContra: { efecto: 'burn', pct: .50 },
-      desc: 'Un dragón de rayo cae sobre todos los enemigos: 125%, +50% contra los que tengan Quemadura (Kirin usa el calor del fuego). 30% de probabilidad de Sangrado a cada uno.',
+      desc: 'Un dragón de rayo cae sobre todos los enemigos: 75%, +50% contra los que tengan Quemadura (Kirin usa el calor del fuego). 30% de probabilidad de Sangrado a cada uno.',
       efectos: [{ accion: { tipo: 'efecto', id: 'bleed', prob: .30 } }],
     },
   ],

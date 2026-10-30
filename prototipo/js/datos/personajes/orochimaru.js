@@ -33,14 +33,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Manos de Serpiente Ocultas', objetivo: 'azar', golpes: 2, estilo: 'ranged', color: 0x65a30d,
-      pct: .50, escala: 'dano', cd: 0,
-      desc: 'Sen\'eijashu: 2 golpes de 50% a enemigos al azar, cada uno con 40% de probabilidad de aplicar Veneno.',
+      pct: .45, escala: 'dano', cd: 0,
+      desc: 'Sen\'eijashu: 2 golpes de 45% a enemigos al azar, cada uno con 40% de probabilidad de aplicar Veneno.',
       efectos: [{ accion: { tipo: 'efecto', id: 'poison', prob: .40 } }],
     },
     {
       categoria: 'especial', nombre: 'Espada Kusanagi', objetivo: 'enemigo', estilo: 'melee', color: 0xa3e635,
-      pct: 1.50, escala: 'dano', cd: 3,
-      desc: 'Causa 150% y aplica 2 Venenos al objetivo.',
+      pct: 1.35, escala: 'dano', cd: 3,
+      desc: 'Causa 135% y aplica 2 Venenos al objetivo.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'poison' } },
         { accion: { tipo: 'efecto', id: 'poison' } },

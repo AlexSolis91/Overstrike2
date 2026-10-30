@@ -35,7 +35,7 @@ export default {
     },
     {
       categoria: 'especial', nombre: 'Prominencia Loca', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfbbf24,
-      pct: .90, cd: 2,
+      pct: .9, cd: 2,
       desc: 'Causa 90% a todos los enemigos con 60% de probabilidad de aplicar Quemadura Solar (2 rondas). Con 12 marcas de The One, Escanor gana un turno extra.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'solarBurn', dur: 2, prob: .60 } },
@@ -44,7 +44,7 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Lanza Divina de Escanor', objetivo: 'enemigo', estilo: 'melee', color: 0xfde047,
-      pct: 2.40, cd: 4, sobrante: true,
+      pct: 2.4, cd: 4, sobrante: true,
       desc: 'Causa 240%. Si mata al objetivo, el daño sobrante pasa a otro enemigo al azar. Con 12 marcas de The One suma daño igual al 25% del HP máx. que ganó con sus marcas.',
       bonoPorHpGanado: { pct: .25, si: { propioCargasMin: { efecto: 'theOne', min: 12 } } },
     },

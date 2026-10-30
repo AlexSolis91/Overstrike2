@@ -19,18 +19,18 @@ const narutoModoBarion = {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Golpe Barión', objetivo: 'enemigo', estilo: 'melee', color: 0xf97316,
-      pct: 2.20, escala: 'dano', cd: 0,
-      desc: 'Causa 220%.',
+      pct: 2.35, escala: 'dano', cd: 0,
+      desc: 'Causa 235%.',
     },
     {
       categoria: 'especial', nombre: 'Rasengan Barión', objetivo: 'enemigo', estilo: 'melee', color: 0xfb923c,
-      pct: 3.50, escala: 'dano', cd: 2,
-      desc: 'Causa 350%.',
+      pct: 3.8, escala: 'dano', cd: 2,
+      desc: 'Causa 380%.',
     },
     {
       categoria: 'over', nombre: 'Último Golpe de Kurama', objetivo: 'enemigo', estilo: 'melee', color: 0xea580c,
-      pct: 4.10, escala: 'dano', cd: 2,
-      desc: 'Causa 410%.',
+      pct: 4.4, escala: 'dano', cd: 2,
+      desc: 'Causa 440%.',
     },
   ],
 };
@@ -50,13 +50,13 @@ const narutoModoRikudo = {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Rasenshuriken', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x93c5fd,
-      pct: 1.10, escala: 'dano', cd: 0,
-      desc: 'Causa 110% a todos los enemigos.',
+      pct: 1.2, escala: 'dano', cd: 0,
+      desc: 'Causa 120% a todos los enemigos.',
     },
     {
       categoria: 'especial', nombre: 'Esferas Buscadoras de la Verdad', objetivo: 'azar', golpes: 3, estilo: 'ranged', color: 0x1f2937,
-      pct: 2.40, escala: 'dano', cd: 2,
-      desc: '3 golpes de 240% a enemigos al azar (pueden repetirse). Cada golpe disipa 1 buff del enemigo.',
+      pct: 2.6, escala: 'dano', cd: 2,
+      desc: '3 golpes de 260% a enemigos al azar (pueden repetirse). Cada golpe disipa 1 buff del enemigo.',
       efectos: [{ accion: { tipo: 'disipar', cantidad: 1 } }],
     },
     {
@@ -90,8 +90,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Rasengan', objetivo: 'enemigo', estilo: 'melee', color: 0x60a5fa,
-      pct: 1.75, escala: 'dano', cd: 0,
-      desc: 'Causa 175% con 50% de probabilidad de invocar 1 Clon de Sombra.',
+      pct: 1.9, escala: 'dano', cd: 0,
+      desc: 'Causa 190% con 50% de probabilidad de invocar 1 Clon de Sombra.',
       efectos: [{ cuando: 'final', accion: { tipo: 'invocar', key: 'clonSombra', prob: .50, a: 'propio' } }],
     },
     {

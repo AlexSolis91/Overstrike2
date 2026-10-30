@@ -25,14 +25,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Golpe Arácnido', objetivo: 'enemigo', estilo: 'melee', color: 0xdc2626,
-      pct: .90, escala: 'dano', cd: 0,
-      desc: 'Causa 90% con 30% de probabilidad de Ceguera (1 ronda): telaraña a la cara.',
+      pct: .85, escala: 'dano', cd: 0,
+      desc: 'Causa 85% con 30% de probabilidad de Ceguera (1 ronda): telaraña a la cara.',
       efectos: [{ accion: { tipo: 'efecto', id: 'blind', dur: 1, prob: .30 } }],
     },
     {
       categoria: 'especial', nombre: 'Red de Telaraña', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xe2e8f0,
-      pct: .60, escala: 'dano', cd: 3,
-      desc: 'Causa 60% a todos los enemigos con 40% de probabilidad de Ceguera (2 rondas) a cada uno. Los que ya estaban cegados tienen además 40% de probabilidad de Aturdimiento: quedan pegados a la red.',
+      pct: .56, escala: 'dano', cd: 3,
+      desc: 'Causa 56% a todos los enemigos con 40% de probabilidad de Ceguera (2 rondas) a cada uno. Los que ya estaban cegados tienen además 40% de probabilidad de Aturdimiento: quedan pegados a la red.',
       efectos: [
         { condicion: { objetivoTeniaAntes: 'blind' }, accion: { tipo: 'efecto', id: 'stun', prob: .40 } },
         { accion: { tipo: 'efecto', id: 'blind', dur: 2, prob: .40 } },
@@ -40,8 +40,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Balanceo Máximo', objetivo: 'azar', golpes: 5, estilo: 'melee', color: 0x2563eb,
-      pct: .60, escala: 'dano', cd: 4, critExtra: .25,
-      desc: 'Se columpia por todo el campo: 5 golpes de 60% a enemigos al azar (pueden repetirse), con +25% de Prob. Crítico. Cada golpe tiene 25% de probabilidad de Aturdimiento.',
+      pct: .56, escala: 'dano', cd: 4, critExtra: .25,
+      desc: 'Se columpia por todo el campo: 5 golpes de 56% a enemigos al azar (pueden repetirse), con +25% de Prob. Crítico. Cada golpe tiene 25% de probabilidad de Aturdimiento.',
       efectos: [{ accion: { tipo: 'efecto', id: 'stun', prob: .25 } }],
     },
   ],

@@ -15,9 +15,9 @@ const dragonDeLaVida = {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Aliento de Dragón', objetivo: 'todosAliados', estilo: 'support', color: 0xff6a3d, cd: 0,
-      desc: 'Cura a todos los aliados 8% de su HP máx. y les aplica Aura de Fuego (2 rondas).',
+      desc: 'Cura a todos los aliados 11% de su HP máx. y les aplica Aura de Fuego (2 rondas).',
       efectos: [
-        { accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .08 } },
+        { accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .11 } },
         { accion: { tipo: 'efecto', id: 'fireAura', dur: 2 } },
       ],
     },
@@ -59,9 +59,9 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Fuego Vital', objetivo: 'aliado', estilo: 'support', color: 0xff8a5c, cd: 0,
-      desc: 'Cura al aliado 16% de su HP máx. y le aplica Aura de Fuego (2 rondas): quien lo golpee recibe Quemadura 5% (1 turno).',
+      desc: 'Cura al aliado 22% de su HP máx. y le aplica Aura de Fuego (2 rondas): quien lo golpee recibe Quemadura 5% (1 turno).',
       efectos: [
-        { accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .16 } },
+        { accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .22 } },
         { accion: { tipo: 'efecto', id: 'fireAura', dur: 2 } },
       ],
     },
@@ -72,11 +72,11 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Dragón de la Vida', objetivo: 'propio', estilo: 'support', color: 0xdc2626, cd: 5,
-      desc: 'Se transforma en el Dragón de la Vida (3 turnos). 80% de probabilidad de aplicar Quemadura 10% (3 rondas) a cada enemigo y cura a todos los aliados 16% de su HP máx.',
+      desc: 'Se transforma en el Dragón de la Vida (3 turnos). 80% de probabilidad de aplicar Quemadura 10% (3 rondas) a cada enemigo y cura a todos los aliados 22% de su HP máx.',
       efectos: [
         { cuando: 'final', accion: { tipo: 'transformar', turnos: 3, a: 'propio' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'burn', valor: .10, dur: 3, prob: .80, a: 'todosEnemigos' } },
-        { cuando: 'final', accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .16, a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .22, a: 'todosAliados' } },
       ],
     },
   ],

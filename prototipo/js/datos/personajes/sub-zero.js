@@ -28,15 +28,15 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Ice Blast', objetivo: 'enemigo', golpes: 2, estilo: 'ranged', color: 0x7dd3fc,
-      pct: .45, escala: 'dano', cd: 0,
-      desc: 'Golpea 2 veces (45% cada golpe) a un enemigo. Cada golpe tiene 15% de probabilidad de aplicar Congelación. Contra enemigos con Congelación ignora 25 puntos de Armadura.',
+      pct: .51, escala: 'dano', cd: 0,
+      desc: 'Golpea 2 veces (51% cada golpe) a un enemigo. Cada golpe tiene 15% de probabilidad de aplicar Congelación. Contra enemigos con Congelación ignora 25 puntos de Armadura.',
       ignoraArmaduraSi: { efecto: 'freeze', puntos: .25 },
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .15 } }],
     },
     {
       categoria: 'especial', nombre: 'Ice Burst', objetivo: 'enemigo', estilo: 'ranged', color: 0x38bdf8,
-      pct: 1.55, escala: 'dano', cd: 2,
-      desc: 'Causa 155% con 50% de probabilidad de aplicar Congelación y roba 5% del HP máx. del objetivo. Sub-Zero gana Perforación y Celeridad (2 rondas). Contra enemigos con Congelación ignora 50 puntos de Armadura.',
+      pct: 1.75, escala: 'dano', cd: 2,
+      desc: 'Causa 175% con 50% de probabilidad de aplicar Congelación y roba 5% del HP máx. del objetivo. Sub-Zero gana Perforación y Celeridad (2 rondas). Contra enemigos con Congelación ignora 50 puntos de Armadura.',
       ignoraArmaduraSi: { efecto: 'freeze', puntos: .50 },
       efectos: [
         { accion: { tipo: 'efecto', id: 'freeze', prob: .50 } },
@@ -47,8 +47,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Deep Freeze', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xe0f2fe,
-      pct: 1.45, escala: 'dano', cd: 5,
-      desc: 'Causa 145% a todos los enemigos con 75% de probabilidad de aplicar Congelación (100% contra los más rápidos que Sub-Zero). +50% de Prob. Crítico contra los que ya tenían Congelación antes del ataque.',
+      pct: 1.65, escala: 'dano', cd: 5,
+      desc: 'Causa 165% a todos los enemigos con 75% de probabilidad de aplicar Congelación (100% contra los más rápidos que Sub-Zero). +50% de Prob. Crítico contra los que ya tenían Congelación antes del ataque.',
       critExtraSi: { teniaAntes: 'freeze', pct: .50 },
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .75, probSiMasRapido: 1 } }],
     },

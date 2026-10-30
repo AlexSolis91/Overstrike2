@@ -22,21 +22,21 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Polvo de Diamante', objetivo: 'enemigo', estilo: 'ranged', color: 0xa5f3fc,
-      pct: 1.05, escala: 'dano', cd: 0,
-      desc: 'Causa 105% con 35% de probabilidad de Congelación.',
+      pct: 1.35, escala: 'dano', cd: 0,
+      desc: 'Causa 135% con 35% de probabilidad de Congelación.',
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .35 } }],
     },
     {
       categoria: 'especial', nombre: 'Ataúd de Hielo', objetivo: 'enemigo', estilo: 'ranged', color: 0x67e8f9,
-      pct: 1.25, escala: 'dano', cd: 3,
-      desc: 'Causa 125% y con 70% de probabilidad encierra al enemigo en Mega Congelación.',
+      pct: 1.6, escala: 'dano', cd: 3,
+      desc: 'Causa 160% y con 70% de probabilidad encierra al enemigo en Mega Congelación.',
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', mega: true, prob: .70 } }],
     },
     {
       categoria: 'over', nombre: 'Ejecución de Aurora', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xe0f2fe,
-      pct: 1.70, escala: 'dano', cd: 5,
+      pct: 2.15, escala: 'dano', cd: 5,
       bonoContra: { efecto: 'freeze', pct: .50 },
-      desc: 'Causa 170% a todos los enemigos (+50% contra los que ya tengan Congelación) con 60% de probabilidad de Congelación a cada uno.',
+      desc: 'Causa 215% a todos los enemigos (+50% contra los que ya tengan Congelación) con 60% de probabilidad de Congelación a cada uno.',
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .60 } }],
     },
   ],

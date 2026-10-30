@@ -28,20 +28,20 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Rueda de la Opresión', objetivo: 'enemigo', estilo: 'ranged', color: 0xf97316,
-      pct: 1.25, escala: 'dano', cd: 0,
-      desc: 'Causa 125%. Si golpea a un objetivo con Quemadura, Daenerys gana Sigilo (2 rondas): no la pueden elegir con ataques de un objetivo; se rompe al recibir daño.',
+      pct: 2.00, escala: 'dano', cd: 0,
+      desc: 'Causa 200%. Si golpea a un objetivo con Quemadura, Daenerys gana Sigilo (2 rondas): no la pueden elegir con ataques de un objetivo; se rompe al recibir daño.',
       efectos: [{ cuando: 'final', condicion: { algunGolpeadoTenia: 'burn' }, accion: { tipo: 'efecto', id: 'stealth', dur: 2, a: 'propio' } }],
     },
     {
       categoria: 'especial', nombre: 'Locura Targaryen', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xef4444,
-      pct: 1.05, escala: 'dano', cd: 3,
-      desc: 'Causa 105% a todos los enemigos. Sus invocaciones activas ganan +1 turno de duración.',
+      pct: 1.7, escala: 'dano', cd: 3,
+      desc: 'Causa 170% a todos los enemigos. Sus invocaciones activas ganan +1 turno de duración.',
       efectos: [{ cuando: 'final', accion: { tipo: 'extenderInvocaciones', turnos: 1, a: 'propio' } }],
     },
     {
       categoria: 'over', nombre: 'Dracarys', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xff3d00,
-      pct: 1.25, escala: 'dano', cd: 7,
-      desc: 'Causa 125% a todos los enemigos con 80% de probabilidad de aplicar Quemadura 10% (3 rondas) a cada uno. Si tiene sus 3 dragones activos, cada dragón actúa de inmediato.',
+      pct: 2.00, escala: 'dano', cd: 7,
+      desc: 'Causa 200% a todos los enemigos con 80% de probabilidad de aplicar Quemadura 10% (3 rondas) a cada uno. Si tiene sus 3 dragones activos, cada dragón actúa de inmediato.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'burn', valor: .10, dur: 3, prob: .80 } },
         { cuando: 'final', condicion: { invocacionesMin: 3 }, accion: { tipo: 'potenciarInvocaciones', potencia: 1, a: 'propio' } },

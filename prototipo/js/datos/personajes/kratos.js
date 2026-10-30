@@ -24,8 +24,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Espadas del Caos', objetivo: 'enemigo', estilo: 'melee', color: 0xf97316,
-      pct: 1.10, escala: 'dano', cd: 0,
-      desc: 'Causa 110% con 60% de probabilidad de Sangrado. ⚔️ Con 2 Espadas equipadas: 2 golpes de 60%, cada uno con su tirada de Sangrado.',
+      pct: .75, escala: 'dano', cd: 0,
+      desc: 'Causa 75% con 60% de probabilidad de Sangrado. ⚔️ Con 2 Espadas equipadas: 2 golpes de 60%, cada uno con su tirada de Sangrado.',
       conEquipo: { equipo: { tipo: 'Espada', min: 2 }, cambios: { golpes: 2, pct: .60 } },
       efectos: [{ accion: { tipo: 'efecto', id: 'bleed', prob: .60 } }],
     },
@@ -42,12 +42,12 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Ira del Dios de la Guerra', objetivo: 'enemigo', estilo: 'melee', color: 0xb91c1c,
-      pct: 3.15, escala: 'dano', cd: 5,
-      desc: 'Causa 315%. Asesino de Dioses: +30% si el objetivo tiene más HP que Kratos. Si tenía Sangrado, se convierte en Hemorragia. 🔱 Con una Lanza equipada: la lanza explota y golpea (50%) a los demás enemigos que sangran.',
+      pct: 2.1, escala: 'dano', cd: 5,
+      desc: 'Causa 210%. Asesino de Dioses: +30% si el objetivo tiene más HP que Kratos. Si tenía Sangrado, se convierte en Hemorragia. 🔱 Con una Lanza equipada: la lanza explota y golpea (33%) a los demás enemigos que sangran.',
       bonoSiObjetivoMasHp: .30,
       efectos: [
         { condicion: { objetivoTeniaAntes: 'bleed' }, accion: { tipo: 'hemorragia' } },
-        { cuando: 'final', condicion: { equipo: { tipo: 'Lanza' } }, accion: { tipo: 'golpeDirecto', nombre: 'Lanza de Draupnir', pct: .50, color: 0x93c5fd, a: { enemigosCon: ['bleed', 'hemo'] } } },
+        { cuando: 'final', condicion: { equipo: { tipo: 'Lanza' } }, accion: { tipo: 'golpeDirecto', nombre: 'Lanza de Draupnir', pct: .33, color: 0x93c5fd, a: { enemigosCon: ['bleed', 'hemo'] } } },
       ],
     },
   ],

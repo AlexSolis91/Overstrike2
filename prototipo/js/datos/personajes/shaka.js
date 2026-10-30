@@ -26,9 +26,9 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Kahn', objetivo: 'propio', estilo: 'support', color: 0xfde68a, cd: 0,
-      desc: 'Shaka se cura 10% de su HP máx. y da Protección (+30% Resistencia) o Regeneración (cura 10% HP máx.) por 1 ronda a 2 aliados al azar (puede incluirse y repetir).',
+      desc: 'Shaka se cura 12% de su HP máx. y da Protección (+30% Resistencia) o Regeneración (cura 10% HP máx.) por 1 ronda a 2 aliados al azar (puede incluirse y repetir).',
       efectos: [
-        { cuando: 'final', accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .10, a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'curar', base: 'hpMaxObjetivo', pct: .12, a: 'propio' } },
         { cuando: 'final', accion: { tipo: 'efecto', idAzar: ['protect', 'regen'], dur: 1, a: { aliadosAzar: 2 } } },
       ],
     },
@@ -42,8 +42,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Tesoro del Cielo', objetivo: 'enemigo', estilo: 'ranged', color: 0xfde047,
-      pct: 5.60, escala: 'hp', cd: 5,
-      desc: 'Causa 560% (escala por HP). Luego reparte al azar entre los enemigos daño por efecto igual al 20% de la suma de los Escudos de su equipo.',
+      pct: 6.8, escala: 'hp', cd: 5,
+      desc: 'Causa 680% (escala por HP). Luego reparte al azar entre los enemigos daño por efecto igual al 20% de la suma de los Escudos de su equipo.',
       efectos: [{ cuando: 'final', accion: { tipo: 'danoRepartido', base: 'escudosEquipo', pct: .20, paquetes: 10, a: 'propio' } }],
     },
   ],

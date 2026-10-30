@@ -26,8 +26,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Primera y Última Postura del Sol', objetivo: 'enemigo', estilo: 'melee', color: 0xef4444,
-      pct: 1.30, cd: 0,
-      desc: 'Causa 130% y aplica Quemadura Solar (2 rondas). Si el objetivo ya tenía Quemadura Solar, baja 1 turno el cooldown de su Especial y su Over.',
+      pct: 1.15, cd: 0,
+      desc: 'Causa 115% y aplica Quemadura Solar (2 rondas). Si el objetivo ya tenía Quemadura Solar, baja 1 turno el cooldown de su Especial y su Over.',
       efectos: [
         { condicion: { objetivoTeniaAntes: 'solarBurn' }, accion: { tipo: 'reducirCooldown', cantidad: 1, categorias: ['especial', 'over'], a: 'propio' } },
         { accion: { tipo: 'efecto', id: 'solarBurn', dur: 2 } },
@@ -35,14 +35,14 @@ export default {
     },
     {
       categoria: 'especial', nombre: 'Respiración Solar', objetivo: 'todosEnemigos', estilo: 'melee', color: 0xf97316,
-      pct: 1.60, cd: 2,
-      desc: 'Causa 160% a todos los enemigos y les disipa 1 buff.',
+      pct: 1.45, cd: 2,
+      desc: 'Causa 145% a todos los enemigos y les disipa 1 buff.',
       efectos: [{ accion: { tipo: 'disipar', cantidad: 1 } }],
     },
     {
       categoria: 'over', nombre: 'Las 13 Posturas del Sol', objetivo: 'enemigo', estilo: 'melee', color: 0xfacc15,
-      pct: .40, cd: 5, golpes: 13,
-      desc: '13 golpes de 40% al mismo enemigo. Cada crítico baja 1 turno el cooldown de este movimiento. Si el objetivo tenía Quemadura Solar, gana un turno extra.',
+      pct: .36, cd: 5, golpes: 13,
+      desc: '13 golpes de 36% al mismo enemigo. Cada crítico baja 1 turno el cooldown de este movimiento. Si el objetivo tenía Quemadura Solar, gana un turno extra.',
       efectos: [
         { cuando: 'critico', accion: { tipo: 'reducirCooldown', cantidad: 1, categorias: ['over'], a: 'propio' } },
         { cuando: 'final', condicion: { algunGolpeadoTenia: 'solarBurn' }, accion: { tipo: 'turnoExtra', a: 'propio' } },

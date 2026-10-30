@@ -31,8 +31,8 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Espada de Ironside', objetivo: 'enemigo', estilo: 'melee', color: 0x94a3b8,
-      pct: .85, escala: 'dano', cd: 0,
-      desc: 'Causa 85% y gana un Escudo del 6% de su HP máx.',
+      pct: .8, escala: 'dano', cd: 0,
+      desc: 'Causa 80% y gana un Escudo del 6% de su HP máx.',
       efectos: [{ cuando: 'final', accion: { tipo: 'escudo', pct: .06, escala: 'hpMax', a: 'propio' } }],
     },
     {
@@ -45,9 +45,9 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Saqueo del Mediterráneo', objetivo: 'todosEnemigos', estilo: 'melee', color: 0xcbd5e1,
-      pct: 1.05, escala: 'dano', cd: 5,
-      desc: 'Lleva a sus guerreros al saqueo: 105% a todos los enemigos, y todos los aliados ganan un Escudo del 15% del HP máx. de Bjorn.',
-      efectos: [{ cuando: 'final', accion: { tipo: 'escudo', pct: .15, escala: 'hpMax', a: 'todosAliados' } }],
+      pct: 1.00, escala: 'dano', cd: 5,
+      desc: 'Lleva a sus guerreros al saqueo: 100% a todos los enemigos, y todos los aliados ganan un Escudo del 14% del HP máx. de Bjorn.',
+      efectos: [{ cuando: 'final', accion: { tipo: 'escudo', pct: .14, escala: 'hpMax', a: 'todosAliados' } }],
     },
   ],
 };

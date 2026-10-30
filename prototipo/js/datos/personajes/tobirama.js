@@ -30,14 +30,14 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Gran Bala de Agua', objetivo: 'enemigo', estilo: 'ranged', color: 0x3b82f6,
-      pct: 1.30, escala: 'dano', cd: 0,
-      desc: 'Causa 130% con 35% de probabilidad de Congelación.',
+      pct: 1.4, escala: 'dano', cd: 0,
+      desc: 'Causa 140% con 35% de probabilidad de Congelación.',
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .35 } }],
     },
     {
       categoria: 'especial', nombre: 'Dragón de Agua', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x60a5fa,
-      pct: 1.05, escala: 'dano', cd: 3,
-      desc: 'Un dragón de agua arrasa el campo: 105% a todos los enemigos con 45% de probabilidad de Congelación. Todos los aliados ganan Celeridad (2 rondas).',
+      pct: 1.15, escala: 'dano', cd: 3,
+      desc: 'Un dragón de agua arrasa el campo: 115% a todos los enemigos con 45% de probabilidad de Congelación. Todos los aliados ganan Celeridad (2 rondas).',
       efectos: [
         { accion: { tipo: 'efecto', id: 'freeze', prob: .45 } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'haste', dur: 2, a: 'todosAliados' } },
@@ -45,8 +45,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Corte del Dios del Trueno Volador', objetivo: 'enemigo', estilo: 'melee', color: 0xbfdbfe,
-      pct: 3.15, escala: 'dano', cd: 5, criticoSiObjetivoTiene: 'freeze',
-      desc: 'Se teletransporta junto al enemigo y lo corta: 315%, crítico seguro si está Congelado. Aplica Mega Congelación con 60% de probabilidad.',
+      pct: 3.4, escala: 'dano', cd: 5, criticoSiObjetivoTiene: 'freeze',
+      desc: 'Se teletransporta junto al enemigo y lo corta: 340%, crítico seguro si está Congelado. Aplica Mega Congelación con 60% de probabilidad.',
       efectos: [{ accion: { tipo: 'efecto', id: 'freeze', mega: true, prob: .60 } }],
     },
   ],

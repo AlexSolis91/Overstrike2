@@ -29,23 +29,23 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Fervor Místico', objetivo: 'enemigo', estilo: 'ranged', color: 0x4ade80,
-      pct: 1.00, escala: 'hp', cd: 0,
-      desc: 'Causa 100% (escala por HP) más el 30% del Escudo actual de Doctor Doom (no lo gasta).',
+      pct: .95, escala: 'hp', cd: 0,
+      desc: 'Causa 95% (escala por HP) más el 30% del Escudo actual de Doctor Doom (no lo gasta).',
       bonoPorEscudoPropio: .30,
     },
     {
       categoria: 'especial', nombre: 'Protocolo Doombot', objetivo: 'propio', estilo: 'support', color: 0x86efac,
       cd: 2,
-      desc: 'Todos los aliados ganan un Escudo del 10% del HP máx. de Doctor Doom. Doctor Doom gana +10% de HP máx. permanente (hasta +50%).',
+      desc: 'Todos los aliados ganan un Escudo del 9% del HP máx. de Doctor Doom. Doctor Doom gana +10% de HP máx. permanente (hasta +50%).',
       efectos: [
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .10, escala: 'hpMax', a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: .09, escala: 'hpMax', a: 'todosAliados' } },
         { cuando: 'final', accion: { tipo: 'bonoPermanente', stat: 'hpPct', pct: .10, tope: .50, a: 'propio' } },
       ],
     },
     {
       categoria: 'over', nombre: 'Voluntad de Hierro', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x22c55e,
-      pct: 1.50, escala: 'hp', cd: 4,
-      desc: 'Causa 150% (escala por HP) a todos los enemigos. Les quita todos sus buffs y se los da al aliado de Doom en la misma posición (o a uno al azar si cayó). 60% de probabilidad, por enemigo, de poner su Over en cooldown completo.',
+      pct: 1.4, escala: 'hp', cd: 4,
+      desc: 'Causa 140% (escala por HP) a todos los enemigos. Les quita todos sus buffs y se los da al aliado de Doom en la misma posición (o a uno al azar si cayó). 60% de probabilidad, por enemigo, de poner su Over en cooldown completo.',
       efectos: [
         { accion: { tipo: 'transferirBuffs' } },
         { accion: { tipo: 'activarCooldown', categoria: 'over', prob: .60 } },

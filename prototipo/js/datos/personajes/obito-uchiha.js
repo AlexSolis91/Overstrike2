@@ -41,19 +41,19 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Kamui', objetivo: 'enemigo', estilo: 'melee', color: 0xea580c,
-      pct: .90, escala: 'dano', cd: 0,
+      pct: .9, escala: 'dano', cd: 0,
       desc: 'Causa 90% con 25% de probabilidad de Confusión (1 ronda).',
       efectos: [{ accion: { tipo: 'efecto', id: 'confuse', dur: 1, prob: .25 } }],
     },
     {
       categoria: 'especial', nombre: 'Control del Sharingan', objetivo: 'enemigo', estilo: 'ranged', color: 0xdc2626,
-      pct: 1.50, escala: 'dano', cd: 3,
-      desc: 'Causa 150% con 40% de probabilidad de Posesión: en su turno ataca a sus propios aliados.',
+      pct: 1.55, escala: 'dano', cd: 3,
+      desc: 'Causa 155% con 40% de probabilidad de Posesión: en su turno ataca a sus propios aliados.',
       efectos: [{ accion: { tipo: 'efecto', id: 'possess', prob: .40 } }],
     },
     {
       categoria: 'over', nombre: 'Plan Ojo de Luna', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xb91c1c,
-      pct: 1.10, escala: 'dano', cd: 5,
+      pct: 1.1, escala: 'dano', cd: 5,
       desc: 'Causa 110% a todos los enemigos con 60% de probabilidad de Confusión (2 rondas). Los que ya estaban confundidos tienen además 50% de probabilidad de Posesión.',
       efectos: [
         { condicion: { objetivoTeniaAntes: 'confuse' }, accion: { tipo: 'efecto', id: 'possess', prob: .50 } },

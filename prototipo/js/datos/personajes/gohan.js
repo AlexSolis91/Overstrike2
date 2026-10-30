@@ -18,22 +18,22 @@ const gohanBestia = {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Puño Bestial', objetivo: 'enemigo', estilo: 'melee', color: 0xc4b5fd,
-      pct: .70, escala: 'dano', cd: 0, golpes: 2,
-      desc: '2 golpes de 70%, cada uno con 30% de probabilidad de Aturdir.',
+      pct: .65, escala: 'dano', cd: 0, golpes: 2,
+      desc: '2 golpes de 65%, cada uno con 30% de probabilidad de Aturdir.',
       efectos: [{ accion: { tipo: 'efecto', id: 'stun', prob: .30 } }],
     },
     {
       categoria: 'especial', nombre: 'Furia Protectora', objetivo: 'todosAliados', estilo: 'support', color: 0xa78bfa, cd: 3,
-      desc: 'Todos los aliados ganan un Escudo del 20% de su HP máx. y Furia (2 rondas).',
+      desc: 'Todos los aliados ganan un Escudo del 19% de su HP máx. y Furia (2 rondas).',
       efectos: [
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .20, escala: 'hpMax', a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: .19, escala: 'hpMax', a: 'todosAliados' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'dmgUp', dur: 2, a: 'todosAliados' } },
       ],
     },
     {
       categoria: 'over', nombre: 'Cañón Especial Bestia', objetivo: 'enemigo', estilo: 'ranged', color: 0xe9d5ff,
-      pct: 2.10, escala: 'dano', cd: 5,
-      desc: 'Un rayo que lo atraviesa todo: 210% con 40% de probabilidad de Mega Aturdimiento.',
+      pct: 2.00, escala: 'dano', cd: 5,
+      desc: 'Un rayo que lo atraviesa todo: 200% con 40% de probabilidad de Mega Aturdimiento.',
       efectos: [{ accion: { tipo: 'efecto', id: 'stun', mega: true, prob: .40 } }],
     },
   ],
@@ -61,23 +61,23 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Masenko', objetivo: 'enemigo', estilo: 'ranged', color: 0xfacc15,
-      pct: 1.00, escala: 'dano', cd: 0,
-      desc: 'Causa 100% con 25% de probabilidad de Aturdir.',
+      pct: .95, escala: 'dano', cd: 0,
+      desc: 'Causa 95% con 25% de probabilidad de Aturdir.',
       efectos: [{ accion: { tipo: 'efecto', id: 'stun', prob: .25 } }],
     },
     {
       categoria: 'especial', nombre: 'Escudo del Maestro', objetivo: 'todosAliados', estilo: 'support', color: 0x8b5cf6, cd: 3,
-      desc: 'Todos los aliados ganan un Escudo del 15% de su HP máx. y se les quita el Control. Gana 1 de Potencial.',
+      desc: 'Todos los aliados ganan un Escudo del 14% de su HP máx. y se les quita el Control. Gana 1 de Potencial.',
       efectos: [
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .15, escala: 'hpMax', a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: .14, escala: 'hpMax', a: 'todosAliados' } },
         { cuando: 'final', accion: { tipo: 'limpiar', etiqueta: 'Control', a: 'todosAliados' } },
         { cuando: 'final', accion: { tipo: 'ganarCargas', cantidad: 1, max: 3, efecto: 'potencialGohan', a: 'propio' } },
       ],
     },
     {
       categoria: 'over', nombre: 'Kamehameha Padre e Hijo', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x60a5fa,
-      pct: 1.40, escala: 'dano', cd: 5,
-      desc: 'Causa 140% a todos los enemigos con 35% de probabilidad de Aturdir. Gana 1 de Potencial.',
+      pct: 1.35, escala: 'dano', cd: 5,
+      desc: 'Causa 135% a todos los enemigos con 35% de probabilidad de Aturdir. Gana 1 de Potencial.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'stun', prob: .35 } },
         { cuando: 'final', accion: { tipo: 'ganarCargas', cantidad: 1, max: 3, efecto: 'potencialGohan', a: 'propio' } },
