@@ -14,7 +14,7 @@ export default {
   sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦋', color: '#a855f7', imagen: 'assets/personajes/shinobu-kocho.webp',
-  base: { hp: 650, dmg: 60, spd: 118 },
+  base: { hp: 550, dmg: 48, spd: 105 },
   extra: { acc: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

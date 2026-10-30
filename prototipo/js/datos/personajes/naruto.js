@@ -38,7 +38,7 @@ const narutoModoBarion = {
 const narutoModoRikudo = {
   nombre: 'Naruto Modo Rikudo',
   emoji: '☯️', color: '#facc15', imagen: 'assets/transformaciones/naruto-modo-rikudo.webp',
-  base: { hp: 810, dmg: 84, spd: 119 },
+  base: { hp: 800, dmg: 81, spd: 116 },
   extra: { res: .10 },
   pasiva: {
     nombre: 'Chakra de los Seis Caminos',
@@ -77,7 +77,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Invocador',
   sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
   emoji: '🍥', color: '#f97316', imagen: 'assets/personajes/naruto.webp',
-  base: { hp: 750, dmg: 75, spd: 111 },
+  base: { hp: 740, dmg: 72, spd: 108 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

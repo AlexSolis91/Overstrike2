@@ -12,7 +12,7 @@ export default {
   sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐲', color: '#ef4444', imagen: 'assets/personajes/natsu-dragneel.webp',
-  base: { hp: 550, dmg: 45, spd: 80 },
+  base: { hp: 620, dmg: 58, spd: 98 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

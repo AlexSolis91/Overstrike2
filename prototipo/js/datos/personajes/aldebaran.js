@@ -10,7 +10,7 @@ export default {
   rol: 'Tanque', rolSecundario: 'Daño',
   sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🐂', color: '#eab308', imagen: 'assets/personajes/aldebaran.webp',
-  base: { hp: 850, dmg: 55, spd: 97 },
+  base: { hp: 850, dmg: 52, spd: 86 },
   extra: { armor: .50, res: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

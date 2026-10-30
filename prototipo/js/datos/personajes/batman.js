@@ -8,7 +8,7 @@ export default {
   rol: 'Control', rolSecundario: 'Support',
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🦇', color: '#334155', imagen: 'assets/personajes/batman.webp',
-  base: { hp: 700, dmg: 65, spd: 97 },
+  base: { hp: 660, dmg: 60, spd: 100 },
   extra: { acc: .25, armor: .05 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

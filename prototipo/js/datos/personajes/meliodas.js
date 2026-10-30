@@ -11,7 +11,7 @@ export default {
   rol: 'Daño',
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🐉', color: '#7c3aed', imagen: 'assets/personajes/meliodas.webp',
-  base: { hp: 740, dmg: 75, spd: 110 },
+  base: { hp: 730, dmg: 75, spd: 112 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

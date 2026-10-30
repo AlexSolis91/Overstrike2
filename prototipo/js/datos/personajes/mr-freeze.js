@@ -12,7 +12,7 @@ export default {
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🥶', color: '#67e8f9', imagen: 'assets/personajes/mr-freeze.webp',
-  base: { hp: 750, dmg: 40, spd: 80 },
+  base: { hp: 780, dmg: 45, spd: 80 },
   extra: { armor: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

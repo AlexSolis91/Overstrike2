@@ -10,7 +10,7 @@ export default {
   rol: 'DoTer', rolSecundario: 'Daño',
   sobres: ['phantom'],
   emoji: '💥', color: '#facc15', imagen: 'assets/personajes/deidara.webp',
-  base: { hp: 550, dmg: 45, spd: 80 },
+  base: { hp: 560, dmg: 50, spd: 90 },
   extra: { acc: .15 },                        // su ojo explorador
   slots: espacios('argonita', 'pechera', 'anilloCobre'),
 

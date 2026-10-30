@@ -12,7 +12,7 @@ export default {
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🗡️', color: '#3b82f6', imagen: 'assets/personajes/baruka.webp',
-  base: { hp: 680, dmg: 65, spd: 117 },
+  base: { hp: 640, dmg: 62, spd: 108 },
   extra: { critRate: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

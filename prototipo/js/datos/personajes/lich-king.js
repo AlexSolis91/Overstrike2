@@ -11,7 +11,7 @@ export default {
   sobres: ['phantom'],
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '👑', color: '#60a5fa', imagen: 'assets/personajes/lich-king.webp',
-  base: { hp: 850, dmg: 55, spd: 97 },
+  base: { hp: 850, dmg: 55, spd: 85 },
   extra: { armor: .20, res: .20 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

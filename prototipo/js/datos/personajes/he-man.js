@@ -10,7 +10,7 @@ export default {
   rol: 'Tanque', rolSecundario: 'Daño',
   sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
   emoji: '⚔️', color: '#f59e0b', imagen: 'assets/personajes/he-man.webp',
-  base: { hp: 750, dmg: 40, spd: 80 },
+  base: { hp: 820, dmg: 52, spd: 86 },
   extra: { armor: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

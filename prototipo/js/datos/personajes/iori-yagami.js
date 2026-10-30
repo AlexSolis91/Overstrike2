@@ -10,7 +10,7 @@ export default {
   rol: 'Daño', rolSecundario: 'DoTer',
   sobres: ['bloodline', 'phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🌙', color: '#7e22ce', imagen: 'assets/personajes/iori-yagami.webp',
-  base: { hp: 650, dmg: 60, spd: 89 },
+  base: { hp: 680, dmg: 68, spd: 106 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

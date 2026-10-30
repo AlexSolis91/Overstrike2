@@ -11,7 +11,7 @@ export default {
   sobres: ['bloodline'],
   starter: 'noxious',                         // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦂', color: '#dc2626', imagen: 'assets/personajes/milo.webp',
-  base: { hp: 550, dmg: 45, spd: 84 },
+  base: { hp: 600, dmg: 55, spd: 102 },
   extra: { dot: .30 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

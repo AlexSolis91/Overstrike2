@@ -11,7 +11,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Invoker',
   sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
   emoji: '🌀', color: '#7c3aed', imagen: 'assets/personajes/pain.webp',
-  base: { hp: 740, dmg: 74, spd: 106 },
+  base: { hp: 700, dmg: 70, spd: 100 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

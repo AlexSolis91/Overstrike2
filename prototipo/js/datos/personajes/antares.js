@@ -8,7 +8,7 @@ import { espacios } from '../reliquias.js';
 const reyDragon = {
   nombre: 'Antares, Rey de los Dragones',
   emoji: '🐉', color: '#b91c1c', imagen: 'assets/transformaciones/antares-rey-de-los-dragones.webp',
-  base: { hp: 860, dmg: 75, spd: 95 },
+  base: { hp: 880, dmg: 77, spd: 108 },
   compartirCooldowns: true,
   pasiva: {
     nombre: 'Forma Verdadera del Rey Dragón',
@@ -57,7 +57,7 @@ export default {
   sobres: ['phantom'],
   starter: 'blazing',
   emoji: '🐲', color: '#dc2626', imagen: 'assets/personajes/antares.webp',
-  base: { hp: 630, dmg: 58, spd: 87 },
+  base: { hp: 650, dmg: 60, spd: 100 },
   extra: {},
   slots: espacios('argonita', 'pechera', 'anilloCobre'),
 

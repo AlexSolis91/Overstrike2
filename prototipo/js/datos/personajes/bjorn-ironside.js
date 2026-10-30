@@ -13,7 +13,7 @@ export default {
   sobres: ['bloodline'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🛡️', color: '#64748b', imagen: 'assets/personajes/bjorn-ironside.webp',
-  base: { hp: 780, dmg: 41, spd: 80 },
+  base: { hp: 790, dmg: 48, spd: 84 },
   extra: { armor: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

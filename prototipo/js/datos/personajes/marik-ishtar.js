@@ -7,7 +7,7 @@ import { espacios } from '../reliquias.js';
 const raModoFenix = {
   nombre: 'Ra Modo Fénix',
   emoji: '🔥', color: '#f59e0b', imagen: 'assets/transformaciones/ra-modo-fenix.webp',
-  base: { hp: 750, dmg: 80, spd: 118 },
+  base: { hp: 670, dmg: 68, spd: 88 },
   extra: {},
   lider: {
     nombre: 'Dios Definitivo del Sol',
@@ -57,7 +57,7 @@ export default {
   rol: 'Invocador', rolSecundario: 'Control',
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '👁️', color: '#a855f7', imagen: 'assets/personajes/marik-ishtar.webp',
-  base: { hp: 700, dmg: 70, spd: 120 },
+  base: { hp: 620, dmg: 58, spd: 90 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

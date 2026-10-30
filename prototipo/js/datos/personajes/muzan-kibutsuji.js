@@ -8,7 +8,7 @@ import { espacios } from '../reliquias.js';
 const muzanFormaFinal = {
   nombre: 'Muzan, Forma Final',
   emoji: '🩸', color: '#be123c', imagen: 'assets/transformaciones/muzan-forma-final.webp',
-  base: { hp: 690, dmg: 57, spd: 82 },
+  base: { hp: 760, dmg: 67, spd: 105 },
   extra: {},
   pasiva: {
     nombre: 'Cuerpo del Rey Demonio',
@@ -52,7 +52,7 @@ export default {
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🎩', color: '#881337', imagen: 'assets/personajes/muzan-kibutsuji.webp',
-  base: { hp: 550, dmg: 45, spd: 80 },
+  base: { hp: 620, dmg: 55, spd: 103 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

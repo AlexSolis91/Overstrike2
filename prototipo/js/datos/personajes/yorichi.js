@@ -9,7 +9,7 @@ export default {
   rol: 'Daño',
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '☀️', color: '#dc2626', imagen: 'assets/personajes/yorichi.webp',
-  base: { hp: 730, dmg: 75, spd: 100 },
+  base: { hp: 720, dmg: 75, spd: 115 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

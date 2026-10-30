@@ -12,7 +12,7 @@ export default {
   sobres: ['phantom', 'bloodline'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🌿', color: '#16a34a', imagen: 'assets/personajes/poison-ivy.webp',
-  base: { hp: 610, dmg: 56, spd: 111 },
+  base: { hp: 590, dmg: 52, spd: 92 },
   extra: { acc: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

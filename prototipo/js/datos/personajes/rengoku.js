@@ -9,7 +9,7 @@ export default {
   sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🔥', color: '#f97316', imagen: 'assets/personajes/rengoku.webp',
-  base: { hp: 850, dmg: 55, spd: 97 },
+  base: { hp: 820, dmg: 55, spd: 93 },
   extra: { armor: .20, res: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

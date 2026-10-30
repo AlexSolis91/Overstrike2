@@ -12,7 +12,7 @@ export default {
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🧊', color: '#38bdf8', imagen: 'assets/personajes/sillad.webp',
-  base: { hp: 660, dmg: 55, spd: 81 },
+  base: { hp: 680, dmg: 60, spd: 98 },
   extra: { acc: .15 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

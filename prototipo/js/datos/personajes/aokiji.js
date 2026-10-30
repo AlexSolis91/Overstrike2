@@ -13,7 +13,7 @@ export default {
   sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🧊', color: '#0ea5e9', imagen: 'assets/personajes/aokiji.webp',
-  base: { hp: 700, dmg: 65, spd: 108 },
+  base: { hp: 700, dmg: 65, spd: 100 },
   extra: { acc: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

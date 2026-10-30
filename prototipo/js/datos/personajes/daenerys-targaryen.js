@@ -9,7 +9,7 @@ export default {
   sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐉', color: '#b91c1c', imagen: 'assets/personajes/daenerys-targaryen.webp',
-  base: { hp: 700, dmg: 70, spd: 88 },
+  base: { hp: 600, dmg: 60, spd: 88 },
   extra: {},
   slots: espacios('argonita', 'yelmo', 'anilloCobre'),
 

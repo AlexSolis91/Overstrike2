@@ -11,7 +11,7 @@ export default {
   rol: 'Control', rolSecundario: 'Daño',
   sobres: ['phantom'],
   emoji: '🌀', color: '#ea580c', imagen: 'assets/personajes/obito-uchiha.webp',
-  base: { hp: 690, dmg: 65, spd: 89 },
+  base: { hp: 680, dmg: 62, spd: 100 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'amuletoPantano'),
 

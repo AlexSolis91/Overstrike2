@@ -8,7 +8,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Invocador',
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🌑', color: '#8b5cf6', imagen: 'assets/personajes/sun-jin-woo.webp',
-  base: { hp: 570, dmg: 57, spd: 105 },
+  base: { hp: 600, dmg: 88, spd: 122 },
   extra: {},
   slots: espacios('katanaCarmesi', 'botas', 'anilloCobre'),
 

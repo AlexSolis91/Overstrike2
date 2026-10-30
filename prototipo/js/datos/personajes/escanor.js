@@ -11,7 +11,7 @@ export default {
   rol: 'Tanque', rolSecundario: 'Daño',
   sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🦁', color: '#f59e0b', imagen: 'assets/personajes/escanor.webp',
-  base: { hp: 760, dmg: 55, spd: 100 },
+  base: { hp: 800, dmg: 55, spd: 85 },
   extra: { armor: .20 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

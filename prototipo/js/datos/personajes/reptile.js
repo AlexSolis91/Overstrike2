@@ -11,7 +11,7 @@ export default {
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦎', color: '#65a30d', imagen: 'assets/personajes/reptile.webp',
-  base: { hp: 600, dmg: 90, spd: 119 },
+  base: { hp: 560, dmg: 80, spd: 125 },
   extra: { critRate: .15, acc: .25 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

@@ -10,7 +10,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Control',
   sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
   emoji: '⚡', color: '#facc15', imagen: 'assets/personajes/minato.webp',
-  base: { hp: 750, dmg: 74, spd: 103 },
+  base: { hp: 680, dmg: 70, spd: 120 },
   extra: { block: .25 },   // Hiraishin: se teletransporta fuera del golpe (25% de Bloqueo)
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

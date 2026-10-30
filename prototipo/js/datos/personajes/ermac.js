@@ -12,7 +12,7 @@ export default {
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '👻', color: '#15803d', imagen: 'assets/personajes/ermac.webp',
-  base: { hp: 550, dmg: 45, spd: 80 },
+  base: { hp: 580, dmg: 50, spd: 90 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

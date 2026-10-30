@@ -25,9 +25,12 @@ está aquí, primero se define y se agrega a este registro; nunca se programa "s
 
 **Rangos por rol (estadísticas base, obligatorios):** Tanque 750–850 HP / 40–55 Daño · Luchador 650–750 / 60–75 ·
 Asesino 500–600 / 75–90 · DoTer 550–650 / 45–60 · Soporte 550–650 / 40–55 · Control 600–700 / 50–65 ·
-Invocador 500–700 / 55–70. Velocidad base 80–130 para todos. Rol "Daño": banda de Luchador (o de Asesino si es frágil).
-Las transformaciones escalan en proporción a su forma base. La fuerza que la banda no alcanza se da con el kit
-(multiplicadores, pasiva, efectos) o con estadísticas secundarias (Armadura, Resistencia, Puntería, Prob. Crítico).
+Invocador 500–700 / 55–70. **Velocidad por rol (2026-10-29):** Tanque 80–95 · Soporte 85–100 · DoTer 85–105 ·
+Invocador 85–105 · Control 90–110 · Luchador 95–120 · Asesino 105–130. Rol "Daño": según su lore, perfil Luchador o Asesino
+(en el juego sigue diciendo "Daño"). Manda el **rol primario**; el lore solo decide el lugar **dentro** del rango (p. ej. un
+tanque muy rápido en su historia será de los tanques más rápidos, pero nunca más que un Luchador veloz). Las estadísticas
+son coherentes con el roster y **no se suben para ganar más**: la tasa de victoria se ajusta con los **movimientos**
+(multiplicadores, cooldowns, efectos, pasiva). Las transformaciones conservan su diferencia con la forma base.
 
 **Balance de la beta (2026-10-21):** todos los campeones oficiales quedaron entre ~46% y ~53% de victorias contra
 equipos al azar (simulación de 12,000 partidas 5 vs 5 entre todo el roster). En partidas al azar el promedio de todo el

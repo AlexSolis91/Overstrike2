@@ -10,7 +10,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Control',
   sobres: ['sacred'],
   emoji: '👑', color: '#eab308', imagen: 'assets/personajes/gilgamesh.webp',
-  base: { hp: 650, dmg: 60, spd: 80 },
+  base: { hp: 720, dmg: 75, spd: 105 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

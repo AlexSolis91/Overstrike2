@@ -10,7 +10,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Support',
   sobres: ['sacred'],
   emoji: '🏛️', color: '#2563eb', imagen: 'assets/personajes/ozymandias.webp',
-  base: { hp: 650, dmg: 60, spd: 80 },
+  base: { hp: 720, dmg: 70, spd: 100 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

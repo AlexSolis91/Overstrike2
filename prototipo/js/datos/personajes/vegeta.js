@@ -8,7 +8,7 @@ import { espacios } from '../reliquias.js';
 const vegetaSuperSayajin = {
   nombre: 'Vegeta Super Sayajin',
   emoji: '⚡', color: '#facc15', imagen: 'assets/transformaciones/vegeta-super-sayajin.webp',
-  base: { hp: 640, dmg: 102, spd: 115 },
+  base: { hp: 630, dmg: 100, spd: 122 },
   extra: { critRate: .10, armor: .10 },
   pasiva: {
     nombre: 'Orgullo del Super Sayajin',
@@ -46,7 +46,7 @@ export default {
   rol: 'Daño', rolSecundario: '',
   sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
   emoji: '👑', color: '#2563eb', imagen: 'assets/personajes/vegeta.webp',
-  base: { hp: 600, dmg: 90, spd: 113 },
+  base: { hp: 590, dmg: 88, spd: 120 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

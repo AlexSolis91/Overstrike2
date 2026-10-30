@@ -8,7 +8,7 @@ import { espacios } from '../reliquias.js';
 const brolyLegendario = {
   nombre: 'Broly Super Saiyajin Legendario',
   emoji: '💚', color: '#84cc16', imagen: 'assets/transformaciones/broly-super-sayajin-legendario.webp',
-  base: { hp: 880, dmg: 58, spd: 99 },
+  base: { hp: 890, dmg: 59, spd: 92 },
   extra: { armor: .15 },
   pasiva: {
     nombre: 'Poder Sin Límites',
@@ -44,7 +44,7 @@ export default {
   rol: 'Tanque', rolSecundario: 'Daño',
   sobres: [],  // como Goku y Vegeta: solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
   emoji: '💚', color: '#65a30d', imagen: 'assets/personajes/broly.webp',
-  base: { hp: 840, dmg: 54, spd: 95 },
+  base: { hp: 850, dmg: 55, spd: 88 },
   extra: { armor: .15 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

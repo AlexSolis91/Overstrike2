@@ -8,7 +8,7 @@ export default {
   rol: 'Tanque', rolSecundario: 'Support',
   sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🪷', color: '#facc15', imagen: 'assets/personajes/shaka.webp',
-  base: { hp: 850, dmg: 55, spd: 97 },
+  base: { hp: 830, dmg: 55, spd: 93 },
   extra: { armor: .25, res: .15 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

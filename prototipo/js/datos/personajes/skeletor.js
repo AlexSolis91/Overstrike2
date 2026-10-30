@@ -11,7 +11,7 @@ export default {
   rol: 'Control', rolSecundario: 'Daño',
   sobres: ['phantom'],
   emoji: '💀', color: '#7c3aed', imagen: 'assets/personajes/skeletor.webp',
-  base: { hp: 670, dmg: 62, spd: 99 },
+  base: { hp: 660, dmg: 62, spd: 95 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

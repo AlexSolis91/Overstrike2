@@ -12,7 +12,7 @@ export default {
   sobres: ['phantom'],
   starter: 'blazing',
   emoji: '💀', color: '#f97316', imagen: 'assets/personajes/ghost-rider.webp',
-  base: { hp: 730, dmg: 67, spd: 80 },
+  base: { hp: 740, dmg: 70, spd: 100 },
   extra: {},
   slots: espacios('lanzaFuego', 'pechera', 'anilloCobre'),
 

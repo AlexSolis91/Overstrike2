@@ -10,7 +10,7 @@ export default {
   rol: 'Daño', rolSecundario: 'Control',
   sobres: ['phantom'],
   emoji: '😈', color: '#6366f1', imagen: 'assets/personajes/baran.webp',
-  base: { hp: 650, dmg: 63, spd: 94 },
+  base: { hp: 720, dmg: 72, spd: 110 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 

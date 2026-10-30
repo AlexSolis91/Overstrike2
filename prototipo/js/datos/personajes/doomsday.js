@@ -11,7 +11,7 @@ export default {
   rol: 'Tanque', rolSecundario: 'Daño',
   sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🦴', color: '#64748b', imagen: 'assets/personajes/doomsday.webp',
-  base: { hp: 820, dmg: 52, spd: 84 },
+  base: { hp: 850, dmg: 55, spd: 88 },
   extra: { armor: .10 },
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
