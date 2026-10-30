@@ -26,17 +26,17 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Sol Cruel', objetivo: 'enemigo', estilo: 'melee', color: 0xf59e0b,
-      pct: .85, cd: 0,
-      desc: 'Causa 85%. Si el objetivo tiene Quemadura Solar, Escanor gana 1 marca de The One. Con 12 marcas golpea también a otro enemigo al azar (85%).',
+      pct: .85, escala: 'hp', cd: 0,
+      desc: 'Causa 85% (escala por HP). Si el objetivo tiene Quemadura Solar, Escanor gana 1 marca de The One. Con 12 marcas golpea también a otro enemigo al azar (85%).',
       efectos: [
         { condicion: { objetivoTiene: 'solarBurn' }, accion: { tipo: 'ganarCargas', efecto: 'theOne', max: 12, a: 'propio' } },
-        { cuando: 'final', condicion: { propioCargasMin: { efecto: 'theOne', min: 12 } }, accion: { tipo: 'golpeDirecto', nombre: 'Sol Cruel', pct: .85, a: 'otroEnemigoAzar' } },
+        { cuando: 'final', condicion: { propioCargasMin: { efecto: 'theOne', min: 12 } }, accion: { tipo: 'golpeDirecto', nombre: 'Sol Cruel', pct: .85, escala: 'hp', a: 'otroEnemigoAzar' } },
       ],
     },
     {
       categoria: 'especial', nombre: 'Prominencia Loca', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfbbf24,
-      pct: .9, cd: 2,
-      desc: 'Causa 90% a todos los enemigos con 60% de probabilidad de aplicar Quemadura Solar (2 rondas). Con 12 marcas de The One, Escanor gana un turno extra.',
+      pct: .9, escala: 'hp', cd: 2,
+      desc: 'Causa 90% (escala por HP) a todos los enemigos con 60% de probabilidad de aplicar Quemadura Solar (2 rondas). Con 12 marcas de The One, Escanor gana un turno extra.',
       efectos: [
         { accion: { tipo: 'efecto', id: 'solarBurn', dur: 2, prob: .60 } },
         { cuando: 'final', condicion: { propioCargasMin: { efecto: 'theOne', min: 12 } }, accion: { tipo: 'turnoExtra', a: 'propio' } },
@@ -44,8 +44,8 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Lanza Divina de Escanor', objetivo: 'enemigo', estilo: 'melee', color: 0xfde047,
-      pct: 2.4, cd: 4, sobrante: true,
-      desc: 'Causa 240%. Si mata al objetivo, el daño sobrante pasa a otro enemigo al azar. Con 12 marcas de The One suma daño igual al 25% del HP máx. que ganó con sus marcas.',
+      pct: 2.4, escala: 'hp', cd: 4, sobrante: true,
+      desc: 'Causa 240% (escala por HP). Si mata al objetivo, el daño sobrante pasa a otro enemigo al azar. Con 12 marcas de The One suma daño igual al 25% del HP máx. que ganó con sus marcas.',
       bonoPorHpGanado: { pct: .25, si: { propioCargasMin: { efecto: 'theOne', min: 12 } } },
     },
   ],
