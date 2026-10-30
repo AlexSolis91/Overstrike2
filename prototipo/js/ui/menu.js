@@ -198,17 +198,21 @@ function statsHtml(base, extra = {}) {
     ['🎯 Puntería', pct(s.acc)], ['🧿 Resistencia', pct(s.res)], ['🛡️ Armadura', pct(s.armor)], ['✋ Bloqueo', pct(s.block)], ['☠️ Daño DoT', pct(s.dot)], ['🗡️ Penetración de escudo', pct(s.pen)]];
   return `<div class="fs">${filas.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join('')}</div>`;
 }
-function fichaHtml(p) {
+// Líder, pasiva, movimientos y transformaciones (también los usa la ficha de Colección)
+export function habilidadesHtml(p) {
   let formas = '';
   for (let f = p.transformacion, n = 1; f; f = f.transformacion, n++) {
     formas += `<section><h4>Transformación ${n}: ${f.nombre}</h4>${statsHtml(f.base, f.extra)}
       ${f.pasiva ? `<div class="fb"><b>Pasiva: ${f.pasiva.nombre}</b><p>${f.pasiva.desc}</p></div>` : ''}${f.movimientos.map(movHtml).join('')}</section>`;
   }
-  return `<div class="fh">${retrato(p, 'fh-img')}<div><h3>${p.nombre}</h3><div class="gc-rol">${rolesDe(p).join(' · ')}</div></div></div>
-    <section><h4>Estadísticas base <small>(sin reliquias)</small></h4>${statsHtml(p.base, p.extra)}</section>
-    ${p.lider ? `<div class="fb lider"><b>👑 Líder: ${p.lider.nombre}</b><p>${p.lider.desc}</p></div>` : '<div class="fb"><b>👑 Sin habilidad de líder</b></div>'}
+  return `${p.lider ? `<div class="fb lider"><b>👑 Líder: ${p.lider.nombre}</b><p>${p.lider.desc}</p></div>` : '<div class="fb"><b>👑 Sin habilidad de líder</b></div>'}
     ${p.pasiva ? `<div class="fb"><b>✦ Pasiva: ${p.pasiva.nombre}</b><p>${p.pasiva.desc}</p></div>` : ''}
     <section><h4>Movimientos</h4>${p.movimientos.map(movHtml).join('')}</section>${formas}`;
+}
+function fichaHtml(p) {
+  return `<div class="fh">${retrato(p, 'fh-img')}<div><h3>${p.nombre}</h3><div class="gc-rol">${rolesDe(p).join(' · ')}</div></div></div>
+    <section><h4>Estadísticas base <small>(sin reliquias)</small></h4>${statsHtml(p.base, p.extra)}</section>
+    ${habilidadesHtml(p)}`;
 }
 function abrirFicha(id) { $('#ficha-cont').innerHTML = fichaHtml(OFICIALES.find(p => p.id === id)); $('#ficha').classList.remove('hidden'); sonar('abrir'); }
 const cerrarFicha = () => { $('#ficha').classList.add('hidden'); sonar('cerrar'); };

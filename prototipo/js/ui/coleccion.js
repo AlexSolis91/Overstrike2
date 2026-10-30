@@ -10,7 +10,9 @@ import { RAREZAS, ESPACIOS, STAT_META, instancia, calidad, motivoNoEquipar } fro
 import { cartaReliquia } from './panel.js';
 import { activarTip, comparacion, hojaTactil, conCursor, ocultarTip, cerrarHoja } from './tipReliquia.js';
 import { RECETAS, revisarReceta, proponerIngredientes } from '../datos/recetas.js';
-import { RELIQUIAS } from '../datos/reliquias.js';
+import { RELIQUIAS, espaciosDeCuenta } from '../datos/reliquias.js';
+import { crearCombate } from '../motor/combate.js';
+import { habilidadesHtml } from './menu.js';
 
 const $ = s => document.querySelector(s);
 const ROL = { Support: 'Soporte', Invoker: 'Invocador' };
@@ -254,6 +256,24 @@ function htmlEspaciosReliquias(p, r) {
   return `<section class="tc-equipo"><h4>🗡️ Reliquias equipadas</h4><div class="tc-slots">${casillas}</div>${panel}</section>`;
 }
 
+// Estadísticas del campeón con lo que tiene en la cuenta, calculadas con el mismo motor de la batalla:
+// base de su ficha → + estrellas → + reliquias equipadas (bonos fijos de las reliquias; lo que crece en batalla no se cuenta)
+const FILAS_STATS = ['hp', 'dmg', 'spd', 'critRate', 'critDmg', 'acc', 'res', 'armor', 'block', 'dot', 'pen'];
+function htmlStatsCuenta(p, r) {
+  const ficha = { ...p, estrellas: r.estrellas, slots: espaciosDeCuenta(equipoDe(p.id), abiertosDe(r)) };
+  const c = crearCombate({ equipoJugador: [ficha], equipoRival: [p], semilla: 1 }), yo = c.personajes[0];
+  const base = c.stats(yo, {}), est = c.stats(yo, { estrellas: true }), tot = c.stats(yo, { estrellas: true, reliquias: true });
+  const plana = k => k === 'hp' || k === 'dmg' || k === 'spd';
+  const val = (k, v) => plana(k) ? num(Math.round(v)) : `${Math.round(v * 1000) / 10}%`;
+  const dif = (k, d) => { const n = plana(k) ? Math.round(d) : Math.round(d * 1000) / 10;
+    return n ? `<em class="${n > 0 ? 'mas' : 'menos'}">${n > 0 ? '+' : ''}${plana(k) ? num(n) : n + '%'}</em>` : '<em>—</em>'; };
+  const cab = '<div class="cab"><span></span><i>Base</i><i>★</i><i>Reliquias</i><i>Total</i></div>';
+  return `<section class="tc-stats"><h4>📊 Estadísticas</h4>
+    <div class="tc-stats-tabla">${cab}${cab}${FILAS_STATS.map(k => `<div><span>${STAT_META[k].icon} ${STAT_META[k].label}</span><b>${val(k, base[k])}</b>
+      ${dif(k, est[k] - base[k])}${dif(k, tot[k] - est[k])}<strong>${val(k, tot[k])}</strong></div>`).join('')}</div>
+    <p class="tc-tenue">Cambia las reliquias abajo y estos números se actualizan al instante. No incluye bonos que solo aparecen en batalla (líder, buffs o lo que crece al pelear).</p></section>`;
+}
+
 function htmlColeccion() {
   if (detalle) return htmlDetalle(porId(detalle));
   const tengo = OFICIALES.filter(p => col.has(p.id)).length;
@@ -298,7 +318,9 @@ function htmlDetalle(p) {
         ${r.copias ? `<div class="tc-fila"><input id="tc-cant" type="number" min="1" max="${r.copias}" value="1"><button class="eq-btn" data-desfrag>Desfragmentar</button></div>` : '<p class="tc-tenue">No tiene copias para desfragmentar.</p>'}
       </section>
     </div>
-    ${htmlEspaciosReliquias(p, r)}`;
+    ${htmlStatsCuenta(p, r)}
+    ${htmlEspaciosReliquias(p, r)}
+    <section class="tc-habilidades"><h4>✦ Habilidades</h4>${habilidadesHtml(p)}</section>`;
 }
 
 function htmlPortal() {
