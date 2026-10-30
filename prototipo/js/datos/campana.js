@@ -76,52 +76,52 @@ export const DIFICULTADES = {
 export const AREAS = {
   portal: {
     nombre: 'El Portal', titulo: '🌀 El Portal',
-    etapas: [   // orden por fuerza (simulación 2026-10-21, Exploradores fijo en la 1); poder calibrado para ~95% → ~40% de victorias en Normal
-      { tema: 'exploradores', poder: 0.86 },   // 1
-      { tema: 'gotica', poder: 1.1 },   // 2
-      { tema: 'reyes', poder: 1.05 },   // 3
-      { tema: 'caos', poder: 1.01 },   // 4
-      { tema: 'marvel', poder: 1.1 },   // 5
-      { tema: 'sangre', poder: 1.1 },   // 6
-      { tema: 'uchiha', poder: 1.1 },   // 7
-      { tema: 'akatsuki', poder: 1.12 },   // 8
-      { tema: 'asgard', poder: 1.14 },   // 9
-      { tema: 'eternia', poder: 1.08, jefe: true },   // 10
-      { tema: 'monarcas', poder: 1.29 },   // 11
-      { tema: 'mortal', poder: 1.14 },   // 12
-      { tema: 'cazadores', poder: 1.16 },   // 13 (2026-10-29: entra Yorichi, sale Minato)
-      { tema: 'santos', poder: 1.21 },   // 14
-      { tema: 'konoha', poder: 1.24 },   // 15
-      { tema: 'sayajin', poder: 1.16 },   // 16
+    etapas: [   // orden por fuerza (simulación 2026-10-21, Exploradores fijo en la 1); poder recalibrado 2026-10-30 para ~95% → ~40% de victorias en Normal
+      { tema: 'exploradores', poder: 0.9 },   // 1
+      { tema: 'gotica', poder: 0.88 },   // 2
+      { tema: 'reyes', poder: 1.02 },   // 3
+      { tema: 'caos', poder: 0.94 },   // 4
+      { tema: 'marvel', poder: 1.22 },   // 5
+      { tema: 'sangre', poder: 1.12 },   // 6
+      { tema: 'uchiha', poder: 1.06 },   // 7
+      { tema: 'akatsuki', poder: 1.16 },   // 8
+      { tema: 'asgard', poder: 1.27 },   // 9
+      { tema: 'eternia', poder: 1.04, jefe: true },   // 10
+      { tema: 'monarcas', poder: 1.16 },   // 11
+      { tema: 'mortal', poder: 1.15 },   // 12
+      { tema: 'cazadores', poder: 1.18 },   // 13 (2026-10-29: entra Yorichi, sale Minato)
+      { tema: 'santos', poder: 1.24 },   // 14
+      { tema: 'konoha', poder: 1.2 },   // 15
+      { tema: 'sayajin', poder: 1.17 },   // 16
       { tema: 'fuego', poder: 1.11 },   // 17
-      { tema: 'azeroth', poder: 1.01 },   // 18
-      { tema: 'dragones', poder: 1.01 },   // 19
+      { tema: 'azeroth', poder: 1.04 },   // 18
+      { tema: 'dragones', poder: 0.9 },   // 19
       { tema: 'hielo', poder: 0.97, jefe: true },   // 20
     ],
   },
   abismo: {
     nombre: 'El Abismo', titulo: '🕳️ El Abismo',
-    etapas: [   // orden por fuerza (simulación 2026-10-21); poder calibrado para ~85% → ~30% de victorias en Normal
-      { tema: 'reyesInm', poder: 1.17 },   // 1
-      { tema: 'panteon', poder: 1.1 },   // 2
-      { tema: 'crimen', poder: 1.14 },   // 3
-      { tema: 'monarcasAbismo', poder: 1.14 },   // 4
-      { tema: 'akatsukiSup', poder: 1.13 },   // 5
-      { tema: 'hokages', poder: 1.1 },   // 6
-      { tema: 'titanes', poder: 1.19 },   // 7
-      { tema: 'ojosUchiha', poder: 1.25 },   // 8
-      { tema: 'marvelDef', poder: 1.19 },   // 9
-      { tema: 'kombat', poder: 1.1, jefe: true },   // 10
-      { tema: 'inviernoEterno', poder: 1.19 },   // 11
-      { tema: 'santosOro', poder: 1.19 },   // 12
-      { tema: 'hashira', poder: 1.29 },   // 13
-      { tema: 'sayajinLeg', poder: 1.19 },   // 14
-      { tema: 'hemorragia', poder: 1.24 },   // 15
-      { tema: 'punosFuego', poder: 1.14 },   // 16
-      { tema: 'venenoLetal', poder: 1.14 },   // 17
-      { tema: 'norte', poder: 1.1 },   // 18
-      { tema: 'furiaDragon', poder: 1.1 },   // 19
-      { tema: 'infierno', poder: 0.97, jefe: true },   // 20
+    etapas: [   // orden por fuerza (simulación 2026-10-21); poder recalibrado 2026-10-30 para ~85% → ~30% de victorias en Normal
+      { tema: 'reyesInm', poder: 1.06 },   // 1
+      { tema: 'panteon', poder: 1.19 },   // 2
+      { tema: 'crimen', poder: 1 },   // 3
+      { tema: 'monarcasAbismo', poder: 1.09 },   // 4
+      { tema: 'akatsukiSup', poder: 1.17 },   // 5
+      { tema: 'hokages', poder: 1.16 },   // 6
+      { tema: 'titanes', poder: 1.08 },   // 7
+      { tema: 'ojosUchiha', poder: 1.17 },   // 8
+      { tema: 'marvelDef', poder: 1.28 },   // 9
+      { tema: 'kombat', poder: 1.12, jefe: true },   // 10
+      { tema: 'inviernoEterno', poder: 1.14 },   // 11
+      { tema: 'santosOro', poder: 1.26 },   // 12
+      { tema: 'hashira', poder: 1.27 },   // 13
+      { tema: 'sayajinLeg', poder: 1.22 },   // 14
+      { tema: 'hemorragia', poder: 1.19 },   // 15
+      { tema: 'punosFuego', poder: 1.12 },   // 16
+      { tema: 'venenoLetal', poder: 1.1 },   // 17
+      { tema: 'norte', poder: 1.07 },   // 18
+      { tema: 'furiaDragon', poder: 1.01 },   // 19
+      { tema: 'infierno', poder: 1.05, jefe: true },   // 20
     ],
   },
 
