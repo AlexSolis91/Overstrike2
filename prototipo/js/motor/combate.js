@@ -19,7 +19,8 @@ const clonar = o => JSON.parse(JSON.stringify(o));
 export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival: opcionesRival = {}, invertido = false }) {
   const rng = crearRng(semilla);
   const P = [];
-  const S = { ronda: 0, rondaBase: 0, actuaron: new Set(), orden: [], actual: null, esperando: null, fin: null };
+  const S = { ronda: 0, rondaBase: 0, actuaron: new Set(), orden: [], actual: null, esperando: null, fin: null,
+    anticipan: [], cola: [], reanudar: null };   // turnos especiales: Anticipar y turnos regalados (ver seguirTras)
   let EV = [];
   // Reacciones: lo que una pasiva hace en respuesta a la acción de otro (p. ej. Sub-Zero lanza Ice Blast cuando le rompen
   // el hielo a un enemigo) espera a que termine el movimiento en curso, para no mezclarse con él.
@@ -139,8 +140,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       const z = get(x, 'zona');
       for (const [k, v] of Object.entries(z?.zona?.bono || {})) { if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v; }
     }
+    let todo = 1;                                   // bono "todoPct": +X% a TODAS sus estadísticas (p. ej. Camino Jedi de Yoda)
     if (capas.buffs) for (const e of p.estados) if (e.bono) {      // marca con bono de estadísticas (p. ej. Sello Maldito)
-      for (const [k, v] of Object.entries(e.bono)) { if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v; }
+      for (const [k, v] of Object.entries(e.bono)) { if (k === 'todoPct') todo *= 1 + v; else if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v; }
     }
     sec.armor = Math.max(0, sec.armor);   // la Armadura nunca baja de 0% (la Puntería sí puede quedar negativa, p. ej. con Ceguera)
     if (capas.lider) for (const l of lideresDe(p)) {          // líder "bonoPorEfecto": +valor a una estadística por cada enemigo con ese efecto
@@ -161,10 +163,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (capas.permanente) for (const [k, v] of Object.entries(p.permanente || {})) {
       if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
     }
+    if (todo !== 1) for (const k of Object.keys(sec)) sec[k] *= todo;
     return {
-      hp: (b.hp + flat.hp) * (1 + pct.hp),
-      dmg: (b.dmg + flat.dmg) * (1 + pct.dmg),
-      spd: (b.spd + flat.spd) * (1 + pct.spd),
+      hp: (b.hp + flat.hp) * (1 + pct.hp) * todo,
+      dmg: (b.dmg + flat.dmg) * (1 + pct.dmg) * todo,
+      spd: (b.spd + flat.spd) * (1 + pct.spd) * todo,
       ...sec,
     };
   }
@@ -242,6 +245,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'grayskull': texto = `${e.valor} de Poder de Grayskull (máx. 5): Golpe de Grayskull +15% por cada uno`; n = e.valor; break;
         case 'poderRobado': texto = `${e.valor} de Poder Robado (máx. 10): Poder de Grayskull +20% por cada uno`; n = e.valor; break;
         case 'orgullo': texto = `${e.valor} de Orgullo (máx. 5): Final Flash +15% por cada uno`; n = e.valor; break;
+        case 'caminoJedi': texto = `Marca de ${porUid(e.fuente)?.nombre || 'Yoda'}: +5% a todas sus estadísticas · usa su Básico cuando Yoda usa su Básico o Especial`; break;
+        case 'anticipar': texto = `Si un enemigo gana un turno adicional, juega uno antes que él${e.permanente ? ' · permanente' : ` · ${e.dur} ronda(s)`}`; n = e.permanente ? '∞' : e.dur; break;
         case 'hiraishin': texto = `Marca de ${porUid(e.fuente)?.nombre || 'Minato'}: al golpearlo, la consume y gana un turno extra · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'zona': texto = `${e.zona.nombre}: ${e.zona.desc} · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'sello': { const se = p.pasiva?.sello; texto = se ? `${se.nombre}: ${se.desc}` : ''; break; }
@@ -542,6 +547,54 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       objetivos: objetivosValidos(p, m).map(t => t.uid),
     }));
   }
+  // ================================================================ turnos especiales
+  // Anticipar (buff o pasiva): cuando un enemigo gana un turno extra, quien tiene Anticipar juega un turno ANTES de que el
+  // enemigo lo tome. Los turnos regalados (turnoExtra a otro) se juegan al terminar el turno de quien los dio. Ninguno de los
+  // dos es un turno normal: sin DoT, Regeneración ni control y no baja cooldowns (igual que un turno extra), y no activan Anticipar.
+  function ganoTurnoExtra(t) {
+    for (const x of P) if (!x.muerto && x.lado !== t.lado && get(x, 'anticipar') && !S.anticipan.includes(x)) S.anticipan.push(x);
+  }
+  const puedeJugar = x => x && !x.muerto && !conControl(x) && opciones(x).some(o => o.disponible);
+  function turnoEspecial(x, texto) {
+    x.turnoEspecial = true; S.actual = x;
+    emitir('turnoExtra', { id: x.uid, texto }, x);
+    emitir('bonoVisible', { a: x.uid, texto }, x);
+    S.esperando = { id: x.uid, opciones: opciones(x) };
+  }
+  // Qué pasa después de que alguien actúa: Anticipar > su turno extra > fin de su turno > turnos regalados > siguiente en la ronda
+  function seguirTras(a) {
+    if (!comprobarFin()) {
+      let x; while ((x = S.anticipan.shift()) && !puedeJugar(x));
+      if (x) { if (!a.turnoEspecial) S.reanudar = a; return turnoEspecial(x, '🔮 ¡Anticipar!'); }
+    }
+    if (a.turnoEspecial) {
+      if (a.turnosExtra > 0 && !comprobarFin() && puedeJugar(a)) {   // ganó un turno extra durante su turno especial: lo juega ya
+        a.turnosExtra--;
+        emitir('turnoExtra', { id: a.uid }, a);
+        S.esperando = { id: a.uid, opciones: opciones(a) };
+        return;
+      }
+      a.turnosExtra = 0; a.turnoEspecial = false;
+      const r = S.reanudar; S.reanudar = null;
+      if (r) { S.actual = r; return seguirTras(r); }     // vuelve con quien iba a tomar su turno extra
+      return siguienteDeCola();
+    }
+    if (a.turnosExtra > 0 && !a.muerto && !comprobarFin() && opciones(a).some(o => o.disponible)) {   // turno extra: sin DoT, Regeneración ni control; no baja cooldowns
+      a.turnosExtra--;
+      emitir('turnoExtra', { id: a.uid }, a);
+      S.esperando = { id: a.uid, opciones: opciones(a) };
+      return;
+    }
+    a.turnosExtra = 0;
+    terminarTurno(a);
+    siguienteDeCola();
+  }
+  function siguienteDeCola() {
+    let x; while (!comprobarFin() && (x = S.cola.shift())) if (puedeJugar(x)) return turnoEspecial(x, '✨ Turno adicional');
+    S.cola = [];
+    avanzar();
+  }
+
   function objetivosValidos(p, m) {
     const inc = incitadoPor(p);
     if (inc && m.categoria === 'basico' && m.objetivo === 'enemigo') return [inc];
@@ -700,7 +753,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (rp?.categoria === categoria) r += rp.pct;
     return Math.min(r, .9);
   }
+  // pasiva "intocable" (p. ej. Yoda): no recibe daño de ningún tipo mientras viva algún aliado suyo
+  const intocable = t => !!t.pasiva?.intocable && !t.muerto && aliadosDe(t).some(x => x !== t);
   function repartir(t, d, pen) {
+    if (intocable(t)) { emitir('inmune', { a: t.uid, texto: 'Intocable' }); return { aHp: 0, aEsc: 0 }; }
     let aHp = d * Math.min(pen, 1), aEsc = d - aHp;
     if (t.escudo > 0) { const abs = Math.min(t.escudo, aEsc); t.escudo -= abs; aHp += aEsc - abs; aEsc = abs; }
     else { aHp += aEsc; aEsc = 0; }
@@ -935,6 +991,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     const db = t.pasiva?.debilidadA;                        // pasiva "debilidadA": recibe +pct de daño de esos DoT (p. ej. Venom: fuego)
     const debil = db && [].concat(db.efecto).includes(tipo) ? 1 + db.pct : 1;
     const aura = P.reduce((m, x) => m * (x.lado !== t.lado && !x.muerto && x.pasiva?.auraDoT ? 1 + x.pasiva.auraDoT : 1), 1);   // pasiva "auraDoT": los DoT de su equipo hacen +X% (p. ej. Trunks)
+    if (intocable(t)) return;
     const d = valor * maxHp(t) * (1 - reduccion(t, 'dot')) * (ag ? 1 + ag.valor * DEBUFFS.aguja : 1) * debil * aura;
     t.hp -= d;
     emitir('dot', { a: t.uid, tipo, dano: d }, t);
@@ -948,7 +1005,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
 
   // Robar HP: ignora Armadura y Escudo, no le afectan reducciones; cura al ladrón (lo que exceda su HP máx. se pierde).
   function robarHP(a, t, pct) {
-    if (t.muerto || a.muerto) return;
+    if (t.muerto || a.muerto || intocable(t)) return;
     const d = pct * maxHp(t);
     t.hp -= d;
     emitir('robo', { de: a.uid, a: t.uid, cantidad: d }, t);
@@ -985,7 +1042,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   // le afectan las reducciones de DoT y nadie recibe crédito si mata.
   function danoSolar(t, cantidad) {
     const d = cantidad * (1 - reduccion(t, 'dot'));
-    if (d <= 0) return;
+    if (d <= 0 || intocable(t)) return;
     t.hp -= d;
     emitir('dot', { a: t.uid, tipo: 'solarBurn', dano: d }, t);
     recibioDano(t, d, fuentesDe([get(t, 'solarBurn')].filter(Boolean)));
@@ -1050,6 +1107,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     for (const p of P.filter(x => x.lado !== t.lado && !x.muerto)) pasivas(p, 'alMorirEnemigo', { objetivo: t, teniaAlMorir });
     for (const p of aliadosDe(t)) pasivas(p, 'alMorirAliado', { objetivo: t });   // p. ej. Almas Atadas de Gul'dan
     for (const p of aliadosDe(t)) if (p.sellado && p.pasiva.sello.romper.muereAliado) romperSello(p);
+    const solo = aliadosDe(t);                        // pasiva "intocable": si cae el último de sus aliados, muere al instante
+    if (solo.length === 1 && solo[0].pasiva?.intocable) morir(solo[0]);
     for (const l of P.filter(x => x.lado !== t.lado && x.esLider && !x.muerto && x.lider?.alMorirEnemigo)) ejecutarAccion(l, l.lider.alMorirEnemigo, { objetivo: t });   // líder: p. ej. Tesoro del Rey
   }
 
@@ -1067,7 +1126,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     const d = b.valor * maxHp(t) * (S.factorBombas || 1);     // movimiento "potenciaBombas": las que estallan durante él hacen ×factor
     let total = 0;
     emitir('explosion', { a: t.uid, soloSalpicadura });
-    if (!soloSalpicadura && !t.muerto) {
+    if (!soloSalpicadura && !t.muerto && !intocable(t)) {
       const real = d * (1 - reduccion(t, 'dot'));
       total += real;
       t.hp -= real;
@@ -1076,7 +1135,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       if (t.hp <= 0) morir(t);
     }
     for (const x of aliadosDe(t)) {
-      if (x === t) continue;
+      if (x === t || intocable(x)) continue;
       const s = d * DOT.salpicaduraBomba * (1 - reduccion(x, 'dot'));
       total += s;
       x.hp -= s;
@@ -1217,7 +1276,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         break;
       }
       case 'confuse': case 'fear': case 'dmgUp': case 'taunt': case 'fireAura': case 'frostAura': case 'infect': case 'blockBuffs': case 'protect': case 'regen':
-      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'agotar': case 'expuesto': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': case 'incite': case 'mirror': {
+      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'agotar': case 'expuesto': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': case 'incite': case 'mirror': case 'anticipar': {
         if (acc.id === 'stealth' && get(t, 'taunt')) { emitir('sinEfecto', { a: t.uid, texto: 'Con Provocación no puede tener Sigilo' }); return; }
         if (acc.id === 'taunt' && get(t, 'stealth')) { quitar(t, get(t, 'stealth')); emitir('sigiloRoto', { a: t.uid }, t); }
         if (acc.id === 'dmgUp') acc = { ...acc, valor: BUFFS.furia };      // Furia siempre +50%
@@ -1345,7 +1404,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'curar': {
           const base = acc.base === 'dano' ? (ctx.dano || 0) : acc.base === 'hpMaxObjetivo' ? maxHp(t) : acc.base === 'hpMaxGolpeado' ? (ctx.objetivo ? maxHp(ctx.objetivo) : 0) : acc.base === 'curacion' ? (ctx.curacion || 0) : baseDe(a, acc.escala);
           const veces = acc.porCada ? (ctx[acc.porCada] || 0)     // porCada: 'eliminados' = una vez por cada enemigo eliminado
-            : acc.porEnemigoCon ? enemigosDe(a).filter(x => get(x, acc.porEnemigoCon)).length : 1;   // porEnemigoCon: una vez por cada enemigo con ese efecto (p. ej. Muzan)
+            : acc.porEnemigoCon ? enemigosDe(a).filter(x => get(x, acc.porEnemigoCon)).length   // porEnemigoCon: una vez por cada enemigo con ese efecto (p. ej. Muzan)
+            : acc.porAliadoCon ? aliadosDe(a).filter(x => get(x, acc.porAliadoCon)).length : 1;   // porAliadoCon: por cada aliado con esa marca (p. ej. Yoda)
           if (veces > 0) curar(a, t, base * acc.pct * veces);
           break;
         }
@@ -1408,8 +1468,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           if (acc.prob != null && rng() >= acc.prob) break;
           if (t.muerto) break;
           let e = t.estados.find(x => x.id === acc.marca && x.fuente === a.uid);
-          if (e) { e.dur = Math.max(e.dur, acc.dur); e.movId = movId; }
+          const hpAntes = maxHp(t);
+          if (e) { if (!e.permanente) e.dur = Math.max(e.dur, acc.dur); e.movId = movId; }
+          else if (acc.permanente) { e = { id: acc.marca, permanente: true, fuente: a.uid, movId, bono: acc.bono }; t.estados.push(e); }   // permanente: toda la partida; bono: no se acumula (una marca por dueño)
           else { e = { id: acc.marca, dur: acc.dur, fuente: a.uid, movId }; t.estados.push(e); }
+          if (acc.bono) t.hp += Math.max(0, maxHp(t) - hpAntes);      // si sube su HP máx., el HP actual sube lo mismo
           if (S.actuaron.has(t) || S.actual === t) e.nuevo = true;
           emitir('efecto', { a: t.uid, id: acc.marca, texto: `${EFECTOS[acc.marca].icono} ${EFECTOS[acc.marca].nombre}` }, t);
           break;
@@ -1423,9 +1486,22 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'turnoExtra':
-          t.turnosExtra = (t.turnosExtra || 0) + 1;
+          if (t !== a) { if (!S.cola.includes(t)) S.cola.push(t); }   // a otro (p. ej. Espíritu de la Fuerza de Yoda): lo toma al terminar el turno en curso
+          else t.turnosExtra = (t.turnosExtra || 0) + 1;
           emitir('turnoExtraGanado', { id: t.uid }, t);
+          ganoTurnoExtra(t);
           break;
+        case 'ordenarBasico': {        // cada aliado (no él) con esa marca usa su Básico: a un enemigo al azar (o a un aliado al azar si es de apoyo)
+          for (const x of aliadosDe(a).filter(x => x !== a && x.estados.some(e => e.id === acc.marca))) {
+            const mov = x.movimientos.find(m => m.categoria === 'basico');
+            if (!mov || x.muerto || conControl(x) || get(x, 'silence')?.categoria === 'basico' || comprobarFin()) continue;
+            const v = objetivosValidos(x, mov), d = v.length ? rng.elegir(v) : null;
+            if ((mov.objetivo === 'enemigo' || mov.objetivo === 'aliado') && !d) continue;
+            emitir('bonoVisible', { a: x.uid, texto: acc.texto || '¡A la orden!' }, x);
+            ejecutarMovimiento(x, acc.factor != null && mov.pct ? { ...mov, pct: mov.pct * acc.factor } : mov, d, { reaccion: true });   // factor: % del daño normal
+          }
+          break;
+        }
         case 'multiple':      // aplica varias acciones a cada objetivo elegido (los mismos para todas)
           for (const sub of acc.acciones) ejecutarAccion(a, { ...sub, a: 'objetivo' }, { ...ctx, objetivo: t });
           break;
@@ -2099,17 +2175,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
             && P.filter(x => !x.muerto && x !== a).every(x => stats(x).spd < stats(a).spd)) {
           a.turnoRapidoRonda = S.ronda; a.turnosExtra = (a.turnosExtra || 0) + 1;
           emitir('turnoExtraGanado', { id: a.uid }, a);
+          ganoTurnoExtra(a);
         }
         if (!a.muerto && !comprobarFin()) actuanInvocaciones(a);
-        if (a.turnosExtra > 0 && !a.muerto && !comprobarFin() && opciones(a).some(o => o.disponible)) {   // turno extra: sin DoT, Regeneración ni control; no baja cooldowns
-          a.turnosExtra--;
-          emitir('turnoExtra', { id: a.uid }, a);
-          S.esperando = { id: a.uid, opciones: opciones(a) };
-          return;
-        }
-        a.turnosExtra = 0;
-        terminarTurno(a);
-        avanzar();
+        seguirTras(a);
       });
     },
 

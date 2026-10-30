@@ -19,6 +19,9 @@ export function elegirIA(combate, rnd = Math.random) {
     let objetivo = null;
 
     if (acciones.includes('potenciarInvocaciones') && invocaciones() < 2) continue;   // Dominio: vale la pena con 2+ sombras
+    const conMarca = id => P.filter(p => p.lado === a.lado && p !== a && !p.muerto && p.estados.some(e => e.id === id)).length;
+    const om = (mov.efectos || []).find(e => e.accion.tipo === 'ordenarBasico')?.accion.marca;   // órdenes (p. ej. Yoda): sin aliados marcados no hace nada
+    if (om && mov.objetivo !== 'aliado' && conMarca(om) < 2) continue;
     const mc = mov.iaMinEnemigosCon;           // solo vale la pena si suficientes enemigos tienen ese efecto (p. ej. Mil Cortes Divinos)
     if (mc) { const en = P.filter(p => p.lado !== a.lado && !p.muerto); if (en.filter(p => p.estados.some(e => e.id === mc.efecto)).length < Math.min(mc.min, en.length)) continue; }
     if (mov.invocar) {
@@ -27,13 +30,25 @@ export function elegirIA(combate, rnd = Math.random) {
     } else if (mov.desatar) {
       if (invocaciones(mov.desatar) < 2) continue;
     } else if (mov.objetivo === 'enemigo') {
-      const cands = op.objetivos.map(por);
+      // pasiva "intocable" (Yoda): no recibe daño mientras viva un aliado suyo; no vale la pena golpearlo si hay otro objetivo
+      const intocable = p => p.pasiva?.intocable && P.some(x => x !== p && x.lado === p.lado && !x.muerto);
+      const todos = op.objetivos.map(por), utiles = todos.filter(p => !intocable(p));
+      const cands = utiles.length ? utiles : todos;
       const marcas = p => p.estados.find(e => e.id === 'aguja')?.valor || 0;
       if (mov.consumeAgujas && cands.some(marcas)) objetivo = cands.reduce((x, y) => marcas(y) > marcas(x) ? y : x);   // consume marcas: al que más tenga
       else objetivo = rnd() < .4 ? cands.reduce((x, y) => ratio(x) < ratio(y) ? x : y) : pick(cands);
     } else if (mov.objetivo === 'aliado') {
       const cands = op.objetivos.map(por);
-      if (acciones.includes('limpiar')) {
+      const marca = (mov.efectos || []).find(e => e.accion.tipo === 'marcar')?.accion.marca;
+      if (marca) {                         // marcar a un aliado (p. ej. Camino Jedi): al que todavía no la tenga, nunca a sí mismo
+        const sin = cands.filter(p => p !== a && !p.estados.some(e => e.id === marca));
+        objetivo = pick(sin.length ? sin : cands.filter(p => p !== a).length ? cands.filter(p => p !== a) : cands);
+      } else if (acciones.includes('turnoExtra')) {    // regalar un turno (p. ej. Espíritu de la Fuerza): al aliado con más cooldowns por bajar
+        const otros = cands.filter(p => p !== a);
+        if (!otros.length) continue;
+        const cd = p => Object.values(p.cds || {}).reduce((x, y) => x + (y || 0), 0);
+        objetivo = otros.reduce((x, y) => cd(y) > cd(x) ? y : x);
+      } else if (acciones.includes('limpiar')) {
         const con = cands.filter(p => p.estados.some(e => ['burn', 'poison', 'bleed', 'hemo', 'bomb', 'fear', 'confuse'].includes(e.id)));
         objetivo = con.length ? con.reduce((x, y) => ratio(x) < ratio(y) ? x : y) : null;
         if (!objetivo) continue;

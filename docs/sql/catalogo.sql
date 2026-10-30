@@ -70,9 +70,10 @@ insert into public.campeones (id, nombre, starter, sobres, activo) values
   ('meliodas', 'Meliodas', null, array['phantom']::text[], true),
   ('marik-ishtar', 'Marik Ishtar', null, array['phantom']::text[], true),
   ('yorichi', 'Yorichi', null, array['phantom']::text[], true),
-  ('tengen', 'Tengen', null, array['phantom']::text[], true)
+  ('tengen', 'Tengen', null, array['phantom']::text[], true),
+  ('yoda', 'Yoda', null, array['sacred']::text[], true)
 on conflict (id) do update set nombre = excluded.nombre, starter = excluded.starter, sobres = excluded.sobres, activo = excluded.activo;
--- 70 campeones
+-- 71 campeones
 
 -- ============================================================ RELIQUIAS (requiere docs/sql/005_reliquias.sql y 006_horda.sql)
 insert into public.reliquia_tipos (tipo, categoria, planas, pcts) values
