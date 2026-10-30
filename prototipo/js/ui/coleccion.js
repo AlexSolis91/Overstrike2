@@ -33,8 +33,6 @@ const POLVO = { 'Común': 1, 'Raro': 5, 'Especial': 20, 'Épico': 100 };
 const COSTO_MEJORA = { 'Común': 2, 'Raro': 8, 'Especial': 25, 'Épico': 80, 'Legendario': 200 };
 const ORO_FUSION = { 'Común': 1000, 'Raro': 5000, 'Especial': 20000 };
 const SIG_RAREZA = { 'Común': 'Raro', 'Raro': 'Especial', 'Especial': 'Épico' };
-const hoyMx = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
-const precioPortal = () => { const n = inv.portal_dia === hoyMx() ? inv.portal_compras || 0 : 0; return n === 0 ? 10000 : n === 1 ? 20000 : 40000; };
 let cfg = [];                 // sobres_config del servidor
 let pestana = 'tienda', detalle = null, elegidoPortal = null, ocupado = false;
 
@@ -91,14 +89,8 @@ function htmlTienda() {
   const orden = id => Object.keys(SOBRES).indexOf(id);
   const grupo = rel => lista.filter(c => (SOBRES[c.id].tipo === 'reliquias') === rel).sort((a, b) => orden(a.id) - orden(b.id));
   const campeones = grupo(false), reliquias = sinReliquias ? [] : grupo(true);
-  const precio = precioPortal();
-  const objetos = inv.runas_portal == null ? '' : `<h4 class="tc-seccion">Objetos</h4><div class="tc-sobres"><div class="tc-sobre" style="--c:#3b82f6">
-      <div class="tc-sobre-arte tc-objeto"><img src="assets/items/runaPortal.png" alt="Runa de Portal"></div>
-      <b>Runa de Portal</b>
-      <button class="eq-listo tc-abrir" data-comprarportal ${inv.oro >= precio ? '' : 'disabled'}>🪙 ${num(precio)}</button>
-      <em>Abre la Horda · el precio sube con cada compra del día (10,000 · 20,000 · 40,000)</em></div></div>`;
   return `${campeones.length ? `<h4 class="tc-seccion">Sobres de campeones</h4>${htmlSobres(campeones)}` : ''}
-    ${reliquias.length ? `<h4 class="tc-seccion">Sobres de reliquias</h4>${htmlSobres(reliquias)}` : ''}${objetos}`;
+    ${reliquias.length ? `<h4 class="tc-seccion">Sobres de reliquias</h4>${htmlSobres(reliquias)}` : ''}`;
 }
 function htmlSobres(lista) {
   return `<div class="tc-sobres">${lista.map(c => { const s = SOBRES[c.id], alcanza = inv.oro >= c.precio, esRel = s.tipo === 'reliquias';
@@ -420,11 +412,6 @@ async function ejecutar(e) {
   }
   if (b.dataset.candado) { const r = rels.find(x => x.uid === b.dataset.candado); return accion(async () => { await D.bloquearReliquia(r.uid, !r.bloqueada); await recargar(); pintar(); }); }
   if (b.dataset.mejorar) return accion(async () => { await D.mejorarReliquia(b.dataset.relid, b.dataset.mejorar); await recargar(); pintar(); aviso('¡Nuevo valor sorteado!'); });
-  if ('comprarportal' in b.dataset) {
-    const precio = precioPortal();
-    if (!confirm(`¿Comprar 1 Runa de Portal por ${num(precio)} de oro?`)) return;
-    return accion(async () => { const r = await D.comprarRunaPortal(); await recargar(); pintar(); aviso(`¡Runa de Portal comprada! Tienes ${r.runas}. La siguiente cuesta ${num(r.siguiente)}.`); });
-  }
   if (b.dataset.rel) { relSel = b.dataset.rel; return pintar(); }
   if ('relVolver' in b.dataset) { relSel = null; return pintar(); }
   if (b.dataset.slot) { slotSel = slotSel === b.dataset.slot ? null : b.dataset.slot; return pintar(); }

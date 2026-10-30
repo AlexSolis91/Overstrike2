@@ -48,7 +48,6 @@ export const hordaEntrar = horda => rpc('horda_entrar', { p_horda: horda });
 export const hordaOleada = (partida, oleada) => rpc('horda_oleada', { p_partida: partida, p_oleada: oleada });
 export const hordaTerminar = partida => rpc('horda_terminar', { p_partida: partida });
 export const miRecordHorda = horda => q(sb => sb.from('horda_partidas').select('oleada').eq('horda', horda).order('oleada', { ascending: false }).limit(1));
-export const comprarRunaPortal = () => rpc('comprar_runa_portal');
 export const tiendaHordaComprar = id => rpc('tienda_horda_comprar', { p_reliquia: id });   // docs/sql/011_horda_extras.sql
 export const misHitosHorda = horda => q(sb => sb.from('horda_hitos').select('oleada').eq('horda', horda));
 

@@ -617,14 +617,13 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
   - **Tienda de la Horda** (en la pantalla de la Horda): eliges exactamente la reliquia del lote de Orcos que quieres (no Legendarias): Común 15 · Rara 60 · Especial 300 · Épica 1,500 Trofeos, **máximo 1 Épica por semana** (se renueva el lunes, hora de México; `docs/sql/015_tienda_horda_precios.sql`). Un jugador avanzado (oleada 30, ~48 Trofeos por partida) consigue como mucho 1 Épica por semana.
 - **Entre oleadas:** el botín se cobra solo y a los **5 s** arranca sola la siguiente oleada (cuenta regresiva en el botón). «⏸ Esperar» detiene la cuenta; «Retirarse» termina la partida.
 - **Runa de Portal:** siempre se muestra con su imagen (`ICONO_RUNA_PORTAL` en `js/datos/recompensas.js`), nunca con el emoji 🌀 (el 🌀 queda para el área del Portal y la Confusión).
-  - **Primera vez** (una vez por cuenta y Horda, `horda_hitos`): oleada 10 → 2 Runas de Portal + 1 vale + 25 Trofeos · oleada 20 → 3 Runas + 2 vales + 75 Trofeos · oleada 30 → 1 Épica al azar del lote + 5 Runas + 150 Trofeos + la **Hazaña** (desbloquea las recetas de Legendarias).
+  - **Primera vez** (una vez por cuenta y Horda, `horda_hitos`): oleada 10 → 10,000 oro + 1 vale + 25 Trofeos · oleada 20 → 20,000 oro + 2 vales + 75 Trofeos · oleada 30 → 1 Épica al azar del lote + 40,000 oro + 150 Trofeos + la **Hazaña** (desbloquea las recetas de Legendarias).
 
 ## 23. Polvo Arcano, mejorar y fusión (Colección → Reliquias)
 - **Descomponer** (modo 🧪): toca reliquias o «Todas las Comunes/Raras» → Polvo Arcano (Común 1 · Rara 5 · Especial 20 · Épica 100). No se descomponen Legendarias, equipadas ni con candado.
 - **Candado** (ficha de la reliquia): protege de descomponer y fusionar.
 - **Mejorar valores** (ficha de la reliquia): vuelve a sortear una línea (plana o porcentual; las de 2–3 tiradas juntas) por Común 2 · Rara 8 · Especial 25 · Épica 80 · Legendaria 200 de Polvo. El nuevo valor reemplaza al anterior.
 - **Fusionar** (modo ⚗️): 10 de la misma rareza → 1 al azar de la siguiente (cualquier lote), por 1,000 / 5,000 / 20,000 de oro (Común / Rara / Especial). Las Épicas no se fusionan.
-- **Tienda → Objetos:** Runa de Portal (precio que sube con cada compra del día).
 
 ## 24. Recetas de Legendarias (Colección → Recetas)
 - **Regla:** cada receta pide **siempre 10 Épicas**: Épicas definidas (×2 o ×3) + 2 o 3 comodines (cualquier Épica). Datos en `js/datos/recetas.js` (valida que sumen 10); el servidor forja con `forjar_legendaria` (`docs/sql/007_recetas.sql`, catálogo de recetas en catalogo.sql).
@@ -710,7 +709,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 | 10 | Completa todas las misiones diarias | Final | 1 Vale de sobre |
 
 - **Contadores en el servidor** (tabla `misiones_diarias`, disparadores): aperturas de sobres (`sobre`, `vale`, `reliquias`), reliquias equipadas, oleada máxima del día en la Horda, ataques de Arena y Arena en vivo terminados; la Campaña suma desde `campana_completar`. La misión 10 cuenta las otras 9 completadas (no hace falta cobrarlas antes).
-- **Fuentes de Runa de Portal:** misión 4 (1/día) · Arena 3.3% por combate, ganes o pierdas (~1 cada 30; también en vivo, sin aviso en pantalla) · recompensas semanales de liga · primera vez en la Horda · Tienda (precio que sube) · regalo inicial de 3. La Campaña ya no da Runas de Portal.
+- **Fuentes de Runa de Portal:** misión 4 (1/día) · Arena 3.3% por combate, ganes o pierdas (~1 cada 30; también en vivo, sin aviso en pantalla) · recompensas semanales de liga · regalo inicial de 3. Nada más: ni la Tienda, ni la Campaña, ni los hitos de la Horda dan Runas de Portal (`docs/sql/019_runas_portal_fuentes.sql`).
 
 ## 27. Juego en segundo plano (2026-10-27)
 - Con la ventana oculta, tapada o minimizada el navegador deja de dibujar y frena los temporizadores de la página. `js/ui/graficos.js` crea un **Worker** (`reloj`) que no sufre ese freno:

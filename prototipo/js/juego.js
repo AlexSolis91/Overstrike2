@@ -549,7 +549,7 @@ async function oleadaGanada() {
   let r = null, error = '';
   try { r = await cobrarOleada(h); } catch (e) { error = D.mensajeError(e); }
   if (esta !== partida) return;
-  if (r) { h.botin.oro += r.oro; if (r.reliquia) h.botin.reliquias.push(r.reliquia); h.botin.fragmentos += r.fragmentos;
+  if (r) { h.botin.oro += r.oro + (r.hito?.oro || 0); if (r.reliquia) h.botin.reliquias.push(r.reliquia); h.botin.fragmentos += r.fragmentos;
     h.botin.trofeos = (h.botin.trofeos || 0) + (r.trofeos || 0) + (r.hito?.trofeos || 0); if (r.hito?.epica) h.botin.reliquias.push(r.hito.epica); }
   h.prox = oleada(h.n + 1);
   const item = (img, txt, color = '#374151') => `<div class="hov-item" style="--rc:${color}">${img}${txt}</div>`;
@@ -563,7 +563,7 @@ async function oleadaGanada() {
       ${rel ? item(`<img src="${rel.imagen}" alt="">`, `<span style="color:${RAREZAS[rel.rarity].color}">${rel.name}</span>`, RAREZAS[rel.rarity].color) : ''}
       ${r?.fragmentos ? item('<div style="font-size:34px">🔷</div>', `+${r.fragmentos} Fragmento(s) de Runa`) : ''}
       ${r?.trofeos ? item('<div style="font-size:34px">🏅</div>', `+${r.trofeos} Trofeo(s) de Orco`) : ''}
-      ${r?.hito ? item('<div style="font-size:34px">🎉</div>', `<b>¡Primera vez en la oleada ${r.hito.oleada}!</b><br>+${r.hito.runas_portal} ${ICONO_RUNA_PORTAL} Runas de Portal${r.hito.vales ? ` · +${r.hito.vales} vale(s) de sobre` : ''} · +${r.hito.trofeos} Trofeos${r.hito.epica ? ` · Épica: ${RELIQUIAS[r.hito.epica.reliquia]?.name || ''}` : ''}${r.hito.hazana ? '<br>🏆 <b>Hazaña conseguida:</b> ya puedes forjar Legendarias' : ''}`, '#f59e0b') : ''}
+      ${r?.hito ? item('<div style="font-size:34px">🎉</div>', `<b>¡Primera vez en la oleada ${r.hito.oleada}!</b><br>${r.hito.oro ? `+${miles(r.hito.oro)} de oro 🪙` : `+${r.hito.runas_portal} ${ICONO_RUNA_PORTAL} Runas de Portal`}${r.hito.vales ? ` · +${r.hito.vales} vale(s) de sobre` : ''} · +${r.hito.trofeos} Trofeos${r.hito.epica ? ` · Épica: ${RELIQUIAS[r.hito.epica.reliquia]?.name || ''}` : ''}${r.hito.hazana ? '<br>🏆 <b>Hazaña conseguida:</b> ya puedes forjar Legendarias' : ''}`, '#f59e0b') : ''}
       ${error ? `<div class="hov-sig">⚠️ ${error}</div>` : ''}
     </div>
     <div class="hov-total">Total: 🪙 ${miles(h.botin.oro)} · 💎 ${h.botin.reliquias.length} reliquia(s) · 🔷 ${h.botin.fragmentos} · 🏅 ${h.botin.trofeos || 0}</div>

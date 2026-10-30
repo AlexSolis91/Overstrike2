@@ -17,9 +17,9 @@ export const PRECIO_TROFEOS = { 'Común': 15, 'Raro': 60, 'Especial': 300, 'Épi
 const lunesMx = () => { const h = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' })); h.setDate(h.getDate() - (h.getDay() + 6) % 7);
   return `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-${String(h.getDate()).padStart(2, '0')}`; };
 const HITOS = [
-  { oleada: 10, txt: `${ICONO_RUNA_PORTAL} 2 Runas de Portal · 1 vale de sobre · 25 Trofeos` },
-  { oleada: 20, txt: `${ICONO_RUNA_PORTAL} 3 Runas de Portal · 2 vales de sobre · 75 Trofeos` },
-  { oleada: 30, txt: `1 Épica al azar del lote · ${ICONO_RUNA_PORTAL} 5 Runas de Portal · 150 Trofeos · 🏆 Hazaña (desbloquea las recetas de Legendarias)` },
+  { oleada: 10, txt: `🪙 10,000 de oro · 1 vale de sobre · 25 Trofeos` },
+  { oleada: 20, txt: `🪙 20,000 de oro · 2 vales de sobre · 75 Trofeos` },
+  { oleada: 30, txt: `1 Épica al azar del lote · 🪙 40,000 de oro · 150 Trofeos · 🏆 Hazaña (desbloquea las recetas de Legendarias)` },
 ];
 const tienda = () => Object.entries(RELIQUIAS).filter(([, r]) => (r.lote || 'orcos') === 'orcos' && PRECIO_TROFEOS[r.rarity] && !r.soloReceta)
   .map(([id, r]) => ({ id, ...r }));
@@ -53,7 +53,7 @@ function pintar() {
         <div class="hd-acciones">
           <button id="hd-entrar" class="hd-btn" ${sinSesion || !runas || error ? 'disabled' : ''}>${ICONO_RUNA_PORTAL} Abrir portal (1 Runa)</button>
         </div>
-        ${sinSesion ? '<p>⚠️ Inicia sesión para jugar la Horda.</p>' : error ? `<p>⚠️ ${error}</p>` : !runas ? '<p>No tienes Runas de Portal: cómpralas en la Tienda o gánalas en la Campaña.</p>' : ''}
+        ${sinSesion ? '<p>⚠️ Inicia sesión para jugar la Horda.</p>' : error ? `<p>⚠️ ${error}</p>` : !runas ? '<p>No tienes Runas de Portal: gánalas en las Misiones diarias y en la Arena.</p>' : ''}
       </div>
       <div class="hd-panel">
         <h4>🎉 Primera vez</h4>
@@ -80,7 +80,7 @@ function pintar() {
         ${TRAMOS_RAREZA.map((t, i) => `<tr><td>${t.desde}${TRAMOS_RAREZA[i + 1] ? '–' + (TRAMOS_RAREZA[i + 1].desde - 1) : '+'}</td><td>${pct(t['Común'])}</td><td>${pct(t['Raro'])}</td><td>${pct(t['Especial'])}</td><td>${pct(t['Épico'])}</td></tr>`).join('')}
       </table>
       <h4>Consigue Runas de Portal</h4>
-      <p>3 de regalo · 1 la primera vez que completas una etapa de la Campaña con 3 estrellas (y 15% al repetirla) · en la Tienda con oro (el precio sube con cada compra del día).</p>
+      <p>3 de regalo al empezar · 1 en la misión diaria "Gana 5 combates de Arena" · 3.3% de 1 runa en cada combate de Arena (ganes o pierdas) · la recompensa semanal de tu liga de Arena (1–4).</p>
     </aside>`;
 }
 
