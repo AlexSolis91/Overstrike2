@@ -43,11 +43,11 @@ export default {
     {
       categoria: 'over', nombre: 'Susanoo', objetivo: 'enemigo', estilo: 'melee', color: 0xef4444,
       pct: 1.65, escala: 'dano', cd: 5,
-      desc: 'La Espada de Totsuka causa 165% y sella el Over del objetivo (lo pone en su cooldown completo). El Espejo de Yata le da a Itachi Espejismo (2 rondas: devuelve el 30% del daño de cada golpe) y un Escudo del 15% de su HP máx.',
+      desc: 'La Espada de Totsuka causa 165% y sella el Over del objetivo (lo pone en su cooldown completo). El Espejo de Yata le da a Itachi Espejismo (2 rondas: devuelve el 30% del daño de cada golpe) y un Escudo del 200% de su HP máx. (2 rondas).',
       efectos: [
         { accion: { tipo: 'activarCooldown', categoria: 'over' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'mirror', dur: 2, a: 'propio' } },
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .15, escala: 'hpMax', a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: 2.00, escala: 'hpMax', dur: 2, a: 'propio' } },
       ],
     },
   ],

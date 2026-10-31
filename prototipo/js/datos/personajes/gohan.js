@@ -24,9 +24,9 @@ const gohanBestia = {
     },
     {
       categoria: 'especial', nombre: 'Furia Protectora', objetivo: 'todosAliados', estilo: 'support', color: 0xa78bfa, cd: 3,
-      desc: 'Todos los aliados ganan un Escudo del 19% de su HP máx. y Furia (2 rondas).',
+      desc: 'Todos los aliados ganan un Escudo del 50% del HP máx. de Gohan (2 rondas) y Furia (2 rondas).',
       efectos: [
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .19, escala: 'hpMax', a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: .50, escala: 'hpMax', dur: 2, a: 'todosAliados' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'dmgUp', dur: 2, a: 'todosAliados' } },
       ],
     },
@@ -67,9 +67,9 @@ export default {
     },
     {
       categoria: 'especial', nombre: 'Escudo del Maestro', objetivo: 'todosAliados', estilo: 'support', color: 0x8b5cf6, cd: 3,
-      desc: 'Todos los aliados ganan un Escudo del 14% de su HP máx. y se les quita el Control. Gana 1 de Potencial.',
+      desc: 'Todos los aliados ganan un Escudo del 50% del HP máx. de Gohan (2 rondas) y se les quita el Control. Gana 1 de Potencial.',
       efectos: [
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .14, escala: 'hpMax', a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: .50, escala: 'hpMax', dur: 2, a: 'todosAliados' } },
         { cuando: 'final', accion: { tipo: 'limpiar', etiqueta: 'Control', a: 'todosAliados' } },
         { cuando: 'final', accion: { tipo: 'ganarCargas', cantidad: 1, max: 3, efecto: 'potencialGohan', a: 'propio' } },
       ],

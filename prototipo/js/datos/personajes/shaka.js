@@ -14,8 +14,8 @@ export default {
 
   lider: {
     nombre: 'Reencarnación de Buda',
-    desc: 'Al inicio de cada ronda, da un Escudo del 12% del HP máx. de Shaka al aliado con menor % de HP.',
-    alIniciarRonda: { tipo: 'escudo', pct: .12, escala: 'hpMax', a: 'aliadoMasHerido' },
+    desc: 'Al inicio de cada ronda, da un Escudo del 50% del HP máx. de Shaka (1 ronda) al aliado con menor % de HP.',
+    alIniciarRonda: { tipo: 'escudo', pct: .50, escala: 'hpMax', dur: 1, a: 'aliadoMasHerido' },
   },
   pasiva: {
     nombre: 'Sangre de Atena',
@@ -34,9 +34,9 @@ export default {
     },
     {
       categoria: 'especial', nombre: 'Ohm', objetivo: 'propio', estilo: 'support', color: 0xfacc15, cd: 3,
-      desc: '3 aliados al azar (pueden repetirse) reciben un Escudo del 5% del HP máx. de Shaka y Furia (+50% Daño) por 2 rondas.',
+      desc: '3 aliados al azar (pueden repetirse) reciben un Escudo del 50% del HP máx. de Shaka (1 ronda) y Furia (+50% Daño, 2 rondas).',
       efectos: [{ cuando: 'final', accion: { tipo: 'multiple', a: { aliadosAzar: 3 }, acciones: [
-        { tipo: 'escudo', pct: .05, escala: 'hpMax' },
+        { tipo: 'escudo', pct: .50, escala: 'hpMax', dur: 1 },
         { tipo: 'efecto', id: 'dmgUp', dur: 2 },
       ] } }],
     },

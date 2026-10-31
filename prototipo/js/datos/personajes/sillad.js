@@ -37,10 +37,10 @@ export default {
     {
       categoria: 'especial', nombre: 'Ventisca del Monarca', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xbae6fd, cd: 3,
       pct: .45, escala: 'dano',
-      desc: 'Una ventisca helada: 45% a todos los enemigos con 40% de probabilidad de Congelación. Todos los aliados ganan un Escudo del 7% de su HP máx.',
+      desc: 'Una ventisca helada: 45% a todos los enemigos con 40% de probabilidad de Congelación. Todos los aliados ganan un Escudo del 50% del HP máx. de Sillad (1 ronda).',
       efectos: [
         { accion: { tipo: 'efecto', id: 'freeze', prob: .40 } },
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .07, escala: 'hpMax', a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: .50, escala: 'hpMax', dur: 1, a: 'todosAliados' } },
       ],
     },
     {

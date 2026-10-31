@@ -26,8 +26,8 @@ export const ORCOS = {
     movimientos: [
       golpe('basico', 'Empujón con Escudo', 'enemigo', .80, 0, 'Causa 80%.'),
       { categoria: 'especial', nombre: 'Muro de Escudos', objetivo: 'propio', estilo: 'support', color: 0x84cc16, cd: 3,
-        desc: 'Gana Provocación (2 rondas) y un Escudo del 25% de su HP máx.',
-        efectos: [fin({ tipo: 'efecto', id: 'taunt', dur: 2, a: 'propio' }), fin({ tipo: 'escudo', pct: .25, escala: 'hpMax', a: 'propio' })] },
+        desc: 'Gana Provocación (2 rondas) y un Escudo del 100% de su HP máx. (2 rondas).',
+        efectos: [fin({ tipo: 'efecto', id: 'taunt', dur: 2, a: 'propio' }), fin({ tipo: 'escudo', pct: 1.00, escala: 'hpMax', dur: 2, a: 'propio' })] },
       golpe('over', 'Embestida', 'enemigo', 1.50, 4, 'Causa 150% con 30% de probabilidad de Aturdir.', [ef('stun', { prob: .30 })]),
     ] },
   'chaman-orco': { ...B('chaman-orco', 'Chamán Orco', 'Support', { hp: 480, dmg: 40, spd: 85 }),
@@ -52,7 +52,7 @@ export const ORCOS = {
     movimientos: [
       golpe('basico', 'Toque Pútrido', 'enemigo', .90, 0, 'Causa 90% y aplica Veneno.', [ef('poison')], { estilo: 'ranged' }),
       golpe('especial', 'Nube Tóxica', 'todosEnemigos', .60, 3, 'Causa 60% a todos con 50% de probabilidad de Veneno.', [ef('poison', { prob: .50 })], { estilo: 'ranged' }),
-      golpe('over', 'Maldición', 'enemigo', 1.40, 4, 'Causa 140% y aplica Silencio (bloquea uno de sus movimientos, 2 rondas).', [ef('silence', { dur: 2 })], { estilo: 'ranged' }),
+      golpe('over', 'Maldición', 'enemigo', 1.40, 4, 'Causa 140%, le quita todos sus buffs (Escudo incluido) y aplica Silencio (bloquea uno de sus movimientos, 2 rondas).', [{ accion: { tipo: 'disipar' } }, ef('silence', { dur: 2 })], { estilo: 'ranged' }),
     ] },
   'asesino-orco': { ...B('asesino-orco', 'Asesino Orco', 'Daño', { hp: 450, dmg: 70, spd: 100 }),
     movimientos: [
@@ -94,8 +94,8 @@ export const ORCOS = {
     movimientos: [
       golpe('basico', 'Mazazo', 'enemigo', 1.00, 0, 'Causa 100% con 25% de probabilidad de Aturdir.', [ef('stun', { prob: .25 })]),
       { categoria: 'especial', nombre: 'Escudo de Pinchos', objetivo: 'propio', estilo: 'support', color: 0xb91c1c, cd: 3,
-        desc: 'Gana un Escudo del 30% de su HP máx. y Espejismo (2 rondas).',
-        efectos: [fin({ tipo: 'escudo', pct: .30, escala: 'hpMax', a: 'propio' }), fin({ tipo: 'efecto', id: 'mirror', dur: 2, a: 'propio' })] },
+        desc: 'Gana un Escudo del 100% de su HP máx. y Espejismo (2 rondas).',
+        efectos: [fin({ tipo: 'escudo', pct: 1.00, escala: 'hpMax', dur: 2, a: 'propio' }), fin({ tipo: 'efecto', id: 'mirror', dur: 2, a: 'propio' })] },
       golpe('over', 'Terremoto', 'todosEnemigos', 1.20, 4, 'Causa 120% a todos con 35% de probabilidad de Aturdir.', [ef('stun', { prob: .35 })]),
     ] },
 
@@ -109,12 +109,12 @@ export const ORCOS = {
       { categoria: 'especial', nombre: 'Pacto de Sombras', objetivo: 'propio', estilo: 'support', color: 0x3b82f6, cd: 3,
         desc: 'Revive a 1 orco caído con 30% de su HP máx., cura 25% del HP máx. a todos los aliados y les quita los debuffs.',
         efectos: [fin({ tipo: 'reanimar', cantidad: 1, hp: .30 }), fin({ tipo: 'curar', pct: .25, base: 'hpMaxObjetivo', a: 'todosAliados' }), fin({ tipo: 'limpiar', a: 'todosAliados' })] },
-      golpe('over', 'Lluvia Vil', 'todosEnemigos', 1.40, 4, 'Causa 140% a todos con 50% de probabilidad de Silencio (2 rondas).', [ef('silence', { dur: 2, prob: .50 })], { estilo: 'ranged', color: 0x3b82f6 }),
+      golpe('over', 'Lluvia Vil', 'todosEnemigos', 1.40, 4, 'Causa 140% a todos, les quita 1 buff al azar (puede ser el Escudo) y 50% de probabilidad de Silencio (2 rondas).', [{ accion: { tipo: 'disipar', cantidad: 1 } }, ef('silence', { dur: 2, prob: .50 })], { estilo: 'ranged', color: 0x3b82f6 }),
     ] },
   kargalgan: { ...B('kargalgan', 'Kargalgan', 'Support', { hp: 2000, dmg: 95, spd: 95 }), rango: 'jefe', color: '#dc2626',
     lider: { nombre: 'Señor de los Altos Orcos', desc: 'Todos los orcos ganan +20% de Daño.', bonoDano: .20 },
-    pasiva: { nombre: 'Barrera de Sangre', desc: 'Al inicio de cada ronda da un Escudo del 10% de su HP máx. a todos sus aliados (él incluido).',
-      gatillo: 'alIniciarRonda', accion: { tipo: 'escudo', pct: .10, escala: 'hpMax', a: 'todosAliados' } },
+    pasiva: { nombre: 'Barrera de Sangre', desc: 'Al inicio de cada ronda da un Escudo del 25% de su HP máx. (1 ronda) a todos sus aliados (él incluido).',
+      gatillo: 'alIniciarRonda', accion: { tipo: 'escudo', pct: .25, escala: 'hpMax', dur: 1, a: 'todosAliados' } },
     movimientos: [
       golpe('basico', 'Bola de Fuego', 'enemigo', 1.30, 0, 'Causa 130% y aplica Quemadura 8% (2 rondas).', [ef('burn', { valor: .08, dur: 2 })], { estilo: 'ranged', color: 0xef4444 }),
       { categoria: 'especial', nombre: 'Sed de Sangre', objetivo: 'propio', estilo: 'support', color: 0xef4444, cd: 3,

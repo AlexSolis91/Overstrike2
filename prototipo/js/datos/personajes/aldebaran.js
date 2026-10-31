@@ -23,9 +23,9 @@ export default {
   movimientos: [
     {
       categoria: 'basico', nombre: 'Embestida del Toro', objetivo: 'enemigo', estilo: 'melee', color: 0xfacc15,
-      pct: 1.7, escala: 'hp', cd: 0,
-      desc: 'Causa 170% (escala por HP) y Aldebarán gana un Escudo del 11% de su HP máx.',
-      efectos: [{ cuando: 'final', accion: { tipo: 'escudo', pct: .11, escala: 'hpMax', a: 'propio' } }],
+      pct: 1.85, escala: 'hp', cd: 0,
+      desc: 'Causa 185% (escala por HP) y Aldebarán gana un Escudo del 75% de su HP máx. (2 rondas).',
+      efectos: [{ cuando: 'final', accion: { tipo: 'escudo', pct: .75, escala: 'hpMax', dur: 2, a: 'propio' } }],
     },
     {
       categoria: 'especial', nombre: 'Gran Cuerno', objetivo: 'enemigo', estilo: 'ranged', color: 0xfde047,
@@ -37,9 +37,9 @@ export default {
     {
       categoria: 'over', nombre: 'Orgullo del Toro Dorado', objetivo: 'propio', estilo: 'support', color: 0xeab308,
       cd: 5,
-      desc: 'Gana Provocación (2 rondas) y un Escudo del 37% de su HP máx. Mientras dure esa Provocación, cada golpe le da 2 cargas. Al terminar, lanza automáticamente un Gran Cuerno contra el último enemigo que lo golpeó.',
+      desc: 'Gana Provocación (2 rondas) y un Escudo del 200% de su HP máx. (2 rondas). Mientras dure esa Provocación, cada golpe le da 2 cargas. Al terminar, lanza automáticamente un Gran Cuerno contra el último enemigo que lo golpeó.',
       efectos: [
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .37, escala: 'hpMax', a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: 2.00, escala: 'hpMax', dur: 2, a: 'propio' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'taunt', dur: 2, cargasX: 2, a: 'propio',
           alTerminar: { tipo: 'usarMovimiento', categoria: 'especial', a: 'ultimoAtacante' } } },
       ],

@@ -186,10 +186,9 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | `activarDoT` | efecto | Hace el daño de un DoT al instante sin consumirlo ni quitarle duración (cuenta como daño DoT). Con Veneno suma **todas** las acumulaciones |
 | `extenderDuracion` | efecto, rondas | Suma rondas a un DoT activo |
 | `transformar` | turnos | Transforma al personaje en su forma (ver sección 12) |
-| `escudo` | pct, escala | Da Escudo (siempre se aplica) |
+| `escudo` | pct, escala, dur | Da el buff **Escudo** de pct × HP máx. de quien lo pone (o la `escala` indicada) durante `dur` rondas (1 por defecto). Ver sección 29 |
 | `limpiar` | cantidad, etiqueta | Quita debuffs |
 | `disipar` | cantidad, etiqueta | Quita buffs (tirada por buff) |
-| `escudo` con `base: 'recibido'` | pct | Escudo = pct del daño del golpe que activó la pasiva `alRecibirGolpe` |
 | `bonoPermanente` con `tope` | stat, pct, tope | Igual, pero sin pasar de `tope` acumulado (p. ej. Doom: +10% HP máx., hasta +50%) |
 | `invocar` | key, prob | Invoca esa invocación concreta (con `prob` opcional). P. ej. Clon de Sombra de Naruto |
 | `reducirHpMax` | pct, tope | Baja el HP máx. del objetivo para el resto de la partida (acumulable hasta `tope`); su HP actual no puede quedar por encima. P. ej. Fusión con Kurama: 5% por golpe, hasta −30% |
@@ -203,7 +202,6 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | `usarMovimiento` + `despues: true` | categoria | Igual, pero **espera** a que termine el movimiento en curso; si su destino cayó, va a otro enemigo al azar. Destino `a: { distintos: N }` = N enemigos al azar distintos. P. ej. Anillo de Hielo: 2 Descargas de Escarcha |
 | `usarMovimiento` | categoria | Usa uno de sus propios movimientos sobre el destino, igual que el normal (puede aplicar efectos, activa Hemorragia, etc.), pero **no** gasta su turno ni cambia su cooldown. P. ej. Absolute Zero de Sub-Zero: Ice Blast a un enemigo al azar |
 | `propagar` | efecto | Copia un debuff del objetivo principal **en su estado actual** (intensidad, duración restante, acumulación, turnos, capas, reducción de Desgaste…) a los destinos. Cada copia hace su Tirada de Puntería y se apila con las reglas normales. Funciona aunque el objetivo muera. **Restricción:** si la ficha indica un debuff (`efecto: 'burn'`, como Purgatorio de Rengoku), solo propaga ese y, si el objetivo no lo tiene, no pasa nada. Sin restricción (`efecto: 'azar'`, como Bola de Fuerza de Reptile), elige uno al azar entre **cualquier** debuff que el objetivo **ya tenía antes** del movimiento. El Silencio copiado bloquea un movimiento al azar del nuevo objetivo |
-| `escudo` con `base: 'danoCausado'` | pct | Escudo igual a un % del daño total causado por el movimiento |
 | `efecto` con `idAzar: [ids]` | sinRepetir | Elige al azar uno de los efectos (por cada objetivo). Con `sinRepetir` no elige uno que el objetivo ya tenga activo |
 | `extenderInvocaciones` | turnos | +N turnos de duración a todas las invocaciones activas del objetivo |
 | `reducirCooldown` | cantidad, categorias | Baja el cooldown de esos movimientos del objetivo (p. ej. Viserion: Especial y Over de Daenerys) |
@@ -651,7 +649,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - `potenciaBombas: { factor }` (p. ej. El Pingüino, ×1.5): cuando el portador golpea a un enemigo, cada Bomba que ese enemigo **ya tenía antes de que empezara el ataque** multiplica su daño por `factor`. Una vez por Bomba en cada ataque (un movimiento de varios golpes no la multiplica varias veces). Las Bombas que pone el mismo ataque no se potencian. Combinado con `detonar`, el Over del Pingüino primero potencia y luego hace explotar.
 - **Movimiento** `potenciaBombas: { factor }` (p. ej. Sinfonía Estridente de Tengen, ×2): todas las Bombas que estallen **mientras se ejecuta ese movimiento** (por `detonar`, por una pasiva al golpear o al morir el portador) hacen ×factor de daño, también su salpicadura.
 - **Acción `efecto` con `alAcertar: acción`**: ejecuta esa acción una vez por cada efecto que de verdad quedó puesto (falla por Puntería, resistencia o máximo de Bombas = no cuenta). P. ej. Tengen: +5% Armadura permanente por cada Bomba colocada (`bonoPermanente` con tope).
-- **Líder** `escudoPorBomba: { pct }` (Tengen, 20%): cada vez que una Bomba hace daño a un enemigo del líder (explosión + salpicadura), su equipo gana un Escudo de pct × ese daño, repartido entre los aliados vivos.
+- **Líder** `escudoPorBomba: { pct, dur }` (Tengen, 50%, 1 ronda): cada vez que estalla una Bomba en un enemigo del líder, el aliado vivo más herido gana un Escudo de pct × HP máx. del líder (desde 2026-10-31; antes era un % del daño de la Bomba).
 ## Piezas de Yoda (2026-10-30)
 - **Buff `anticipar`** (Anticipar, 🔮; también como pasiva con `efectosPermanentes: ['anticipar']`): cuando un **enemigo** gana un turno adicional, el portador juega un turno **antes** de que el enemigo lo tome. Es un turno especial (sin DoT, Regeneración ni control; no baja cooldowns) y no vuelve a activar Anticipar.
 - **`turnoExtra` a otro** (a: objetivo ≠ quien lo da): es un **turno regalado** que el objetivo juega en cuanto termina el turno en curso (cola de turnos). Un aliado con control (Aturdido, etc.) no lo puede jugar. Dar un turno extra a uno mismo funciona igual que antes.
@@ -732,3 +730,11 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 ## 28. Récords de la Horda (2026-10-30, `docs/sql/020_horda_ranking.sql`)
 - `horda_ranking(p_horda)`: la mejor oleada de cada jugador en esa Horda (empate: quien la alcanzó primero), top 50 + mi puesto (`yo`). Pública (anon y authenticated): solo nombre, oleada y fecha.
 - Se ve en la pantalla de Hordas, al final del panel derecho (🥇🥈🥉, mi fila resaltada; si estoy fuera del top 50, mi puesto aparece abajo tras “⋯”).
+
+## 29. Escudos estilo Raid (2026-10-31)
+- El Escudo es el **buff 🛡️ `shield`** y su cantidad vive en el buff (`valor`); `p.escudo` lo lee y lo escribe. Absorbe el daño antes que el HP (la Penetración de escudo lo atraviesa en parte).
+- **Dura 1 o 2 rondas** (`dur` de la acción `escudo`) y desaparece al expirar, al gastarse por completo, al **disiparse** o al **robarse** (Wukong, Skeletor…). Bloquear Buffs impide recibirlo.
+- **Se suma**: si ya tiene Escudo, la cantidad nueva se suma y **conserva la duración que le quedaba** (no se renueva).
+- La cantidad es siempre un **% del HP máx. de quien lo pone**, nunca del daño causado o recibido (así no escala con los enemigos de la Horda). Ya no existen `base: 'recibido'` ni `base: 'danoCausado'`.
+- Escala de diseño: básico o pasiva que se activa seguido → 50% (1 ronda; 25% si es automática cada ronda o a todo el equipo); especial → 100% propio / 50% al equipo (1–2 rondas); Over o con condición → hasta 200% propio / 100% al equipo (2 rondas).
+- Los orcos pueden disipar: Maldición del Brujo Orco (todos los buffs del objetivo) y Lluvia Vil de Gul'dan (1 buff a cada enemigo).

@@ -36,9 +36,9 @@ export default {
     },
     {
       categoria: 'especial', nombre: 'Tigre de Fuego', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xff5a1a,
-      pct: 1.45, escala: 'hp', cd: 2,
-      desc: 'Causa 145% (escala por HP) a todos los enemigos. Si golpea al menos a un enemigo con Quemadura, Rengoku gana un Escudo igual al 125% del daño total causado.',
-      efectos: [{ cuando: 'final', condicion: { algunGolpeadoTenia: 'burn' }, accion: { tipo: 'escudo', base: 'danoCausado', pct: 1.25, a: 'propio' } }],
+      pct: 1.6, escala: 'hp', cd: 2,
+      desc: 'Causa 160% (escala por HP) a todos los enemigos. Si golpea al menos a un enemigo con Quemadura, Rengoku gana un Escudo del 200% de su HP máx. (2 rondas).',
+      efectos: [{ cuando: 'final', condicion: { algunGolpeadoTenia: 'burn' }, accion: { tipo: 'escudo', pct: 2.00, escala: 'hpMax', dur: 2, a: 'propio' } }],
     },
     {
       categoria: 'over', nombre: 'Purgatorio', objetivo: 'enemigo', estilo: 'melee', color: 0xffb347,

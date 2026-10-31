@@ -24,10 +24,10 @@ export const INVOCACIONES = {
   iron: {
     nombre: 'Iron', rareza: 'Común', emoji: '🛡️', color: 0x94a3b8, imagen: 'assets/invocaciones/iron.webp', dur: 2,
     enfoque: [.385, .245],   // dónde está la cara en la imagen (para el medallón)
-    desc: 'Golpea 25% a un enemigo al azar y da un Escudo de 50% al aliado más herido.',
+    desc: 'Golpea 25% a un enemigo al azar y da un Escudo del 50% del HP máx. de Sun Jin Woo (1 ronda) al aliado más herido.',
     acciones: [
       { tipo: 'golpe', pct: .25, elegir: 'azar' },
-      { tipo: 'escudo', pct: .50, escala: 'dano', a: 'aliadoMasHerido' },
+      { tipo: 'escudo', pct: .50, escala: 'hpMax', dur: 1, a: 'aliadoMasHerido' },
     ],
   },
   igris: {
@@ -64,14 +64,14 @@ export const INVOCACIONES = {
   tusk: {   // la sombra de Kargalgan, el chamán de los Altos Orcos (jefe final de la Horda): Sed de Sangre, Bola de Fuego y Barrera de Sangre
     nombre: 'Tusk', rareza: 'Épico', emoji: '🔮', color: 0xdc2626, imagen: 'assets/invocaciones/tusk.webp', dur: 2,
     enfoque: [.53, .17],
-    desc: 'Lanza una Bola de Fuego a un enemigo al azar: 45% con 40% de probabilidad de Quemadura, y da a todos los aliados un Escudo (Barrera de Sangre) del 5% del HP máx. de Sun Jin Woo. Al aparecer, Sed de Sangre: todos los aliados ganan Celeridad y Frenesí (2 rondas).',
+    desc: 'Lanza una Bola de Fuego a un enemigo al azar: 45% con 40% de probabilidad de Quemadura, y da a todos los aliados un Escudo (Barrera de Sangre) del 25% del HP máx. de Sun Jin Woo (1 ronda). Al aparecer, Sed de Sangre: todos los aliados ganan Celeridad y Frenesí (2 rondas).',
     alAparecer: [
       { tipo: 'efecto', id: 'haste', dur: 2, a: 'todosAliados' },
       { tipo: 'efecto', id: 'frenzy', dur: 2, a: 'todosAliados' },
     ],
     acciones: [
       { tipo: 'golpe', pct: .45, elegir: 'azar', efectos: [{ accion: { tipo: 'efecto', id: 'burn', prob: .40 } }] },
-      { tipo: 'escudo', pct: .05, escala: 'hpMax', a: 'todosAliados' },
+      { tipo: 'escudo', pct: .25, escala: 'hpMax', dur: 1, a: 'todosAliados' },
     ],
   },
   kamish: {
@@ -162,8 +162,8 @@ export const INVOCACIONES = {
   rinoceronteGigante: {
     nombre: 'Rinoceronte Gigante', rareza: 'Raro', emoji: '🦏', color: 0x52525b, imagen: 'assets/invocaciones/rinoceronte-gigante.webp', dur: 2,
     enfoque: [.50, .35],
-    desc: 'Arrasa el campo: golpea 30% a todos los enemigos. Al aparecer, da a Pain un Escudo del 10% de su HP máx.',
-    alAparecer: [{ tipo: 'escudo', pct: .10, escala: 'hpMax', a: 'propio' }],
+    desc: 'Arrasa el campo: golpea 30% a todos los enemigos. Al aparecer, da a Pain un Escudo del 50% de su HP máx. (2 rondas).',
+    alAparecer: [{ tipo: 'escudo', pct: .50, escala: 'hpMax', dur: 2, a: 'propio' }],
     acciones: [{ tipo: 'golpe', pct: .30, elegir: 'todos' }],
   },
   pajaroGigante: {

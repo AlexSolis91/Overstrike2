@@ -22,9 +22,9 @@ export default {
   },
   pasiva: {
     nombre: 'Codicia del Bastón del Caos',
-    desc: 'Cada vez que un enemigo recibe un buff, Skeletor gana 1 de Poder Robado 💀 (máx. 10, no se puede disipar). Sus golpes hacen +8% de daño por cada buff que tenga el objetivo (hasta +40%).',
+    desc: 'Cada vez que un enemigo recibe un buff, Skeletor gana 1 de Poder Robado 💀 (máx. 10, no se puede disipar). Sus golpes hacen +6% de daño por cada buff que tenga el objetivo (hasta +30%).',
     cargasPorBuffEnemigo: { efecto: 'poderRobado', max: 10 },
-    bonoPorBuffsObjetivo: { pct: .08, max: .40 },
+    bonoPorBuffsObjetivo: { pct: .06, max: .30 },
   },
   movimientos: [
     {

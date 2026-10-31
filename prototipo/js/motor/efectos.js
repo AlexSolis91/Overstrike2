@@ -108,6 +108,8 @@ export const EFECTOS = {
     desc: `Cargas que gana al recibir golpes; un movimiento que las consume hace más daño. No se disipan ni se limpian.` },
   caminoJedi: { nombre: 'Camino Jedi', icono: '🌿', color: 0x86efac, tipo: 'marca', tags: ['Marca'], noDisipable: true,
     desc: 'Marca de Yoda: +5% a todas las estadísticas mientras la tenga (no se acumula). Cuando Yoda usa su Básico o su Especial, el portador usa su Básico. No se limpia ni se disipa.' },
+  shield:  { nombre: 'Escudo', icono: '🛡️', color: 0x67e8f9, tipo: 'buff', tags: ['Escudo'],
+    desc: 'Absorbe el daño antes que el HP. Dura 1 o 2 rondas; desaparece al gastarse y se puede disipar o robar. Un Escudo nuevo se suma al que ya tiene, sin renovar su duración.' },
   anticipar: { nombre: 'Anticipar', icono: '🔮', color: 0xc4b5fd, tipo: 'buff', tags: ['Turno'],
     desc: 'Cuando un enemigo gana un turno adicional, el portador juega un turno adicional ANTES que él.' },
   taunt:   { nombre: 'Provocación', icono: '🎯', color: 0xf97316, tipo: 'buff', tags: ['Provocación'],

@@ -34,11 +34,11 @@ export default {
     {
       categoria: 'especial', nombre: '¡Por el Poder de Grayskull!', objetivo: 'enemigo', estilo: 'melee', color: 0xfacc15, cd: 3,
       pct: .9, escala: 'dano',
-      desc: 'Causa 90%. He-Man gana Furia (+50% de daño) y Protección (+30% de Resistencia) por 2 rondas, y todos sus aliados ganan un Escudo del 15% del HP máx. de He-Man.',
+      desc: 'Causa 90%. He-Man gana Furia (+50% de daño) y Protección (+30% de Resistencia) por 2 rondas, y todos sus aliados ganan un Escudo del 50% del HP máx. de He-Man (2 rondas).',
       efectos: [
         { cuando: 'final', accion: { tipo: 'efecto', id: 'dmgUp', dur: 2, a: 'propio' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'protect', dur: 2, a: 'propio' } },
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .15, escala: 'hpMax', a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: .50, escala: 'hpMax', dur: 2, a: 'todosAliados' } },
       ],
     },
     {

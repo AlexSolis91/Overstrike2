@@ -22,23 +22,23 @@ export default {
   },
   pasiva: {
     nombre: 'Soberano de Latveria',
-    desc: 'Hasta 2 veces por ronda: cuando Doctor Doom recibe daño de un golpe, el aliado más herido (puede ser él) gana un Escudo igual al 60% del daño recibido.',
+    desc: 'Hasta 2 veces por ronda: cuando Doctor Doom recibe daño de un golpe, el aliado más herido (puede ser él) gana un Escudo del 25% del HP máx. de Doctor Doom (1 ronda).',
     gatillo: 'alRecibirGolpe', maxPorRonda: 2,
-    accion: { tipo: 'escudo', base: 'recibido', pct: .60, a: 'aliadoMasHerido' },
+    accion: { tipo: 'escudo', pct: .25, escala: 'hpMax', dur: 1, a: 'aliadoMasHerido' },
   },
   movimientos: [
     {
       categoria: 'basico', nombre: 'Fervor Místico', objetivo: 'enemigo', estilo: 'ranged', color: 0x4ade80,
       pct: .95, escala: 'hp', cd: 0,
-      desc: 'Causa 95% (escala por HP) más el 30% del Escudo actual de Doctor Doom (no lo gasta).',
-      bonoPorEscudoPropio: .30,
+      desc: 'Causa 95% (escala por HP) más el 10% del Escudo actual de Doctor Doom (no lo gasta).',
+      bonoPorEscudoPropio: .10,
     },
     {
       categoria: 'especial', nombre: 'Protocolo Doombot', objetivo: 'propio', estilo: 'support', color: 0x86efac,
       cd: 2,
-      desc: 'Todos los aliados ganan un Escudo del 9% del HP máx. de Doctor Doom. Doctor Doom gana +10% de HP máx. permanente (hasta +50%).',
+      desc: 'Todos los aliados ganan un Escudo del 50% del HP máx. de Doctor Doom (1 ronda). Doctor Doom gana +10% de HP máx. permanente (hasta +50%).',
       efectos: [
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .09, escala: 'hpMax', a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: .50, escala: 'hpMax', dur: 1, a: 'todosAliados' } },
         { cuando: 'final', accion: { tipo: 'bonoPermanente', stat: 'hpPct', pct: .10, tope: .50, a: 'propio' } },
       ],
     },

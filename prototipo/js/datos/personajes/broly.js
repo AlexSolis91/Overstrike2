@@ -67,10 +67,10 @@ export default {
     {
       categoria: 'especial', nombre: 'Furia Incontrolable', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x84cc16, cd: 3,
       pct: 1.1, escala: 'dano',
-      desc: 'Estalla de rabia: 110% a todos los enemigos, gana Provocación (2 rondas) y un Escudo del 22% de su HP máx.',
+      desc: 'Estalla de rabia: 110% a todos los enemigos, gana Provocación (2 rondas) y un Escudo del 100% de su HP máx. (2 rondas).',
       efectos: [
         { cuando: 'final', accion: { tipo: 'efecto', id: 'taunt', dur: 2, a: 'propio' } },
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .22, escala: 'hpMax', a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: 1.00, escala: 'hpMax', dur: 2, a: 'propio' } },
       ],
     },
     {

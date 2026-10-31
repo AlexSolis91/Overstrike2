@@ -42,9 +42,9 @@ const narutoModoRikudo = {
   extra: { res: .10 },
   pasiva: {
     nombre: 'Chakra de los Seis Caminos',
-    desc: 'Al inicio de cada ronda, el aliado más herido recibe un Escudo del 8% del HP máx. de Naruto.',
+    desc: 'Al inicio de cada ronda, el aliado más herido recibe un Escudo del 50% del HP máx. de Naruto (1 ronda).',
     gatillo: 'alIniciarRonda',
-    accion: { tipo: 'escudo', pct: .08, escala: 'hpMax', a: 'aliadoMasHerido' },
+    accion: { tipo: 'escudo', pct: .50, escala: 'hpMax', dur: 1, a: 'aliadoMasHerido' },
   },
   transformacion: narutoModoBarion,
   movimientos: [

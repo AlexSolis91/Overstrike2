@@ -32,22 +32,22 @@ export default {
     {
       categoria: 'basico', nombre: 'Espada de Ironside', objetivo: 'enemigo', estilo: 'melee', color: 0x94a3b8,
       pct: .8, escala: 'dano', cd: 0,
-      desc: 'Causa 80% y gana un Escudo del 6% de su HP máx.',
-      efectos: [{ cuando: 'final', accion: { tipo: 'escudo', pct: .06, escala: 'hpMax', a: 'propio' } }],
+      desc: 'Causa 80% y gana un Escudo del 50% de su HP máx. (1 ronda).',
+      efectos: [{ cuando: 'final', accion: { tipo: 'escudo', pct: .50, escala: 'hpMax', dur: 1, a: 'propio' } }],
     },
     {
       categoria: 'especial', nombre: 'Muro de Escudos', objetivo: 'todosAliados', estilo: 'support', color: 0x60a5fa, cd: 3,
-      desc: 'Levanta el muro de escudos vikingo: todos los aliados ganan un Escudo del 11% del HP máx. de Bjorn, y él gana Provocación (2 rondas).',
+      desc: 'Levanta el muro de escudos vikingo: todos los aliados ganan un Escudo del 50% del HP máx. de Bjorn (2 rondas), y él gana Provocación (2 rondas).',
       efectos: [
-        { cuando: 'final', accion: { tipo: 'escudo', pct: .11, escala: 'hpMax', a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'escudo', pct: .50, escala: 'hpMax', dur: 2, a: 'todosAliados' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'taunt', dur: 2, a: 'propio' } },
       ],
     },
     {
       categoria: 'over', nombre: 'Saqueo del Mediterráneo', objetivo: 'todosEnemigos', estilo: 'melee', color: 0xcbd5e1,
       pct: 1.00, escala: 'dano', cd: 5,
-      desc: 'Lleva a sus guerreros al saqueo: 100% a todos los enemigos, y todos los aliados ganan un Escudo del 14% del HP máx. de Bjorn.',
-      efectos: [{ cuando: 'final', accion: { tipo: 'escudo', pct: .14, escala: 'hpMax', a: 'todosAliados' } }],
+      desc: 'Lleva a sus guerreros al saqueo: 100% a todos los enemigos, y todos los aliados ganan un Escudo del 100% del HP máx. de Bjorn (2 rondas).',
+      efectos: [{ cuando: 'final', accion: { tipo: 'escudo', pct: 1.00, escala: 'hpMax', dur: 2, a: 'todosAliados' } }],
     },
   ],
 };

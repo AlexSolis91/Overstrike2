@@ -36,7 +36,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     const p = clonar(def);
     Object.assign(p, {
       uid: `${lado}-${pos}`, lado, pos, esLider: pos === 0 && !!def.lider,
-      estados: [], escudo: 0, muerto: false, cds: {}, bonos: {}, desempate: rng(),
+      estados: [], muerto: false, cds: {}, bonos: {}, desempate: rng(),
       inmune: false, recienLiberado: false,
       permanente: {},        // bonos permanentes e invisibles (p. ej. Armadura de un líder); no se disipan
       usosPasiva: 0,         // activaciones de la pasiva en la ronda actual (para "máximo X por ronda")
@@ -52,6 +52,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     const cl = def.pasiva?.clones;                       // clones: empieza con N (p. ej. Clones de Cuervo de Itachi)
     if (cl?.iniciales) p.estados.push({ id: cl.efecto, valor: cl.iniciales });
     if (def.pasiva?.sello) { p.sellado = true; p.estados.push({ id: 'sello', permanente: true }); }   // sello: un movimiento bloqueado hasta romperlo
+    // Escudo (estilo Raid): es el buff 'shield' y su cantidad vive en el buff (valor). p.escudo lo lee y lo escribe:
+    // al gastarse (≤ 0) el buff desaparece; al expirar, disiparse o robarse, el escudo se va con él.
+    Object.defineProperty(p, 'escudo', {
+      get() { return get(this, 'shield')?.valor || 0; },
+      set(v) { const e = get(this, 'shield'); if (v <= .5) { if (e) quitar(this, e); } else if (e) e.valor = v; else this.estados.push({ id: 'shield', valor: v, dur: 1 }); },
+      enumerable: true, configurable: true,
+    });
     p.hp = stats(p).hp;
     return p;
   }
@@ -253,6 +260,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'rival': texto = `Rival de ${porUid(e.fuente)?.nombre || 'Vegeta'}: recibe más daño de él`; break;
         case 'cargas': texto = `${e.valor} carga(s): su próximo movimiento que las consume hace más daño`; n = e.valor; break;
         case 'incite': texto = `Solo puede usar su Básico contra ${porUid(e.fuente)?.nombre || 'quien lo incitó'} · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'shield': texto = `Absorbe ${Math.round(e.valor)} de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'pierce': texto = `+${Math.round(BUFFS.perforacion * 100)}% Penetración de escudo · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'solarBurn': texto = `Las curaciones le hacen daño (ignora Armadura y Escudo) · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'aoeDodge': texto = `Esquiva los movimientos de área de los enemigos (daño y efectos) · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -1143,11 +1151,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       recibioDano(x, s, porUid(b.fuente));
       if (x.hp <= 0) morir(x);
     }
-    // líder "escudoPorBomba": el daño de cada Bomba enemiga (con salpicadura) se vuelve Escudo para su equipo, repartido entre los vivos
-    if (total > 0) for (const l of P) if (l.lider?.escudoPorBomba && l.esLider && !l.muerto && l.lado !== t.lado) {
+    // líder "escudoPorBomba { pct, dur }": cada Bomba que estalla en un enemigo da al aliado vivo más herido un Escudo de pct × HP máx. del líder
+    for (const l of P) if (l.lider?.escudoPorBomba && l.esLider && !l.muerto && l.lado !== t.lado) {
       const al = aliadosDe(l); if (!al.length) continue;
-      const c = total * l.lider.escudoPorBomba.pct / al.length;
-      for (const x of al) { x.escudo += c; l.est.escudo += c; emitir('escudo', { de: l.uid, a: x.uid, cantidad: c }, x); }
+      const x = al.reduce((m, y) => y.hp / maxHp(y) < m.hp / maxHp(m) ? y : m);
+      darEscudo(l, x, maxHp(l) * l.lider.escudoPorBomba.pct, l.lider.escudoPorBomba.dur ?? 1);
     }
   }
 
@@ -1165,6 +1173,22 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       || (a.pasiva?.seguroVsLentos && stats(t).spd < stats(a).spd);                            // pasiva: siempre entra contra los más lentos   // p. ej. Miedo de Loki contra envenenados
     if (!irresistible && rng() >= probAplicar(sa.acc, st.res)) { emitir('resistido', { a: t.uid, id: acc.id }); return; }
     aplicarEfecto(a, t, acc);
+  }
+
+  // Escudo (buff 'shield'): si ya tiene uno, la cantidad se SUMA y conserva la duración que le quedaba (no se renueva);
+  // si no, entra con la duración `dur`. Bloquear Buffs lo impide. La cantidad nunca depende del daño hecho o recibido.
+  function darEscudo(a, t, c, dur = 1) {
+    if (c <= 0 || t.muerto) return;
+    if (get(t, 'blockBuffs')) { emitir('sinEfecto', { a: t.uid, texto: '🚫 Buffs bloqueados' }); return; }
+    const e = get(t, 'shield');
+    if (e) e.valor += c;
+    else {
+      t.estados.push({ id: 'shield', valor: c, dur, fuente: a.uid });
+      if (S.actuaron.has(t) || S.actual === t) get(t, 'shield').nuevo = true;   // ya actuó: su duración empieza a contar desde la siguiente ronda
+      for (const p of enemigosDe(t)) { const cb = p.pasiva?.cargasPorBuffEnemigo; if (cb) ganarCargas(p, 1, cb.max, cb.efecto); }
+    }
+    a.est.escudo += c;
+    emitir('escudo', { de: a.uid, a: t.uid, cantidad: c }, t);
   }
 
   function aplicarEfecto(a, t, acc) {
@@ -1516,14 +1540,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         }
         case 'invocarAzar': invocarAzar(t, acc.tabla, acc.rarezas, acc.renueva); break;
         case 'potenciarInvocaciones': potenciarInvocaciones(t, acc.potencia || 1, acc.renovar, acc.veces || 1, acc.conAparecer); break;
-        case 'escudo': {
-          const c = (acc.base === 'danoCausado' ? (ctx.danoCausado || 0) : acc.base === 'recibido' ? (ctx.recibido || 0) : baseDe(a, acc.escala)) * acc.pct;
-          if (c <= 0) break;
-          t.escudo += c;
-          a.est.escudo += c;
-          emitir('escudo', { de: a.uid, a: t.uid, cantidad: c }, t);
+        case 'escudo':           // Escudo de pct × HP máx. (o la escala indicada) de quien lo pone, durante `dur` rondas (1 por defecto)
+          darEscudo(a, t, baseDe(a, acc.escala || 'hpMax') * acc.pct, acc.dur ?? 1);
           break;
-        }
         case 'limpiar': ctx.limpiados = (ctx.limpiados || 0) + limpiar(a, t, acc); break;
         case 'reiniciarCooldowns': {         // pone en 0 los cooldowns indicados del objetivo
           let n = 0;
@@ -2194,7 +2213,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           case 'crit': golpear(fuente, t, mov, { forzarCritico: true }); break;
           case 'block': emitir('bloqueo', { de: fuente.uid, a: t.uid }); break;
           case 'heal': curar(t, t, maxHp(t) * .2); break;
-          case 'shield': { const c = maxHp(t) * .2; t.escudo += c; emitir('escudo', { de: t.uid, a: t.uid, cantidad: c }, t); break; }
+          case 'shield': darEscudo(t, t, maxHp(t) * .5, 2); break;
           case 'burn': aplicarEfecto(fuente, t, { id: 'burn', valor: .10, dur: 2 }); break;
           case 'poison': aplicarEfecto(fuente, t, { id: 'poison' }); break;
           case 'bleed': aplicarEfecto(fuente, t, { id: 'bleed' }); break;
