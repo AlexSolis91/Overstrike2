@@ -1,11 +1,25 @@
 // Carta de personaje en el campo. Se dibuja a partir de la ficha (estática) y de la "vista" que manda el motor.
-import { G, CW, CH, EMOJI_FONT, canvasTex, rr, shade, txt, spawn, rand, pick, hpVisible, texturaDesenfocada, MOVIL } from './graficos.js';
+import { G, CW, CH, EMOJI_FONT, canvasTex, rr, shade, txt, spawn, burst, rand, pick, hpVisible, texturaDesenfocada, shakeScene, ringWave, MOVIL } from './graficos.js';
 import { IMG, TEX_INVOCACION, drawCover } from './imagenes.js';
 import { INVOCACIONES } from '../datos/invocaciones.js';
+import { sonar } from './audio.js';
 const { PIXI, gsap } = window;
 
+// Auras de cargas (pasiva.aura: { tipo, efecto, desde, max }): desde `desde` cargas la carta empieza a arder poco a poco y
+// al llegar a `max` estalla y queda envuelta (corona, rayos, brasas y llamaradas que brotan de los bordes). P. ej. The One de Escanor.
+const AURAS = {
+  solar: { corona: 0xff9a1a, rayos: 0xffd36b, chispas: [0xffd36b, 0xffb020, 0xff7a1a, 0xffffff], llama: [0xffffff, 0xfff3a0, 0xffc23a, 0xff8a1a, 0xff5a00] },
+};
+function puntoBorde() {                              // punto al azar del contorno de la carta, con su normal hacia afuera
+  let d = Math.random() * 2 * (CW + CH);
+  if (d < CW) return { x: -CW / 2 + d, y: -CH / 2, nx: 0, ny: -1 };
+  d -= CW; if (d < CH) return { x: CW / 2, y: -CH / 2 + d, nx: 1, ny: 0 };
+  d -= CH; if (d < CW) return { x: CW / 2 - d, y: CH / 2, nx: 0, ny: 1 };
+  d -= CW; return { x: -CW / 2, y: CH / 2 - d, nx: -1, ny: 0 };
+}
+
 // Sombra y resplandores ya desenfocados (se crean una vez y los comparten todas las cartas)
-let TEX_SOMBRA, TEX_LIDER, TEX_FORMA;
+let TEX_SOMBRA, TEX_LIDER, TEX_FORMA, TEX_CORONA;
 function texturasCompartidas() {
   TEX_SOMBRA ||= texturaDesenfocada(CW, CH, 14, 10, { color: '#000000', alpha: .5 });
   TEX_LIDER ||= texturaDesenfocada(CW + 6, CH + 6, 14, 6, { forma: 'borde', grosor: 7, color: '#f7c948', alpha: .35 });
@@ -134,6 +148,20 @@ export class Carta {
     this.formaBadge = new PIXI.Container(); this.formaBadge.position.set(CW / 2 + 2, -CH / 2 + 40); this.formaBadge.visible = false;
     c.addChild(this.formaBadge);
     this.formaKey = null;
+    if (p.pasiva?.aura) {                             // aura de cargas: corona y rayos detrás de la cara (se mueven con la carta)
+      const st = AURAS[p.pasiva.aura.tipo];
+      TEX_CORONA ||= texturaDesenfocada(CW + 10, CH + 10, 16, 9, { forma: 'borde', grosor: 12, color: '#ffffff', alpha: 1 });
+      const r = this.auraRayos = new PIXI.Graphics();
+      for (let i = 0; i < 16; i++) {
+        const a = i * Math.PI / 8, b = i % 2 ? .05 : .08, L = i % 2 ? 165 : 200;
+        r.poly([0, 0, Math.cos(a - b) * L, Math.sin(a - b) * L, Math.cos(a + b) * L, Math.sin(a + b) * L]).fill({ color: st.rayos, alpha: i % 2 ? .10 : .17 });
+      }
+      r.blendMode = 'add'; r.visible = false;
+      this.auraCorona = new PIXI.Sprite(TEX_CORONA); this.auraCorona.anchor.set(.5); this.auraCorona.tint = st.corona;
+      this.auraCorona.blendMode = 'add'; this.auraCorona.visible = false;
+      body.addChildAt(this.auraCorona, 0); body.addChildAt(r, 0);
+      this.auraN = 0; this.llamaradas = []; this.llamT = 0;
+    }
     this.statusRow = new PIXI.Container(); this.statusRow.y = CH / 2;   // sobre el borde inferior de la carta
     c.addChild(this.statusRow);
     this.marker = txt('▼', { size: 22, fill: '#ffd36b', stroke: 4 }); this.marker.y = -CH / 2 - 20; this.marker.alpha = 0; c.addChild(this.marker);
@@ -203,6 +231,56 @@ export class Carta {
     }
     if (this.liderGlow) this.liderGlow.alpha = v.muerto ? 0 : 1;
     this.dibujarForma();
+    if (this.auraRayos) this.actualizarAura(primera || instantaneo);
+  }
+
+  // Aura de cargas: cuenta las cargas de la vista; al llegar al máximo durante la partida, estalla
+  actualizarAura(sinEstallido) {
+    const au = this.p.pasiva.aura;
+    const n = this.v.muerto ? 0 : Number(this.v.estados.find(e => e.id === au.efecto)?.n) || 0;
+    if (n >= au.max && this.auraN < au.max && !sinEstallido) this.estallidoAura();
+    this.auraN = n;
+    if (this.v.muerto) { this.auraCorona.visible = this.auraRayos.visible = false; this.llamaradas.length = 0; }
+  }
+  estallidoAura() {
+    const st = AURAS[this.p.pasiva.aura.tipo], { x, y } = this.c, cy = y + this.body.y;
+    this.flashG.tint = 0xfff3c4; gsap.killTweensOf(this.flashG);
+    gsap.fromTo(this.flashG, { alpha: 1 }, { alpha: 0, duration: .7, ease: 'power2.out' });
+    ringWave(x, cy, st.corona, { scale: 6, width: 8, dur: .7 });
+    ringWave(x, cy, 0xffffff, { scale: 3.5, width: 4, dur: .45 });
+    burst(x, cy, { n: MOVIL ? 26 : 50, colors: st.chispas, speed: 11, size: .34, life: 46, drag: .93 });
+    shakeScene(12); sonar('transformacion');
+    for (let i = 0; i < 4; i++) this.nuevaLlamarada(1.5);
+  }
+  nuevaLlamarada(g = 1) {                            // arco de fuego que brota de un borde, se curva hacia afuera y vuelve a entrar
+    const b = puntoBorde();
+    if (b.ny === 1) { b.y = -b.y; b.ny = -1; }        // abajo no (taparía los estados): pasa al borde de arriba
+    this.llamaradas.push({ ...b, tx: -b.ny, ty: b.nx, w: rand(34, 66) * g, h: rand(30, 56) * g, g, t: 0, dur: rand(24, 34) });
+  }
+  tickAura(dt, T, x, y) {
+    const au = this.p.pasiva.aura, st = AURAS[au.tipo], n = this.auraN, lleno = n >= au.max;
+    const k = lleno ? 1 : Math.max(0, (n - au.desde + 1) / (au.max - au.desde + 1));   // 0–1: qué tan cerca está de estallar
+    this.auraCorona.visible = k > 0; this.auraRayos.visible = lleno;
+    if (!k) return;
+    const s = this.body.scale.x, cy = y + this.body.y;
+    this.auraCorona.alpha = lleno ? .7 + .3 * Math.sin(T * 1.8) : k * (.3 + .12 * Math.sin(T * 3));
+    this.auraCorona.scale.set(lleno ? 1 + .025 * Math.sin(T * 1.8) : 1);
+    if (lleno) { this.auraRayos.rotation += .004 * dt; this.auraRayos.alpha = .75 + .25 * Math.sin(T * 1.3); }
+    if (Math.random() < (lleno ? 1.3 : .45 * k) * (MOVIL ? .5 : 1) * dt) {   // brasas que suben desde los bordes: más cuantas más cargas
+      const b = puntoBorde();
+      spawn({ x: x + (b.x + b.nx * rand(0, 6)) * s, y: cy + (b.y + b.ny * rand(0, 6)) * s, vx: b.nx * rand(.2, .7) + rand(-.2, .2), vy: rand(-1, -2.4) + b.ny * .4,
+        color: pick(st.chispas), size: rand(.12, lleno ? .28 : .2), life: rand(28, 46), drag: .99, grow: -.7 });
+    }
+    if (lleno && (this.llamT -= dt) <= 0) { this.nuevaLlamarada(); this.llamT = rand(14, 30) * (MOVIL ? 1.6 : 1); }
+    for (let i = this.llamaradas.length - 1; i >= 0; i--) {
+      const f = this.llamaradas[i];
+      if ((f.t += dt / f.dur) >= 1) { this.llamaradas.splice(i, 1); continue; }
+      const u = f.t, alto = f.h * Math.sin(Math.PI * u);
+      const px = f.x + f.tx * f.w * (u - .5) + f.nx * alto, py = f.y + f.ty * f.w * (u - .5) + f.ny * alto;
+      for (let j = 0; j < (MOVIL ? 2 : 3); j++)
+        spawn({ x: x + px * s + rand(-2, 2), y: cy + py * s + rand(-2, 2), vx: f.nx * .25, vy: f.ny * .25 - .2,
+          color: pick(st.llama), size: rand(.28, .46) * (.6 + .4 * f.g) * (1 - .45 * Math.abs(u - .5) * 2), life: rand(26, 40), drag: .95, grow: -.55 });
+    }
   }
 
   // Cambia la ilustración/nombre de la carta a la forma (o de vuelta a la base si forma = null)
@@ -331,6 +409,7 @@ export class Carta {
           color: pick([this.formaCol, 0xffd36b, 0xffffff]), size: rand(.14, .26), life: rand(26, 40), drag: .99, grow: -.7 });
       }
     }
+    if (this.auraRayos) this.tickAura(dt, T, x, y);
     const tiene = id => v.estados.some(e => e.id === id);
     // Al elegir objetivo: las cartas del lado apuntado que NO se pueden elegir (Provocación, Sigilo, Incitar) se apagan
     // y la(s) válida(s) crecen un poco para que se note a quién hay que atacar

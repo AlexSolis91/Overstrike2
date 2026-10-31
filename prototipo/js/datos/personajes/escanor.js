@@ -22,6 +22,7 @@ export default {
     bonoPorCarga: { efecto: 'theOne', stat: 'hpPct', pct: .10 },
     alMaxCargas: { efecto: 'theOne', texto: '☀️ ¡THE ONE!', accion: { tipo: 'efecto', id: 'taunt', permanente: true, a: 'propio' } },
     curaAlRecibirDe: { efecto: 'solarBurn', siPropio: 'taunt', pct: .50, texto: '☀️ ¡Absorbe el daño!' },
+    aura: { tipo: 'solar', efecto: 'theOne', desde: 6, max: 12 },   // solo visual: la carta empieza a arder con 6 marcas y estalla en llamaradas solares con 12
   },
   movimientos: [
     {

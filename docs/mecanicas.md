@@ -678,6 +678,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - Condición `propioCargasMin { efecto, min }`: el ejecutor tiene al menos `min` cargas de ese contador.
 - Movimiento `bonoPorHpGanado { pct, si }`: suma al golpe `pct` × el HP máx. que ganó con `bonoPorCarga` (con `si`, solo si cumple esa condición). P. ej. Lanza Divina de Escanor: 25% con 12 marcas.
 - Marca nueva: **The One ☀️** (contador de Escanor, máx. 12).
+- `aura { tipo, efecto, desde, max }` (pasiva, **solo visual**, `ui/carta.js`): desde `desde` cargas de ese contador la carta empieza a arder (corona y brasas que crecen con cada carga); al llegar a `max` estalla (destello, ondas, temblor y sonido de transformación) y queda envuelta: corona que respira, rayos girando detrás y llamaradas que brotan de los bordes. Tipos en `AURAS` (por ahora `solar`; se agregan otros colores ahí). P. ej. Escanor: `solar`, The One, desde 6, máx. 12 (2026-10-30).
 
 ## Piezas nuevas (2026-10-27, Meliodas)
 - **Líder** `copiarDebuffAliado { prob }`: cuando un **enemigo** le aplica un debuff a un aliado (incluido el líder), con `prob` el líder aplica una **copia exacta** (misma intensidad y duración, como Propagar) a un enemigo al azar, con su Tirada de Puntería. Las copias no se vuelven a copiar (evita cadenas entre dos líderes así). Meliodas: 30%.
