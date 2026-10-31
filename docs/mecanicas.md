@@ -728,3 +728,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
   - `temporizar(fn, ms)` (y `wait`) usan su reloj; devuelve una función para cancelar. Úsalo en vez de `setTimeout` en todo lo que mueve la partida (esperas, series de Campaña, VS, turno en vivo, oleadas de la Horda).
   - Si GSAP lleva más de 150 ms sin cuadro, el Worker lo empuja con `gsap.ticker.tick()` (unas 5 veces por segundo): las animaciones terminan a tiempo real y la batalla sigue en Auto. Con la ventana a la vista no hace nada.
 - Para jugar sin mirar: Auto encendido + Horda (sigue sola) o una serie de repeticiones de Campaña.
+
+## 28. Récords de la Horda (2026-10-30, `docs/sql/020_horda_ranking.sql`)
+- `horda_ranking(p_horda)`: la mejor oleada de cada jugador en esa Horda (empate: quien la alcanzó primero), top 50 + mi puesto (`yo`). Pública (anon y authenticated): solo nombre, oleada y fecha.
+- Se ve en la pantalla de Hordas, al final del panel derecho (🥇🥈🥉, mi fila resaltada; si estoy fuera del top 50, mi puesto aparece abajo tras “⋯”).

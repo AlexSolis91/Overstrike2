@@ -11,6 +11,7 @@ import { activarTip, cartaPosible, hojaTactil, conCursor, ocultarTip, cerrarHoja
 const $ = s => document.querySelector(s);
 const ICONO_PORTAL = 'assets/items/runaPortal.png';
 let jugar = null, inv = null, record = 0, error = '', hitos = new Set(), filtro = 'Raro', comprando = false;
+let ranking;   // undefined = cargando · null = falta el SQL 020 · { lista, yo }
 // Tienda de la Horda (docs/sql/011 y 015): precio en Trofeos de Orco por rareza (Épicas: 1 por semana); premios de primera vez
 export const PRECIO_TROFEOS = { 'Común': 15, 'Raro': 60, 'Especial': 300, 'Épico': 1500 };
 // Lunes de esta semana en hora de México (igual que el servidor), como 'AAAA-MM-DD'
@@ -25,6 +26,22 @@ const tienda = () => Object.entries(RELIQUIAS).filter(([, r]) => (r.lote || 'orc
   .map(([id, r]) => ({ id, ...r }));
 
 const pct = v => `${Math.round(v * 1000) / 10}%`.replace('.0%', '%');
+
+async function cargarRanking() {
+  ranking = await D.hordaRanking('orcos').catch(() => null);
+}
+
+// Récords de la Horda: top 50 (🥇🥈🥉) y, si estoy fuera, mi puesto al final
+function htmlRanking() {
+  if (ranking === undefined) return '<p>Cargando…</p>';
+  if (!ranking) return '<p>⚠️ Falta ejecutar docs/sql/020_horda_ranking.sql en el servidor.</p>';
+  if (!ranking.lista.length) return '<p>Todavía nadie tiene récord. ¡Sé el primero!</p>';
+  const fecha = f => new Date(f).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+  const fila = r => `<tr class="${r.yo ? 'yo' : ''}"><td>${['🥇', '🥈', '🥉'][r.puesto - 1] || r.puesto}</td><td class="hd-rk-n">${r.nombre}</td><td><b>${r.oleada}</b></td><td>${fecha(r.fecha)}</td></tr>`;
+  const fuera = ranking.yo && ranking.yo.puesto > ranking.lista.length;
+  return `<table class="hd-ranking"><tr><th>#</th><th>Jugador</th><th>Oleada</th><th>Fecha</th></tr>
+    ${ranking.lista.map(fila).join('')}${fuera ? `<tr class="hd-rk-sep"><td colspan="4">⋯</td></tr>${fila(ranking.yo)}` : ''}</table>`;
+}
 
 async function cargar() {
   error = '';
@@ -81,12 +98,16 @@ function pintar() {
       </table>
       <h4>Consigue Runas de Portal</h4>
       <p>3 de regalo al empezar · 1 en la misión diaria "Gana 5 combates de Arena" · 3.3% de 1 runa en cada combate de Arena (ganes o pierdas) · la recompensa semanal de tu liga de Arena (1–4).</p>
+      <h4>🏆 Récords de la Horda de Orcos</h4>
+      <p class="hd-nota">La oleada más alta de cada jugador. En empate, va primero quien la alcanzó antes.</p>
+      ${htmlRanking()}
     </aside>`;
 }
 
 export async function abrirHorda() {
+  ranking = undefined;
   pintar();
-  await cargar();
+  await Promise.all([cargar(), cargarRanking()]);
   pintar();
 }
 

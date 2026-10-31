@@ -50,6 +50,7 @@ export const hordaTerminar = partida => rpc('horda_terminar', { p_partida: parti
 export const miRecordHorda = horda => q(sb => sb.from('horda_partidas').select('oleada').eq('horda', horda).order('oleada', { ascending: false }).limit(1));
 export const tiendaHordaComprar = id => rpc('tienda_horda_comprar', { p_reliquia: id });   // docs/sql/011_horda_extras.sql
 export const misHitosHorda = horda => q(sb => sb.from('horda_hitos').select('oleada').eq('horda', horda));
+export const hordaRanking = horda => rpc('horda_ranking', { p_horda: horda });   // docs/sql/020_horda_ranking.sql
 
 // Arena (docs/sql/008_arena.sql)
 export const arenaEstado = () => rpc('arena_estado');
