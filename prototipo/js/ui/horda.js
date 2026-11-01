@@ -3,7 +3,7 @@
 import * as D from '../servicios/datos.js';
 import { perfilActual } from './cuenta.js';
 import { equipoCampana, irA } from './menu.js';
-import { HORDAS, oleada, defsOleada, oroOleada, TRAMOS_RAREZA } from '../datos/horda/horda.js';
+import { HORDAS, oleada, defsOleada, oroOleada, ORO_PASO, TRAMOS_RAREZA } from '../datos/horda/horda.js';
 import { RELIQUIAS, RAREZAS } from '../datos/reliquias.js';
 import { ICONO_RUNA_PORTAL } from '../datos/recompensas.js';
 import { activarTip, cartaPosible, hojaTactil, conCursor, ocultarTip, cerrarHoja } from './tipReliquia.js';
@@ -91,7 +91,7 @@ function pintar() {
       <p>Abrir un portal consume <b>1 Runa de Portal</b>. Elige 5 campeones de tu colección: pelean con sus estrellas y reliquias.
       Cada 5 oleadas aparece un <b>mini-jefe</b> (General Galek o General Torl-khan) y cada 10 un <b>jefe</b> (Gul'dan o Kargalgan).</p>
       <h4>Recompensas por oleada</h4>
-      <p><b>Oro:</b> ${oroOleada(1).toLocaleString('es-MX')} en la oleada 1, +150 por oleada (×3 mini-jefe, ×5 jefe).<br>
+      <p><b>Oro:</b> ${oroOleada(1).toLocaleString('es-MX')} en la oleada 1, +${ORO_PASO} por oleada (×3 mini-jefe, ×5 jefe).<br>
       <b>Trofeos de Orco:</b> 1 por oleada (×3 mini-jefe, ×5 jefe), para la Tienda de la Horda.<br>
       <b>30%</b> de una reliquia de la Horda de Orcos · <b>2%</b> de 1–3 Fragmentos de Runa.</p>
       <table><tr><th>Oleadas</th><th>Común</th><th>Rara</th><th>Especial</th><th>Épica</th></tr>
