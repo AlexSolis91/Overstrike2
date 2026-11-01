@@ -393,6 +393,21 @@ body.movil-v #girar:not(.cerrado) {
 #jefe-barra.muerto { opacity: .4; }
 @keyframes jb-furia { 50% { box-shadow: 0 0 24px rgba(251, 146, 60, 1); } }
 body.movil #jefe-barra { top: 38px; width: 50%; }
+/* Arena: placa del jugador rival, centrada sobre su fila de cartas */
+#arena-rival { position: absolute; top: 98px; left: 50%; transform: translateX(-50%); z-index: 3; pointer-events: none;
+  display: flex; align-items: center; gap: 9px; max-width: calc(100% - 24px); padding: 5px 14px; border-radius: 99px; white-space: nowrap;
+  background: rgba(8, 11, 18, .85); border: 1px solid rgba(248, 113, 113, .5); box-shadow: 0 4px 16px rgba(0, 0, 0, .5); backdrop-filter: blur(6px); }
+#arena-rival small { font: 800 10px Inter, sans-serif; letter-spacing: .18em; text-transform: uppercase; color: #fca5a5; }
+#arena-rival b { font: 900 15px Cinzel, serif; color: #fff; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#arena-rival em { font: 700 11px Inter, sans-serif; font-style: normal; color: var(--muted); }
+body.movil #arena-rival { gap: 6px; padding: 3px 10px; }
+body.movil-h #arena-rival { top: 46px; left: auto; right: max(8px, env(safe-area-inset-right)); transform: none; width: 160px; padding: 6px 10px; border-radius: 12px;
+  flex-wrap: wrap; gap: 2px 6px; }
+body.movil-h #arena-rival small, body.movil-h #arena-rival b { flex-basis: 100%; }
+body.movil-h #arena-rival .ar-liga { font-size: 10px; padding: 1px 6px; }
+body.movil-v #arena-rival { top: 150px; }
+body.movil #arena-rival b { font-size: 12px; }
+body.movil #arena-rival small, body.movil #arena-rival em { font-size: 9px; }
 body.movil #jefe-barra .jb-nombre { font-size: 11px; }
 body.movil #jefe-barra .jb-track { height: 8px; }
 #res-camp { text-align: center; margin: 4px 0 10px; font: 700 13px Inter, sans-serif; }

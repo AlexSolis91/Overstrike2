@@ -738,3 +738,8 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - La cantidad es siempre un **% del HP máx. de quien lo pone**, nunca del daño causado o recibido (así no escala con los enemigos de la Horda). Ya no existen `base: 'recibido'` ni `base: 'danoCausado'`.
 - Escala de diseño: básico o pasiva que se activa seguido → 50% (1 ronda; 25% si es automática cada ronda o a todo el equipo); especial → 100% propio / 50% al equipo (1–2 rondas); Over o con condición → hasta 200% propio / 100% al equipo (2 rondas).
 - Los orcos pueden disipar: Maldición del Brujo Orco (todos los buffs del objetivo) y Lluvia Vil de Gul'dan (1 buff a cada enemigo).
+
+## 30. Rival en Arena y compra de varios sobres (2026-11-01)
+- **Arena:** durante la batalla, una placa muestra al jugador del equipo rival (nombre, liga y puntos; "Defensa de práctica" si es un bot) y la partida arranca con el anuncio "⚔️ vs Nombre". Usa el `rival` que ya devuelve el servidor, sin SQL nuevo.
+- **Tienda:** cada sobre de pago tiene botones ×5, ×10 y ×20 (se desactivan si no alcanza el oro). El cliente llama al servidor una vez por sobre (`abrir_sobre` / `abrir_sobre_reliquias`), así que cada sobre se cobra y se valida igual que uno suelto, y las garantías de reliquias siguen contando. Si algo falla a medio camino (oro, espacio), se revela lo que sí salió y se avisa cuántos se abrieron.
+- La apertura de muchos sobres junta todas las cartas en una sola revelación: cartas chicas en una lista que se desplaza sola, volteo rápido, y "¡NUEVO!" solo en la primera copia de un campeón nuevo.

@@ -101,6 +101,7 @@ function htmlSobres(lista) {
         ${s.imagen ? `<div class="tc-sobre-arte con-arte" style="--arte:url('${s.imagen}')"><img src="${s.imagen}" alt="${s.nombre}"></div>` : `<div class="tc-sobre-arte"><span>${s.icono}</span></div>`}
         <b>${s.nombre}</b>
         <button class="eq-listo tc-abrir" ${esRel ? 'data-reliquias' : `data-sobre="${c.id}"`} ${alcanza ? '' : 'disabled'}>${c.precio > 0 ? `🪙 ${num(c.precio)}` : 'Gratis'}</button>
+        ${c.precio > 0 ? `<div class="tc-varios">${VARIOS.map(n => `<button class="eq-btn" ${esRel ? 'data-reliquias' : `data-sobre="${c.id}"`} data-n="${n}" title="Abrir ${n} sobres por ${num(c.precio * n)} de oro" ${inv.oro >= c.precio * n ? '' : 'disabled'}>×${n}</button>`).join('')}</div>` : ''}
         ${esRel ? htmlGarantias() : inv.vales_sobre ? `<button class="eq-btn tc-vale" data-vale="${c.id}">🎟️ Usar vale</button>` : alcanza ? '' : '<em>Te falta oro</em>'}
       </div>`; }).join('')}</div>`;
 }
@@ -359,24 +360,48 @@ const cerrarTC = () => $('#tc').classList.add('hidden');
 export const tcAbierto = () => !$('#tc').classList.contains('hidden') || !$('#starter').classList.contains('hidden');
 
 // ---------------------------------------------------------------- acciones
-async function abrirSobre(id) {
+// Compra de varios sobres de golpe: el servidor abre (y cobra) uno por uno; si algo falla a medio camino
+// (p. ej. se acaba el oro o el espacio), se revela lo que sí salió y se avisa
+const VARIOS = [5, 10, 20];
+async function abrirVarios(n, abrirUno) {
+  const res = [];
+  let error = null;
+  for (let i = 0; i < n; i++) {
+    const b = $('#tc-cont .tc-abriendo'); if (b) b.textContent = `Abriendo ${i + 1}/${n}…`;
+    try { res.push(await abrirUno()); } catch (e) { error = e; break; }
+  }
+  if (!res.length && error) throw error;
+  return { res, error };
+}
+function marcarAbriendo(n) {
+  if (n < 2) return;
+  const p = document.createElement('p'); p.className = 'tc-abriendo'; p.textContent = `Abriendo 1/${n}…`;
+  $('#tc-cont').prepend(p);
+}
+const avisoParcial = (r, n) => r.error && aviso(`Solo se abrieron ${r.res.length} de ${n} sobres: ${D.mensajeError(r.error)}`, 'error');
+
+async function abrirSobre(id, n = 1) {
   const s = SOBRES[id], precio = cfg.find(c => c.id === id)?.precio || 0;
-  if (precio > 0 && !confirm(`¿Abrir ${s.nombre} por ${num(precio)} de oro?`)) return;
+  if (precio > 0 && !confirm(n > 1 ? `¿Abrir ${n} sobres ${s.nombre} por ${num(precio * n)} de oro?` : `¿Abrir ${s.nombre} por ${num(precio)} de oro?`)) return;
   await accion(async () => {
-    const ids = await D.abrirSobre(id);
-    const nuevos = nuevosDe(ids);
-    await revelarCartas({ sobre: s, campeones: fichas(ids), nuevos });
+    marcarAbriendo(n);
+    const r = await abrirVarios(n, () => D.abrirSobre(id));
+    const ids = r.res.flat();
+    await revelarCartas({ sobre: s, campeones: fichas(ids), nuevos: nuevosDe(ids), sobres: r.res.length });
+    avisoParcial(r, n);
     await recargar(); pintar();
   });
 }
 
-async function abrirReliquias() {
+async function abrirReliquias(n = 1) {
   const s = SOBRES.reliquias, precio = cfg.find(c => c.id === 'reliquias')?.precio || 0;
-  if (precio > 0 && !confirm(`¿Abrir ${s.nombre} por ${num(precio)} de oro?`)) return;
+  if (precio > 0 && !confirm(n > 1 ? `¿Abrir ${n} sobres ${s.nombre} por ${num(precio * n)} de oro?` : `¿Abrir ${s.nombre} por ${num(precio)} de oro?`)) return;
   await accion(async () => {
-    const r = await D.abrirSobreReliquias();
-    const nuevas = (r.reliquias || []).map(instancia).filter(Boolean);
-    await revelarCartas({ sobre: s, reliquias: nuevas });
+    marcarAbriendo(n);
+    const r = await abrirVarios(n, () => D.abrirSobreReliquias());
+    const nuevas = r.res.flatMap(x => x.reliquias || []).map(instancia).filter(Boolean);
+    await revelarCartas({ sobre: s, reliquias: nuevas, sobres: r.res.length });
+    avisoParcial(r, n);
     await recargar(); pintar();
   });
 }
@@ -399,8 +424,8 @@ async function ejecutar(e) {
   if (gris && gris.dataset.uid && 'tip' in gris.dataset && !conCursor()) return hojaTactil(fichaEquipar(gris.dataset.uid), '', null);   // táctil: ver la ficha (no se puede equipar)
   if (gris) return aviso(gris.dataset.motivo, 'error');
   const b = t.closest('button'); if (!b || b.disabled) return;
-  if (b.dataset.sobre) return abrirSobre(b.dataset.sobre);
-  if ('reliquias' in b.dataset) return abrirReliquias();
+  if (b.dataset.sobre) return abrirSobre(b.dataset.sobre, +b.dataset.n || 1);
+  if ('reliquias' in b.dataset) return abrirReliquias(+b.dataset.n || 1);
   if (b.dataset.filtro) { relFiltro[b.dataset.filtro] = b.dataset.valor; return pintar(); }
   if (b.dataset.receta) { recetaSel = b.dataset.receta; recetaMarcadas = new Set(proponerIngredientes(recetaSel, epicasLibres(), calidad).map(x => x.uid)); return pintar(); }
   if ('recetaVolver' in b.dataset) { recetaSel = null; recetaMarcadas.clear(); return pintar(); }

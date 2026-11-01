@@ -29,6 +29,7 @@ import { crearRng } from './motor/rng.js';
 import { semillaIA } from './motor/verificar.js';
 import { supabase } from './servicios/supabase.js';
 import { RELIQUIAS, RAREZAS } from './datos/reliquias.js';
+import { liga } from './datos/arena.js';
 
 const { gsap } = window;
 const $ = s => document.querySelector(s);
@@ -86,11 +87,13 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   entrarCartas(Object.values(cartas));
   refrescarPanel();
   actualizarJefe();
+  mostrarRivalArena(opciones?.arena?.rival);
   if (vivo) { ui.vivo = conectarVivo(opciones.arena, { alAbandonar: () => abandonoRival() }); ui.auto = false; marcarControles(); }
   else if (ui.arena) { ui.arena.decisiones = []; ui.arena.rnd = crearRng(semillaIA(opciones.semilla)); }   // contra una Defensa: se guardan las decisiones para verificarlas
   await wait(1100);
   await anunciar();
   if (vivo) { banner(`⚔️ EN VIVO vs ${opciones.arena.rival?.nombre || 'rival'}`, { size: 40, color: '#fde68a', hold: 1.2 }); await wait(1500); }
+  else if (ui.arena?.rival?.nombre) { banner(`⚔️ vs ${ui.arena.rival.nombre}`, { size: 40, color: '#fde68a', hold: 1.2 }); await wait(1500); }
   await procesar(combate.iniciar());
 }
 function crearCarta(p) {
@@ -152,6 +155,15 @@ function marcarControles() {
   $('#btn-vel').textContent = `×${v}`; $('#btn-vel').classList.toggle('on', v === 2);
 }
 // Barra del Jefe (Campaña): nombre, vida y estado de furia
+// Arena: placa con el jugador del equipo rival (nombre, liga y puntos), junto a su fila de cartas
+function mostrarRivalArena(r) {
+  const el = $('#arena-rival');
+  if (!r?.nombre) return el.classList.add('hidden');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const l = r.liga ? liga(r.liga) : null;
+  el.innerHTML = `<small>Rival</small><b>${esc(r.nombre)}</b>${l ? `<span class="ar-liga" style="--lc:${l.color}">${l.icono} ${l.id}</span>` : ''}${r.puntos != null ? `<em>${Number(r.puntos).toLocaleString('es-MX')} pts</em>` : ''}`;
+  el.classList.remove('hidden');
+}
 function actualizarJefe() {
   const j = P.find(p => p.lado === 'rival' && vistas[p.uid]?.jefe), bar = $('#jefe-barra');
   if (!j) return bar.classList.add('hidden');
@@ -844,7 +856,7 @@ $('#test-panel').addEventListener('click', async e => {
 // Acceso para pruebas desde la consola del navegador (p. ej. que la IA juegue por el jugador)
 window.__os2 = { combate, ui, jugarIA: () => ui.miTurno && !ui.ocupado && (() => { const d = elegirIA(combate); return ejecutar(d.categoria, d.objetivo); })() };
 window.__os2.audio = { sonar, finDePartida };          // pruebas de sonido desde la consola
-window.__os2.empezar = (j, r) => jugar(j.map(porId), r.map(porId), 'construir');   // pruebas: __os2.empezar(['goku',...], [...])
+window.__os2.empezar = (j, r, o) => jugar(j.map(porId), r.map(porId), 'construir', o);   // pruebas: __os2.empezar(['goku',...], [...], opciones?)
 window.__os2.elegir = cat => elegirMovimiento(cat);                 // pruebas: elegir movimiento y tocar una carta por uid
 window.__os2.tocar = uid => cartas[uid] && tocarCarta(cartas[uid]);
 

@@ -33,19 +33,24 @@ function cartaReliquiaHtml(r, i) {
 }
 
 // sobre: { nombre, icono, color, imagen? } (con imagen se muestra el arte del sobre) · campeones: fichas · nuevos: Set de ids que el jugador no tenía
-// reliquias: copias de reliquias (en lugar de campeones)
-export function revelarCartas({ sobre, campeones = [], nuevos = new Set(), reliquias = null }) {
-  const htmlCartas = reliquias ? reliquias.map(cartaReliquiaHtml) : campeones.map((p, i) => cartaHtml(p, nuevos.has(p.id), i));
+// reliquias: copias de reliquias (en lugar de campeones) · sobres: cuántos sobres se abrieron juntos (compra de varios)
+export function revelarCartas({ sobre, campeones = [], nuevos = new Set(), reliquias = null, sobres = 1 }) {
+  const vistos = new Set();                     // si un campeón nuevo sale repetido en la misma apertura, solo la primera copia es "¡NUEVO!"
+  const htmlCartas = reliquias ? reliquias.map(cartaReliquiaHtml)
+    : campeones.map((p, i) => { const nuevo = nuevos.has(p.id) && !vistos.has(p.id); vistos.add(p.id); return cartaHtml(p, nuevo, i); });
+  const muchas = htmlCartas.length > 10;        // varios sobres: cartas chicas, se voltean rápido y la lista se desplaza sola
   return new Promise(async resolve => {
     document.querySelector('#apertura')?.remove();
     const capa = document.createElement('div');
     capa.id = 'apertura';
+    if (muchas) capa.classList.add('muchas');
     capa.style.setProperty('--c', sobre.color || '#f3d58a');
     capa.innerHTML = `
       <div class="ap-destello"></div>
       ${sobre.imagen
         ? `<div class="ap-sobre con-arte"><img src="${sobre.imagen}" alt="${sobre.nombre}"><div class="ap-sobre-brillo" style="--arte:url('${sobre.imagen}')"></div><small>Toca para abrir</small></div>`
         : `<div class="ap-sobre"><div class="ap-sobre-brillo"></div><span class="ap-sobre-ico">${sobre.icono || '🎁'}</span><b>${sobre.nombre}</b><small>Toca para abrir</small></div>`}
+      ${sobres > 1 ? `<div class="ap-varios">×${sobres} sobres</div>` : ''}
       <div class="ap-chispas"></div>
       <div class="ap-cartas">${htmlCartas.join('')}</div>
       <p class="ap-ayuda">Toca para revelar más rápido</p>
@@ -70,14 +75,16 @@ export function revelarCartas({ sobre, campeones = [], nuevos = new Set(), reliq
     await espera(450);
     // 3) las cartas salen boca abajo
     capa.classList.add('cartas');
-    await espera(500 + htmlCartas.length * 120);
+    await espera(500 + htmlCartas.length * (muchas ? 20 : 120));
     // 4) se voltean una por una
     $('.ap-ayuda').classList.add('visible');
     const cartas = [...capa.querySelectorAll('.ap-carta')];
-    for (const c of cartas) {
+    for (const [i, c] of cartas.entries()) {
       c.classList.add('revelada');
-      sonar(c.classList.contains('legendaria') || c.classList.contains('epica') ? 'invocacionLegendaria' : 'invocacion');
-      await espera(rapido ? 140 : 950);
+      const top = c.classList.contains('legendaria') || c.classList.contains('epica');
+      if (!muchas || top || c.querySelector('.ap-tag.nuevo') || i % 4 === 0) sonar(top ? 'invocacionLegendaria' : 'invocacion');
+      if (muchas) c.scrollIntoView({ block: 'nearest', behavior: rapido ? 'auto' : 'smooth' });
+      await espera(muchas ? (rapido ? 25 : 170) : rapido ? 140 : 950);
     }
     $('.ap-ayuda').classList.remove('visible');
     await espera(500);

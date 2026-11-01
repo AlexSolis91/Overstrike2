@@ -497,6 +497,22 @@ body.app-instalada #menu-full { visibility: hidden; }
 @keyframes apPop { 50% { filter: brightness(1.8); } }
 @keyframes apRayos { to { transform: translate(-50%, -50%) rotateY(180deg) rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .ap-sobre, .ap-sobre.tiembla, .ap-sobre small, .ap-sobre-brillo::after, .ap-carta.revelada::before { animation: none; } }
+/* varios sobres de golpe: cartas chicas en una lista que se desplaza, sin rayos por carta (serían demasiados) */
+.ap-varios { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); padding: 5px 16px; border-radius: 99px; font: 900 15px Cinzel, serif; letter-spacing: .06em;
+  color: #2a1d06; background: linear-gradient(180deg, #fff6d6, #f3d58a); box-shadow: 0 0 18px rgba(243, 213, 138, .6); z-index: 2; }
+#apertura.muchas .ap-cartas { max-width: min(1300px, 100%); max-height: calc(100dvh - 150px); margin-top: 20px; overflow-y: auto; pointer-events: auto;
+  gap: 10px; padding: 18px 12px; scrollbar-width: thin; scrollbar-color: rgba(243, 213, 138, .4) transparent; }
+#apertura.muchas .ap-carta { width: clamp(72px, 8.6vw, 112px); transition-delay: calc(var(--i) * .02s); }
+#apertura.muchas .ap-carta.revelada::before { display: none; }
+#apertura.muchas .ap-cara { border-radius: 9px; }
+#apertura.muchas .ap-frente { box-shadow: 0 0 0 1px rgba(255, 255, 255, .2), 0 0 14px color-mix(in srgb, var(--c) 70%, transparent); }
+#apertura.muchas .ap-dorso-ii { font-size: clamp(26px, 3.4vw, 40px); }
+#apertura.muchas .ap-dorso-marca { bottom: 6px; font-size: 7px; letter-spacing: .15em; }
+#apertura.muchas .ap-info { padding: 14px 4px 5px; }
+#apertura.muchas .ap-info b { font-size: clamp(9px, 1vw, 11px); }
+#apertura.muchas .ap-info small { display: none; }
+#apertura.muchas .ap-tag { top: 4px; padding: 2px 6px; font-size: 8.5px; transition-delay: .2s; }
+#apertura.muchas .ap-ayuda { bottom: 64px; }
 
 /* ================================================================ PANEL DE ADMINISTRADOR (en Tu cuenta) */
 .cu-caja { max-height: 92vh; overflow-y: auto; }
@@ -545,6 +561,10 @@ body.tc-ocupado #tc-cont, body.tc-ocupado .st-packs { opacity: .6; }
 .tc-sobre b { font: 900 15px Cinzel, serif; color: #fff; }
 .tc-sobre em { font-size: 11px; color: #fca5a5; font-style: normal; }
 .tc-abrir { width: 100%; }
+.tc-varios { display: flex; gap: 5px; width: 100%; }
+.tc-varios button { flex: 1; min-width: 0; padding: 5px 0; font-weight: 900; }
+.tc-abriendo { margin: 0 0 10px; padding: 8px 12px; border-radius: 10px; text-align: center; font: 800 13px Inter, sans-serif; color: var(--gold);
+  background: rgba(243, 213, 138, .1); border: 1px solid rgba(243, 213, 138, .35); }
 /* rejilla de campeones */
 .tc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
 .tc-carta { position: relative; aspect-ratio: 5 / 7; padding: 0; border-radius: 12px; overflow: hidden; cursor: pointer; text-align: center; color: var(--text);
