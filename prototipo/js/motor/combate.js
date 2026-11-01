@@ -1151,12 +1151,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       recibioDano(x, s, porUid(b.fuente));
       if (x.hp <= 0) morir(x);
     }
-    // líder "escudoPorBomba { pct, dur }": cada Bomba que estalla en un enemigo da al aliado vivo más herido un Escudo de pct × HP máx. del líder
-    for (const l of P) if (l.lider?.escudoPorBomba && l.esLider && !l.muerto && l.lado !== t.lado) {
-      const al = aliadosDe(l); if (!al.length) continue;
-      const x = al.reduce((m, y) => y.hp / maxHp(y) < m.hp / maxHp(m) ? y : m);
-      darEscudo(l, x, maxHp(l) * l.lider.escudoPorBomba.pct, l.lider.escudoPorBomba.dur ?? 1);
-    }
+    // líder "escudoPorBomba { pct, dur }": cada Bomba que estalla en un enemigo da a todos los aliados vivos un Escudo de pct × HP máx. del líder
+    for (const l of P) if (l.lider?.escudoPorBomba && l.esLider && !l.muerto && l.lado !== t.lado)
+      for (const x of aliadosDe(l)) darEscudo(l, x, maxHp(l) * l.lider.escudoPorBomba.pct, l.lider.escudoPorBomba.dur ?? 1);
   }
 
   // ================================================================ efectos (buffs / debuffs)

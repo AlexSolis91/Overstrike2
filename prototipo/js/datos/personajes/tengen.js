@@ -17,8 +17,8 @@ export default {
 
   lider: {
     nombre: 'Pilar del Sonido',
-    desc: 'Cada vez que estalla una Bomba en un enemigo, el aliado más herido gana un Escudo del 50% del HP máx. de Tengen (1 ronda).',
-    escudoPorBomba: { pct: .50, dur: 1 },
+    desc: 'Cada vez que estalla una Bomba en un enemigo, todos sus aliados ganan un Escudo del 25% del HP máx. de Tengen (2 rondas).',
+    escudoPorBomba: { pct: .25, dur: 2 },
   },
   pasiva: {
     nombre: 'Al Ritmo de la Partitura',
