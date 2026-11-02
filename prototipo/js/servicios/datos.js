@@ -47,6 +47,10 @@ export const forjarLegendaria = (id, ids) => rpc('forjar_legendaria', { p_legend
 export const hordaEntrar = horda => rpc('horda_entrar', { p_horda: horda });
 export const hordaOleada = (partida, oleada) => rpc('horda_oleada', { p_partida: partida, p_oleada: oleada });
 export const hordaTerminar = partida => rpc('horda_terminar', { p_partida: partida });
+// Continuar una partida (docs/sql/022_horda_reanudar.sql)
+export const hordaGuardar = (partida, datos) => rpc('horda_guardar', { p_partida: partida, p_datos: datos });
+export const hordaNoReanudable = partida => rpc('horda_no_reanudable', { p_partida: partida });
+export const miPartidaHorda = horda => q(sb => sb.from('horda_partidas').select('id, oleada, guardado').eq('horda', horda).eq('terminada', false).order('iniciada', { ascending: false }).limit(1).maybeSingle());
 export const miRecordHorda = horda => q(sb => sb.from('horda_partidas').select('oleada').eq('horda', horda).order('oleada', { ascending: false }).limit(1));
 export const tiendaHordaComprar = id => rpc('tienda_horda_comprar', { p_reliquia: id });   // docs/sql/011_horda_extras.sql
 export const misHitosHorda = horda => q(sb => sb.from('horda_hitos').select('oleada').eq('horda', horda));
@@ -86,10 +90,13 @@ export const adminDarOro = (nombre, oro) => rpc('admin_dar_oro', { p_nombre: nom
 export const catalogoProbabilidades = () => q(sb => sb.from('campeones').select('id, nombre, nivel, solo_su_sobre').order('nombre'));
 export const adminProbabilidad = (id, nivel, solo) => rpc('admin_probabilidad_campeon', { p_campeon: id, p_nivel: nivel, p_solo: solo });
 
+// Fallo de conexión (vale la pena reintentar), no una respuesta del servidor
+export const esErrorConexion = e => /fetch|NetworkError|Load failed|import|JWT/i.test(String(e?.message || e || ''));
+
 // Mensajes del servidor → español
 export function mensajeError(e) {
   const m = String(e?.message || e || '');
-  if (/Failed to fetch|NetworkError|import/i.test(m)) return 'No hay conexión con el servidor. Revisa tu internet.';
+  if (/Failed to fetch|NetworkError|Load failed|import/i.test(m)) return 'No hay conexión con el servidor. Revisa tu internet.';
   if (/JWT|not authenticated|Inicia sesión/i.test(m)) return 'Inicia sesión primero.';
   return m || 'Ocurrió un error. Intenta de nuevo.';
 }

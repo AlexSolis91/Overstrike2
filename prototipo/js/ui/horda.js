@@ -6,11 +6,15 @@ import { equipoCampana, irA } from './menu.js';
 import { HORDAS, oleada, defsOleada, oroOleada, ORO_PASO, TRAMOS_RAREZA } from '../datos/horda/horda.js';
 import { RELIQUIAS, RAREZAS } from '../datos/reliquias.js';
 import { ICONO_RUNA_PORTAL } from '../datos/recompensas.js';
+import { repetirHorda, oleadaGuardada, defsGuardadas, totalDecisiones } from '../motor/hordaReanudar.js';
+import { porId } from '../datos/personajes/index.js';
+import { guardarLocal, leerLocal, borrarLocal } from '../servicios/hordaGuardada.js';
 import { activarTip, cartaPosible, hojaTactil, conCursor, ocultarTip, cerrarHoja } from './tipReliquia.js';
 
 const $ = s => document.querySelector(s);
 const ICONO_PORTAL = 'assets/items/runaPortal.png';
 let jugar = null, inv = null, record = 0, error = '', hitos = new Set(), filtro = 'Raro', comprando = false;
+let abierta = null;   // partida sin terminar que se puede continuar: { id, g }
 let ranking;   // undefined = cargando · null = falta el SQL 020 · { lista, yo }
 // Tienda de la Horda (docs/sql/011 y 015): precio en Trofeos de Orco por rareza (Épicas: 1 por semana); premios de primera vez
 export const PRECIO_TROFEOS = { 'Común': 15, 'Raro': 60, 'Especial': 300, 'Épico': 1500 };
@@ -43,11 +47,20 @@ function htmlRanking() {
     ${ranking.lista.map(fila).join('')}${fuera ? `<tr class="hd-rk-sep"><td colspan="4">⋯</td></tr>${fila(ranking.yo)}` : ''}</table>`;
 }
 
+// De la copia del dispositivo y la del servidor, la que llegó más lejos
+function partidaAbierta(fila) {
+  if (!fila) return null;
+  const local = leerLocal(fila.id);
+  const g = local && totalDecisiones(local) >= totalDecisiones(fila.guardado) ? local : fila.guardado;
+  return g ? { id: fila.id, g } : null;
+}
+
 async function cargar() {
   error = '';
-  if (!perfilActual()) { inv = null; return; }
+  if (!perfilActual()) { inv = null; abierta = null; return; }
   try {
-    const [i, r, h] = await Promise.all([D.miInventario(), D.miRecordHorda('orcos').catch(() => []), D.misHitosHorda('orcos').catch(() => [])]);
+    const [i, r, h, p] = await Promise.all([D.miInventario(), D.miRecordHorda('orcos').catch(() => []), D.misHitosHorda('orcos').catch(() => []), D.miPartidaHorda('orcos').catch(() => null)]);
+    abierta = partidaAbierta(p);
     inv = i; record = r?.[0]?.oleada || 0; hitos = new Set((h || []).map(x => x.oleada));
     if (inv && inv.runas_portal == null) error = 'Falta ejecutar docs/sql/006_horda.sql en el servidor.';
   } catch (e) { error = D.mensajeError(e); }
@@ -68,6 +81,7 @@ function pintar() {
         ${record ? `<div class="hd-record">🏆 Tu récord: oleada ${record}</div>` : ''}
         <p>Oleadas infinitas de 5 orcos, cada una más fuerte. Tu equipo conserva su vida entre oleadas. Retírate cuando quieras: te llevas todo tu botín.</p>
         <div class="hd-acciones">
+          ${abierta ? `<button id="hd-continuar" class="hd-btn">▶️ Continuar partida (oleada ${abierta.g.olas.length})</button>` : ''}
           <button id="hd-entrar" class="hd-btn" ${sinSesion || !runas || error ? 'disabled' : ''}>${ICONO_RUNA_PORTAL} Abrir portal (1 Runa)</button>
         </div>
         ${sinSesion ? '<p>⚠️ Inicia sesión para jugar la Horda.</p>' : error ? `<p>⚠️ ${error}</p>` : !runas ? '<p>No tienes Runas de Portal: gánalas en las Misiones diarias y en la Arena.</p>' : ''}
@@ -113,6 +127,7 @@ export async function abrirHorda() {
 }
 
 async function entrar() {
+  if (abierta && !confirm(`Tienes una partida en la oleada ${abierta.g.olas.length}. Si abres otro portal, esa partida se cierra (conservas su botín). ¿Abrir otro?`)) return;
   let col;
   try { col = await D.miColeccion(); } catch (e) { return alert(D.mensajeError(e)); }
   const propios = new Set((col || []).map(r => r.campeon));
@@ -121,11 +136,37 @@ async function entrar() {
     titulo: '🧟 Horda de Orcos · elige tu equipo', rivales: defsOleada(o), propios, volverTxt: '← Horda',
     alVolver: () => irA('horda'),
     alListo: async eqJ => {
-      let partida;
-      try { partida = await D.hordaEntrar('orcos'); } catch (e) { alert(D.mensajeError(e)); return irA('horda'); }
-      jugar(eqJ, defsOleada(o), { rival: o.opciones, horda: { partida, horda: 'orcos', n: 1, rango: o.rango, botin: { oro: 0, reliquias: [], fragmentos: 0 } } });
+      let partida, filasCol, filasRel;
+      try { [filasCol, filasRel] = await Promise.all([D.miColeccion(), D.misReliquias()]); partida = await D.hordaEntrar('orcos'); }
+      catch (e) { alert(D.mensajeError(e)); return irA('horda'); }
+      abierta = null;
+      const equipo = eqJ.map(p => p.id), botin = { oro: 0, reliquias: [], fragmentos: 0 };
+      // Todo lo necesario para reconstruir la partida; las estrellas y reliquias quedan congeladas mientras dure
+      const g = { partida, horda: 'orcos', semilla: Math.floor(Math.random() * 2 ** 31), equipo, olas: [o.enemigos], dec: [[]], marcas: {}, botin, botinHasta: 0,
+        cuenta: { col: (filasCol || []).filter(r => equipo.includes(r.campeon)), reliquias: (filasRel || []).filter(r => equipo.includes(r.campeon)) } };
+      guardarLocal(g); D.hordaGuardar(partida, g).catch(() => null);
+      jugar(eqJ, defsOleada(o), { rival: o.opciones, semilla: g.semilla, horda: { partida, horda: 'orcos', n: 1, rango: o.rango, botin, botinHasta: 0, g } });
     },
   });
+}
+
+// Continuar: reconstruye el combate desde la semilla y las decisiones. Si el juego cambió y ya no coincide, se cierra y se devuelve la Runa.
+async function continuar() {
+  const { id, g } = abierta, btn = $('#hd-continuar');
+  btn.disabled = true; btn.textContent = 'Retomando la partida…';
+  await new Promise(ok => setTimeout(ok, 30));              // deja pintar el botón: reconstruir bloquea un par de segundos
+  let rep;
+  try { rep = repetirHorda(g); }
+  catch (e) {
+    console.warn('Partida de Horda no reconstruible:', e);
+    let txt = 'Tu partida no se pudo retomar porque el juego se actualizó. El botín que ya cobraste es tuyo.';
+    try { txt += (await D.hordaNoReanudable(id)).devuelta ? ' Te devolvimos tu Runa de Portal.' : ''; borrarLocal(id); }
+    catch (e2) { txt = D.mensajeError(e2); }
+    alert(txt);
+    await cargar(); return pintar();
+  }
+  const n = g.olas.length, o = oleadaGuardada(g, n);
+  jugar(g.equipo.map(porId), defsGuardadas(g, n), { rival: o.opciones, horda: { partida: id, horda: g.horda, n, rango: o.rango, botin: g.botin, botinHasta: g.botinHasta, g, rep } });
 }
 
 async function comprar(id, confirmado = false) {
@@ -143,6 +184,7 @@ export function iniciarHorda(opc) {
   activarTip($('#pantalla-horda'), '.hd-rel', el => cartaPosible(el.dataset.id));
   $('#pantalla-horda').addEventListener('click', e => {
     if (e.target.closest('#hd-entrar')) return entrar();
+    if (e.target.closest('#hd-continuar')) return continuar();
     const f = e.target.closest('.hd-fil'); if (f) { filtro = f.dataset.rz; return pintar(); }
     const card = e.target.closest('.hd-rel');
     if (card && !conCursor()) {   // táctil: primer toque = ficha con lo que puede salir y su botón Comprar

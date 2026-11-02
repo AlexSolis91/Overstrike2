@@ -23,6 +23,8 @@ import { cargarCuenta, conCuenta, cuentaDesdeServidor } from './servicios/cuenta
 import * as D from './servicios/datos.js';
 import { oleada, defsOleada, HORDAS } from './datos/horda/horda.js';
 import { iniciarHorda, abrirHorda } from './ui/horda.js';
+import { huellaCombate } from './motor/hordaReanudar.js';
+import { guardarLocal, borrarLocal } from './servicios/hordaGuardada.js';
 import { iniciarArena, abrirArena } from './ui/arena.js';
 import { conectarVivo, swapUid, ganadorRelativo } from './servicios/arenaVivo.js';
 import { crearRng } from './motor/rng.js';
@@ -68,11 +70,12 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   partida++;
   inicioPartida = Date.now();
   const vivo = opciones?.arena?.vivo;
-  const cuenta = vivo ? cuentaDesdeServidor(opciones.arena.equipoMio) : await cargarCuenta();   // tus estrellas y reliquias pelean contigo
+  const hordaG = opciones?.horda?.g, rep = opciones?.horda?.rep;   // Horda: la cuenta queda congelada al abrir el portal; rep = partida reconstruida
+  const cuenta = vivo ? cuentaDesdeServidor(opciones.arena.equipoMio) : hordaG ? cuentaDesdeServidor(hordaG.cuenta) : await cargarCuenta();   // tus estrellas y reliquias pelean contigo
   eqJ = eqJ.map(d => conCuenta(d, cuenta));
   if (opciones?.arena?.equipoRival) { const cr = cuentaDesdeServidor(opciones.arena.equipoRival); eqR = eqR.map(d => conCuenta(d, cr)); }   // la Defensa de otro jugador con sus estrellas y reliquias
   if (opciones?.practicaArena) eqR = eqR.map(d => conCuenta(d, cuenta));     // práctica de Arena: tu propia Defensa, con tus estrellas y reliquias
-  combate = crearCombate({ equipoJugador: eqJ, equipoRival: eqR, rival: opciones?.rival, invertido: !!opciones?.invertido, ...(opciones?.semilla != null ? { semilla: opciones.semilla } : {}) });
+  combate = rep ? rep.combate : crearCombate({ equipoJugador: eqJ, equipoRival: eqR, rival: opciones?.rival, invertido: !!opciones?.invertido, ...(opciones?.semilla != null ? { semilla: opciones.semilla } : {}) });
   P = combate.personajes;
   const serie = opciones?.serie || 0;                         // en una serie de repeticiones siempre va en Auto y ×2
   ui = { actual: null, inspeccionado: P[0].uid, miTurno: false, movSel: null, objetivosValidos: null, tipoObjetivo: null, ocupado: true, opciones: null,
@@ -88,13 +91,27 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   refrescarPanel();
   actualizarJefe();
   mostrarRivalArena(opciones?.arena?.rival);
+  if (rep) restaurarHorda(rep);
   if (vivo) { ui.vivo = conectarVivo(opciones.arena, { alAbandonar: () => abandonoRival() }); ui.auto = false; marcarControles(); }
   else if (ui.arena) { ui.arena.decisiones = []; ui.arena.rnd = crearRng(semillaIA(opciones.semilla)); }   // contra una Defensa: se guardan las decisiones para verificarlas
   await wait(1100);
   await anunciar();
   if (vivo) { banner(`⚔️ EN VIVO vs ${opciones.arena.rival?.nombre || 'rival'}`, { size: 40, color: '#fde68a', hold: 1.2 }); await wait(1500); }
   else if (ui.arena?.rival?.nombre) { banner(`⚔️ vs ${ui.arena.rival.nombre}`, { size: 40, color: '#fde68a', hold: 1.2 }); await wait(1500); }
-  await procesar(combate.iniciar());
+  await procesar(rep ? { ...rep.r, eventos: [] } : combate.iniciar());
+}
+// Continuar una partida de Horda: las cartas toman el estado del combate reconstruido, sin animaciones
+function restaurarHorda(rep) {
+  for (const p of P) {
+    const v = vistas[p.uid] = combate.vista(p), c = cartas[p.uid];
+    if (v.forma) c.cambiarForma(v.forma);
+    c.aplicar(v, true);
+    if (v.muerto) FX.cartaMuerta(c);
+  }
+  if (rep.ronda != null) $('#round-label').textContent = `Ronda ${rep.ronda}`;
+  if (rep.orden) renderOrden(rep.orden, P, vistas);
+  refrescarPanel(); actualizarJefe();
+  log('▶️ Partida retomada', 'sys');
 }
 function crearCarta(p) {
   cartas[p.uid] = new Carta(p, colX(p.pos), p.lado === 'rival' ? 215 : 585, tocarCarta);
@@ -144,7 +161,7 @@ function limpiarPartida() {
   $('#log').innerHTML = ''; logLeido();
   $('#overlay').classList.add('hidden');
 }
-function salirDePartida() { if (ui.vivo && !ui.fin) { D.arenaVivoResultado(ui.arena.partida, ui.arena.soy === 'a' ? 'b' : 'a').catch(() => null); } ui.vivo?.cerrar(); ui.vivo = null; cerrarHorda(); $('#horda-ov').classList.add('hidden'); partida++; ui.miTurno = false; ui.ocupado = true; ui.serie = 0; serieT?.(); serieT = null; $('#overlay').classList.add('hidden'); setVelocidad(1); $('#jefe-barra').classList.add('hidden'); }
+function salirDePartida() { if (ui.vivo && !ui.fin) { D.arenaVivoResultado(ui.arena.partida, ui.arena.soy === 'a' ? 'b' : 'a').catch(() => null); } ui.vivo?.cerrar(); ui.vivo = null; $('#horda-ov').classList.add('hidden'); partida++; ui.miTurno = false; ui.ocupado = true; ui.serie = 0; serieT?.(); serieT = null; $('#overlay').classList.add('hidden'); setVelocidad(1); $('#jefe-barra').classList.add('hidden'); }
 
 // ---------------------------------------------------------------- Auto-batalla y velocidad (se recuerdan en este dispositivo)
 let autoActivo = false, velocidad = 1, serieT = null;
@@ -489,7 +506,7 @@ async function procesar(res) {
       const d = elegirIA(combate, ui.arena.rnd); ui.arena.decisiones.push({ c: d.categoria, o: d.objetivo || null });
       return procesar(combate.actuar(d));
     }
-    await procesar(combate.actuar(elegirIA(combate)));
+    await procesar(actuarGuardando(elegirIA(combate)));
   }
 }
 
@@ -548,21 +565,60 @@ function terminar(fin) {
 
 // ---------------------------------------------------------------- Horda: entre oleadas, retirarse y botín
 const miles = n => Math.round(n).toLocaleString('es-MX');
-async function cobrarOleada(h) {
+// Cada decisión queda guardada en este dispositivo antes de ejecutarse: si se cierra el juego, la partida se reconstruye igual
+function actuarGuardando(d) {
+  const g = ui.horda?.g;
+  if (g) { g.dec[g.dec.length - 1].push([d.categoria, d.objetivo || null]); guardarLocal(g); }
+  return combate.actuar(d);
+}
+const conTiempo = (promesa, ms) => Promise.race([promesa, new Promise((_, no) => setTimeout(() => no(new Error('Failed to fetch')), ms))]);
+// Espera a que vuelva la red, sin pasar de ms
+const esperarRed = ms => new Promise(ok => {
+  const listo = () => { clearTimeout(t); removeEventListener('online', listo); ok(); };
+  const t = setTimeout(listo, ms);
+  addEventListener('online', listo);
+});
+function avisoSinConexion(h) {
+  $('#horda-ov .hov-caja').innerHTML = `
+    <h2>📡 Sin conexión</h2>
+    <div class="hov-sub">Superaste la oleada ${h.n}. Reintentando cobrar tu botín…</div>
+    <div class="hov-sig">La partida sigue en cuanto vuelva la red. También puedes cerrar el juego: al volver, entra a Horda y pulsa Continuar partida.</div>`;
+  $('#horda-ov').classList.remove('hidden');
+}
+// El servidor no paga dos veces la misma oleada (docs/sql/022): se reintenta hasta cobrar, aunque la respuesta anterior se haya perdido
+async function cobrarOleada(h, esta) {
   if (!h.partida) return null;
-  try { return await D.hordaOleada(h.partida, h.n); }
-  catch (e) {                                            // el servidor pide 10 s entre oleadas: espera y reintenta una vez
-    if (!/rápido/i.test(e?.message || '')) throw e;
-    await wait(10500); return D.hordaOleada(h.partida, h.n);
+  for (let i = 0; ; i++) {
+    try { return await conTiempo(D.hordaOleada(h.partida, h.n), 15000); }
+    catch (e) {
+      if (esta !== partida) return null;
+      if (/rápido/i.test(e?.message || '')) await wait(10500);   // el servidor pide 10 s entre oleadas
+      else if (D.esErrorConexion(e)) { avisoSinConexion(h); await esperarRed(Math.min(2000 * 2 ** i, 15000)); }
+      else throw e;
+      if (esta !== partida) return null;
+    }
   }
 }
+function guardarEnServidor(h) { if (h.g) D.hordaGuardar(h.partida, h.g).catch(() => null); }
 async function oleadaGanada() {
   const h = ui.horda, esta = partida;
-  let r = null, error = '';
-  try { r = await cobrarOleada(h); } catch (e) { error = D.mensajeError(e); }
+  if (h.g) { h.g.marcas[h.n] = huellaCombate(combate); guardarLocal(h.g); }
+  let r = null;
+  try { r = await cobrarOleada(h, esta); }
+  catch (e) {                                            // el servidor rechazó el cobro: seguir peleando ya no pagaría nada
+    if (esta !== partida) return;
+    $('#horda-ov .hov-caja').innerHTML = `
+      <h2>⚠️ No se pudo cobrar la oleada ${h.n}</h2>
+      <div class="hov-sig">${D.mensajeError(e)}</div>
+      <div class="hov-botones"><button id="hov-retirar" class="hd-btn sec">🏳️ Terminar partida</button></div>`;
+    $('#horda-ov').classList.remove('hidden');
+    return;
+  }
   if (esta !== partida) return;
-  if (r) { h.botin.oro += r.oro + (r.hito?.oro || 0); if (r.reliquia) h.botin.reliquias.push(r.reliquia); h.botin.fragmentos += r.fragmentos;
-    h.botin.trofeos = (h.botin.trofeos || 0) + (r.trofeos || 0) + (r.hito?.trofeos || 0); if (r.hito?.epica) h.botin.reliquias.push(r.hito.epica); }
+  const yaSumada = (h.botinHasta || 0) >= h.n;           // al continuar una partida: esta oleada ya estaba en el botín
+  if (r && !yaSumada) { h.botin.oro += r.oro + (r.hito?.oro || 0); if (r.reliquia) h.botin.reliquias.push(r.reliquia); h.botin.fragmentos += r.fragmentos;
+    h.botin.trofeos = (h.botin.trofeos || 0) + (r.trofeos || 0) + (r.hito?.trofeos || 0); if (r.hito?.epica) h.botin.reliquias.push(r.hito.epica); h.botinHasta = h.n; }
+  if (h.g && r) { h.g.botin = h.botin; h.g.botinHasta = h.botinHasta; guardarLocal(h.g); guardarEnServidor(h); }
   h.prox = oleada(h.n + 1);
   const item = (img, txt, color = '#374151') => `<div class="hov-item" style="--rc:${color}">${img}${txt}</div>`;
   const rel = r?.reliquia && RELIQUIAS[r.reliquia.reliquia];
@@ -576,7 +632,6 @@ async function oleadaGanada() {
       ${r?.fragmentos ? item('<div style="font-size:34px">🔷</div>', `+${r.fragmentos} Fragmento(s) de Runa`) : ''}
       ${r?.trofeos ? item('<div style="font-size:34px">🏅</div>', `+${r.trofeos} Trofeo(s) de Orco`) : ''}
       ${r?.hito ? item('<div style="font-size:34px">🎉</div>', `<b>¡Primera vez en la oleada ${r.hito.oleada}!</b><br>${r.hito.oro ? `+${miles(r.hito.oro)} de oro 🪙` : `+${r.hito.runas_portal} ${ICONO_RUNA_PORTAL} Runas de Portal`}${r.hito.vales ? ` · +${r.hito.vales} vale(s) de sobre` : ''} · +${r.hito.trofeos} Trofeos${r.hito.epica ? ` · Épica: ${RELIQUIAS[r.hito.epica.reliquia]?.name || ''}` : ''}${r.hito.hazana ? '<br>🏆 <b>Hazaña conseguida:</b> ya puedes forjar Legendarias' : ''}`, '#f59e0b') : ''}
-      ${error ? `<div class="hov-sig">⚠️ ${error}</div>` : ''}
     </div>
     <div class="hov-total">Total: 🪙 ${miles(h.botin.oro)} · 💎 ${h.botin.reliquias.length} reliquia(s) · 🔷 ${h.botin.fragmentos} · 🏅 ${h.botin.trofeos || 0}</div>
     ${aviso ? `<div class="hov-sig">${aviso}</div>` : ''}
@@ -606,6 +661,7 @@ async function siguienteOleada() {
     const c = cartas[uid]; matarTweens(c.c); c.c.parent?.removeChild(c.c); if (!c.c.destroyed) c.c.destroy({ children: true });
     delete cartas[uid]; delete vistas[uid];
   }
+  if (h.g) { h.g.olas.push(o.enemigos); h.g.dec.push([]); guardarLocal(h.g); }
   const res = combate.siguienteOleada(defsOleada(o), o.opciones);
   P = combate.personajes;
   const nuevos = P.filter(p => p.uid.startsWith('rival-'));
@@ -622,7 +678,7 @@ function cerrarHorda() {
   const h = ui.horda;
   if (!h || h.cerrada) return Promise.resolve(null);
   h.cerrada = true;
-  return h.partida ? D.hordaTerminar(h.partida).catch(() => null) : Promise.resolve(null);
+  return h.partida ? D.hordaTerminar(h.partida).then(r => { borrarLocal(h.partida); return r; }).catch(() => null) : Promise.resolve(null);
 }
 async function finHorda(base, retirado) {
   const h = ui.horda, esta = partida;
@@ -632,7 +688,7 @@ async function finHorda(base, retirado) {
   const recompensas = [{ tipo: 'oro', cantidad: h.botin.oro },
     ...h.botin.reliquias.map(f => { const c = RELIQUIAS[f.reliquia]; return { tipo: 'reliquia', cantidad: 1, rareza: c?.rarity, nombre: c?.name, imagen: c?.imagen }; }),
     ...(h.botin.fragmentos ? [{ tipo: 'fragmento', cantidad: h.botin.fragmentos, nombre: 'Fragmentos de Runa' }] : [])];
-  const superadas = retirado ? h.n : h.n - 1;
+  const superadas = res?.oleada ?? (retirado ? h.n : h.n - 1);
   mostrarResultados({ ...base, gano: retirado, recompensas });
   $('#ov-title').textContent = retirado ? '🏳️ Te retiraste' : '☠️ Tu equipo cayó';
   $('#ov-sub').textContent = `Oleadas superadas: ${superadas}${res?.record ? ` · Tu récord: ${res.record}` : ''} · Te llevas todo el botín`;
@@ -730,7 +786,7 @@ async function ejecutar(categoria, objetivo) {
   setHint(''); refrescarPanel();
   if (ui.vivo) { ui.vivo.enviar(ui.vivo.turno, categoria, objetivo); ui.vivo.turno++; }   // en vivo: la decisión viaja al otro jugador
   if (ui.arena?.decisiones) ui.arena.decisiones.push({ c: categoria, o: objetivo || null });
-  await procesar(combate.actuar({ categoria, objetivo }));
+  await procesar(actuarGuardando({ categoria, objetivo }));
 }
 function elegirMovimiento(cat) {
   if (!ui.miTurno || ui.ocupado) return;
@@ -883,3 +939,4 @@ if (eqs && eqs.every(eq => eq.length === 5 && eq.every(Boolean))) {
   await presentarVS(...eqs);
   await iniciarPartida(...eqs);
 } else irA('menu', { reemplazar: true });
+
