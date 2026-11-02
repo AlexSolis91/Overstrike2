@@ -842,6 +842,12 @@ body.eq-campana .eq-modo, body.eq-campana .eq-azar[data-lado="rival"], body.eq-c
 .tc-slot small { position: absolute; left: 0; right: 0; bottom: 0; padding: 2px; font: 700 9px Inter, sans-serif; color: #e5e7eb; background: rgba(5, 8, 14, .78); }
 .tc-slot.cerrado { cursor: default; opacity: .6; border-style: solid; }
 .tc-slot-panel { display: grid; gap: 8px; padding-top: 4px; border-top: 1px solid rgba(255, 255, 255, .08); }
+.tc-slot-cab { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.tc-slot-cab h5 { margin: 0; }
+.tc-slot-cab label { display: flex; align-items: center; gap: 7px; font: 700 12px Inter, sans-serif; color: var(--muted); }
+.tc-slot-cab select { font: 700 12px Inter, sans-serif; color: var(--text); padding: 5px 8px; border-radius: 8px; background: rgba(5, 8, 14, .9); border: 1px solid rgba(243, 213, 138, .4); color-scheme: dark; cursor: pointer; }
+.tc-slot-cab small { font: 600 11px Inter, sans-serif; color: var(--muted); }
+.tc-rel-val { position: absolute; left: 3px; top: 3px; font: 900 11px Inter, sans-serif; font-style: normal; padding: 1px 5px; border-radius: 6px; color: #2a1d06; background: linear-gradient(180deg, #fff6d6, #f3d58a); box-shadow: 0 1px 4px rgba(0, 0, 0, .6); }
 /* apertura: cartas de reliquia */
 .ap-carta.reliquia .ap-img { inset: 6% 6% 26%; }
 .ap-carta.reliquia .ap-img img { object-fit: contain; object-position: center; }

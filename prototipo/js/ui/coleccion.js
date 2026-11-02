@@ -6,7 +6,7 @@ import { SOBRES } from '../datos/sobres.js';
 import { perfilActual } from './cuenta.js';
 import { revelarCartas } from './apertura.js';
 import * as D from '../servicios/datos.js';
-import { RAREZAS, ESPACIOS, STAT_META, instancia, calidad, motivoNoEquipar } from '../datos/reliquias.js';
+import { RAREZAS, ESPACIOS, STAT_META, PORCENTUALES, instancia, calidad, motivoNoEquipar } from '../datos/reliquias.js';
 import { cartaReliquia } from './panel.js';
 import { activarTip, comparacion, hojaTactil, conCursor, ocultarTip, cerrarHoja } from './tipReliquia.js';
 import { RECETAS, revisarReceta, proponerIngredientes } from '../datos/recetas.js';
@@ -28,6 +28,7 @@ let inv = { oro: 0, frag_runa: 0, frag_otros: 0, runas: 0, vales_sobre: 0, rel_s
 let rels = [], sinReliquias = false, hazana = null;   // copias de reliquias del jugador; hazana: superó la oleada 30 de la Horda (null = sin SQL 011)
 // (sinReliquias: falta docs/sql/005_reliquias.sql)
 let relFiltro = { cat: '', rareza: '' }, relSel = null, slotSel = null;   // pestaña Reliquias y espacio elegido en la ficha
+let relAtributo = '';                                                      // ficha: atributo por el que se filtran y ordenan las reliquias a equipar
 let relModo = 'ver', relMarcadas = new Set();
 let recetaSel = null, recetaMarcadas = new Set();   // pestaña Recetas: Legendaria elegida y las 10 Épicas que se entregan   // pestaña Reliquias: 'ver' | 'descomponer' | 'fusionar' y las reliquias elegidas
 // Polvo Arcano y fusión (igual que en el servidor, docs/sql/006_horda.sql)
@@ -156,11 +157,15 @@ function htmlReceta(id) {
 // ---------------------------------------------------------------- pestaña Reliquias (inventario)
 const ordenRel = (a, b) => RAREZAS[b.rarity].orden - RAREZAS[a.rarity].orden || calidad(b) - calidad(a) || a.name.localeCompare(b.name);
 const dondeEsta = r => r.campeon ? `${porId(r.campeon)?.nombre || r.campeon} · ${ESPACIOS.find(e => e.id === r.espacio)?.label || ''}` : '';
-function miniaturaRel(r, attrs = '') {
+// Cuánto da una reliquia de un atributo (su línea plana más sus tiradas; las porcentuales en fracción)
+const valorAtributo = (r, k) => [r.flat, ...r.rolls].reduce((s, [st, v]) => st === k ? s + v : s, 0);
+const txtAtributo = (k, v) => PORCENTUALES.includes(k) ? `+${Math.round(v * 1000) / 10}%` : `+${num(v)}`;
+const nombreAtributo = k => `${STAT_META[k].icon} ${STAT_META[k].label}${/Pct$/.test(k) ? ' %' : ''}`;
+function miniaturaRel(r, attrs = '', valor = '') {
   const conTip = attrs.includes('data-tip');   // con ficha flotante: sin el título nativo del navegador
   return `<button class="tc-rel ${r.campeon ? 'puesta' : ''} ${r.rarity === 'Legendario' ? 'legendaria' : ''} ${relMarcadas.has(r.uid) ? 'marcada' : ''}" data-uid="${r.uid}" ${attrs} style="--rc:${RAREZAS[r.rarity].color}" ${conTip ? 'data-x' : 'title'}=""${r.name} · ${r.rarity} · Calidad ${calidad(r)}%${r.campeon ? ` · en ${dondeEsta(r)}` : ''}">
     ${r.imagen ? `<img src="${r.imagen}" alt="" loading="lazy">` : `<span>${r.name}</span>`}
-    <i class="tc-rel-q">${calidad(r)}%</i>${r.campeon ? `<i class="tc-rel-en">${porId(r.campeon)?.emoji || '👤'}</i>` : ''}${r.bloqueada ? '<i class="tc-rel-lock">🔒</i>' : ''}</button>`;
+    ${valor ? `<i class="tc-rel-val">${valor}</i>` : ''}<i class="tc-rel-q">${calidad(r)}%</i>${r.campeon ? `<i class="tc-rel-en">${porId(r.campeon)?.emoji || '👤'}</i>` : ''}${r.bloqueada ? '<i class="tc-rel-lock">🔒</i>' : ''}</button>`;
 }
 function htmlReliquias() {
   if (sinReliquias) return '<p class="tc-vacio">Las reliquias se activan cuando se ejecute <b>docs/sql/005_reliquias.sql</b> en el servidor.</p>';
@@ -244,12 +249,18 @@ function htmlEspaciosReliquias(p, r) {
   let panel = '';
   if (slotSel) {
     const actual = equipo[slotSel], ctx = { equipo, abiertos, estrellas: r.estrellas };
-    const opciones = rels.filter(x => x.uid !== actual?.uid).map(x => ({ x, motivo: motivoNoEquipar(x, slotSel, ctx) }))
-      .filter(o => !o.motivo || /★/.test(o.motivo)).sort((a, b) => !!a.motivo - !!b.motivo || ordenRel(a.x, b.x));
+    const todas = rels.filter(x => x.uid !== actual?.uid).map(x => ({ x, motivo: motivoNoEquipar(x, slotSel, ctx) }))
+      .filter(o => !o.motivo || /★/.test(o.motivo));
+    // Filtro por atributo: solo los que dan las reliquias de este espacio; si el elegido no aplica aquí, se muestran todas
+    const atributos = Object.keys(STAT_META).filter(k => todas.some(o => valorAtributo(o.x, k) > 0));
+    const atr = atributos.includes(relAtributo) ? relAtributo : '';
+    const opciones = (atr ? todas.filter(o => valorAtributo(o.x, atr) > 0) : todas)
+      .sort((a, b) => !!a.motivo - !!b.motivo || (atr ? valorAtributo(b.x, atr) - valorAtributo(a.x, atr) : 0) || ordenRel(a.x, b.x));
     panel = `<div class="tc-slot-panel">
       ${actual ? `<div class="tc-rel-det">${cartaReliquia(actual)}<div class="tc-rel-acc"><button class="eq-btn" data-quitar="${actual.uid}">Quitar</button></div></div>` : ''}
-      <h5>${actual ? 'Cambiar por' : 'Elige una reliquia'}</h5>
-      ${opciones.length ? `<div class="tc-rels">${opciones.map(({ x, motivo }) => miniaturaRel(x, (motivo ? `data-motivo="${motivo}"` : `data-equipar="${x.uid}"`) + ' data-tip')).join('')}</div>`
+      <div class="tc-slot-cab"><h5>${actual ? 'Cambiar por' : 'Elige una reliquia'}</h5>
+        ${atributos.length ? `<label>Buscar por atributo <select data-atributo><option value="">Todas</option>${atributos.map(k => `<option value="${k}" ${k === atr ? 'selected' : ''}>${nombreAtributo(k)}</option>`).join('')}</select></label>${atr ? `<small>${opciones.length} reliquia${opciones.length === 1 ? '' : 's'}, de mayor a menor</small>` : ''}` : ''}</div>
+      ${opciones.length ? `<div class="tc-rels">${opciones.map(({ x, motivo }) => miniaturaRel(x, (motivo ? `data-motivo="${motivo}"` : `data-equipar="${x.uid}"`) + ' data-tip', atr ? txtAtributo(atr, valorAtributo(x, atr)) : '')).join('')}</div>`
         : '<p class="tc-tenue">No tienes reliquias que vayan en este espacio.</p>'}
       <p class="tc-tenue">${conCursor() ? 'Pasa el cursor por una reliquia para ver sus atributos y compararla con la equipada.' : 'Toca una reliquia para ver sus atributos y compararla con la equipada.'}</p>
       <p class="tc-tenue">Con ${r.estrellas}★ puede usar reliquias ${Object.entries(RAREZAS).filter(([, v]) => v.estrellas <= r.estrellas).map(([, v]) => v.plural).join(', ')}. Las grises necesitan más estrellas.</p></div>`;
@@ -536,6 +547,7 @@ export function iniciarColeccion() {
   $('#btn-tienda').addEventListener('click', () => abrirTC('tienda'));
   $('#btn-coleccion').addEventListener('click', () => abrirTC('coleccion'));
   $('#tc').addEventListener('click', ejecutar);
+  $('#tc').addEventListener('change', e => { if (e.target.matches('[data-atributo]')) { relAtributo = e.target.value; pintar(); } });
   activarTip($('#tc'), '.tc-slot-panel [data-tip]', el => fichaEquipar(el.dataset.uid));
   $('#starter').addEventListener('click', e => {
     if (e.target.closest('#starter-x')) return $('#starter').classList.add('hidden');
