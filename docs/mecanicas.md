@@ -702,6 +702,11 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - Pasiva `alDanoDoT` + `curar` con `base: 'dano'`: cura (o, con Quemadura Solar, daña) por el daño que activó la pasiva. Ra Modo Fénix: cada Quemadura sobre un enemigo con Quemadura Solar le hace el doble.
 - `reducirHpMax` con `porDebuffs: true`: el % se multiplica por los tipos de debuff que el objetivo tenía antes del movimiento (Cañón de las Llamas del Sol: 3% cada uno, máx. −30%).
 
+## Piezas del Capitán América (2026-11-02)
+- **Pasiva `porHpPerdido { cada, bono }`:** por cada tramo completo de HP que le falta, suma esas estadísticas (Capitán América: cada 10%, +5% Armadura, +5% Resistencia y +2% Bloqueo). Sube y baja con su HP y respeta los topes de cada estadística.
+- **Buffs y Escudo con `prob`:** una acción `efecto` de buff o `escudo` puede indicar `prob`. Sin ella siguen aplicándose siempre; nunca tiran Puntería.
+- **`ordenarBasico` con `todos` y `alObjetivo`:** `todos` hace actuar a quien lo usa y a todo su equipo, sin marca; `alObjetivo` manda los Básicos de un objetivo al enemigo elegido (si ya no es válido, a otro al azar). Los de área, propios o a un aliado funcionan normal. Con control o el Básico silenciado no actúan.
+
 ## 26. Misiones diarias y Runas de Portal (2026-10-26, `docs/sql/016_misiones_runas.sql`)
 - **Meta:** ~1 Runa de Portal al día por jugador activo.
 - **10 misiones diarias** (se renuevan a medianoche, hora de México; menú → 📜 Misiones, con contador de premios listos). Textos en `js/datos/misiones.js`, que debe coincidir con `public._misiones()`.

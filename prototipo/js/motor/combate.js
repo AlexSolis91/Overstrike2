@@ -170,6 +170,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (capas.permanente) for (const [k, v] of Object.entries(p.permanente || {})) {
       if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
     }
+    const php = p.pasiva?.porHpPerdido;                  // pasiva: +estadísticas por cada tramo completo de HP que le falta (p. ej. Capitán América)
+    if (capas.buffs && php && p.hp != null) {
+      const tramos = Math.floor(Math.max(0, 1 - p.hp / ((b.hp + flat.hp) * (1 + pct.hp) * todo)) / php.cada + 1e-9);
+      for (const [k, v] of Object.entries(php.bono)) sec[k] = (sec[k] || 0) + v * tramos;
+    }
     if (todo !== 1) for (const k of Object.keys(sec)) sec[k] *= todo;
     return {
       hp: (b.hp + flat.hp) * (1 + pct.hp) * todo,
@@ -230,7 +235,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'dmgUp': texto = `+${Math.round(e.valor * 100)}% Daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'taunt': texto = `Los enemigos deben atacarlo con sus movimientos de un objetivo · ${e.permanente ? 'permanente' : `${e.dur} ronda(s)`}`; n = e.permanente ? '∞' : e.dur; break;
         case 'frostAura': texto = `−${Math.round(BUFFS.auraGelida * 100)}% daño de golpes · ${Math.round(PUNTERIA.auraGelida * 100)}% de Congelar a quien lo golpee · ${e.permanente ? 'permanente' : `${e.dur} ronda(s)`}`; n = e.permanente ? '∞' : e.dur; break;
-        case 'mirror': texto = `Devuelve el ${Math.round(BUFFS.espejismo * 100)}% del daño de cada golpe recibido · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'mirror': texto = `Devuelve el ${Math.round(BUFFS.espejismo * 100)}% del daño de cada golpe recibido, incluido el absorbido por su Escudo · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'aguja': texto = `${e.valor} aguja(s): pierde ${Math.round(e.valor * DEBUFFS.agujaTurno * 1000) / 10}% del HP máx. al inicio de su turno y recibe +${Math.round(e.valor * DEBUFFS.aguja * 100)}% de daño de Veneno y Sangrado`; n = e.valor; break;
         case 'blockBuffs': texto = `No puede recibir buffs nuevos · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'selloMaldito': texto = `Sello de ${porUid(e.fuente)?.nombre || 'Orochimaru'}: ${Object.entries(e.bono || {}).map(([k, v]) => `+${Math.round(v * 100)}% ${{ dmgPct: 'Daño', hpPct: 'HP máx.', spdPct: 'Velocidad' }[k] || k}`).join(', ')}`; break;
@@ -1165,7 +1170,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   function intentarEfecto(a, t, acc) {
     const def = EFECTOS[acc.id];
     if (t.muerto) return;
-    if (def.tipo === 'buff') { aplicarEfecto(a, t, acc); return; }       // los buffs a aliados siempre se aplican
+    if (def.tipo === 'buff') {                                           // los buffs a aliados no tiran Puntería; solo su probabilidad, si la ficha la indica
+      if (acc.prob == null || rng() < acc.prob) aplicarEfecto(a, t, acc);
+      return;
+    }
     let prob = acc.prob;
     if (acc.probSiMasRapido != null && stats(t).spd > stats(a).spd) prob = acc.probSiMasRapido;
     if (acc.probSiConBuff != null && tieneBuff(t)) prob = acc.probSiConBuff;            // p. ej. ¡Te tengo!: 50% si tiene algún buff   // p. ej. Deep Freeze: 100% contra los más rápidos
@@ -1520,10 +1528,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           ganoTurnoExtra(t);
           break;
         case 'ordenarBasico': {        // cada aliado (no él) con esa marca usa su Básico: a un enemigo al azar (o a un aliado al azar si es de apoyo)
-          for (const x of aliadosDe(a).filter(x => x !== a && x.estados.some(e => e.id === acc.marca))) {
+          // todos: él primero y luego todo su equipo, sin marca; alObjetivo: los de un objetivo van al enemigo del movimiento si sigue siendo válido
+          const ordenados = acc.todos ? [a, ...aliadosDe(a).filter(x => x !== a)] : aliadosDe(a).filter(x => x !== a && x.estados.some(e => e.id === acc.marca));
+          for (const x of ordenados) {
             const mov = x.movimientos.find(m => m.categoria === 'basico');
             if (!mov || x.muerto || conControl(x) || get(x, 'silence')?.categoria === 'basico' || comprobarFin()) continue;
-            const v = objetivosValidos(x, mov), d = v.length ? rng.elegir(v) : null;
+            const v = objetivosValidos(x, mov), d = acc.alObjetivo && v.includes(ctx.objetivo) ? ctx.objetivo : v.length ? rng.elegir(v) : null;
             if ((mov.objetivo === 'enemigo' || mov.objetivo === 'aliado') && !d) continue;
             emitir('bonoVisible', { a: x.uid, texto: acc.texto || '¡A la orden!' }, x);
             ejecutarMovimiento(x, acc.factor != null && mov.pct ? { ...mov, pct: mov.pct * acc.factor } : mov, d, { reaccion: true });   // factor: % del daño normal
@@ -1545,6 +1555,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'invocarAzar': invocarAzar(t, acc.tabla, acc.rarezas, acc.renueva); break;
         case 'potenciarInvocaciones': potenciarInvocaciones(t, acc.potencia || 1, acc.renovar, acc.veces || 1, acc.conAparecer); break;
         case 'escudo':           // Escudo de pct × HP máx. (o la escala indicada) de quien lo pone, durante `dur` rondas (1 por defecto)
+          if (acc.prob != null && rng() >= acc.prob) break;
           darEscudo(a, t, baseDe(a, acc.escala || 'hpMax') * acc.pct, acc.dur ?? 1);
           break;
         case 'limpiar': ctx.limpiados = (ctx.limpiados || 0) + limpiar(a, t, acc); break;
