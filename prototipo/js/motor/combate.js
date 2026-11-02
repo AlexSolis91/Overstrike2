@@ -949,8 +949,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         danoEfecto(a, d2, exceso, mov.color, { sinArmadura: true });
       }
     }
-    if (get(t, 'mirror') && t.lado !== a.lado && !a.muerto && aHp + aEsc > 0)   // Espejismo: devuelve parte del golpe (daño por efecto, no es golpe)
-      danoEfecto(t, a, (aHp + aEsc) * BUFFS.espejismo, 0x67e8f9);
+    if (get(t, 'mirror') && t.lado !== a.lado && !a.muerto && aHp + aEsc > 0)   // Espejismo: devuelve parte del golpe (daño por efecto, no es golpe; ignora Armadura)
+      danoEfecto(t, a, (aHp + aEsc) * BUFFS.espejismo, 0x67e8f9, { sinArmadura: true });
     const aura = get(t, 'fireAura');
     if (aura && !t.muerto && !a.muerto && t.lado !== a.lado) {
       emitir('auraFuego', { a: t.uid, de: a.uid });

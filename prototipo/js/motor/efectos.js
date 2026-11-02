@@ -49,7 +49,7 @@ export const EFECTOS = {
     desc: `No puede usar su Especial ni su Over y hace −${p(1 - CONTROL.miedoDano)} de daño.` },
   // ---- Buffs
   mirror:  { nombre: 'Espejismo', icono: '🪞', color: 0x67e8f9, tipo: 'buff', tags: ['Reflejo'],
-    desc: `Cada golpe que recibe de un enemigo le devuelve al atacante el ${p(BUFFS.espejismo)} del daño, incluido el que absorba su Escudo (daño por efecto). Igual recibe el golpe completo.` },
+    desc: `Cada golpe que recibe de un enemigo le devuelve al atacante el ${p(BUFFS.espejismo)} del daño, incluido el que absorba su Escudo (daño por efecto que ignora Armadura). Igual recibe el golpe completo.` },
   orgullo: { nombre: 'Orgullo Sayajin', icono: '⚜️', color: 0x60a5fa, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Cargas de Vegeta (máx. 5): las gana cuando su Rival usa un movimiento y con sus críticos. Al llegar a 5 se transforma; Final Flash las consume para hacer más daño. No se disipa ni se limpia.' },
   aguja: { nombre: 'Aguja Escarlata', icono: '📍', color: 0xdc2626, tipo: 'marca', tags: ['Aguja'], noDisipable: true,
