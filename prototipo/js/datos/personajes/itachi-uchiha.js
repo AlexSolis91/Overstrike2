@@ -28,7 +28,7 @@ export default {
     {
       categoria: 'basico', nombre: 'Genjutsu de Cuervos', objetivo: 'enemigo', golpes: 2, estilo: 'ranged', color: 0x7f1d1d,
       pct: .37, escala: 'dano', cd: 0,
-      desc: '2 golpes de 37% con 30% de probabilidad de Miedo (actúa al final de la ronda y hace −25% de daño).',
+      desc: '2 golpes de 37% con 30% de probabilidad de Miedo (no puede usar Especial ni Over y hace −25% de daño).',
       efectos: [{ accion: { tipo: 'efecto', id: 'fear', dur: 2, prob: .30 } }],
     },
     {

@@ -134,7 +134,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | 🔇 Silencio | Bloquea al azar uno de sus movimientos que **no esté en cooldown** (dura rondas; al transformarse sigue bloqueada esa categoría). Si no tiene ningún movimiento usable, pierde el turno (con inmunidad anti-cadena). La Posesión gana: el poseído usa su Básico igual | — |
 | 👁️ Posesión | En su turno ataca a un aliado suyo al azar con su Básico | 2 turnos |
 | 🌀 Confusión | 50% de que un movimiento de un objetivo vaya a un personaje al azar (dura rondas) | — |
-| 😱 Miedo | Actúa al final de la ronda y hace −25% de daño (dura rondas) | — |
+| 😱 Miedo | No puede usar su **Especial** ni su **Over**, tampoco mediante pasivas o reacciones, y hace −25% de daño (dura rondas). Ya no cambia el orden de turnos. Con el Básico silenciado pierde el turno (como con Silencio) | — |
 | 🗣️ Incitar | Solo puede usar su **Básico** y solo contra **quien lo incitó**, aunque tenga Sigilo o haya Provocación (dura rondas). Si quien lo incitó muere, vuelve a actuar normal. Si su Básico está silenciado, pierde el turno. No quita turnos (no activa la regla anti-bloqueo) | — |
 
 - "Próximo turno" es literal: si aún no había actuado en la ronda, pierde ese mismo turno.
@@ -230,7 +230,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Efectos `cuando: 'antes'`:** se aplican a cada objetivo **antes** de golpear (p. ej. Ahora Nos Ves: robar todos los buffs y después atacar).
 - **Quemadura inextinguible** (`inextinguible: true` en la acción de Quemadura): **no se puede limpiar** (solo termina por duración). Si se fusiona con otra Quemadura, la fusionada queda inextinguible. Se muestra como ⚫🔥 Amaterasu. P. ej. Amaterasu de Sasuke.
 - **Acción `efecto` con `finDeRonda: true`** (y `dur: 1`): el efecto expira al final de la ronda en curso aunque el objetivo ya haya actuado (excepción a la regla general de duraciones). P. ej. Kamui de Obito: Sigilo hasta el final de la ronda en que lo golpearon.
-- **Acción `efecto`:** `probSiConBuff` (otra probabilidad si el objetivo tiene algún buff, sin contar invocaciones) e `irresistible: true` (siempre entra: sin tirada de Puntería vs Resistencia).
+- **Acción `efecto`:** `probSiPropioTiene { efecto, factor }` (multiplica la probabilidad si quien lo aplica tiene ese efecto; p. ej. Loki con Desgaste: ×0.5), `probSiConBuff` (otra probabilidad si el objetivo tiene algún buff, sin contar invocaciones) e `irresistible: true` (siempre entra: sin tirada de Puntería vs Resistencia).
 - `golpeExtraContra { efecto, prob }`: prob de **un** golpe más (mismo %) a **otro** enemigo que tenga ese efecto (nunca al mismo objetivo; si no hay otro, nada). Ese golpe no provoca otro. P. ej. Descarga de Escarcha de Jaina: 20% contra otro congelado.
 - `golpeExtraSiCritico`: si algún golpe fue crítico, **un** golpe más (máximo uno) al mismo objetivo; si murió, a un enemigo al azar (p. ej. Venganza Eterna de Scorpion).
 - `critExtraSi { teniaAntes, pct }`: +pct de Prob. Crítico contra los objetivos que **ya tenían** ese efecto **antes** del movimiento (p. ej. Deep Freeze: +50% contra los ya congelados).
@@ -238,6 +238,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - `ignoraArmadura`: resta **puntos** de Armadura al objetivo (0.10 = 40% → 30%; 1 = la ignora toda).
 - Condición `objetivoEfectoDurMin { efecto, dur }`: el objetivo tiene ese efecto con `dur` rondas o más (p. ej. Llamarada de Meleys: aturde si la Quemadura dura 4+).
 - `ignoraArmaduraSi { efecto, puntos }`: igual, pero solo contra objetivos que tienen ese efecto en el momento del golpe (p. ej. Ice Blast: 25 puntos contra congelados).
+- `bonoPorDuracionDebuffs { pct, max }`: +pct de daño por cada ronda restante de los debuffs del atacante y del objetivo; cada Veneno cuenta por separado y los debuffs sin duración no suman (p. ej. Truco de la Serpiente de Loki: +10%, máx. +100%).
 - `bonoPorAcumulacion { efecto, pct, max }`: +pct de daño por cada acumulación de ese efecto en el objetivo, hasta `max` acumulaciones (p. ej. Fatality de Reptile).
 - `bonoPorHpPerdido { cada, pct }`: +pct de daño por cada tramo completo de HP perdido del atacante.
 - `objetivo: 'azar'` + `golpes: N`: cada golpe va a un enemigo al azar (puede repetir; ignora Provocación; si el elegido ya cayó, va a otro vivo).
@@ -309,7 +310,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 - **Castigador de buffs** (pasiva): `cargasPorBuffEnemigo { efecto, max }` = cada buff que **recibe** un enemigo (por la vía normal; no los robados ni transferidos) le da 1 carga de ese tipo (p. ej. Poder Robado 💀 de Skeletor, máx. 10). `bonoPorBuffsObjetivo { pct, max }` = +pct de daño por cada buff activo del objetivo (sin contar invocaciones), hasta `max`.
 - **Efectos permanentes:** una pasiva puede declarar `efectosPermanentes: [ids]`: el personaje empieza con ese efecto **toda la partida** (sin duración, se ve con ∞). No se puede disipar ni robar, y otra aplicación del mismo efecto no lo cambia. P. ej. Lich King: Provocación permanente.
 - **Efecto propio persistente:** una pasiva puede declarar `efectoPropio: { id }` (p. ej. Shinobu con Veneno): el personaje empieza la partida con ese efecto aplicado a sí mismo y, si se le termina o se lo limpian, se le vuelve a aplicar al inicio de la ronda siguiente. A diferencia de `efectosPermanentes`, es un efecto normal (con su duración y su daño). Los movimientos pueden preguntar por él con la condición `propioTiene: <efecto>` (el que ejecuta lo tiene).
-- **Reducción para el equipo:** una pasiva puede declarar `reduccionAliados { pct, salvoSi }`: todo su equipo (incluido él) recibe −pct de **todo** el daño mientras viva y no tenga el efecto `salvoSi` (p. ej. Loki: −10% salvo con Desgaste).
+- **Reducción para el equipo:** una pasiva puede declarar `reduccionAliados { pct, salvoSi }`: todo su equipo (incluido él) recibe −pct de **todo** el daño mientras viva y no tenga el efecto `salvoSi` (p. ej. Loki: −20% salvo con Desgaste).
 - **Reducción propia:** una pasiva puede declarar `reduccionPropia { categoria, pct }`: reduce el daño de esa categoría que recibe **él mismo** (p. ej. Aldebarán: −15% de golpes). Se suma a la de líderes (tope 90%).
 - **Cargas:** una pasiva puede declarar `cargasAlRecibirGolpe { max }`: cada golpe de un enemigo le da 1 carga (Furia Dorada 🐂, se ve en su carta con el número), hasta `max`. Con un Control que le quite turnos no gana cargas. Las cargas **no se pueden disipar** (`noDisipable`).
 - **Debilidad a un DoT:** una pasiva puede declarar `debilidadA { efecto | [efectos], pct }`: recibe +pct de daño de esos DoT (se aplica después de las reducciones; incluye detonaciones y `activarDoT`). P. ej. Venom: +30% de Quemadura (el simbionte es débil al fuego).

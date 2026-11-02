@@ -46,7 +46,7 @@ export const EFECTOS = {
   incite:  { nombre: 'Incitar',      icono: '🗣️', color: 0xfb923c, tipo: 'debuff', tags: ['Control'],
     desc: `Solo puede usar su Básico y solo contra quien lo incitó (si ese enemigo muere, vuelve a actuar normal).` },
   fear:    { nombre: 'Miedo',        icono: '😱', color: 0x94a3b8, tipo: 'debuff', tags: ['Control'],
-    desc: `Actúa al final de la ronda y hace −${p(1 - CONTROL.miedoDano)} de daño.` },
+    desc: `No puede usar su Especial ni su Over y hace −${p(1 - CONTROL.miedoDano)} de daño.` },
   // ---- Buffs
   mirror:  { nombre: 'Espejismo', icono: '🪞', color: 0x67e8f9, tipo: 'buff', tags: ['Reflejo'],
     desc: `Cada golpe que recibe de un enemigo le devuelve al atacante el ${p(BUFFS.espejismo)} del daño (daño por efecto). Igual recibe el golpe completo.` },

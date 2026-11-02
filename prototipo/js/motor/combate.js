@@ -226,7 +226,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'plague': texto = `No puede recibir curaciones · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'blackPlague': texto = `No puede recibir curaciones · pierde ${Math.round(DEBUFFS.pesteNegra * 100)}% del HP máx. al final de su turno · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'confuse': texto = `50% de cambiar de objetivo · ${e.dur} ronda(s)`; n = e.dur; break;
-        case 'fear': texto = `Actúa al final de la ronda · −25% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'fear': texto = `Solo puede usar su Básico · −25% de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'dmgUp': texto = `+${Math.round(e.valor * 100)}% Daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'taunt': texto = `Los enemigos deben atacarlo con sus movimientos de un objetivo · ${e.permanente ? 'permanente' : `${e.dur} ronda(s)`}`; n = e.permanente ? '∞' : e.dur; break;
         case 'frostAura': texto = `−${Math.round(BUFFS.auraGelida * 100)}% daño de golpes · ${Math.round(PUNTERIA.auraGelida * 100)}% de Congelar a quien lo golpee · ${e.permanente ? 'permanente' : `${e.dur} ronda(s)`}`; n = e.permanente ? '∞' : e.dur; break;
@@ -309,8 +309,6 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
 
   // ================================================================ turnos
   function comparar(a, b) {
-    const fa = get(a, 'fear') ? 1 : 0, fb = get(b, 'fear') ? 1 : 0;   // Miedo: actúa al final de la ronda
-    if (fa !== fb) return fa - fb;
     return stats(b).spd - stats(a).spd || b.base.spd - a.base.spd || b.desempate - a.desempate;
   }
   const pendientes = () => P.filter(p => !p.muerto && !S.actuaron.has(p) && p !== S.actual).sort(comparar);
@@ -523,7 +521,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       if (n.muerto) { terminarTurno(n); continue; }
       if (procesarControl(n)) { terminarTurno(n); continue; }
       const ops = opciones(n);
-      if (!ops.some(o => o.disponible)) {            // Silencio: lo único listo está bloqueado -> pierde el turno
+      if (!ops.some(o => o.disponible)) {            // Silencio (o Silencio + Miedo): lo único listo está bloqueado -> pierde el turno
         emitir('pierdeTurno', { id: n.uid, motivo: 'silence' }, n);
         n.inmune = true; n.recienLiberado = true;
         terminarTurno(n); continue;
@@ -541,6 +539,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   const incitadoPor = p => { const e = get(p, 'incite'); const f = e && porUid(e.fuente); return f && !f.muerto && f.lado !== p.lado ? f : null; };
   // requiereInvocaciones { key, o }: tiene esa invocación, o al menos `o` invocaciones activas
   const puedeSacrificar = (p, r) => { const l = todos(p, 'summon'); return l.some(e => e.key === r.key) || l.length >= r.o; };
+  // Silencio bloquea su categoría; Miedo bloquea Especial y Over (también si los usaría una pasiva o reacción)
+  const movBloqueado = (p, categoria) => get(p, 'silence')?.categoria === categoria || (categoria !== 'basico' && !!get(p, 'fear'));
   function opciones(p) {
     const inc = incitadoPor(p);
     return p.movimientos.map(m => ({
@@ -549,7 +549,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       sellado: !!(p.sellado && p.pasiva.sello.categoria === m.categoria),
       sinCaidos: !!(m.requiereAliadoCaido && !P.some(x => x.lado === p.lado && x.muerto && x !== p)),   // p. ej. Edo Tensei
       sinSacrificio: !!(m.requiereInvocaciones && !puedeSacrificar(p, m.requiereInvocaciones)),          // p. ej. Canto del Dios del Sol
-      disponible: !(p.sellado && p.pasiva.sello.categoria === m.categoria) && !(m.requiereAliadoCaido && !P.some(x => x.lado === p.lado && x.muerto && x !== p)) && (p.cds[m.categoria] || 0) === 0 && get(p, 'silence')?.categoria !== m.categoria && (!inc || m.categoria === 'basico')
+      miedo: m.categoria !== 'basico' && !!get(p, 'fear'),
+      disponible: !(p.sellado && p.pasiva.sello.categoria === m.categoria) && !(m.requiereAliadoCaido && !P.some(x => x.lado === p.lado && x.muerto && x !== p)) && (p.cds[m.categoria] || 0) === 0 && !movBloqueado(p, m.categoria) && (!inc || m.categoria === 'basico')
         && !(m.unaVez && p.usados?.has(m.nombre)) && !(m.requiereInvocaciones && !puedeSacrificar(p, m.requiereInvocaciones)),
       cd: p.cds[m.categoria] || 0,
       objetivos: objetivosValidos(p, m).map(t => t.uid),
@@ -815,6 +816,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (mov.bonoPorDebuffs) {                // +pct por cada tipo distinto de debuff del objetivo (3 Venenos = 1 tipo)
       const tipos = new Set(t.estados.filter(e => EFECTOS[e.id]?.tipo === 'debuff').map(e => e.id));
       d *= 1 + tipos.size * mov.bonoPorDebuffs.pct;
+    }
+    if (mov.bonoPorDuracionDebuffs) {         // movimiento: +X% por cada ronda restante de los debuffs del atacante y del objetivo (con tope)
+      const b = mov.bonoPorDuracionDebuffs, rondas = [...a.estados, ...t.estados].reduce((s, e) => s + (EFECTOS[e.id]?.tipo === 'debuff' ? e.dur || 0 : 0), 0);
+      d *= 1 + Math.min(rondas * b.pct, b.max);
     }
     if (mov.bonoPorAcumulacion) {             // movimiento: +X% por cada acumulación de un efecto en el objetivo (con tope)
       const b = mov.bonoPorAcumulacion;
@@ -1164,6 +1169,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     let prob = acc.prob;
     if (acc.probSiMasRapido != null && stats(t).spd > stats(a).spd) prob = acc.probSiMasRapido;
     if (acc.probSiConBuff != null && tieneBuff(t)) prob = acc.probSiConBuff;            // p. ej. ¡Te tengo!: 50% si tiene algún buff   // p. ej. Deep Freeze: 100% contra los más rápidos
+    const psp = acc.probSiPropioTiene;                                   // otra probabilidad si quien lo aplica tiene ese efecto (p. ej. Loki con Desgaste: la mitad)
+    if (psp && get(a, psp.efecto)) prob = (prob ?? 1) * psp.factor;
     if (prob != null && rng() >= prob) return;                          // 1) probabilidad del movimiento (por defecto 100%): si falla, ni lo intenta
     const sa = stats(a), st = stats(t);                                  // 2) Puntería vs Resistencia
     const irresistible = acc.irresistible || (acc.irresistibleSi && get(t, acc.irresistibleSi))   // irresistible: siempre entra
@@ -1642,10 +1649,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         }
         case 'usarMovimiento': {            // usa uno de sus movimientos sobre el objetivo (funciona igual que el normal)
           // categoria 'disponible': uno al azar entre los que no están en cooldown ni silenciados (y que la IA usaría)
-          const mov = acc.categoria === 'disponible' ? rng.elegir(a.movimientos.filter(m => !(a.cds[m.categoria] > 0) && get(a, 'silence')?.categoria !== m.categoria && movimientoConviene(a, m)))
+          const mov = acc.categoria === 'disponible' ? rng.elegir(a.movimientos.filter(m => !(a.cds[m.categoria] > 0) && !movBloqueado(a, m.categoria) && movimientoConviene(a, m)))
             : a.movimientos.find(m => m.categoria === acc.categoria);
           const usar = d => {
-            if (!mov || a.muerto || !d || d.muerto || get(a, 'silence')?.categoria === mov.categoria) return;
+            if (!mov || a.muerto || !d || d.muerto || movBloqueado(a, mov.categoria)) return;
             if (acc.gastaCooldown) a.cds[mov.categoria] = cdDe(a, mov.cd || 0);     // gastaCooldown: entra en cooldown como si lo hubiera usado
             ejecutarMovimiento(a, mov, d, { reaccion: true, contraataque: !!acc.contraataque });
           };
@@ -1743,7 +1750,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (cond.objetivoMasHpQueYo) return !!ctx.objetivo && !!ctx.atacante && (ctx.hpObjetivoAntes ?? ctx.objetivo.hp) > ctx.atacante.hp;
     if (cond.objetivoOverListo) {      // el objetivo tiene su Over listo para usar (sin cooldown ni Silencio)
       const t = ctx.objetivo;
-      return !!t && t.movimientos.some(m => m.categoria === 'over') && !(t.cds.over > 0) && get(t, 'silence')?.categoria !== 'over';
+      return !!t && t.movimientos.some(m => m.categoria === 'over') && !(t.cds.over > 0) && !movBloqueado(t, 'over');
     }
     return true;
   }
