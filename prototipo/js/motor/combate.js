@@ -542,8 +542,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
 
   // Incitar: quien lo aplicó (si sigue vivo); mientras dure, solo puede usar el Básico y solo contra él
   const incitadoPor = p => { const e = get(p, 'incite'); const f = e && porUid(e.fuente); return f && !f.muerto && f.lado !== p.lado ? f : null; };
-  // requiereInvocaciones { key, o }: tiene esa invocación, o al menos `o` invocaciones activas
-  const puedeSacrificar = (p, r) => { const l = todos(p, 'summon'); return l.some(e => e.key === r.key) || l.length >= r.o; };
+  // requiereInvocaciones { key, o, oActiva }: tiene esa invocación, al menos `o` invocaciones activas, o la invocación `oActiva`
+  const puedeSacrificar = (p, r) => { const l = todos(p, 'summon'); return l.some(e => e.key === r.key || e.key === r.oActiva) || l.length >= r.o; };
   // Silencio bloquea su categoría; Miedo bloquea Especial y Over (también si los usaría una pasiva o reacción)
   const movBloqueado = (p, categoria) => get(p, 'silence')?.categoria === categoria || (categoria !== 'basico' && !!get(p, 'fear'));
   function opciones(p) {
@@ -1757,6 +1757,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (cond.objetivoEfectoDurMin) { const e = ctx.objetivo && get(ctx.objetivo, cond.objetivoEfectoDurMin.efecto); return !!e && (e.dur ?? 0) >= cond.objetivoEfectoDurMin.dur; }
     if (cond.algunGolpeadoTenia) return !!ctx.golpeadosTenian?.has(cond.algunGolpeadoTenia);
     if (cond.invocacionesMin) return (ctx.invocaciones || 0) >= cond.invocacionesMin;
+    if (cond.propioInvocacion) return !!ctx.ejecutor && todos(ctx.ejecutor, 'summon').some(e => e.key === cond.propioInvocacion);   // quien ejecuta tiene esa invocación activa
+    if (cond.propioSinInvocacion) return !!ctx.ejecutor && !todos(ctx.ejecutor, 'summon').some(e => e.key === cond.propioSinInvocacion);
     if (cond.objetivoEliminado) return !!ctx.objetivo?.muerto;
     if (cond.objetivoMasHpQueYo) return !!ctx.objetivo && !!ctx.atacante && (ctx.hpObjetivoAntes ?? ctx.objetivo.hp) > ctx.atacante.hp;
     if (cond.objetivoOverListo) {      // el objetivo tiene su Over listo para usar (sin cooldown ni Silencio)

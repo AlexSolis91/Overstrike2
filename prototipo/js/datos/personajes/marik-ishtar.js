@@ -88,11 +88,12 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Canto del Dios del Sol', objetivo: 'propio', estilo: 'support', color: 0xfacc15,
-      cd: 1, requiereInvocaciones: { key: 'huevoSol', o: 3 },
-      desc: 'Se cura 8% de su HP máx. Sacrifica el Huevo del Sol (o, si no lo tiene, 3 invocaciones) e invoca al Dragón Alado de Ra. Requiere el Huevo del Sol o 3 invocaciones.',
+      cd: 1, requiereInvocaciones: { key: 'huevoSol', o: 3, oActiva: 'raAlado' }, iaMinEnemigosCon: { efecto: 'solarBurn', min: 1, siInvocacion: 'raAlado' },
+      desc: 'Sin el Dragón Alado de Ra: se cura 4% de su HP máx. por cada enemigo con Quemadura Solar, sacrifica el Huevo del Sol (o, si no lo tiene, 3 invocaciones) e invoca a Ra; requiere el Huevo del Sol o 3 invocaciones. Con Ra ya en el campo: no sacrifica nada y esa curación es para todos los aliados.',
       efectos: [
-        { cuando: 'final', accion: { tipo: 'curar', pct: .08, escala: 'hpMax', a: 'propio' } },
-        { cuando: 'final', accion: { tipo: 'sacrificarInvocar', sacrificio: 'huevoSol', o: 3, key: 'raAlado', a: 'propio' } },
+        { cuando: 'final', condicion: { propioSinInvocacion: 'raAlado' }, accion: { tipo: 'curar', pct: .04, escala: 'hpMax', porEnemigoCon: 'solarBurn', a: 'propio' } },
+        { cuando: 'final', condicion: { propioInvocacion: 'raAlado' }, accion: { tipo: 'curar', pct: .04, escala: 'hpMax', porEnemigoCon: 'solarBurn', a: 'todosAliados' } },
+        { cuando: 'final', condicion: { propioSinInvocacion: 'raAlado' }, accion: { tipo: 'sacrificarInvocar', sacrificio: 'huevoSol', o: 3, key: 'raAlado', a: 'propio' } },
       ],
     },
   ],
