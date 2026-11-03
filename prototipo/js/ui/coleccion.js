@@ -17,7 +17,7 @@ import { habilidadesHtml } from './menu.js';
 const $ = s => document.querySelector(s);
 const ROL = { Support: 'Soporte', Invoker: 'Invocador' };
 const COSTO_ESPACIO = { copias: [1, 3, 5], oro: [100000, 500000, 1000000] };   // igual que en el servidor
-const FRAG_POR_RUNA = 20, BONO_ESTRELLA = 3;
+const FRAG_POR_RUNA = 50, BONO_ESTRELLA = 3;
 const num = n => Number(n || 0).toLocaleString('es-MX');
 const roles = p => [p.rol, p.rolSecundario].filter(Boolean).map(r => ROL[r] || r).join(' · ');
 const retrato = p => p.imagen ? `<img src="${p.imagen}" alt="" loading="lazy">` : `<span class="tc-emoji">${p.emoji}</span>`;

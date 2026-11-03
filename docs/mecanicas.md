@@ -537,13 +537,13 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
 Solo con sesión iniciada. Todo cambio lo valida el **servidor** (funciones de `docs/sql/002_coleccion.sql`); la pantalla solo muestra y pide.
 
 - **Starter Pack** (`js/ui/coleccion.js`): si la cuenta aún no eligió, al entrar al menú aparece *Elige tu Starter Pack* con los 3 packs. **Solo se muestra la imagen y el nombre** de cada sobre (sin tema, contenido ni cantidad): el jugador elige por el arte. Se elige **una sola vez**. Se puede cerrar ("más tarde"); Tienda y Colección lo vuelven a mostrar hasta elegir.
-- **Botones del menú:** 🛒 Tienda y 📚 Colección (solo con sesión). Abren la misma ventana con 3 pestañas. Arriba siempre: 🪙 oro, 🔮 runas, 🧩 fragmentos de runa x/20 (con barra) y 💠 otros fragmentos.
+- **Botones del menú:** 🛒 Tienda y 📚 Colección (solo con sesión). Abren la misma ventana con 3 pestañas. Arriba siempre: 🪙 oro, 🔮 runas, 🧩 fragmentos de runa x/50 (con barra) y 💠 otros fragmentos.
 - **Tienda:** los sobres activos (y dentro de sus fechas `desde`/`hasta`): solo imagen (o ícono), nombre y precio; sin tema ni contenido. Sin oro suficiente, el botón queda gris.
 - **Colección:** los campeones (los que no tienes en gris). Cada carta: estrellas y copias (×N). Al tocar uno:
   - ⭐ **Ascender:** la estrella N cuesta N copias (máximo 5★). Cada estrella: +3% a sus estadísticas.
   - 💎 **Espacios de reliquias:** el 1.º, 2.º y 3.º cuestan 1 / 3 / 5 copias **o** 100,000 / 500,000 / 1,000,000 de oro.
   - 🧩 **Desfragmentar:** cada copia = 3 fragmentos (1 o 2 de Runa de Invocación, el resto de otros tipos). Pide confirmación.
-- **Portal:** *Combinar* 20 fragmentos = 1 Runa. Elegir cualquier campeón y gastar 1 Runa para invocarlo (si ya lo tenía, suma copia).
+- **Portal:** *Combinar* 50 fragmentos = 1 Runa (antes 20; `docs/sql/023_runa_50_fragmentos.sql`). Elegir cualquier campeón y gastar 1 Runa para invocarlo (si ya lo tenía, suma copia).
 - **Animación de apertura** (`js/ui/apertura.js`, la misma para sobres, Starter Pack y Portal): el sobre flota y brilla → al tocarlo (o a los 5 s) tiembla cada vez más → estalla en un destello con chispas → las cartas salen boca abajo → se voltean **una por una** con rayos de luz del color del campeón y la etiqueta **¡NUEVO!** o **+1 copia**. Tocar acelera la revelación. Botón *Continuar* al final.
 - **Panel de administrador** (en 👤 Tu cuenta, solo rol admin): casilla de activo y precio de cada sobre (*Guardar sobres*) y *Dar oro* a un jugador por su nombre.
 - **Al agregar un campeón nuevo:** declarar `starter` y `sobres` en su ficha, correr `node herramientas/generar_catalogo.mjs` (desde `prototipo`) y ejecutar `docs/sql/catalogo.sql` en Supabase. Sin ese paso el servidor no lo puede dar en sobres.
