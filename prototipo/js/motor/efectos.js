@@ -128,6 +128,8 @@ export const EFECTOS = {
     desc: `+${p(BUFFS.perforacion)} de Penetración de escudo: esa parte del daño pasa directo al HP aunque el objetivo tenga Escudo.` },
   protect: { nombre: 'Protección', icono: '🔰', color: 0x60a5fa, tipo: 'buff', tags: ['Estadística'],
     desc: `+${p(BUFFS.proteccion)} de Resistencia: resiste mejor los debuffs.` },
+  auraLuz: { nombre: 'Aura de Luz', icono: '🌟', color: 0xfde68a, tipo: 'buff', tags: ['Curación'],
+    desc: `Las curaciones que recibe se multiplican ×${BUFFS.auraLuz}.` },
   regen:   { nombre: 'Regeneración', icono: '💚', color: 0x4ade80, tipo: 'buff', tags: ['Curación'],
     desc: `Al inicio de su turno se cura ${p(BUFFS.regeneracion)} de su HP máx.` },
   dmgUp:   { nombre: 'Furia',       icono: '⚔️', color: 0x4ade80, tipo: 'buff', tags: ['Estadística'],

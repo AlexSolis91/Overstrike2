@@ -753,6 +753,12 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 ## 31. Buscar reliquias por atributo (2026-11-01)
 - En la ficha del campeón, al elegir un espacio de reliquia, el selector **Buscar por atributo** muestra solo las reliquias que dan ese atributo, de mayor a menor (suma su línea plana y sus tiradas) y con el valor en cada miniatura. Las que aún no se pueden equipar por estrellas van al final. HP, Daño y Velocidad planos y sus versiones en % son opciones separadas. Solo ofrece atributos que existen entre las reliquias de ese espacio.
 
+## Piezas nuevas (2026-11-03, Nezuko Kamado)
+- **Buff Aura de Luz** (`auraLuz`, tag Curación): las curaciones que recibe el portador se multiplican ×2 (`BUFFS.auraLuz`). No duplica el daño que la Quemadura Solar hace con esas curaciones.
+- Gatillo de pasiva `alRecibirDano`: cualquier daño recibido (golpe, DoT o efecto). Con `unaVezPorMovimiento`: una vez por ataque.
+- Pasiva `danoPorCuracion { pct }`: pct de lo que realmente sanó cada curación del dueño se reparte al azar como daño por efecto entre los enemigos (aplica Armadura y Escudo). Ese daño no activa `alRecibirDano`, para que dos Nezuko no se reboten sin fin.
+- `reducirCooldown` con `azar: true`: baja una sola habilidad al azar entre las que estén en cooldown, sin contar el movimiento que se está usando.
+
 ## 32. Horda: cobro seguro y Continuar partida (2026-11-01, `docs/sql/022_horda_reanudar.sql`)
 - **Cobro seguro:** el juego no empieza la siguiente oleada hasta cobrar la anterior. Sin conexión reintenta solo, y si la respuesta se perdió, el servidor devuelve el mismo premio sin pagarlo otra vez.
 - **Continuar partida:** el combate se reconstruye con semilla + oleadas + decisiones (`motor/hordaReanudar.js`), así que retoma el turno exacto y recargar no cambia la suerte. Cada decisión se guarda en el dispositivo; al terminar cada oleada, también en el servidor (en otro dispositivo se retoma desde el inicio de esa oleada).

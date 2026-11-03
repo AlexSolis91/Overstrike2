@@ -44,6 +44,7 @@ export const BUFFS = {
   espejismo: .30,      // Espejismo: devuelve al atacante el 30% del daño de cada golpe recibido
   auraGelida: .20,     // Aura Gélida: −20% de daño de los golpes enemigos
   perforacion: .50,    // Perforación: +50% Penetración de escudo (puntos; tope 100%)
+  auraLuz: 2,          // Aura de Luz: multiplica las curaciones que recibe
 };
 
 // Valores fijos de debuffs universales
