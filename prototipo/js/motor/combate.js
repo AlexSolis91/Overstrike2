@@ -324,6 +324,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     S.ronda++;
     S.actuaron = new Set(); S.orden = [];
     for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; }
+    for (const x of P) {                                    // pasiva "revivirRonda": muerto, cada inicio de ronda puede revivir (una vez por partida)
+      const rr = x.pasiva?.revivirRonda;
+      if (!rr || !x.muerto || x.revivioRonda || x.noRevivir || rng() >= rr.prob) continue;
+      x.revivioRonda = true;
+      emitir('pasiva', { id: x.uid, nombre: x.pasiva.nombre });
+      revivir(x, rr.hp);
+      if (rr.alRevivir) ejecutarAccion(x, rr.alRevivir, {});
+    }
     emitir('ronda', { n: S.ronda, orden: ordenActual() });
     for (const l of P.filter(x => x.esLider && !x.muerto && x.lider?.alIniciarRonda)) {
       emitir('liderActua', { id: l.uid, nombre: l.lider.nombre });
@@ -1548,13 +1556,17 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         case 'ordenarBasico': {        // cada aliado (no él) con esa marca usa su Básico: a un enemigo al azar (o a un aliado al azar si es de apoyo)
           // todos: él primero y luego todo su equipo, sin marca; alObjetivo: los de un objetivo van al enemigo del movimiento si sigue siendo válido
-          const ordenados = acc.todos ? [a, ...aliadosDe(a).filter(x => x !== a)] : aliadosDe(a).filter(x => x !== a && x.estados.some(e => e.id === acc.marca));
+          // categoria: otro movimiento en vez del Básico; otros: sus aliados, sin marca; soloListo: solo si lo podría usar ahora; gastaCooldown: entra en cooldown
+          const cat = acc.categoria || 'basico';
+          const ordenados = acc.todos ? [a, ...aliadosDe(a).filter(x => x !== a)] : aliadosDe(a).filter(x => x !== a && (acc.otros || x.estados.some(e => e.id === acc.marca)));
           for (const x of ordenados) {
-            const mov = x.movimientos.find(m => m.categoria === 'basico');
-            if (!mov || x.muerto || conControl(x) || get(x, 'silence')?.categoria === 'basico' || comprobarFin()) continue;
+            const mov = x.movimientos.find(m => m.categoria === cat);
+            if (!mov || x.muerto || conControl(x) || get(x, 'silence')?.categoria === cat || comprobarFin()) continue;
+            if (acc.soloListo && (!opciones(x).find(o => o.categoria === cat)?.disponible || !movimientoConviene(x, mov) || mov.efectos?.some(e => e.accion.tipo === 'ordenarBasico'))) continue;   // sin cadenas de órdenes
             const v = objetivosValidos(x, mov), d = acc.alObjetivo && v.includes(ctx.objetivo) ? ctx.objetivo : v.length ? rng.elegir(v) : null;
             if ((mov.objetivo === 'enemigo' || mov.objetivo === 'aliado') && !d) continue;
             emitir('bonoVisible', { a: x.uid, texto: acc.texto || '¡A la orden!' }, x);
+            if (acc.gastaCooldown) x.cds[cat] = cdDe(x, mov.cd || 0);
             ejecutarMovimiento(x, acc.factor != null && mov.pct ? { ...mov, pct: mov.pct * acc.factor } : mov, d, { reaccion: true });   // factor: % del daño normal
           }
           break;
@@ -1766,6 +1778,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (cond.propioTiene) return !!ctx.ejecutor && !!get(ctx.ejecutor, cond.propioTiene);   // el que ejecuta tiene ese efecto (p. ej. Shinobu envenenada)
     if (cond.objetivoTiene) return !!(ctx.objetivo && get(ctx.objetivo, cond.objetivoTiene));
     if (cond.objetivoTeniaAntes) return [].concat(cond.objetivoTeniaAntes).some(id => ctx.teniaAntes?.has(id));
+    if (cond.objetivoTeniaDebuff) return [...(ctx.teniaAntes || [])].some(id => EFECTOS[id]?.tipo === 'debuff');   // cualquier debuff antes del golpe
     if (cond.rompioMega) return !!ctx.rompioMega;
     if (cond.objetivoConBuff) return !!ctx.objetivo && tieneBuff(ctx.objetivo);
     if (cond.equipo) return !!ctx.ejecutor && tieneEquipo(ctx.ejecutor, cond.equipo);
@@ -2045,6 +2058,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (!ctx.forzado && get(a, 'confuse') && (mov.objetivo === 'enemigo' || mov.objetivo === 'aliado') && rng() < CONTROL.confusionProb) {
       const nuevo = rng.elegir(P.filter(x => !x.muerto && x !== a));
       if (nuevo) { objetivo = nuevo; emitir('confundido', { id: a.uid, a: nuevo.uid }); }
+    }
+    if (mov.objetivo === 'todosEnemigos') for (const l of P.filter(x => x.lado !== a.lado && x.esLider && !x.muerto && x.lider?.alEnemigoAoe)) {   // líder "alEnemigoAoe": tira por cada aliado antes del ataque
+      const ae = l.lider.alEnemigoAoe;
+      for (const x of aliadosDe(l)) if (rng() < ae.prob) aplicarEfecto(l, x, { id: ae.id, dur: ae.dur });
     }
     // 'azar': cada golpe va a un enemigo al azar (puede repetir; ignora Provocación)
     const azar = mov.objetivo === 'azar' ? Array.from({ length: mov.golpes || 1 }, () => rng.elegir(enemigosDe(a))).filter(Boolean) : null;

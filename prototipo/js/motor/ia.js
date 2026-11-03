@@ -22,6 +22,8 @@ export function elegirIA(combate, rnd = Math.random) {
     const conMarca = id => P.filter(p => p.lado === a.lado && p !== a && !p.muerto && p.estados.some(e => e.id === id)).length;
     const om = (mov.efectos || []).find(e => e.accion.tipo === 'ordenarBasico')?.accion.marca;   // órdenes (p. ej. Yoda): sin aliados marcados no hace nada
     if (om && mov.objetivo !== 'aliado' && conMarca(om) < 2) continue;
+    const oc = (mov.efectos || []).find(e => e.accion.tipo === 'ordenarBasico' && e.accion.soloListo)?.accion.categoria;   // ordenar un movimiento (p. ej. Jon Snow): sin aliados listos no hace nada
+    if (oc && !P.some(p => p !== a && p.lado === a.lado && !p.muerto && !(p.cds[oc] > 0))) continue;
     const mc = mov.iaMinEnemigosCon;           // solo vale la pena si suficientes enemigos tienen ese efecto (p. ej. Mil Cortes Divinos); siInvocacion: solo cuenta con esa invocación activa
     if (mc && (!mc.siInvocacion || invocaciones(mc.siInvocacion))) { const en = P.filter(p => p.lado !== a.lado && !p.muerto); if (en.filter(p => p.estados.some(e => e.id === mc.efecto)).length < Math.min(mc.min, en.length)) continue; }
     if (mov.invocar) {

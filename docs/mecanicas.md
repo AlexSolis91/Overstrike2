@@ -759,6 +759,12 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - Pasiva `danoPorCuracion { pct }`: pct de lo que realmente sanó cada curación del dueño se reparte al azar como daño por efecto entre los enemigos (aplica Armadura y Escudo). Ese daño no activa `alRecibirDano`, para que dos Nezuko no se reboten sin fin.
 - `reducirCooldown` con `azar: true`: baja una sola habilidad al azar entre las que estén en cooldown, sin contar el movimiento que se está usando.
 
+## Piezas nuevas (2026-11-03, Jon Snow)
+- **Líder** `alEnemigoAoe { prob, id, dur }`: cuando un enemigo usa un movimiento de área, antes del ataque cada aliado tira `prob` de ganar ese buff (Príncipe Prometido: Esquiva Área, así que puede esquivar ese mismo ataque).
+- Pasiva `revivirRonda { prob, hp, alRevivir }`: si está muerto, al inicio de cada ronda tira `prob` de revivir con `hp`, una vez por partida, y ejecuta `alRevivir`.
+- `ordenarBasico` con `categoria` (otro movimiento en vez del Básico), `otros` (sus aliados, sin marca), `soloListo` (solo si lo podría usar ahora: cooldown, Silencio, Miedo, requisitos y conveniencia) y `gastaCooldown`. No encadena órdenes.
+- Condición `objetivoTeniaDebuff`: el objetivo tenía algún debuff antes del golpe.
+
 ## 34. Aviso de nueva versión (2026-11-03)
 - El juego revisa cada 2 minutos, al volver al menú y al volver a la pestaña si el `Last-Modified` de la página en el servidor es más nuevo que el de la cargada. GitHub Pages lo cambia en cada publicación, así que no hay que subir ningún número de versión a mano.
 - Si hay una nueva, el menú muestra abajo al centro **Actualizar nueva versión**. El botón vuelve a pedir los archivos `.js` y `.css` al servidor y recarga la página. No aparece en batalla, para no sacar a nadie de un combate.
