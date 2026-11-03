@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=19">
-  <link rel="stylesheet" href="menu.css?v=41">
+  <link rel="stylesheet" href="menu.css?v=42">
 </head>
 <body data-pantalla="cargando">
   <!-- ============================================================ LOBBY -->
@@ -28,6 +28,19 @@
       <h1 class="logo-titulo" aria-label="Overstrike 2"><span class="lg">O</span><span class="lp">V</span><span class="lp">E</span><span class="lp">R</span><span class="lp">S</span><span class="lp">T</span><span class="lp">R</span><span class="lp">I</span><span class="lp">K</span><span class="lg">E</span></h1>
     </div>
     <nav id="menu-modos"></nav>
+    <aside id="social" aria-label="Jugadores en línea y chat">
+      <button id="soc-cerrar" title="Cerrar">✕</button>
+      <div id="soc-sin" class="soc-vacio">Inicia sesión para ver quién está en línea, chatear y desafiar a otros jugadores.</div>
+      <div id="soc-con" class="hidden">
+        <section class="soc-lista"><h3><i class="soc-punto"></i> En línea <b id="soc-n">0</b></h3><ul id="soc-jug"></ul></section>
+        <section class="soc-chat">
+          <div id="soc-tabs"></div>
+          <div id="soc-msgs"></div>
+          <form id="soc-form" autocomplete="off"><input id="soc-texto" maxlength="300" placeholder="Escribe un mensaje…" aria-label="Mensaje"><button type="submit" class="eq-btn">Enviar</button></form>
+        </section>
+      </div>
+    </aside>
+    <button id="soc-abrir" title="Jugadores en línea y chat">💬<span id="soc-badge" class="hidden">0</span></button>
     <footer class="menu-pie"><div class="pie-botones"><button id="btn-tienda" class="eq-btn hidden">🛒 Tienda</button><button id="btn-coleccion" class="eq-btn hidden">📚 Colección</button><button id="btn-misiones" class="eq-btn hidden">📜 Misiones</button><button id="btn-cuenta" class="eq-btn">👤 Iniciar sesión</button><button id="menu-full" class="eq-btn">⛶ Pantalla completa</button><button class="eq-btn" data-abre-ajustes title="Sonido">🔊</button></div><span>Prototipo · v0.10</span></footer>
   </section>
 
@@ -220,6 +233,9 @@
     </main>
   </div>
 
+  <div id="desafio-aviso" class="hidden" role="alert"></div>
+  <div id="desafio-reloj" class="hidden"></div>
+  <div id="soc-toasts"></div>
   <div id="relic-pop" class="hidden"></div>
 
   <div id="ios-tip" class="hidden">

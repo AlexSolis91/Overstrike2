@@ -759,6 +759,12 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - Pasiva `danoPorCuracion { pct }`: pct de lo que realmente sanó cada curación del dueño se reparte al azar como daño por efecto entre los enemigos (aplica Armadura y Escudo). Ese daño no activa `alRecibirDano`, para que dos Nezuko no se reboten sin fin.
 - `reducirCooldown` con `azar: true`: baja una sola habilidad al azar entre las que estén en cooldown, sin contar el movimiento que se está usando.
 
+## 33. Panel social (2026-11-03, `docs/sql/024_social.sql`)
+- **En línea:** panel a la izquierda del menú (con sesión). Cada jugador avisa cada 15 s; cuenta como en línea si avisó en los últimos 70 s. Estado Libre o En combate.
+- **Chat:** global e individual, 300 caracteres, 1 mensaje por segundo, se guarda 7 días. Los privados solo los leen sus participantes, también si llegan sin estar conectado. Sin herramientas de moderación por decisión del usuario.
+- **Desafíos amistosos:** 30 s para aceptar o rechazar y 60 s para elegir 5 campeones de la colección; al acabarse el tiempo se completa con lo elegido, luego el Ataque de la Arena y luego al azar. La batalla usa la técnica de la Arena en vivo (`arena.amistoso`), sin premios, puntos ni ataques diarios. Rendirse avisa al rival al instante. Las dos pantallas deben tener la misma `VERSION`.
+- `arenaVivo.js`: el latido pide el turno que espera y el otro reenvía esa decisión si se perdió.
+
 ## 32. Horda: cobro seguro y Continuar partida (2026-11-01, `docs/sql/022_horda_reanudar.sql`)
 - **Cobro seguro:** el juego no empieza la siguiente oleada hasta cobrar la anterior. Sin conexión reintenta solo, y si la respuesta se perdió, el servidor devuelve el mismo premio sin pagarlo otra vez.
 - **Continuar partida:** el combate se reconstruye con semilla + oleadas + decisiones (`motor/hordaReanudar.js`), así que retoma el turno exacto y recargar no cambia la suerte. Cada decisión se guarda en el dispositivo; al terminar cada oleada, también en el servidor (en otro dispositivo se retoma desde el inicio de esa oleada).

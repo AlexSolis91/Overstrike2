@@ -264,6 +264,7 @@ export function iniciarMenu({ jugar, salirDePartida, abrirCampana, abrirHorda, a
 // Recupera la selección (al volver de una partida para "Cambiar equipo")
 export function cargarSeleccion(eqJ, eqR, rivalModo) { E.jugador = [...eqJ]; E.rival = rivalModo === 'construir' ? [...eqR] : []; E.rivalModo = rivalModo; E.editando = 'jugador'; }
 export const seleccion = () => ({ rivalModo: E.rivalModo });
+export const equipoElegido = () => [...E.jugador];
 // Modo Campaña: abre la construcción de equipo con el rival fijo de la etapa y solo los campeones propios
 export function equipoCampana({ titulo, rivales, propios, alListo, alVolver, volverTxt, sinRival = false, inicial = null }) {
   E.campana = { titulo, rivales, propios, alListo, alVolver, volverTxt, sinRival };

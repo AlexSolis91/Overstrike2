@@ -26,6 +26,7 @@ import { iniciarHorda, abrirHorda } from './ui/horda.js';
 import { huellaCombate } from './motor/hordaReanudar.js';
 import { guardarLocal, borrarLocal } from './servicios/hordaGuardada.js';
 import { iniciarArena, abrirArena } from './ui/arena.js';
+import { iniciarSocial } from './ui/social.js';
 import { conectarVivo, swapUid, ganadorRelativo } from './servicios/arenaVivo.js';
 import { crearRng } from './motor/rng.js';
 import { semillaIA } from './motor/verificar.js';
@@ -161,7 +162,7 @@ function limpiarPartida() {
   $('#log').innerHTML = ''; logLeido();
   $('#overlay').classList.add('hidden');
 }
-function salirDePartida() { if (ui.vivo && !ui.fin) { D.arenaVivoResultado(ui.arena.partida, ui.arena.soy === 'a' ? 'b' : 'a').catch(() => null); } ui.vivo?.cerrar(); ui.vivo = null; $('#horda-ov').classList.add('hidden'); partida++; ui.miTurno = false; ui.ocupado = true; ui.serie = 0; serieT?.(); serieT = null; $('#overlay').classList.add('hidden'); setVelocidad(1); $('#jefe-barra').classList.add('hidden'); }
+function salirDePartida() { if (ui.vivo && !ui.fin) { if (ui.arena.amistoso) { ui.vivo.rendirse(); D.desafioTerminar(ui.arena.partida).catch(() => null); } else D.arenaVivoResultado(ui.arena.partida, ui.arena.soy === 'a' ? 'b' : 'a').catch(() => null); } ui.vivo?.cerrar(); ui.vivo = null; $('#horda-ov').classList.add('hidden'); partida++; ui.miTurno = false; ui.ocupado = true; ui.serie = 0; serieT?.(); serieT = null; $('#overlay').classList.add('hidden'); setVelocidad(1); $('#jefe-barra').classList.add('hidden'); }
 
 // ---------------------------------------------------------------- Auto-batalla y velocidad (se recuerdan en este dispositivo)
 let autoActivo = false, velocidad = 1, serieT = null;
@@ -736,6 +737,13 @@ async function finArena(base, fin) {
 async function finVivo(base, fin) {
   const a = ui.arena, esta = partida, rel = ganadorRelativo(fin.ganador, a.soy);
   ui.vivo?.cerrar();
+  if (a.amistoso) {                                         // desafío amistoso: sin premios ni reporte de resultado
+    D.desafioTerminar(a.partida).catch(() => null);
+    mostrarResultados({ ...base, recompensas: [] });
+    $('#ov-title').textContent = fin.abandono ? '🏆 Victoria por abandono' : base.gano ? '🏆 Victoria' : base.empate ? 'Empate' : '💀 Derrota';
+    $('#ov-sub').textContent = `Desafío amistoso vs ${a.rival?.nombre || 'rival'} · sin premios`;
+    return;
+  }
   let r = null, error = '';
   for (let i = 0; i < 4; i++) {
     try { r = await D.arenaVivoResultado(a.partida, rel); } catch (e) { error = D.mensajeError(e); break; }
@@ -760,7 +768,7 @@ function botonesResultado(gano) {
   $('#ov-revancha').classList.toggle('hidden', h || (ar && !pr)); $('#ov-equipo').classList.toggle('hidden', h || ar);
   $('#ov-siguiente').classList.toggle('hidden', !(camp && gano && siguienteEtapa(camp)));
   $('#ov-revancha').textContent = camp ? '🔁 Repetir' : '⚔️ Revancha';
-  $('#ov-menu').textContent = camp ? '🌀 Portal' : h ? '🧟 Horda' : ar ? '🏟️ Arena' : '🏠 Menú';
+  $('#ov-menu').textContent = camp ? '🌀 Portal' : h ? '🧟 Horda' : ar && !ui.arena?.amistoso ? '🏟️ Arena' : '🏠 Menú';
 }
 // Serie de repeticiones: 5 s entre batallas (o lo que aún pida el servidor entre cobros) y lanza la siguiente en Auto ×2
 function programarRepeticion(esta) {
@@ -883,7 +891,7 @@ $('#ov-equipo').addEventListener('click', () => {
   if (c) return elegirEquipoEtapa(c.dif, c.etapa);
   cargarSeleccion(ultima.jugador.map(porId), ultima.rival.map(porId), ultima.rivalModo); irA('equipo');
 });
-$('#ov-menu').addEventListener('click', () => { serieT?.(); serieT = null; irA(ultima.opciones?.campana ? 'campana' : ultima.opciones?.horda ? 'horda' : ultima.opciones?.arena || ultima.opciones?.practicaArena ? 'arena' : 'menu'); });
+$('#ov-menu').addEventListener('click', () => { serieT?.(); serieT = null; irA(ultima.opciones?.campana ? 'campana' : ultima.opciones?.horda ? 'horda' : (ultima.opciones?.arena && !ultima.opciones.arena.amistoso) || ultima.opciones?.practicaArena ? 'arena' : 'menu'); });
 $('#ov-siguiente').addEventListener('click', () => { serieT?.(); const c = ultima.opciones?.campana, e = c && siguienteEtapa(c); if (e) elegirEquipoEtapa(c.dif, e); });
 $('#overlay').addEventListener('click', e => {
   const b = e.target.closest('#res-serie-stop'); if (!b) return;
@@ -930,6 +938,7 @@ iniciarMenu({ jugar: (j, r) => jugar(j, r, document.querySelector('.eq-modo butt
 iniciarCampana({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 iniciarHorda({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 iniciarArena({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
+iniciarSocial({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 let pendiente = null;
 try { pendiente = JSON.parse(sessionStorage.getItem('os2-partida') || 'null'); sessionStorage.removeItem('os2-partida'); } catch (e) { /* sin almacenamiento */ }
 const eqs = pendiente && [pendiente.jugador.map(porId), pendiente.rival.map(porId)];

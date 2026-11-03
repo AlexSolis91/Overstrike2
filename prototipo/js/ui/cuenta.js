@@ -5,7 +5,7 @@ import { configSobres, adminGuardarSobre, adminDarOro, catalogoProbabilidades, a
 import { SOBRES } from '../datos/sobres.js';
 
 const $ = s => document.querySelector(s);
-let perfil = null;                 // { nombre, rol, starter_elegido } del jugador conectado
+let perfil = null;                 // { id, nombre, rol, starter_elegido } del jugador conectado
 let modo = 'entrar';               // 'entrar' | 'crear'
 
 export const perfilActual = () => perfil;
@@ -60,8 +60,8 @@ async function cargarPerfil(sesion) {
   try {
     const sb = await supabase();
     const { data, error } = await sb.from('jugadores').select('nombre, rol, starter_elegido').eq('id', sesion.user.id).single();
-    perfil = error ? { nombre: sesion.user.email, rol: 'jugador', starter_elegido: null } : data;
-  } catch { perfil = { nombre: sesion.user.email, rol: 'jugador', starter_elegido: null }; }
+    perfil = { id: sesion.user.id, ...(error ? { nombre: sesion.user.email, rol: 'jugador', starter_elegido: null } : data) };
+  } catch { perfil = { id: sesion.user.id, nombre: sesion.user.email, rol: 'jugador', starter_elegido: null }; }
   pintarBoton();
 }
 // Avisa a las demás pantallas (Tienda, Colección, Starter Pack) que entró o salió alguien

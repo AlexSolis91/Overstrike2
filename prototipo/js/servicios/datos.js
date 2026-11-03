@@ -71,6 +71,19 @@ export const arenaVivoBuscar = (ataque, version) => rpc('arena_vivo_buscar', { p
 export const arenaVivoCancelar = () => rpc('arena_vivo_cancelar');
 export const arenaVivoResultado = (partida, ganador) => rpc('arena_vivo_resultado', { p_partida: partida, p_ganador: ganador });
 
+// Panel social: en línea, chat y desafíos amistosos
+export const socialLatido = estado => rpc('social_latido', { p_estado: estado });
+export const chatEnviar = (para, texto) => rpc('chat_enviar', { p_para: para, p_texto: texto });
+export const chatHistorial = con => rpc('chat_historial', { p_con: con });
+export const chatConversaciones = () => rpc('chat_conversaciones');
+export const chatLeer = con => rpc('chat_leer', { p_con: con });
+export const desafioEnviar = (para, version) => rpc('desafio_enviar', { p_para: para, p_version: version });
+export const desafioResponder = (id, aceptar, version) => rpc('desafio_responder', { p_id: id, p_aceptar: aceptar, p_version: version });
+export const desafioCancelar = id => rpc('desafio_cancelar', { p_id: id });
+export const desafioEquipo = (id, equipo) => rpc('desafio_equipo', { p_id: id, p_equipo: equipo });
+export const desafioDatos = id => rpc('desafio_datos', { p_id: id });
+export const desafioTerminar = id => rpc('desafio_terminar', { p_id: id });
+
 // Campaña: progreso (solo lectura) y cobrar una victoria (el servidor valida desbloqueo, tiempo entre repeticiones y paga)
 // Misiones diarias (docs/sql/016_misiones_runas.sql)
 export const misionesEstado = () => rpc('misiones_estado');
