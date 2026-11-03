@@ -1064,3 +1064,13 @@ body.eq-sin-rival .eq-fila[data-lado="rival"], body.eq-sin-rival .eq-modo { disp
   body.social-abierto #social { display: flex; }
   #soc-cerrar { display: block; }
 }
+
+/* ---------- aviso de nueva versión */
+#btn-actualizar { position: absolute; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 6; padding: 10px 18px; border: 1px solid var(--gold); border-radius: 8px; background: linear-gradient(180deg, #fde68a, #d4a017); color: #1a1405; font: 800 14px Inter, sans-serif; white-space: nowrap; cursor: pointer; animation: actualizar-pulso 1.8s ease-in-out infinite; }
+#btn-actualizar:disabled { opacity: .75; cursor: default; animation: none; }
+@keyframes actualizar-pulso { 50% { box-shadow: 0 0 18px rgba(253, 230, 138, .75); } }
+@media (max-width: 900px), (max-height: 520px) { #btn-actualizar { padding: 8px 14px; font-size: 13px; } }
+@media (max-width: 900px) and (min-height: 521px) { #pantalla-menu:has(#btn-actualizar:not(.hidden)) .menu-pie { bottom: 58px; } }   /* en celular, el pie sube para dejarle lugar */
+@media (max-width: 900px) and (min-height: 521px) and (max-height: 760px) { #pantalla-menu:has(#btn-actualizar:not(.hidden)) #menu-modos .modo:not(.activo) { display: none; } #pantalla-menu:has(#btn-actualizar:not(.hidden)) { justify-content: flex-start; padding-top: 44px; } }   /* celular chico: sin los modos "Próximamente" */
+@media (max-height: 520px) { #btn-actualizar { position: fixed; bottom: 6px; } }
+@media (prefers-reduced-motion: reduce) { #btn-actualizar { animation: none; } }

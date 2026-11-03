@@ -759,6 +759,10 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - Pasiva `danoPorCuracion { pct }`: pct de lo que realmente sanó cada curación del dueño se reparte al azar como daño por efecto entre los enemigos (aplica Armadura y Escudo). Ese daño no activa `alRecibirDano`, para que dos Nezuko no se reboten sin fin.
 - `reducirCooldown` con `azar: true`: baja una sola habilidad al azar entre las que estén en cooldown, sin contar el movimiento que se está usando.
 
+## 34. Aviso de nueva versión (2026-11-03)
+- El juego revisa cada 2 minutos, al volver al menú y al volver a la pestaña si el `Last-Modified` de la página en el servidor es más nuevo que el de la cargada. GitHub Pages lo cambia en cada publicación, así que no hay que subir ningún número de versión a mano.
+- Si hay una nueva, el menú muestra abajo al centro **Actualizar nueva versión**. El botón vuelve a pedir los archivos `.js` y `.css` al servidor y recarga la página. No aparece en batalla, para no sacar a nadie de un combate.
+
 ## 33. Panel social (2026-11-03, `docs/sql/024_social.sql`)
 - **En línea:** panel a la izquierda del menú (con sesión). Cada jugador avisa cada 15 s; cuenta como en línea si avisó en los últimos 70 s. Estado Libre o En combate.
 - **Chat:** global e individual, 300 caracteres, 1 mensaje por segundo, se guarda 7 días. Los privados solo los leen sus participantes, también si llegan sin estar conectado. Sin herramientas de moderación por decisión del usuario.

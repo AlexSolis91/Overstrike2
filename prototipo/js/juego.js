@@ -27,6 +27,7 @@ import { huellaCombate } from './motor/hordaReanudar.js';
 import { guardarLocal, borrarLocal } from './servicios/hordaGuardada.js';
 import { iniciarArena, abrirArena } from './ui/arena.js';
 import { iniciarSocial } from './ui/social.js';
+import { iniciarActualizacion } from './ui/actualizacion.js';
 import { conectarVivo, swapUid, ganadorRelativo } from './servicios/arenaVivo.js';
 import { crearRng } from './motor/rng.js';
 import { semillaIA } from './motor/verificar.js';
@@ -939,6 +940,7 @@ iniciarCampana({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) }
 iniciarHorda({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 iniciarArena({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 iniciarSocial({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
+iniciarActualizacion();
 let pendiente = null;
 try { pendiente = JSON.parse(sessionStorage.getItem('os2-partida') || 'null'); sessionStorage.removeItem('os2-partida'); } catch (e) { /* sin almacenamiento */ }
 const eqs = pendiente && [pendiente.jugador.map(porId), pendiente.rival.map(porId)];
