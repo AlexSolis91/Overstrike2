@@ -849,3 +849,6 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 ## 43. Rangos de daño de los cofres (2026-11-04, `docs/sql/030_raid_rangos.sql`)
 - Sustituyen a los de la sección 35. Valores al 100% (cofres 1 a 4): Fácil 15k/75k/150k/250k · Normal 30k/110k/225k/375k · Difícil 60k/150k/300k/500k · Brutal 90k/225k/450k/750k · Pesadilla 120k/300k/600k/1M.
 - Calibración: una cuenta avanzada con 3 llaves debe quedar en el cofre 2 de Difícil.
+
+## 44. Prueba de administrador en el Jefe de Raid (2026-11-04)
+- Un administrador puede abrir cualquier dificultad, también bloqueada o ya derrotada, con «🧪 Probar como admin», con su cuenta y el HP completo. La batalla corre solo en su pantalla (`raid.prueba`): el servidor no se entera, así que no gasta llaves, no da recompensas y no cuenta para el ranking, las misiones ni la barra de todos.

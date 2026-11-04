@@ -76,7 +76,7 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   inicioPartida = Date.now();
   const vivo = opciones?.arena?.vivo;
   const hordaG = opciones?.horda?.g, rep = opciones?.horda?.rep;   // Horda: la cuenta queda congelada al abrir el portal; rep = partida reconstruida
-  const cuenta = vivo ? cuentaDesdeServidor(opciones.arena.equipoMio) : opciones?.raid ? cuentaDesdeServidor(opciones.raid.equipoMio) : hordaG ? cuentaDesdeServidor(hordaG.cuenta) : await cargarCuenta();   // tus estrellas y reliquias pelean contigo
+  const cuenta = vivo ? cuentaDesdeServidor(opciones.arena.equipoMio) : opciones?.raid?.equipoMio ? cuentaDesdeServidor(opciones.raid.equipoMio) : hordaG ? cuentaDesdeServidor(hordaG.cuenta) : await cargarCuenta();   // tus estrellas y reliquias pelean contigo
   eqJ = eqJ.map(d => conCuenta(d, cuenta));
   if (opciones?.arena?.equipoRival) { const cr = cuentaDesdeServidor(opciones.arena.equipoRival); eqR = eqR.map(d => conCuenta(d, cr)); }   // la Defensa de otro jugador con sus estrellas y reliquias
   if (opciones?.practicaArena) eqR = eqR.map(d => conCuenta(d, cuenta));     // práctica de Arena: tu propia Defensa, con tus estrellas y reliquias
@@ -769,6 +769,7 @@ async function finArena(base, fin) {
 // Jefe de Raid: manda el daño (una sola vez) y, si la verificación está encendida, el servidor repite la batalla
 function enviarRaid() {
   const r = ui.raid;
+  if (r.prueba) return Promise.resolve(null);               // prueba de administrador: nada llega al servidor
   if (r.envio) return r.envio;
   const j = P.find(p => p.lado === 'rival');
   const dano = Math.max(0, Math.round(r.hpInicio - Math.max(0, j.hp)));
@@ -783,6 +784,16 @@ function enviarRaid() {
 }
 async function finRaid(base, fin) {
   const r = ui.raid, esta = partida;
+  if (r.prueba) {
+    const j = P.find(p => p.lado === 'rival'), dano = Math.max(0, Math.round(r.hpInicio - Math.max(0, j.hp)));
+    await wait(700);
+    if (esta !== partida) return;
+    mostrarResultados({ ...base, gano: j.muerto || !!fin.limite, empate: false, recompensas: [] });
+    const sin = document.querySelector('.res-sin'); if (sin) sin.textContent = 'Modo prueba: sin recompensas.';
+    $('#ov-title').textContent = j.muerto ? '🧪 Jefe derrotado (prueba)' : `🧪 ${miles(dano)} de daño (prueba)`;
+    $('#ov-sub').textContent = `${r.nombreDif} · Llegaste a la ronda ${fin.ronda} · No cuenta para nada`;
+    return;
+  }
   let res = null, error = '';
   try { res = await enviarRaid(); } catch (e) { error = D.mensajeError(e); }
   await wait(700);

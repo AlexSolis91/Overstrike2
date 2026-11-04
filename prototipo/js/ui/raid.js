@@ -2,7 +2,7 @@
 // La batalla la lleva juego.js (opciones.raid); el servidor cuenta el daño y paga (docs/sql/026_jefe_raid.sql).
 import * as D from '../servicios/datos.js';
 import { supabase } from '../servicios/supabase.js';
-import { perfilActual } from './cuenta.js';
+import { perfilActual, esAdmin } from './cuenta.js';
 import { equipoCampana, irA } from './menu.js';
 import { JEFES_RAID, DIFICULTADES_RAID, furiaAcumulada, opcionesRaid } from '../datos/jefes/raid.js';
 import { RELIQUIAS, RAREZAS } from '../datos/reliquias.js';
@@ -36,7 +36,7 @@ async function cargar() {
     error = /raid_estado|schema cache|does not exist/i.test(e?.message || '') ? 'Falta ejecutar docs/sql/026_jefe_raid.sql en el servidor.' : D.mensajeError(e);
   }
   const lista = E?.dificultades || [];
-  if (!lista.find(d => d.id === sel && d.abierta)) sel = [...lista].reverse().find(d => d.abierta && !d.derrotado)?.id || lista.find(d => d.abierta)?.id || null;
+  if (!lista.find(d => d.id === sel && (d.abierta || esAdmin()))) sel = [...lista].reverse().find(d => d.abierta && !d.derrotado)?.id || lista.find(d => d.abierta)?.id || null;
 }
 
 const faltan = ts => {
@@ -72,12 +72,13 @@ function pintar() {
         <p>Todos los jugadores atacan la misma barra. El día cierra a medianoche, hora de México.</p>
       </div>
       ${sinSesion ? '<div class="hd-panel"><p>⚠️ Inicia sesión para atacar al jefe.</p></div>' : error ? `<div class="hd-panel"><p>⚠️ ${error}</p></div>` : !E ? '<div class="hd-panel"><p>Cargando…</p></div>' : `
-      <div class="rd-difs">${E.dificultades.map(x => `<button class="rd-dif ${x.id === sel ? 'on' : ''}" data-dif="${x.id}" style="--dc:${DIFICULTADES_RAID[x.id].color}" ${x.abierta ? '' : 'disabled'}>${x.abierta ? (x.derrotado ? '✅ ' : '') : '🔒 '}${x.nombre}</button>`).join('')}</div>
+      <div class="rd-difs">${E.dificultades.map(x => `<button class="rd-dif ${x.id === sel ? 'on' : ''}" data-dif="${x.id}" style="--dc:${DIFICULTADES_RAID[x.id].color}" ${x.abierta || esAdmin() ? '' : 'disabled'}>${x.abierta ? (x.derrotado ? '✅ ' : '') : '🔒 '}${x.nombre}</button>`).join('')}</div>
       ${d ? `<div class="hd-panel">
         <div class="rd-hp"><i style="width:${Math.max(0, hp * 100)}%"></i><span>${miles(d.hp_restante)} / ${miles(d.hp_total)}</span></div>
         <p class="rd-mio">Tu daño hoy: <b>${miles(d.mi_dano)}</b>${d.cofre ? ` · Cofre ${d.cofre} de 4` : ' · Aún sin cofre'}${d.reclamado ? ' · ✅ Ya reclamaste este cofre' : sig > 0 && !d.derrotado ? ` · Faltan ${miles(sig)} para el siguiente` : ''}</p>
         ${d.derrotado ? '<p class="hd-nota">✅ El jefe ya cayó en esta dificultad. Vuelve mañana o ataca otra.</p>' : ''}
-        <button id="rd-atacar" class="hd-btn" ${!E.llaves || d.derrotado || ocupado ? 'disabled' : ''}>⚔️ Atacar (1 llave)</button>
+        <button id="rd-atacar" class="hd-btn" ${!E.llaves || d.derrotado || !d.abierta || ocupado ? 'disabled' : ''}>⚔️ Atacar (1 llave)</button>
+        ${esAdmin() ? '<button id="rd-probar" class="hd-btn sec">🧪 Probar como admin (sin llave)</button><p class="hd-nota">Prueba: cualquier dificultad, con el HP completo. No gasta llaves, no da recompensas y no cuenta para el ranking ni las misiones.</p>' : ''}
         ${!E.llaves ? `<p class="hd-nota">Sin llaves: recibes 1 cada 6 horas, hasta ${MAX_LLAVES}.</p>` : ''}
       </div>
       <div class="hd-panel"><h4>🎁 Rangos de ${d.nombre}</h4>${htmlRangos(d)}</div>` : ''}
@@ -100,16 +101,21 @@ function pintar() {
   pintarRelojes();
 }
 
-async function atacar() {
+// prueba (solo administrador): la batalla corre solo en esta pantalla; el servidor no se entera, así que no gasta ni paga nada
+async function atacar(prueba = false) {
   const d = E.dificultades.find(x => x.id === sel), jefe = JEFES_RAID[E.jefe];
   let propios;
   try { propios = new Set((await D.miColeccion()).map(c => c.campeon)); } catch (e) { return alert(D.mensajeError(e)); }
   if (propios.size < 5) return alert('Necesitas al menos 5 campeones en tu colección.');
   const { porId } = await import('../datos/personajes/index.js');
   equipoCampana({
-    titulo: `👑 ${jefe.nombre} · ${d.nombre} · elige tu equipo`, rivales: [jefe], propios, volverTxt: '← Jefe de Raid',
+    titulo: `${prueba ? '🧪 Prueba · ' : '👑 '}${jefe.nombre} · ${d.nombre} · elige tu equipo`, rivales: [jefe], propios, volverTxt: '← Jefe de Raid',
     alVolver: () => irA('raid'),
     alListo: async eqJ => {
+      if (prueba) return jugar(eqJ.map(p => porId(p.id)), [jefe], {
+        rival: opcionesRaid(d.id, d.hp_total, d.hp_total),
+        raid: { prueba: true, tema: jefe.musica, dificultad: d.id, nombreDif: `${d.nombre} · Prueba`, hpInicio: d.hp_total, hpTotal: d.hp_total, fondo: 'assets/fondos/raid-lich-king.webp' },
+      });
       let a;
       try { a = await D.raidEntrar(d.id, eqJ.map(p => p.id), VERSION); }
       catch (e) { alert(D.mensajeError(e)); return irA('raid'); }
@@ -168,6 +174,7 @@ export function iniciarRaid(opc) {
     const dif = e.target.closest('.rd-dif'); if (dif) { sel = dif.dataset.dif; return pintar(); }
     if (e.target.closest('#rd-premio-ok') || e.target.id === 'rd-premio') return $('#rd-premio').classList.add('hidden');
     if (e.target.closest('#rd-atacar')) return atacar();
+    if (e.target.closest('#rd-probar')) return atacar(true);
     const c = e.target.closest('.rd-reclamar'); if (c) return reclamar(c.dataset.dia, c.dataset.dif);
   });
 }
