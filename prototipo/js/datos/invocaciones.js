@@ -17,7 +17,7 @@ export const INVOCACIONES = {
   // vuelo: true → en el campo del jefe cruza la pantalla al aparecer y al atacar
   sindragosa: {
     nombre: 'Sindragosa', rareza: 'Legendario', emoji: '🐉', color: 0x38bdf8, imagen: 'assets/invocaciones/sindragosa.webp', dur: 2,
-    enfoque: [.62, .36], luminosa: true, vuelo: true,
+    enfoque: [.62, .36], vuelo: true,
     desc: 'La Reina de los Vermis de Escarcha. Al aparecer aplica Desgaste a todos los enemigos. Cada turno, Aliento de Escarcha: golpea 70% a todos los enemigos, con 25% de probabilidad de Congelación.',
     alAparecer: [{ tipo: 'efecto', id: 'wear', a: 'todosEnemigos' }],
     acciones: [{ tipo: 'golpe', pct: .70, elegir: 'todos', efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .25 } }] }],

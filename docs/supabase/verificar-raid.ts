@@ -302,7 +302,7 @@ const INVOCACIONES = {
   // vuelo: true → en el campo del jefe cruza la pantalla al aparecer y al atacar
   sindragosa: {
     nombre: 'Sindragosa', rareza: 'Legendario', emoji: '🐉', color: 0x38bdf8, imagen: 'assets/invocaciones/sindragosa.webp', dur: 2,
-    enfoque: [.62, .36], luminosa: true, vuelo: true,
+    enfoque: [.62, .36], vuelo: true,
     desc: 'La Reina de los Vermis de Escarcha. Al aparecer aplica Desgaste a todos los enemigos. Cada turno, Aliento de Escarcha: golpea 70% a todos los enemigos, con 25% de probabilidad de Congelación.',
     alAparecer: [{ tipo: 'efecto', id: 'wear', a: 'todosEnemigos' }],
     acciones: [{ tipo: 'golpe', pct: .70, elegir: 'todos', efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .25 } }] }],
@@ -8144,8 +8144,11 @@ function conCuenta(def, cuenta) {
 
 // Versión del juego (huella de las fichas y reliquias): en vivo solo se emparejan jugadores con la misma, y el servidor
 // solo verifica batallas jugadas con la versión que conoce
+// Lo que solo se ve no cambia una batalla: no debe obligar a volver a publicar la función que las verifica
+const VISUALES = new Set(['imagen', 'arteCarta', 'auraJefe', 'ambiente', 'emoji', 'color', 'enfoque', 'luminosa', 'vuelo', 'desc', 'nombre', 'estilo']);
+const sinVisuales = o => JSON.parse(JSON.stringify(o, (k, v) => VISUALES.has(k) ? undefined : v));
 const VERSION = (() => {
-  const t = JSON.stringify([OFICIALES.map(p => [p.id, p.base, p.extra, p.movimientos, p.pasiva, p.lider]), Object.keys(RELIQUIAS), JEFES_RAID, INVOCACIONES]);
+  const t = JSON.stringify([OFICIALES.map(p => [p.id, p.base, p.extra, p.movimientos, p.pasiva, p.lider]), Object.keys(RELIQUIAS), sinVisuales(JEFES_RAID), sinVisuales(INVOCACIONES)]);
   let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return String(h >>> 0);
 })();
 

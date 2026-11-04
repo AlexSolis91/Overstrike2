@@ -68,7 +68,6 @@ function pintar() {
   $('#rd-cuerpo').innerHTML = `
     <section>
       <div class="hd-tarjeta rd-tarjeta" style="background-image:url('assets/fondos/raid-lich-king.webp')">
-        <img class="rd-arte" src="${jefe.imagen}" alt="">
         <h3>👑 ${jefe.nombre}</h3>
         <p>Todos los jugadores atacan la misma barra. El día cierra a medianoche, hora de México.</p>
       </div>

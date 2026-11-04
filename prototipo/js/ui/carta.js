@@ -21,11 +21,11 @@ function puntoBorde() {                              // punto al azar del contor
 // Sombra y resplandores ya desenfocados (se crean una vez y los comparten todas las cartas)
 let TEX_SOMBRA, TEX_LIDER, TEX_FORMA, TEX_CORONA;
 
-// Aura de jefe (ficha: auraJefe), según su lore: corona que late, rayos que giran y partículas que suben desde los bordes
+// Aura de jefe (ficha: auraJefe), según su lore: corona que late y partículas que suben desde los bordes
 const AURAS_JEFE = {
-  hielo: { corona: 0x38bdf8, rayos: 0x7dd3fc, chispas: [0xffffff, 0xe0f2fe, 0x7dd3fc, 0x38bdf8], onda: 0xbae6fd },
-  fuego: { corona: 0xff7a1a, rayos: 0xffd36b, chispas: [0xfff3a0, 0xffc23a, 0xff8a1a, 0xff5a00], onda: 0xffb020 },
-  oscuro: { corona: 0x7c3aed, rayos: 0xa78bfa, chispas: [0xddd6fe, 0xa78bfa, 0x7c3aed, 0x4c1d95], onda: 0x8b5cf6 },
+  hielo: { corona: 0x38bdf8, chispas: [0xffffff, 0xe0f2fe, 0x7dd3fc, 0x38bdf8], onda: 0xbae6fd },
+  fuego: { corona: 0xff7a1a, chispas: [0xfff3a0, 0xffc23a, 0xff8a1a, 0xff5a00], onda: 0xffb020 },
+  oscuro: { corona: 0x7c3aed, chispas: [0xddd6fe, 0xa78bfa, 0x7c3aed, 0x4c1d95], onda: 0x8b5cf6 },
 };
 // Carta de jefe: la imagen completa dentro de un marco, sin nombre, barra ni estadísticas
 function texturaJefe(p) {
@@ -185,14 +185,8 @@ export class Carta {
     if (p.auraJefe) {
       const st = this.auraDeJefe = AURAS_JEFE[p.auraJefe];
       TEX_CORONA ||= texturaDesenfocada(CW + 10, CH + 10, 16, 9, { forma: 'borde', grosor: 12, color: '#ffffff', alpha: 1 });
-      const r = this.jefeRayos = new PIXI.Graphics();
-      for (let i = 0; i < 16; i++) {
-        const a = i * Math.PI / 8, b = i % 2 ? .05 : .08, L = i % 2 ? 165 : 200;
-        r.poly([0, 0, Math.cos(a - b) * L, Math.sin(a - b) * L, Math.cos(a + b) * L, Math.sin(a + b) * L]).fill({ color: st.rayos, alpha: i % 2 ? .10 : .17 });
-      }
-      r.blendMode = 'add';
       this.jefeCorona = new PIXI.Sprite(TEX_CORONA); this.jefeCorona.anchor.set(.5); this.jefeCorona.tint = st.corona; this.jefeCorona.blendMode = 'add';
-      body.addChildAt(this.jefeCorona, 0); body.addChildAt(r, 0);
+      body.addChildAt(this.jefeCorona, 0);
       this.jefeOnda = 2;
     }
     this.statusRow = new PIXI.Container(); this.statusRow.y = CH / 2;   // sobre el borde inferior de la carta
@@ -269,12 +263,11 @@ export class Carta {
 
   tickAuraJefe(dt, T, x, y) {
     const vivo = !this.v?.muerto, st = this.auraDeJefe;
-    this.jefeCorona.visible = this.jefeRayos.visible = vivo;
+    this.jefeCorona.visible = vivo;
     if (!vivo) return;
     const k = this.c.scale.x * this.body.scale.x, cy = y + this.body.y * this.c.scale.y;
     this.jefeCorona.alpha = .7 + .3 * Math.sin(T * 1.8);
     this.jefeCorona.scale.set(1 + .03 * Math.sin(T * 1.8));
-    this.jefeRayos.rotation += .004 * dt; this.jefeRayos.alpha = .75 + .25 * Math.sin(T * 1.3);
     if (Math.random() < (MOVIL ? .7 : 1.4) * dt) {
       const b = puntoBorde();
       spawn({ x: x + (b.x + b.nx * rand(0, 6)) * k, y: cy + (b.y + b.ny * rand(0, 6)) * k, vx: b.nx * rand(.2, .8) + rand(-.2, .2), vy: rand(-1, -2.6) + b.ny * .4,

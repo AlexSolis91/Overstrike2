@@ -1081,7 +1081,6 @@ body.social-min #soc-abrir { display: block; }
 /* Jefe de Raid */
 .rd-tarjeta { min-height: 240px; border-color: rgba(125, 211, 252, .45); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: flex-end; }
 .rd-tarjeta h3 { color: #bae6fd; }
-.rd-arte { position: absolute; right: 14px; top: 14px; width: 150px; border-radius: 10px; border: 1px solid rgba(186, 230, 253, .6); }
 .rd-difs { display: flex; gap: 6px; margin-top: 10px; overflow-x: auto; }
 .rd-dif { flex: 1 0 auto; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--dc); background: rgba(8, 11, 18, .85); color: var(--dc); font-weight: 800; cursor: pointer; }
 .rd-dif.on { background: var(--dc); color: #0b1220; }
