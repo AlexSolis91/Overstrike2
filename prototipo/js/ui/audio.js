@@ -1,6 +1,6 @@
 // Reproductor de audio: efectos (archivos del registro SONIDOS) y música en bucle con transiciones.
 // Los navegadores solo dejan sonar una página después de que el jugador toca algo: el audio se activa con el primer toque.
-import { SONIDOS, MUSICA } from '../datos/sonidos.js';
+import { SONIDOS, MUSICA, VOLUMEN_MUSICA } from '../datos/sonidos.js';
 
 const AJ = { musica: .5, efectos: .8, mudo: false, overRapido: false };
 try { Object.assign(AJ, JSON.parse(localStorage.getItem('os2-audio') || '{}')); } catch (e) { /* sin almacenamiento */ }
@@ -78,8 +78,8 @@ const rutaDe = nombre => {
 };
 function pista(nombre) {
   if (pistas[nombre]) return pistas[nombre];
-  const el = new Audio(); el.src = rutaDe(nombre); el.loop = nombre === 'menu' || nombre === 'batalla' || nombre.startsWith('horda'); el.preload = 'auto'; el.crossOrigin = 'anonymous';
-  const p = pistas[nombre] = { el, gain: ctx.createGain(), ok: true };
+  const el = new Audio(); el.src = rutaDe(nombre); el.loop = nombre !== 'victoria' && nombre !== 'derrota'; el.preload = 'auto'; el.crossOrigin = 'anonymous';
+  const p = pistas[nombre] = { el, gain: ctx.createGain(), ok: true, vol: VOLUMEN_MUSICA[nombre] ?? 1 };
   p.gain.gain.value = 0;
   ctx.createMediaElementSource(el).connect(p.gain); p.gain.connect(busMusica);   // por Web Audio: el volumen funciona también en iPhone
   el.addEventListener('error', () => { p.ok = false; });
@@ -104,7 +104,7 @@ export function musica(nombre) {
   const p = pista(nombre);
   if (!p.ok) return;
   p.el.currentTime = 0;
-  p.el.play().then(() => desvanecer(p, 1, 1.2)).catch(() => { /* el navegador aún no deja: sonará al próximo toque */ });
+  p.el.play().then(() => desvanecer(p, p.vol, 1.2)).catch(() => { /* el navegador aún no deja: sonará al próximo toque */ });
   actual = { nombre, p };
 }
 // Fin de partida: se va la música de batalla y suena el tema de Victoria o Derrota; la del menú entra "retrasoMenu" ms
