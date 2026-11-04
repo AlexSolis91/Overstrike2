@@ -845,3 +845,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 
 ## 42. Hemorragia contra jefes (2026-11-04)
 - Contra un Jefe de Raid crece 10 veces más lento (+0.1 puntos por golpe, `CRECE_HEMO_RAID`), porque su barra no se acaba en una pelea y sin esto crecía hasta 300%. Contra todos los demás sigue igual (+1 por golpe).
+
+## 43. Rangos de daño de los cofres (2026-11-04, `docs/sql/030_raid_rangos.sql`)
+- Sustituyen a los de la sección 35. Valores al 100% (cofres 1 a 4): Fácil 15k/75k/150k/250k · Normal 30k/110k/225k/375k · Difícil 60k/150k/300k/500k · Brutal 90k/225k/450k/750k · Pesadilla 120k/300k/600k/1M.
+- Calibración: una cuenta avanzada con 3 llaves debe quedar en el cofre 2 de Difícil.
