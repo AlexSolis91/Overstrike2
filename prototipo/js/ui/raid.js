@@ -78,7 +78,7 @@ function pintar() {
         <p class="rd-mio">Tu daño hoy: <b>${miles(d.mi_dano)}</b>${d.cofre ? ` · Cofre ${d.cofre} de 4` : ' · Aún sin cofre'}${sig > 0 ? ` · Faltan ${miles(sig)} para el siguiente` : ''}</p>
         ${d.derrotado ? '<p class="hd-nota">✅ El jefe ya cayó en esta dificultad. Vuelve mañana o ataca otra.</p>' : ''}
         <button id="rd-atacar" class="hd-btn" ${!E.llaves || d.derrotado || ocupado ? 'disabled' : ''}>⚔️ Atacar (1 llave)</button>
-        ${!E.llaves ? '<p class="hd-nota">Sin llaves: recibes 1 cada 6 horas, hasta ${MAX_LLAVES}.</p>' : ''}
+        ${!E.llaves ? `<p class="hd-nota">Sin llaves: recibes 1 cada 6 horas, hasta ${MAX_LLAVES}.</p>` : ''}
       </div>
       <div class="hd-panel"><h4>🎁 Rangos de ${d.nombre}</h4>${htmlRangos(d)}</div>` : ''}
       ${E.cofres.length ? `<div class="hd-panel"><h4>🧰 Tus cofres</h4>${E.cofres.map(c => `<div class="rd-cofre"><span><b>${c.nombre}</b> · Cofre ${c.cofre} de 4 · ${miles(c.dano)} de daño${c.derrotado ? ' · ×2' : ''}</span>
