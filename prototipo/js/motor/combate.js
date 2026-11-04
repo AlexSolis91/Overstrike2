@@ -912,7 +912,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       if (prot.hp <= 0) morir(prot, a);
     }
     const hpAntesGolpe = t.hp;
-    const { aHp, aEsc } = repartir(t, d, sa.pen);
+    const { aHp, aEsc } = repartir(t, d, mov.ignoraEscudo ? 1 : sa.pen);   // ignoraEscudo: el golpe pasa por encima del Escudo y no lo gasta
     if (aHp > 0) t.perdidoGolpesRonda = (t.perdidoGolpesRonda || 0) + aHp;   // reliquia "recuperaGolpes"
     if (ctx.acum) ctx.acum.dano += aHp + aEsc;
     const des = get(t, 'wear');                // Desgaste: cada golpe recibido (no bloqueado) quita 5 puntos más de Armadura
@@ -992,7 +992,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       const bl = get(t, 'bleed');
       if (bl) danoDoT(t, bl.valor, 'bleed', fuentesDe([bl]));
       const hm = get(t, 'hemo');
-      if (hm && !t.muerto) { danoDoT(t, hm.valor, 'hemo', fuentesDe([hm])); hm.valor += DOT.hemorragiaCrece; emitir('actualizar', {}, t); }
+      if (hm && !t.muerto) {
+        danoDoT(t, hm.valor, 'hemo', fuentesDe([hm]));
+        hm.valor += DOT.hemorragiaCrece * (t.barra?.creceHemo ?? 1);   // Jefe de Raid: crece más lento (su barra no se acaba en una pelea)
+        emitir('actualizar', {}, t);
+      }
     }
     // gatillo "al romperse una capa de hielo" de un ENEMIGO del dueño de la pasiva (solo por golpes)
     if (quiebre) for (const p of P) if (!p.muerto && p.lado !== t.lado && p.pasiva?.gatillo === 'alRomperCapa')
@@ -1929,7 +1933,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         emitir('invocacionAtaca', { de: a.uid, key: e.key, idx, a: t.uid });
         const extra = acc.golpeExtraSi && get(t, acc.golpeExtraSi) ? 1 : 0;   // p. ej. Drogon: 2.º golpe si tiene Quemadura
         resolverSobreObjetivo(a, t, { nombre: def.nombre, categoria: 'invocacion', pct: acc.pct * potencia, escala: acc.escala || 'dano',
-          golpes: (acc.golpes || 1) + extra, color: def.color, efectos: acc.efectos }, { fuente: def.nombre });
+          golpes: (acc.golpes || 1) + extra, color: def.color, efectos: acc.efectos, ignoraEscudo: acc.ignoraEscudo }, { fuente: def.nombre });
         emitir('invocacionVuelve', { de: a.uid, key: e.key });
         procesarReacciones();
       }
@@ -2215,7 +2219,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   for (const p of P) p.hp = stats(p).hp;      // con todos creados: incluye bonos de líder al HP máx. (el líder se crea antes que su equipo)
   if (opcionesRival.barra) {                  // Jefe de Raid: su HP real es la barra compartida; stats(p).hp queda de referencia para los efectos por % de HP
     const j = P.find(x => x.lado === 'rival');
-    j.barra = { total: opcionesRival.barra.total }; j.hp = opcionesRival.barra.hp;
+    j.barra = { total: opcionesRival.barra.total, creceHemo: opcionesRival.barra.creceHemo }; j.hp = opcionesRival.barra.hp;
   }
 
   return {

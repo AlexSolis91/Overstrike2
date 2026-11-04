@@ -801,7 +801,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
   - `rival.limiteRondas`: límite de rondas por modo.
   - `rival.furiaRonda { desde, dmgPct, texto }`: el equipo rival gana daño cada ronda desde `desde`.
   - `rival.dmgPct`: daño por dificultad sin tocar el HP.
-- **Lich King jefe** (`js/datos/jefes/lich-king.js`, ficha distinta del campeón): Daño 70, Velocidad 100, Armadura 20%, Resistencia 50%, HP de referencia 3,000. Inmune a Control. Ciclo: Invierno sin Remordimiento → Segador de Almas → Invierno → Segador → Furia de Frostmourne. Daño por dificultad: ×1, ×1.5, ×2, ×3, ×4.
+- **Lich King jefe** (`js/datos/jefes/lich-king.js`, ficha distinta del campeón): Daño 175, Velocidad 100, Armadura 20%, Resistencia 50%, HP de referencia 3,000. Inmune a Control. Ciclo: Invierno sin Remordimiento → Segador de Almas → Invierno → Segador → Furia de Frostmourne. Daño por dificultad: ×1, ×1.25, ×1.5, ×2, ×2.5 (175, 219, 263, 350 y 438).
 - **Campo:** `js/ui/ambiente.js`. Fondo propio, nieve constante y un efecto por movimiento (campo `ambiente` de la ficha): `ventisca` (tormenta de nieve), `rayos` (rayos de hielo), `furia` (destello, tormenta máxima y rayos a todos). Cada campeón caído manda su alma al jefe. 
 
 ## 36. Ajustes del Jefe de Raid, Sindragosa y desfragmentar en lote (2026-11-04, `docs/sql/027_raid_ajustes.sql`)
@@ -810,7 +810,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - **Resultados:** el título sale en rojo solo si tu equipo cayó. Llegar a la ronda 30 o derrotar al jefe no se ve como derrota.
 - **Carta de jefe** (`arteCarta` en la ficha): solo la imagen completa, sin nombre, barra ni estadísticas. Los datos siguen en el panel y en la barra compartida.
 - **Aura de jefe** (`auraJefe`: `hielo`, `fuego` u `oscuro`): corona que late, partículas y ondas, con los colores de `AURAS_JEFE` en `js/ui/carta.js`.
-- **Sindragosa** (invocación, Legendario, `js/datos/invocaciones.js`): la invoca Furia de Frostmourne. Actúa 2 veces y se puede Disipar. Al aparecer aplica Desgaste a todos los enemigos; cada turno, Aliento de Escarcha: 70% a todos, con 25% de Congelación.
+- **Sindragosa** (invocación, Legendario, `js/datos/invocaciones.js`): la invoca Furia de Frostmourne. Actúa 2 veces y se puede Disipar. Al aparecer aplica Desgaste a todos los enemigos; cada turno, Aliento de Escarcha: 70% a todos, ignorando Escudos (`ignoraEscudo`: no los gasta), con 25% de Congelación.
 - **`vuelo: true`** en una invocación: en el campo del jefe aparece grande en el centro por 2 segundos, lanza rayos de hielo en todas direcciones y trae tormenta y sacudida, al ser invocada y al atacar (`vueloInvocacion` en `js/ui/ambiente.js`). Su imagen está recortada, así que se ve sólida.
 - **`VERSION`** ahora incluye a los jefes y las invocaciones, sin sus datos solo visuales (imagen, color, aura, descripción…). Con fichas nuevas, una función `verificar-raid` vieja acepta el daño reportado en vez de rechazarlo.
 - **Función `verificar-raid`:** se genera con `node prototipo/herramientas/empaquetar_verificador.mjs` y lleva el motor adentro. Hay que generarla y publicarla otra vez cuando cambien las fichas, las invocaciones o el motor de combate. Un cambio solo en el motor no cambia `VERSION`, así que en ese caso **se debe publicar antes de que los jugadores ataquen**: una repetición que no coincide cuenta 0 de daño.
@@ -837,3 +837,6 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 ## 41. Ventana de premios del Jefe de Raid (2026-11-04, `docs/sql/028_raid_reclamado.sql`)
 - Reclamar un cofre o ganar una receta abre una ventana con el estilo del botín de la Horda: emojis, la imagen de la Runa de Portal y la de cada reliquia.
 - `raid_estado` indica si ya reclamaste el cofre de cada dificultad, y la pantalla lo muestra junto a tu daño. Un cofre reclamado sale de «Tus cofres».
+
+## 42. Hemorragia contra jefes (2026-11-04)
+- Contra un Jefe de Raid crece 10 veces más lento (+0.1 puntos por golpe, `CRECE_HEMO_RAID`), porque su barra no se acaba en una pelea y sin esto crecía hasta 300%. Contra todos los demás sigue igual (+1 por golpe).

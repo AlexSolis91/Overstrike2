@@ -18,9 +18,9 @@ export const INVOCACIONES = {
   sindragosa: {
     nombre: 'Sindragosa', rareza: 'Legendario', emoji: '🐉', color: 0x38bdf8, imagen: 'assets/invocaciones/sindragosa.webp', dur: 2,
     enfoque: [.62, .36], vuelo: true,
-    desc: 'La Reina de los Vermis de Escarcha. Al aparecer aplica Desgaste a todos los enemigos. Cada turno, Aliento de Escarcha: golpea 70% a todos los enemigos, con 25% de probabilidad de Congelación.',
+    desc: 'La Reina de los Vermis de Escarcha. Al aparecer aplica Desgaste a todos los enemigos. Cada turno, Aliento de Escarcha: golpea 70% a todos los enemigos, ignorando sus Escudos, con 25% de probabilidad de Congelación.',
     alAparecer: [{ tipo: 'efecto', id: 'wear', a: 'todosEnemigos' }],
-    acciones: [{ tipo: 'golpe', pct: .70, elegir: 'todos', efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .25 } }] }],
+    acciones: [{ tipo: 'golpe', pct: .70, elegir: 'todos', ignoraEscudo: true, efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .25 } }] }],
   },
   // ---------------------------------------------------------------- Naruto
   clonSombra: {

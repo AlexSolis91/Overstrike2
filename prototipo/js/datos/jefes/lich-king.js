@@ -9,7 +9,7 @@ export default {
   arteCarta: 'assets/personajes/lich-king-jefe-carta.webp',   // la carta del campo es solo esta imagen, sin barra ni estadísticas
   musica: 'jefeLichKing',                                    // pista exclusiva de este jefe (MUSICA en js/datos/sonidos.js)
   auraJefe: 'hielo',                                         // aura de la carta: hielo · fuego · oscuro
-  base: { hp: 3000, dmg: 70, spd: 100 },
+  base: { hp: 3000, dmg: 175, spd: 100 },
   extra: { armor: .20, res: .50 },
   slots: [],
   ciclo: ['especial', 'basico', 'especial', 'basico', 'over'],   // siempre en este orden; la pantalla muestra lo que sigue
