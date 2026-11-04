@@ -32,7 +32,7 @@ export const MUSICA = {
 
 const sfx = n => `assets/audio/sfx/${n}.mp3`;
 export const SONIDOS = {
-  clic:                 { archivo: sfx('boton'), v: .8, gap: 30 },
+  clic:                 { archivo: sfx('boton-ps4'), v: .8, gap: 30 },
   golpe:                { archivo: sfx('golpe'), v: .85, var: .05, gap: 35 },
   critico:              { archivo: sfx('critico'), v: 1, var: .03, gap: 150 },  // bate de home run (2.1 s)
   escudoGolpe:          { archivo: sfx('golpe'), v: .55, var: .05, gap: 35 },
