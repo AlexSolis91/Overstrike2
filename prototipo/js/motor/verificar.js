@@ -6,6 +6,7 @@ import { elegirIA } from './ia.js';
 import { crearRng } from './rng.js';
 import { porId } from '../datos/personajes/index.js';
 import { cuentaDesdeServidor, conCuenta } from '../datos/cuenta.js';
+import { JEFES_RAID, opcionesRaid } from '../datos/jefes/raid.js';
 
 export const semillaIA = semilla => (semilla ^ 0x5bd1e995) >>> 0;
 
@@ -32,5 +33,32 @@ export function repetirCombate(c) {
     }
     const gano = r.fin?.ganador === 'jugador' && !r.fin?.limite;
     return { ok: gano === !!c.gano, ganador: r.fin?.ganador, limite: !!r.fin?.limite, motivo: gano === !!c.gano ? '' : 'El resultado no coincide' };
+  } catch (e) { return { ok: false, motivo: String(e?.message || e) }; }
+}
+
+// Jefe de Raid. a: fila de raid_ataques (semilla, dificultad, hp_inicio, hp_total, equipo, equipo_datos, decisiones).
+// El daño es lo que baja la barra al repetir. Se permite terminar antes de tiempo (el jugador abandonó): cuenta lo jugado.
+export function repetirRaid(a, jefe = 'lich-king') {
+  try {
+    const eq = a.equipo.map(porId);
+    if (eq.some(x => !x)) return { ok: false, motivo: 'Campeón desconocido' };
+    const cuenta = cuentaDesdeServidor(a.equipo_datos);
+    const combate = crearCombate({ equipoJugador: eq.map(d => conCuenta(d, cuenta)), equipoRival: [JEFES_RAID[jefe]], semilla: Number(a.semilla),
+      rival: opcionesRaid(a.dificultad, Number(a.hp_inicio), Number(a.hp_total)) });
+    const rnd = crearRng(semillaIA(Number(a.semilla)));
+    const lista = a.decisiones || [];
+    const b = combate.personajes.find(p => p.lado === 'rival');
+    let r = combate.iniciar(), i = 0;
+    while (!r.fin && r.esperando) {
+      const d = lista[i++];
+      if (!d) break;
+      const actor = combate.personajes.find(p => p.uid === r.esperando.id);
+      if (actor.lado === 'rival') {
+        const ia = elegirIA(combate, rnd);
+        if (ia.categoria !== d.c || (ia.objetivo || null) !== (d.o || null)) return { ok: false, motivo: `Decisión del jefe alterada (turno ${i})` };
+      }
+      r = combate.actuar({ categoria: d.c, objetivo: d.o || null });
+    }
+    return { ok: true, dano: Math.max(0, Math.round(Number(a.hp_inicio) - Math.max(0, b.hp))) };
   } catch (e) { return { ok: false, motivo: String(e?.message || e) }; }
 }

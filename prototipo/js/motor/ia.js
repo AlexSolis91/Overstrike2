@@ -11,6 +11,13 @@ export function elegirIA(combate, rnd = Math.random) {
   const pick = arr => arr[Math.floor(rnd() * arr.length)];
   const invocaciones = key => a.estados.filter(e => e.id === 'summon' && (!key || e.key === key)).length;
 
+  if (a.ciclo) {                                             // ciclo fijo (Jefe de Raid): solo elige a quién golpear
+    const quiere = a.ciclo[(a.cicloI || 0) % a.ciclo.length];
+    const op = esp.opciones.find(o => o.categoria === quiere && o.disponible) || esp.opciones.find(o => o.disponible);
+    const mov = a.movimientos.find(m => m.categoria === op.categoria);
+    return { categoria: op.categoria, objetivo: mov.objetivo === 'enemigo' || mov.objetivo === 'aliado' ? pick(op.objetivos) : null };
+  }
+
   const planes = [];
   for (const op of esp.opciones) {
     if (!op.disponible) continue;

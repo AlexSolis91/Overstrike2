@@ -1,7 +1,7 @@
 // Forja de los Dioses (2026-11-03). Cada receta es única de la cuenta que la ganó: el servidor sortea sus 5 Épicas y la guarda
 // ligada al jugador (docs/sql/025_forja_dioses.sql). Aquí solo está lo que se muestra; el servidor vuelve a validar todo al forjar.
 export const INGREDIENTES_RECETA = 5, CALIDAD_MINIMA = 80, COSTO_FORJA = 1000000;
-// Qué jefe de clan suelta cada receta
+// Qué Jefe de Raid suelta cada receta
 export const JEFE_DE_LEGENDARIA = {
   frostmourne: 'Lich King', shadowmourne: 'Bolvar Fordragon', anilloTiempo: 'Zamasu', armaduraMithril: 'Balrog', escudoHyliano: 'Ganon',
 };

@@ -451,7 +451,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 ## 13. Pantallas y construcción de equipos
 
 - **Flujo:** Lobby → Construcción de equipo → presentación VS → Partida → Resultado (Revancha · Cambiar equipo · Menú). El botón "atrás" del navegador/celular vuelve entre pantallas; salir en plena partida la abandona (🏠 pide confirmación).
-- **Lobby:** modos de juego. Activo: **Partida rápida** (contra la IA). Próximamente: Campaña, Multijugador, Hordas, Jefe de Clan, Arena.
+- **Lobby:** modos de juego. Activo: **Partida rápida** (contra la IA). Próximamente: Campaña, Multijugador, Hordas, Jefe de Raid, Arena.
 - **Equipos:** siempre **5** personajes, sin repetir dentro del mismo equipo (sí se puede repetir entre tu equipo y el rival). La **primera casilla es el líder**; la pantalla muestra qué habilidad de líder quedará activa o avisa si no hay.
 - **Rival:** *Aleatorio* (5 al azar entre los oficiales) o *Construir* (lo armas tú, útil para probar balance).
 - **Galería:** solo personajes oficiales; los de prueba están ocultos. Filtros por rol. La "i" abre la ficha completa (estadísticas base sin reliquias, líder, pasiva, movimientos y transformaciones).
@@ -780,3 +780,26 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - **Continuar partida:** el combate se reconstruye con semilla + oleadas + decisiones (`motor/hordaReanudar.js`), así que retoma el turno exacto y recargar no cambia la suerte. Cada decisión se guarda en el dispositivo; al terminar cada oleada, también en el servidor (en otro dispositivo se retoma desde el inicio de esa oleada).
 - Salir de la batalla ya no cierra la partida: la cierran Retirarse, caer o abrir otro portal. Las estrellas y reliquias quedan congeladas al abrir el portal.
 - Si una actualización impide reconstruirla, la partida se cierra y se devuelve la Runa (máximo 1 por día). El botín ya cobrado se conserva.
+
+## 35. Jefe de Raid (2026-11-04, `docs/sql/026_jefe_raid.sql`)
+- **Sin clanes:** todos los jugadores atacan la misma barra de HP por dificultad. Se reinicia a medianoche, hora de México. Derrotar una dificultad abre la siguiente para todos, y queda abierta.
+- **Llaves:** 1 cada 6 horas, máximo 4. Cada ataque gasta 1. Abandonar cuenta el daño hecho hasta ese momento.
+- **Batalla:** 5 campeones propios con sus estrellas y reliquias (congeladas al entrar) contra un jefe. Hasta 30 rondas; desde la 21, el jefe gana +10% de Daño cada ronda.
+- **Valores base** (HP · rangos · oro del cofre 4, sin duplicar · polvo · runas · reliquia Rara/Especial/Épica · receta):
+  - Fácil: 500,000 · 5k/20k/40k/80k · 47,500 · 20 · 0 · 30/5/0% · 1.5%
+  - Normal: 1,000,000 · 4k/16k/32k/64k · 95,000 · 40 · 1 · 40/10/0.5% · 3%
+  - Difícil: 1,670,000 · 3k/12k/24k/48k · 165,000 · 70 · 1 · 50/15/1% · 4.5%
+  - Brutal: 2,500,000 · 2k/7k/14k/28k · 257,500 · 110 · 2 · 60/25/2% · 6%
+  - Pesadilla: 3,330,000 · 1.5k/5k/10k/20k · 375,000 · 160 · 3 · 70/35/3% · 7.5%
+- **Cofres:** uno por dificultad y día, según el daño total del jugador. Pagan 25, 50, 75 y 100% de oro, polvo y runas. Las reliquias no cambian con el cofre. Se reclaman al derrotar al jefe o al cerrar el día. Si el jefe cayó, se duplican oro, polvo y runas; reliquias y receta no.
+- **Receta:** 1 tirada por jugador y día, al cerrar el día, en la dificultad más alta donde alcanzó cofre. Usa `_dar_receta`.
+- **Administrador:** un solo porcentaje (`admin_raid_escala`) escala HP y rangos de todas las dificultades. También mueve la barra de hoy, en proporción.
+- **Verificación:** `docs/supabase/verificar-raid.ts` repite el ataque con `repetirRaid` y cuenta ese daño. Está apagada hasta publicar la función y ejecutar `update public.raid_config set verificar = true;`. Mientras esté apagada, el servidor acepta el daño que reporta el juego.
+- **Piezas nuevas del motor (universales):**
+  - `ciclo` en la ficha: orden fijo de movimientos; la IA solo elige objetivo (`cicloI` guarda la posición).
+  - `rival.barra { hp, total }`: el HP real es la barra compartida. `stats.hp` queda como **HP de referencia** para los efectos por % de HP máx.
+  - `rival.limiteRondas`: límite de rondas por modo.
+  - `rival.furiaRonda { desde, dmgPct, texto }`: el equipo rival gana daño cada ronda desde `desde`.
+  - `rival.dmgPct`: daño por dificultad sin tocar el HP.
+- **Lich King jefe** (`js/datos/jefes/lich-king.js`, ficha distinta del campeón): Daño 70, Velocidad 100, Armadura 20%, Resistencia 50%, HP de referencia 3,000. Inmune a Control. Ciclo: Invierno sin Remordimiento → Segador de Almas → Invierno → Segador → Furia de Frostmourne. Daño por dificultad: ×1, ×1.5, ×2, ×3, ×4.
+- **Campo:** `js/ui/ambiente.js`. Fondo propio, nieve constante y un efecto por movimiento (campo `ambiente` de la ficha): `ventisca` (tormenta de nieve), `rayos` (rayos de hielo), `furia` (destello, tormenta máxima y rayos a todos). Cada campeón caído manda su alma al jefe. Desde la Furia del Rey, la tormenta ya no se calma del todo.

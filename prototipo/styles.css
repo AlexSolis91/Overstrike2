@@ -433,3 +433,26 @@ body.movil #jefe-barra .jb-track { height: 8px; }
 @media (prefers-reduced-motion: reduce) {
   .slot.has.legendaria .slot-img, .rc.legendaria .rc-img { animation: none; filter: drop-shadow(0 0 10px #fbbf24); }
 }
+
+/* Jefe de Raid: barra compartida y lo que sigue en su ciclo */
+body.en-raid #jefe-barra .jb-nombre { color: #e0f2fe; }
+body.en-raid #jefe-barra .jb-track { height: 16px; border-color: rgba(125, 211, 252, .7); }
+body.en-raid #jefe-barra .jb-track i { background: linear-gradient(90deg, #0c4a6e, #38bdf8); }
+#raid-info { position: absolute; top: 110px; right: 12px; z-index: 6; pointer-events: none; display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; max-width: 230px; border-radius: 10px; background: rgba(5, 10, 20, .78); border: 1px solid rgba(125, 211, 252, .4); color: #e0f2fe; font-size: 13px; text-align: right; }
+#raid-info b { color: #fde68a; font-size: 14px; }
+#raid-info small { color: #a5c4dc; }
+body:not(.en-raid) #raid-info { display: none; }
+body.movil #raid-info { top: 62px; right: 50%; transform: translateX(50%); flex-direction: row; gap: 8px; white-space: nowrap; padding: 3px 8px; font-size: 11px; max-width: 96%; }
+body.movil #raid-info small { display: none; }
+body.movil.en-raid #jefe-barra { width: 92%; }
+body.movil.en-raid #jefe-barra .jb-nombre { white-space: nowrap; }
+body.movil-h #raid-info { top: 58px; right: calc(50% + 88px); }
+body.movil-h.en-raid #jefe-barra { width: 56%; left: calc(50% - 88px); }
+body.movil #raid-info b { font-size: 12px; }
+body.en-raid #jefe-barra { top: 60px; }
+body.en-raid #hint { top: 104px; }
+body.movil.en-raid #jefe-barra { top: 38px; }
+body.movil.en-raid #hint { top: 86px; }
+body.movil-v.en-raid #jefe-barra { top: 50px; }
+body.movil-v #raid-info { top: 86px; }
+body.movil-v.en-raid #hint { top: 112px; }

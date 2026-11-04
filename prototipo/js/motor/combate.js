@@ -297,7 +297,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   }
   function vista(p) {
     return {
-      hp: Math.max(0, p.hp), maxHp: maxHp(p), escudo: p.escudo, muerto: p.muerto, esLider: p.esLider,
+      hp: Math.max(0, p.hp), maxHp: p.barra?.total || maxHp(p), escudo: p.escudo, muerto: p.muerto, esLider: p.esLider,
       stats: stats(p), desglose: desglose(p), estados: vistaEstados(p), cds: { ...p.cds }, silenciado: get(p, 'silence')?.categoria || null, bonos: { ...p.bonos }, inmune: p.inmune,
       invocaciones: todos(p, 'summon').map(e => ({ key: e.key, dur: e.dur, fresca: !!e.fresca, max: INVOCACIONES[e.key].dur })),
       forma: p.forma ? { nombre: p.forma.nombre, imagen: p.forma.imagen, emoji: p.forma.emoji, color: p.forma.color, turnos: p.forma.turnos, total: p.forma.total, permanente: !!p.forma.permanente } : null,
@@ -322,6 +322,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
 
   function iniciarRonda() {
     S.ronda++;
+    const fr = opcionesRival.furiaRonda;                    // furia por rondas (Jefe de Raid): desde esa ronda el jefe pega más cada ronda
+    if (fr && S.ronda >= fr.desde) for (const j of P.filter(x => x.lado === 'rival' && !x.muerto)) {
+      j.campana.dmgPct = (j.campana.dmgPct || 0) + fr.dmgPct;
+      if (S.ronda === fr.desde) emitir('jefeFuria', { id: j.uid, texto: fr.texto }, j);
+    }
     S.actuaron = new Set(); S.orden = [];
     for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; }
     for (const x of P) {                                    // pasiva "revivirRonda": muerto, cada inicio de ronda puede revivir (una vez por partida)
@@ -470,7 +475,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (quita <= 1e-9) return;
     p.pestePerdida = perdido + quita;
     p.permanente.hpPct = (p.permanente.hpPct || 0) - quita;
-    p.hp = Math.min(p.hp, maxHp(p));
+    if (!p.barra) p.hp = Math.min(p.hp, maxHp(p));
     emitir('bonoVisible', { a: p.uid, texto: `☠️ −${Math.round(quita * 100)}% HP máx.` }, p);
   }
 
@@ -523,7 +528,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     while (!comprobarFin()) {
       let n = S.ronda ? siguiente() : null;
       if (!n) {
-        if (S.ronda) { finRonda(); if (comprobarFin()) return; if (S.ronda - S.rondaBase >= LIMITE_RONDAS) { finPorLimite(); return; } }
+        if (S.ronda) { finRonda(); if (comprobarFin()) return; if (S.ronda - S.rondaBase >= (opcionesRival.limiteRondas || LIMITE_RONDAS)) { finPorLimite(); return; } }
         iniciarRonda();
         n = siguiente();
         if (!n) return;
@@ -1135,7 +1140,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       const s = aliadosDe(t).find(x => x !== t && !x.muerto && x.lider && x.pasiva?.sucesorDe?.id === t.id);
       if (s) { t.esLider = false; reacciones.push(() => surgirLider(s, t)); }
     }
-    if ((t.esLider && t.lider) || t.pasiva?.bonoPorAliadosQueAplican) for (const x of aliadosDe(t)) if (x.hp > maxHp(x)) { x.hp = maxHp(x); emitir('actualizar', {}, x); }
+    if ((t.esLider && t.lider) || t.pasiva?.bonoPorAliadosQueAplican) for (const x of aliadosDe(t)) if (!x.barra && x.hp > maxHp(x)) { x.hp = maxHp(x); emitir('actualizar', {}, x); }
     const rv = t.pasiva?.revivir;                      // pasiva "revivir": vuelve tras N turnos (de cualquiera), una vez por partida
     const rr = !t.revivioReliquia && pasivasDeReliquia(t).find(m => m.revivir);   // reliquia "revivir" (p. ej. Anillo del Tiempo)
     if (rr) { t.reviveRonda = S.ronda + 1; t.reviveRelHp = rr.revivir.hp ?? 1; emitir('extension', { a: t.uid, texto: '⏳ Revivirá al final de la próxima ronda' }, t); }
@@ -1630,7 +1635,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           if (baja <= 1e-9) break;
           t.hpMaxReducido = (t.hpMaxReducido || 0) + baja;
           t.permanente.hpPct = (t.permanente.hpPct || 0) - baja;
-          if (t.hp > maxHp(t)) t.hp = maxHp(t);
+          if (!t.barra && t.hp > maxHp(t)) t.hp = maxHp(t);
           emitir('bonoVisible', { a: t.uid, texto: `−${Math.round(baja * 100)}% HP máx.` }, t);
           break;
         }
@@ -2186,6 +2191,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (r.sinReliquias) p.slots = (p.slots || []).map(sl => ({ ...sl, relic: null }));
     if (r.sinLider) p.esLider = false;
     p.campana = {};
+    if (r.dmgPct) p.campana.dmgPct = r.dmgPct;
     if (r.poder && r.poder !== 1) { p.campana.hpPct = r.poder - 1; p.campana.dmgPct = r.poder - 1; }
     if (r.spdPct) p.campana.spdPct = r.spdPct;
     if (r.jefe && p.pos === 0) {                             // el Jefe: más HP y una fase de furia al bajar de cierto % de HP
@@ -2203,6 +2209,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   for (const p of P) { const ej = p.pasiva?.enemigoJurado;          // enemigo jurado: se marca como Rival desde el inicio
     if (ej) for (const t of P) if (t.lado !== p.lado && t.id === ej.id) t.estados.push({ id: 'rival', fuente: p.uid, permanente: true }); }
   for (const p of P) p.hp = stats(p).hp;      // con todos creados: incluye bonos de líder al HP máx. (el líder se crea antes que su equipo)
+  if (opcionesRival.barra) {                  // Jefe de Raid: su HP real es la barra compartida; stats(p).hp queda de referencia para los efectos por % de HP
+    const j = P.find(x => x.lado === 'rival');
+    j.barra = { total: opcionesRival.barra.total }; j.hp = opcionesRival.barra.hp;
+  }
 
   return {
     personajes: P,
@@ -2239,6 +2249,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         const t = objetivo ? P.find(p => p.uid === objetivo) : null;
         if ((mov.objetivo === 'enemigo' || mov.objetivo === 'aliado') && !objetivosValidos(a, mov).includes(t)) throw new Error('Objetivo no válido');
         S.esperando = null;
+        if (a.ciclo) a.cicloI = (a.cicloI || 0) + 1;   // ciclo fijo de ataques (Jefe de Raid)
         ejecutarMovimiento(a, mov, t);
         // pasiva "turnoExtraSiMasRapido": si es el más rápido de TODO el campo, gana un turno extra (una vez por ronda)
         if (a.pasiva?.turnoExtraSiMasRapido && !a.muerto && a.turnoRapidoRonda !== S.ronda

@@ -1,6 +1,6 @@
 /* ================================================================ PANTALLAS FUERA DE LA BATALLA (lobby, equipos, ficha, VS) */
 .pantalla { display: none; }
-body[data-pantalla="menu"] #pantalla-menu, body[data-pantalla="equipo"] #pantalla-equipo, body[data-pantalla="campana"] #pantalla-campana, body[data-pantalla="horda"] #pantalla-horda, body[data-pantalla="arena"] #pantalla-arena { display: flex; }
+body[data-pantalla="menu"] #pantalla-menu, body[data-pantalla="equipo"] #pantalla-equipo, body[data-pantalla="campana"] #pantalla-campana, body[data-pantalla="horda"] #pantalla-horda, body[data-pantalla="arena"] #pantalla-arena, body[data-pantalla="raid"] #pantalla-raid { display: flex; }
 body:not([data-pantalla="partida"]) #app { visibility: hidden; }
 .pantalla {
   position: fixed; inset: 0; z-index: 20; flex-direction: column; overflow: hidden;
@@ -1076,3 +1076,18 @@ body.eq-sin-rival .eq-fila[data-lado="rival"], body.eq-sin-rival .eq-modo { disp
 @media (max-width: 900px) and (min-height: 521px) and (max-height: 760px) { #pantalla-menu:has(#btn-actualizar:not(.hidden)) #menu-modos .modo:not(.activo) { display: none; } #pantalla-menu:has(#btn-actualizar:not(.hidden)) { justify-content: flex-start; padding-top: 44px; } }   /* celular chico: sin los modos "Próximamente" */
 @media (max-height: 520px) { #btn-actualizar { position: fixed; bottom: 6px; } }
 @media (prefers-reduced-motion: reduce) { #btn-actualizar { animation: none; } }
+
+/* Jefe de Raid */
+.rd-tarjeta { min-height: 240px; border-color: rgba(125, 211, 252, .45); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: flex-end; }
+.rd-tarjeta h3 { color: #bae6fd; }
+.rd-arte { position: absolute; right: 14px; top: 14px; width: 150px; border-radius: 10px; border: 1px solid rgba(186, 230, 253, .6); }
+.rd-difs { display: flex; gap: 6px; margin-top: 10px; overflow-x: auto; }
+.rd-dif { flex: 1 0 auto; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--dc); background: rgba(8, 11, 18, .85); color: var(--dc); font-weight: 800; cursor: pointer; }
+.rd-dif.on { background: var(--dc); color: #0b1220; }
+.rd-dif:disabled { opacity: .4; cursor: default; }
+.rd-hp { position: relative; height: 24px; border-radius: 8px; overflow: hidden; background: rgba(0, 0, 0, .6); border: 1px solid rgba(125, 211, 252, .5); }
+.rd-hp i { display: block; height: 100%; background: linear-gradient(90deg, #0c4a6e, #38bdf8); }
+.rd-hp span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 13px; font-weight: 800; color: #fff; text-shadow: 0 1px 3px #000; }
+.rd-mio { margin: 8px 0; font-size: 13px; color: #e5e7eb; }
+.rd-rangos img { height: 16px; vertical-align: middle; }
+.rd-cofre { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; font-size: 13px; color: #e5e7eb; border-top: 1px solid rgba(255, 255, 255, .08); flex-wrap: wrap; }

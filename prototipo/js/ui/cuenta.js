@@ -3,7 +3,7 @@
 import { supabase } from '../servicios/supabase.js';
 import { RELIQUIAS } from '../datos/reliquias.js';
 import { JEFE_DE_LEGENDARIA } from '../datos/recetas.js';
-import { configSobres, adminGuardarSobre, adminDarOro, adminDarReceta, catalogoProbabilidades, adminProbabilidad, mensajeError } from '../servicios/datos.js';
+import { configSobres, adminGuardarSobre, adminDarOro, adminDarReceta, adminRaidEscala, raidEstado, catalogoProbabilidades, adminProbabilidad, mensajeError } from '../servicios/datos.js';
 import { SOBRES } from '../datos/sobres.js';
 
 const $ = s => document.querySelector(s);
@@ -96,7 +96,16 @@ async function pintarAdmin(msg = '', tipo = '') {
     <form id="adm-oro" class="adm-oro"><input id="adm-nombre" placeholder="Nombre del jugador" required><input id="adm-cant" type="number" min="1" step="1" value="10000" required title="Oro a dar"><button class="eq-btn">Dar</button></form>
     <p class="cu-nota">Dar una receta de Legendaria a un jugador (sus 5 Épicas se sortean):</p>
     <form id="adm-receta" class="adm-oro"><input id="adm-rec-nombre" placeholder="Nombre del jugador" required><select id="adm-rec-leg">${Object.entries(JEFE_DE_LEGENDARIA).map(([id, jefe]) => `<option value="${id}">${RELIQUIAS[id].name} (${jefe})</option>`).join('')}</select><button class="eq-btn">Dar</button></form>
+    <p class="cu-nota">Jefe de Raid: HP y rangos de daño de todas las dificultades, en % (100 = valores base). Cambia también la barra de hoy, en proporción:</p>
+    <form id="adm-raid" class="adm-oro"><input id="adm-raid-pct" type="number" min="1" max="100000" step="1" required title="Porcentaje"><button class="eq-btn">Aplicar</button></form>
     ${msg ? `<p class="cu-msg ${tipo}">${msg}</p>` : ''}`;
+  raidEstado().then(e => { const i = $('#adm-raid-pct'); if (i && !i.value) i.value = Math.round(e.escala * 100); }).catch(() => null);
+}
+async function escalaRaid(e) {
+  e.preventDefault();
+  const pct = Number($('#adm-raid-pct').value);
+  try { await adminRaidEscala(pct); pintarAdmin(`Listo: el Jefe de Raid quedó al ${pct}%.`, 'ok'); }
+  catch (err) { pintarAdmin(mensajeError(err), 'error'); }
 }
 const NIVELES = [['normal', 'Normal (1)'], ['baja', 'Baja (0.75)'], ['muy_baja', 'Muy baja (0.5)'], ['minima', 'Mínima (0.25)']];
 async function guardarProbabilidades() {
@@ -170,7 +179,7 @@ export function iniciarCuenta() {
         pintar('Te enviamos un correo para cambiar tu contraseña.', 'ok'); } catch (err) { pintar(traducir(err), 'error'); }
     }
   });
-  $('#cuenta').addEventListener('submit', e => { if (e.target.id === 'cu-form') enviar(e); else if (e.target.id === 'adm-oro') darOro(e); else if (e.target.id === 'adm-receta') darReceta(e); });
+  $('#cuenta').addEventListener('submit', e => { if (e.target.id === 'cu-form') enviar(e); else if (e.target.id === 'adm-oro') darOro(e); else if (e.target.id === 'adm-receta') darReceta(e); else if (e.target.id === 'adm-raid') escalaRaid(e); });
   pintarBoton();
   // Sesión guardada y cambios de sesión (entrar / salir / confirmar correo)
   supabase().then(async sb => {

@@ -30,6 +30,9 @@ delete from public.campana_progreso;
 
 -- Reliquias, colección e historial de aperturas
 do $$ begin if to_regclass('public.recetas_jugador') is not null then delete from public.recetas_jugador; end if; end $$;
+do $$ begin if to_regclass('public.raid_danos') is not null then
+  delete from public.raid_tiradas; delete from public.raid_danos; delete from public.raid_ataques; delete from public.raid_jugadores; delete from public.raid_dias; delete from public.raid_desbloqueos;
+end if; end $$;
 delete from public.reliquias;
 delete from public.coleccion;
 delete from public.aperturas;

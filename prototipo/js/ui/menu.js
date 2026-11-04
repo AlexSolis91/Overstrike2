@@ -13,7 +13,7 @@ const MODOS = [
   { id: 'campana', nombre: 'Campaña', icono: '📜', desc: 'El Portal y el Abismo: 40 etapas y 3 dificultades', activo: true },
   { id: 'multi', nombre: 'Multijugador', icono: '🌐' },
   { id: 'hordas', nombre: 'Hordas', icono: '🧟', desc: 'Oleadas sin fin: ¿hasta dónde llegas?', activo: true },
-  { id: 'jefe', nombre: 'Jefe de Clan', icono: '🐲' },
+  { id: 'jefe', nombre: 'Jefe de Raid', icono: '👑', desc: 'Todos contra Lich King: reparte daño y gana cofres', activo: true },
   { id: 'arena', nombre: 'Arena', icono: '🏟️', desc: 'Defiende y ataca: sube de liga', activo: true },
 ];
 const ROL = { Invocador: 'Invoker' };          // mismos roles con distinto nombre en las fichas
@@ -27,8 +27,8 @@ const E = { jugador: [], rival: [], rivalModo: 'azar', editando: 'jugador', filt
 let alJugar = null;
 
 // ---------------------------------------------------------------- navegación entre pantallas (con el botón "atrás")
-const PANTALLAS = ['menu', 'equipo', 'partida', 'campana', 'horda', 'arena'];
-let alSalirDePartida = null;
+const PANTALLAS = ['menu', 'equipo', 'partida', 'campana', 'horda', 'arena', 'raid'];
+let alSalirDePartida = null, alAbrirRaid = null;
 export function irA(p, { reemplazar = false } = {}) {
   if (reemplazar) history.replaceState(null, '', '#' + p); else if (location.hash !== '#' + p) history.pushState(null, '', '#' + p);
   mostrar(p);
@@ -38,11 +38,12 @@ function mostrar(p) {
   document.body.dataset.pantalla = p;
   if (antes === 'partida' && p !== 'partida') alSalirDePartida?.();
   musica(p === 'partida' ? temaDePartida() : 'menu');
-  fondo(p === 'menu' || p === 'campana' || p === 'horda' || p === 'arena' ? 'menu' : p === 'equipo' ? 'equipo' : null);
+  fondo(p === 'menu' || p === 'campana' || p === 'horda' || p === 'arena' || p === 'raid' ? 'menu' : p === 'equipo' ? 'equipo' : null);
   if (p === 'equipo') renderEquipo();
   if (p === 'campana') alAbrirCampana?.();
   if (p === 'horda') alAbrirHorda?.();
   if (p === 'arena') alAbrirArena?.();
+  if (p === 'raid') alAbrirRaid?.();
   if (p === 'menu') { E.campana = null; dispatchEvent(new Event('menu:mostrar')); }
 }
 addEventListener('popstate', () => {
@@ -228,14 +229,15 @@ export function presentarVS(eqJ, eqR) {
 
 // ---------------------------------------------------------------- arranque
 let alAbrirCampana = null, alAbrirHorda = null, alAbrirArena = null;
-export function iniciarMenu({ jugar, salirDePartida, abrirCampana, abrirHorda, abrirArena }) {
-  alJugar = jugar; alSalirDePartida = salirDePartida; alAbrirCampana = abrirCampana; alAbrirHorda = abrirHorda; alAbrirArena = abrirArena;
+export function iniciarMenu({ jugar, salirDePartida, abrirCampana, abrirHorda, abrirArena, abrirRaid }) {
+  alJugar = jugar; alSalirDePartida = salirDePartida; alAbrirCampana = abrirCampana; alAbrirHorda = abrirHorda; alAbrirArena = abrirArena; alAbrirRaid = abrirRaid;
   renderMenu();
   $('#menu-modos').addEventListener('click', e => {
     if (e.target.closest('[data-modo="rapida"]')) { E.campana = null; irA('equipo'); }
     if (e.target.closest('[data-modo="campana"]')) irA('campana');
     if (e.target.closest('[data-modo="hordas"]')) irA('horda');
     if (e.target.closest('[data-modo="arena"]')) irA('arena');
+    if (e.target.closest('[data-modo="jefe"]')) irA('raid');
   });
   $('#eq-volver').addEventListener('click', () => { if (E.campana) { const c = E.campana; E.campana = null; c.alVolver?.(); } else irA('menu'); });
   $('#pantalla-equipo').addEventListener('click', e => {

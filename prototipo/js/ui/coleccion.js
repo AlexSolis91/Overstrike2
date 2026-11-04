@@ -115,7 +115,7 @@ function htmlGarantias() {
     return `<span style="--rc:${RAREZAS[rz].color}">${nombre}: <b>${k === 1 ? '¡el próximo!' : `en ${k} sobres`}</b></span>`; }).join('')}</div>`;
 }
 
-// ---------------------------------------------------------------- pestaña Forja de los Dioses (recetas ganadas a los jefes de clan)
+// ---------------------------------------------------------------- pestaña Forja de los Dioses (recetas ganadas al Jefe de Raid)
 const epicas = () => rels.filter(r => r.rarity === 'Épico');
 const lineaIngrediente = (e, marcadas) => { const n = marcadas ? marcadas.filter(x => x.id === e.id).length : e.aptas, ok = n >= e.pide;
   const nota = !ok && !marcadas ? [e.bajas ? `${e.bajas} bajo ${CALIDAD_MINIMA}%` : '', e.candado ? `${e.candado} con 🔒` : ''].filter(Boolean).join(' · ') : '';
@@ -126,7 +126,7 @@ function htmlForja() {
   if (recetas === null) return '<p class="tc-vacio">La Forja se activa cuando se ejecute <b>docs/sql/025_forja_dioses.sql</b> en el servidor.</p>';
   const sel = recetas.find(r => r.id === recetaSel);
   if (sel) return htmlReceta(sel);
-  if (!recetas.length) return '<p class="tc-vacio">⚒️ Aún no tienes recetas. Derrota a los jefes de clan para conseguir una.</p>';
+  if (!recetas.length) return '<p class="tc-vacio">⚒️ Aún no tienes recetas. Ataca al Jefe de Raid para conseguir una.</p>';
   const mias = epicas();
   return `<p class="tc-nota">Cada receta es solo de tu cuenta y se gasta al forjar. Pide <b>5 Épicas con ${CALIDAD_MINIMA}% de calidad o más</b> y <b>${num(COSTO_FORJA)} de oro</b>. Las equipadas sí cuentan (se quitan solas del campeón); las que tienen candado, no.</p>
     <div class="tc-recetas">${recetas.map(r => { const leg = RELIQUIAS[r.legendaria], est = estadoReceta(r.ingredientes, mias, calidad);

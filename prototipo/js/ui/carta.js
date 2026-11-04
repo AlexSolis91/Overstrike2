@@ -416,7 +416,7 @@ export class Carta {
     const ladoApuntado = ui.tipoObjetivo === 'enemigo' ? 'rival' : ui.tipoObjetivo === 'aliado' ? 'jugador' : null;
     const bloqueada = !!(ui.objetivosValidos && this.p.lado === ladoApuntado && !targ);
     this.apagar(this.apagado + ((bloqueada ? 1 : 0) - this.apagado) * Math.min(1, dt * .2));
-    const sc = this.c.scale.x + ((targ && ui.hayBloqueados ? 1.05 : 1) - this.c.scale.x) * Math.min(1, dt * .2);
+    const sc = this.c.scale.x + ((targ && ui.hayBloqueados ? 1.05 : 1) * (this.escalaBase || 1) - this.c.scale.x) * Math.min(1, dt * .2);
     this.c.scale.set(sc);
     this.body.alpha = (tiene('stealth') ? .45 + .1 * Math.sin(T * 3) : 1) * (1 - .6 * this.apagado);   // Sigilo: carta translúcida
     if (tiene('burn') && Math.random() < .35 * dt)

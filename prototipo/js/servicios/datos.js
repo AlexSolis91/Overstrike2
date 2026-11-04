@@ -59,6 +59,13 @@ export const tiendaHordaComprar = id => rpc('tienda_horda_comprar', { p_reliquia
 export const misHitosHorda = horda => q(sb => sb.from('horda_hitos').select('oleada').eq('horda', horda));
 export const hordaRanking = horda => rpc('horda_ranking', { p_horda: horda });   // docs/sql/020_horda_ranking.sql
 
+// Jefe de Raid (docs/sql/026_jefe_raid.sql)
+export const raidEstado = () => rpc('raid_estado');
+export const raidEntrar = (dificultad, equipo, version) => rpc('raid_entrar', { p_dif: dificultad, p_equipo: equipo, p_version: version });
+export const raidTerminar = (ataque, dano, decisiones) => rpc('raid_terminar', { p_ataque: ataque, p_dano: dano, p_decisiones: decisiones });
+export const raidReclamar = (dia, dificultad) => rpc('raid_reclamar', { p_dia: dia, p_dif: dificultad });
+export const adminRaidEscala = pct => rpc('admin_raid_escala', { p_pct: pct });
+
 // Arena (docs/sql/008_arena.sql)
 export const arenaEstado = () => rpc('arena_estado');
 export const arenaGuardarEquipo = (tipo, equipo) => rpc('arena_guardar_equipo', { p_tipo: tipo, p_equipo: equipo });

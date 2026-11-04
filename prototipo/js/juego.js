@@ -26,6 +26,9 @@ import { iniciarHorda, abrirHorda } from './ui/horda.js';
 import { huellaCombate } from './motor/hordaReanudar.js';
 import { guardarLocal, borrarLocal } from './servicios/hordaGuardada.js';
 import { iniciarArena, abrirArena } from './ui/arena.js';
+import { iniciarRaid, abrirRaid } from './ui/raid.js';
+import { iniciarAmbiente, terminarAmbiente, efectoAtaque, almaAlJefe, furiaDelCampo } from './ui/ambiente.js';
+import { JEFES_RAID, RONDAS_RAID } from './datos/jefes/raid.js';
 import { iniciarSocial } from './ui/social.js';
 import { iniciarActualizacion } from './ui/actualizacion.js';
 import { conectarVivo, swapUid, ganadorRelativo } from './servicios/arenaVivo.js';
@@ -53,7 +56,7 @@ addEventListener('resize', modoMovil);
 await iniciarEscena($('#field'));
 await precargar(
   OFICIALES.flatMap(p => { const l = [p.imagen]; for (let f = p.transformacion; f; f = f.transformacion) l.push(f.imagen); return l; })
-    .concat(Object.values(INVOCACIONES).map(i => i.imagen), Object.values(HORDAS).flatMap(h => Object.values(h.enemigos).map(e => e.imagen))),   // + enemigos de la Horda
+    .concat(Object.values(INVOCACIONES).map(i => i.imagen), Object.values(HORDAS).flatMap(h => Object.values(h.enemigos).map(e => e.imagen)), Object.values(JEFES_RAID).map(j => j.imagen)),   // + enemigos de la Horda
   INVOCACIONES,
   (n, total) => { $('#loading-bar').style.width = `${n / total * 100}%`; $('#loading-text').textContent = `Cargando imágenes ${n}/${total}`; },
 );
@@ -73,7 +76,7 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   inicioPartida = Date.now();
   const vivo = opciones?.arena?.vivo;
   const hordaG = opciones?.horda?.g, rep = opciones?.horda?.rep;   // Horda: la cuenta queda congelada al abrir el portal; rep = partida reconstruida
-  const cuenta = vivo ? cuentaDesdeServidor(opciones.arena.equipoMio) : hordaG ? cuentaDesdeServidor(hordaG.cuenta) : await cargarCuenta();   // tus estrellas y reliquias pelean contigo
+  const cuenta = vivo ? cuentaDesdeServidor(opciones.arena.equipoMio) : opciones?.raid ? cuentaDesdeServidor(opciones.raid.equipoMio) : hordaG ? cuentaDesdeServidor(hordaG.cuenta) : await cargarCuenta();   // tus estrellas y reliquias pelean contigo
   eqJ = eqJ.map(d => conCuenta(d, cuenta));
   if (opciones?.arena?.equipoRival) { const cr = cuentaDesdeServidor(opciones.arena.equipoRival); eqR = eqR.map(d => conCuenta(d, cr)); }   // la Defensa de otro jugador con sus estrellas y reliquias
   if (opciones?.practicaArena) eqR = eqR.map(d => conCuenta(d, cuenta));     // práctica de Arena: tu propia Defensa, con tus estrellas y reliquias
@@ -81,9 +84,11 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   P = combate.personajes;
   const serie = opciones?.serie || 0;                         // en una serie de repeticiones siempre va en Auto y ×2
   ui = { actual: null, inspeccionado: P[0].uid, miTurno: false, movSel: null, objetivosValidos: null, tipoObjetivo: null, ocupado: true, opciones: null,
-    camp: opciones?.campana || null, horda: opciones?.horda || null, arena: opciones?.arena || null, vivo: null, serie, auto: !!serie || autoActivo };
+    camp: opciones?.campana || null, horda: opciones?.horda || null, arena: opciones?.arena || null, raid: opciones?.raid || null, vivo: null, serie, auto: !!serie || autoActivo };
   setVelocidad(serie ? 2 : velocidad); marcarControles();
   vistas = {}; cartas = {};
+  if (ui.raid) await iniciarAmbiente({ fondo: ui.raid.fondo });
+  document.body.classList.toggle('en-raid', !!ui.raid);
   for (const p of P) crearCarta(p);
   G.alTick = [(dt, T) => { for (const c of Object.values(cartas)) c.tick(dt, T, ui); }];
   window.__os2.combate = combate; window.__os2.ui = ui; window.__os2.cartas = cartas;
@@ -95,6 +100,7 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   mostrarRivalArena(opciones?.arena?.rival);
   if (rep) restaurarHorda(rep);
   if (vivo) { ui.vivo = conectarVivo(opciones.arena, { alAbandonar: () => abandonoRival() }); ui.auto = false; marcarControles(); }
+  else if (ui.raid) { ui.raid.decisiones = []; ui.raid.rnd = crearRng(semillaIA(opciones.semilla)); }
   else if (ui.arena) { ui.arena.decisiones = []; ui.arena.rnd = crearRng(semillaIA(opciones.semilla)); }   // contra una Defensa: se guardan las decisiones para verificarlas
   await wait(1100);
   await anunciar();
@@ -116,7 +122,9 @@ function restaurarHorda(rep) {
   log('▶️ Partida retomada', 'sys');
 }
 function crearCarta(p) {
-  cartas[p.uid] = new Carta(p, colX(p.pos), p.lado === 'rival' ? 215 : 585, tocarCarta);
+  const elJefe = ui.raid && p.lado === 'rival';              // Jefe de Raid: una sola carta, grande, al centro
+  cartas[p.uid] = new Carta(p, elJefe ? colX(2) : colX(p.pos), p.lado === 'rival' ? 215 : 585, tocarCarta);
+  if (elJefe) { cartas[p.uid].escalaBase = 1.3; cartas[p.uid].c.scale.set(1.3); }
   vistas[p.uid] = combate.vista(p);
   cartas[p.uid].aplicar(vistas[p.uid], true);
 }
@@ -130,6 +138,7 @@ function entrarCartas(lista) {
 // Aviso al empezar: oleada de la Horda y/o jefe (Campaña y Horda)
 async function anunciar() {
   const h = ui.horda;
+  if (ui.raid) { banner(`👑 ${P.find(p => p.lado === 'rival').nombre} · ${ui.raid.nombreDif}`, { size: 44, color: '#bae6fd', hold: 1.3 }); shakeScene(8); await wait(1600); return; }
   if (h) { banner(`🧟 Oleada ${h.n}`, { size: 52, color: '#bef264', hold: .9 }); await wait(1300); }
   const jefe = P.find(p => p.lado === 'rival' && vistas[p.uid]?.jefe);
   const tipo = h ? (h.rango === 'jefe' ? 'JEFE' : 'MINI-JEFE') : ui.camp?.etapa === 20 ? 'JEFE FINAL' : 'MINI-JEFE';
@@ -159,11 +168,12 @@ function limpiarPartida() {
   const restos = [...G.cardLayer.children, ...G.fxLayer.children, ...G.textLayer.children, ...G.scene.children.filter(x => !base.includes(x))];
   for (const o of restos) { matarTweens(o); o.parent?.removeChild(o); if (!o.destroyed) o.destroy({ children: true }); }
   G.alTick = [];
+  terminarAmbiente(); document.body.classList.remove('en-raid');
   combate = null; P = []; cartas = {}; vistas = {}; embestida = null; enVuelo = []; overEnCurso = null;
   $('#log').innerHTML = ''; logLeido();
   $('#overlay').classList.add('hidden');
 }
-function salirDePartida() { if (ui.vivo && !ui.fin) { if (ui.arena.amistoso) { ui.vivo.rendirse(); D.desafioTerminar(ui.arena.partida).catch(() => null); } else D.arenaVivoResultado(ui.arena.partida, ui.arena.soy === 'a' ? 'b' : 'a').catch(() => null); } ui.vivo?.cerrar(); ui.vivo = null; $('#horda-ov').classList.add('hidden'); partida++; ui.miTurno = false; ui.ocupado = true; ui.serie = 0; serieT?.(); serieT = null; $('#overlay').classList.add('hidden'); setVelocidad(1); $('#jefe-barra').classList.add('hidden'); }
+function salirDePartida() { if (ui.raid && !ui.fin) enviarRaid().catch(() => null); terminarAmbiente(); document.body.classList.remove('en-raid'); if (ui.vivo && !ui.fin) { if (ui.arena.amistoso) { ui.vivo.rendirse(); D.desafioTerminar(ui.arena.partida).catch(() => null); } else D.arenaVivoResultado(ui.arena.partida, ui.arena.soy === 'a' ? 'b' : 'a').catch(() => null); } ui.vivo?.cerrar(); ui.vivo = null; $('#horda-ov').classList.add('hidden'); partida++; ui.miTurno = false; ui.ocupado = true; ui.serie = 0; serieT?.(); serieT = null; $('#overlay').classList.add('hidden'); setVelocidad(1); $('#jefe-barra').classList.add('hidden'); }
 
 // ---------------------------------------------------------------- Auto-batalla y velocidad (se recuerdan en este dispositivo)
 let autoActivo = false, velocidad = 1, serieT = null;
@@ -184,6 +194,7 @@ function mostrarRivalArena(r) {
   el.classList.remove('hidden');
 }
 function actualizarJefe() {
+  if (ui.raid) return actualizarRaid();
   const j = P.find(p => p.lado === 'rival' && vistas[p.uid]?.jefe), bar = $('#jefe-barra');
   if (!j) return bar.classList.add('hidden');
   const v = vistas[j.uid];
@@ -192,12 +203,24 @@ function actualizarJefe() {
   bar.querySelector('i').style.width = `${Math.max(0, v.hp / v.maxHp * 100)}%`;
 }
 
+// Jefe de Raid: barra compartida, tu daño de este ataque y lo que sigue en su ciclo
+function actualizarRaid() {
+  const j = P.find(p => p.lado === 'rival'), v = vistas[j.uid], bar = $('#jefe-barra'), r = ui.raid;
+  bar.classList.remove('hidden', 'furia', 'muerto');
+  bar.querySelector('.jb-nombre').textContent = `👑 ${j.nombre} · ${r.nombreDif} · ${miles(Math.max(0, v.hp))} / ${miles(r.hpTotal)}`;
+  bar.querySelector('i').style.width = `${Math.max(0, v.hp / r.hpTotal * 100)}%`;
+  const quien = i => j.movimientos.find(m => m.categoria === j.ciclo[((j.cicloI || 0) + i) % j.ciclo.length]).nombre;
+  $('#raid-info').classList.remove('hidden');
+  $('#raid-info').innerHTML = `<b>Tu daño: ${miles(r.hpInicio - Math.max(0, v.hp))}</b><span>Sigue: ${quien(0)}</span><small>Después: ${quien(1)}</small>`;
+}
+
 function refrescarPanel() { renderPanel(por(ui.inspeccionado), vistas[ui.inspeccionado], ui); refrescarAccion(); }
 function refrescarAccion() { renderAccion(por(ui.actual), vistas[ui.actual], ui); }
 function inspeccionar(uid) { ui.inspeccionado = uid; refrescarPanel(); }
 function aplicar(e) {
   if (!e.s) return;
   for (const [uid, v] of Object.entries(e.s)) { vistas[uid] = v; cartas[uid].aplicar(v); }
+  if (ui.raid) actualizarRaid();
   actualizarJefe();
   if (e.s[ui.inspeccionado]) refrescarPanel();
   else if (e.s[ui.actual]) refrescarAccion();
@@ -265,7 +288,7 @@ async function manejar(e) {
   const s = sonidoDe(e); if (s) sonar(s);
   switch (e.t) {
     case 'ronda':
-      $('#round-label').textContent = `Ronda ${e.n}`;
+      $('#round-label').textContent = `Ronda ${e.n}${ui.raid ? ` / ${RONDAS_RAID}` : ''}`;
       renderOrden(e.orden, P, vistas);
       log(`— Ronda ${e.n} —`, 'sys');
       banner(`RONDA ${e.n}`);
@@ -281,6 +304,7 @@ async function manejar(e) {
       break;
     case 'jefeFuria':
       aplicar(e); FX.textoSobre(c(e.id), '🔥 FURIA', '#f87171', 22, -125); shakeScene(10);
+      if (ui.raid) furiaDelCampo();
       banner(e.texto, { size: 30, color: '#fca5a5' }); log(`${nombre(e.id)} entra en FURIA`, 'fx');
       await wait(1300);
       break;
@@ -320,6 +344,9 @@ async function manejar(e) {
         await FX.cinematicaOver(a, e.nombre, e.color, { velocidad: vel });
         overEnCurso = e.id;
       }
+      const ambiente = ui.raid && por(e.id).movimientos.find(m => m.nombre === e.nombre)?.ambiente;   // efecto de campo del ataque (ver ui/ambiente.js)
+      if (ambiente) { const espera = efectoAtaque(ambiente, a, objetivos); if (espera) await wait(espera); }
+      if (ui.raid) actualizarRaid();
       const disparo = sonidoDisparo(e);
       if (e.estilo === 'melee' && objetivos[0] && objetivos[0] !== a) { if (disparo) sonar(disparo); await FX.embestir(a, objetivos[0]); embestida = a; }
       else {
@@ -378,6 +405,7 @@ async function manejar(e) {
     case 'muerte':
       aplicar(e); log(`☠️ ${nombre(e.a)} ha sido derrotado`, 'sys');
       if (e.lider) log(`👑 Se pierde la habilidad de líder de ${nombre(e.a)}`, 'sys');
+      if (ui.raid && por(e.a).lado === 'jugador') almaAlJefe(c(e.a), cartas[P.find(p => p.lado === 'rival').uid]);
       await FX.muerte(c(e.a));
       break;
     case 'revivir':
@@ -504,8 +532,9 @@ async function procesar(res) {
     }
     await wait(700);
     if (esta !== partida) return;
-    if (ui.arena?.decisiones) {                               // la Defensa: IA con azar de semilla (el servidor la puede repetir)
-      const d = elegirIA(combate, ui.arena.rnd); ui.arena.decisiones.push({ c: d.categoria, o: d.objetivo || null });
+    const reg = ui.raid || (ui.arena?.decisiones && ui.arena);
+    if (reg) {                                                // la Defensa o el jefe: IA con azar de semilla (el servidor la puede repetir)
+      const d = elegirIA(combate, reg.rnd); reg.decisiones.push({ c: d.categoria, o: d.objetivo || null });
       return procesar(combate.actuar(d));
     }
     await procesar(actuarGuardando(elegirIA(combate)));
@@ -553,6 +582,7 @@ function terminar(fin) {
   const base = { gano, empate: fin.ganador === 'empate', limite: !!fin.limite, ronda: fin.ronda, duracionMs: Date.now() - inicioPartida, personajes };
   botonesResultado(gano);
   if (ui.horda) return void finHorda(base, false);
+  if (ui.raid) return void finRaid(base);
   if (ui.arena) return void finArena(base, fin);
   if (!ui.camp) return void temporizar(() => esta === partida && mostrarResultados({ ...base, recompensas: fin.recompensas || [] }), 700);
   // Campaña: estrellas y cobro en el servidor; luego (si es una serie) la siguiente repetición
@@ -734,6 +764,34 @@ async function finArena(base, fin) {
     : `⚠️ ${error || 'No se pudo guardar el resultado'}`;
 }
 
+// Jefe de Raid: manda el daño (una sola vez) y, si la verificación está encendida, el servidor repite la batalla
+function enviarRaid() {
+  const r = ui.raid;
+  if (r.envio) return r.envio;
+  const j = P.find(p => p.lado === 'rival');
+  const dano = Math.max(0, Math.round(r.hpInicio - Math.max(0, j.hp)));
+  r.envio = D.raidTerminar(r.ataque, dano, r.decisiones || []).then(async res => {
+    if (!res?.pendiente) return { ...res, dano };
+    const sb = await supabase(), v = await sb.functions.invoke('verificar-raid', { body: { ataque: r.ataque } });
+    if (v.error) throw v.error;
+    if (v.data?.error) throw new Error(v.data.error);
+    return v.data;
+  });
+  return r.envio;
+}
+async function finRaid(base) {
+  const r = ui.raid, esta = partida;
+  let res = null, error = '';
+  try { res = await enviarRaid(); } catch (e) { error = D.mensajeError(e); }
+  await wait(700);
+  if (esta !== partida) return;
+  mostrarResultados({ ...base, gano: !!res?.derrotado, empate: false, recompensas: [] });
+  const sin = document.querySelector('.res-sin'); if (sin) sin.textContent = 'Tu cofre se reclama en la pantalla del Jefe de Raid, al derrotarlo o al cerrar el día.';
+  $('#ov-title').textContent = res?.derrotado ? '👑 ¡Jefe derrotado!' : res ? `❄️ ${miles(res.dano)} de daño` : '⚠️ Daño sin guardar';
+  $('#ov-sub').textContent = res ? `${r.nombreDif} · Tu total de hoy: ${miles(res.total)} · ${res.cofre ? `Cofre ${res.cofre} de 4` : 'Aún sin cofre'} · ${res.derrotado ? 'Ya puedes reclamar tu cofre' : `Quedan ${miles(res.hp_restante)} de HP`}`
+    : `⚠️ ${error || 'No se pudo guardar el daño'}. Si se está verificando, se sumará en cuanto el servidor lo confirme.`;
+}
+
 // Arena en vivo: los dos jugadores reportan; si el otro no reporta (se fue), se acepta el tuyo a los 60 s
 async function finVivo(base, fin) {
   const a = ui.arena, esta = partida, rel = ganadorRelativo(fin.ganador, a.soy);
@@ -765,11 +823,11 @@ async function finVivo(base, fin) {
 // Botones de la ventana de resultados: en Campaña son Siguiente etapa / Repetir / Cambiar equipo / Portal
 function botonesResultado(gano) {
   const camp = ui.camp;
-  const h = !!ui.horda, pr = !!ultima?.opciones?.practicaArena, ar = !!ui.arena || pr;
-  $('#ov-revancha').classList.toggle('hidden', h || (ar && !pr)); $('#ov-equipo').classList.toggle('hidden', h || ar);
+  const h = !!ui.horda, pr = !!ultima?.opciones?.practicaArena, ar = !!ui.arena || pr, rd = !!ui.raid;
+  $('#ov-revancha').classList.toggle('hidden', h || rd || (ar && !pr)); $('#ov-equipo').classList.toggle('hidden', h || ar || rd);
   $('#ov-siguiente').classList.toggle('hidden', !(camp && gano && siguienteEtapa(camp)));
   $('#ov-revancha').textContent = camp ? '🔁 Repetir' : '⚔️ Revancha';
-  $('#ov-menu').textContent = camp ? '🌀 Portal' : h ? '🧟 Horda' : ar && !ui.arena?.amistoso ? '🏟️ Arena' : '🏠 Menú';
+  $('#ov-menu').textContent = camp ? '🌀 Portal' : rd ? '👑 Jefe de Raid' : h ? '🧟 Horda' : ar && !ui.arena?.amistoso ? '🏟️ Arena' : '🏠 Menú';
 }
 // Serie de repeticiones: 5 s entre batallas (o lo que aún pida el servidor entre cobros) y lanza la siguiente en Auto ×2
 function programarRepeticion(esta) {
@@ -795,6 +853,7 @@ async function ejecutar(categoria, objetivo) {
   setHint(''); refrescarPanel();
   if (ui.vivo) { ui.vivo.enviar(ui.vivo.turno, categoria, objetivo); ui.vivo.turno++; }   // en vivo: la decisión viaja al otro jugador
   if (ui.arena?.decisiones) ui.arena.decisiones.push({ c: categoria, o: objetivo || null });
+  if (ui.raid) ui.raid.decisiones.push({ c: categoria, o: objetivo || null });
   await procesar(actuarGuardando({ categoria, objetivo }));
 }
 function elegirMovimiento(cat) {
@@ -892,7 +951,7 @@ $('#ov-equipo').addEventListener('click', () => {
   if (c) return elegirEquipoEtapa(c.dif, c.etapa);
   cargarSeleccion(ultima.jugador.map(porId), ultima.rival.map(porId), ultima.rivalModo); irA('equipo');
 });
-$('#ov-menu').addEventListener('click', () => { serieT?.(); serieT = null; irA(ultima.opciones?.campana ? 'campana' : ultima.opciones?.horda ? 'horda' : (ultima.opciones?.arena && !ultima.opciones.arena.amistoso) || ultima.opciones?.practicaArena ? 'arena' : 'menu'); });
+$('#ov-menu').addEventListener('click', () => { serieT?.(); serieT = null; irA(ultima.opciones?.campana ? 'campana' : ultima.opciones?.raid ? 'raid' : ultima.opciones?.horda ? 'horda' : (ultima.opciones?.arena && !ultima.opciones.arena.amistoso) || ultima.opciones?.practicaArena ? 'arena' : 'menu'); });
 $('#ov-siguiente').addEventListener('click', () => { serieT?.(); const c = ultima.opciones?.campana, e = c && siguienteEtapa(c); if (e) elegirEquipoEtapa(c.dif, e); });
 $('#overlay').addEventListener('click', e => {
   const b = e.target.closest('#res-serie-stop'); if (!b) return;
@@ -935,7 +994,8 @@ iniciarMisiones();
 document.addEventListener('click', e => { if (e.target.closest('button:not([disabled]):not(.act.off)')) sonar('clic'); }, true);
 
 // ---------------------------------------------------------------- inicio: menú, o directo a la partida si venimos de "Revancha"/"Jugar"
-iniciarMenu({ jugar: (j, r) => jugar(j, r, document.querySelector('.eq-modo button.on')?.dataset.modo || 'azar'), salirDePartida, abrirCampana, abrirHorda, abrirArena });
+iniciarMenu({ jugar: (j, r) => jugar(j, r, document.querySelector('.eq-modo button.on')?.dataset.modo || 'azar'), salirDePartida, abrirCampana, abrirHorda, abrirArena, abrirRaid });
+iniciarRaid({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 iniciarCampana({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 iniciarHorda({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 iniciarArena({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
