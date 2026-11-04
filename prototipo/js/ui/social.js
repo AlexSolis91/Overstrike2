@@ -24,6 +24,12 @@ let enEquipo = false, relojEquipo = null, relojAviso = null;
 const atendidos = new Set();               // `${id}:${estado}` ya procesados
 let peleados = new Set();                  // ids de desafíos que ya entraron a la batalla
 
+// Minimizar el panel: se recuerda en este dispositivo. En pantalla chica el panel se abre encima, y no se recuerda abierto.
+function minimizarSocial(min) {
+  document.body.classList.toggle('social-abierto', !min);
+  document.body.classList.toggle('social-min', min);
+  try { localStorage.setItem('os2-social-min', min ? '1' : '0'); } catch (e) { /* sin almacenamiento */ }
+}
 const miId = () => perfilActual()?.id;
 const estadoLocal = () => document.body.dataset.pantalla === 'partida' ? 'combate' : 'libre';
 const rivalDe = d => d.soy === 'a' ? d.para_nombre : d.de_nombre;
@@ -61,7 +67,7 @@ function pintarPanel() {
   if (!con) return;
   pintarJugadores(); pintarTabs(); pintarMensajes();
 }
-const panelVisible = () => document.body.dataset.pantalla === 'menu' && (getComputedStyle($('#social')).display !== 'none');
+const panelVisible = () => document.body.dataset.pantalla === 'menu' && (getComputedStyle($('#social')).display !== 'none');   // minimizado: los mensajes cuentan como no leídos
 
 async function abrirSala(id, nombre) {
   sala = id;
@@ -302,9 +308,10 @@ export function iniciarSocial(opc) {
     if (cerrar) { salas.delete(cerrar.dataset.cerrar); if (sala === cerrar.dataset.cerrar) abrirSala('global'); else pintarTabs(); return; }
     const tab = t.closest('[data-sala]');
     if (tab) return abrirSala(tab.dataset.sala, salas.get(tab.dataset.sala)?.nombre);
-    if (t.closest('#soc-cerrar')) return document.body.classList.remove('social-abierto');
+    if (t.closest('#soc-cerrar')) return minimizarSocial(true);
   });
-  $('#soc-abrir').addEventListener('click', () => { document.body.classList.toggle('social-abierto'); if (document.body.classList.contains('social-abierto')) abrirSala(sala, salas.get(sala)?.nombre); });
+  try { if (localStorage.getItem('os2-social-min') === '1') document.body.classList.add('social-min'); } catch (e) { /* sin almacenamiento */ }
+  $('#soc-abrir').addEventListener('click', () => { minimizarSocial(document.body.classList.contains('social-abierto')); if (document.body.classList.contains('social-abierto')) abrirSala(sala, salas.get(sala)?.nombre); });
   $('#soc-form').addEventListener('submit', enviarChat);
   $('#desafio-aviso').addEventListener('click', e => {
     const a = e.target.closest('[data-da]')?.dataset.da;

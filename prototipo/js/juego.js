@@ -27,7 +27,7 @@ import { huellaCombate } from './motor/hordaReanudar.js';
 import { guardarLocal, borrarLocal } from './servicios/hordaGuardada.js';
 import { iniciarArena, abrirArena } from './ui/arena.js';
 import { iniciarRaid, abrirRaid } from './ui/raid.js';
-import { iniciarAmbiente, terminarAmbiente, efectoAtaque, almaAlJefe, furiaDelCampo } from './ui/ambiente.js';
+import { iniciarAmbiente, terminarAmbiente, efectoAtaque, almaAlJefe, furiaDelCampo, vueloInvocacion } from './ui/ambiente.js';
 import { JEFES_RAID, RONDAS_RAID } from './datos/jefes/raid.js';
 import { iniciarSocial } from './ui/social.js';
 import { iniciarActualizacion } from './ui/actualizacion.js';
@@ -56,7 +56,7 @@ addEventListener('resize', modoMovil);
 await iniciarEscena($('#field'));
 await precargar(
   OFICIALES.flatMap(p => { const l = [p.imagen]; for (let f = p.transformacion; f; f = f.transformacion) l.push(f.imagen); return l; })
-    .concat(Object.values(INVOCACIONES).map(i => i.imagen), Object.values(HORDAS).flatMap(h => Object.values(h.enemigos).map(e => e.imagen)), Object.values(JEFES_RAID).map(j => j.imagen)),   // + enemigos de la Horda
+    .concat(Object.values(INVOCACIONES).map(i => i.imagen), Object.values(HORDAS).flatMap(h => Object.values(h.enemigos).map(e => e.imagen)), Object.values(JEFES_RAID).flatMap(j => [j.imagen, j.arteCarta])),   // + enemigos de la Horda
   INVOCACIONES,
   (n, total) => { $('#loading-bar').style.width = `${n / total * 100}%`; $('#loading-text').textContent = `Cargando imágenes ${n}/${total}`; },
 );
@@ -426,6 +426,7 @@ async function manejar(e) {
     case 'invocacion':
       log(`${nombre(e.de)} invoca a ${INVOCACIONES[e.key].nombre}${e.rareza ? ` (${e.rareza})` : ''}`, e.rareza === 'Legendario' ? 'sys' : 'fx');
       if (e.rareza === 'Legendario') { banner(`¡${INVOCACIONES[e.key].nombre.toUpperCase()}!`, { size: 70, color: '#fbbf24', hold: 1 }); await wait(700); }
+      if (ui.raid && INVOCACIONES[e.key].vuelo) vueloInvocacion(INVOCACIONES[e.key].imagen, { fuerza: 1.4, segundos: 2 });
       await FX.invocacion(c(e.de), e.key, e.idx);
       aplicar(e);
       break;
@@ -445,6 +446,7 @@ async function manejar(e) {
     case 'invocacionExpira': FX.invocacionSeVa(c(e.de), e.key); log(`${INVOCACIONES[e.key].nombre} de ${nombre(e.de)} se desvanece`); break;
     case 'invocacionAtaca':
       log(`${INVOCACIONES[e.key].nombre} ataca a ${nombre(e.a)}`, 'fx');
+      if (ui.raid && INVOCACIONES[e.key].vuelo && Date.now() - (ui.raid.ultimoVuelo || 0) > 2500) { ui.raid.ultimoVuelo = Date.now(); vueloInvocacion(INVOCACIONES[e.key].imagen); }
       enVuelo.push({ key: e.key, de: e.de, spr: await FX.invocacionSale(c(e.de), e.key, e.idx, c(e.a)) });
       break;
     case 'invocacionVuelve': {        // vuelve la última que salió de ese tipo (y de ese invocador)
@@ -582,7 +584,7 @@ function terminar(fin) {
   const base = { gano, empate: fin.ganador === 'empate', limite: !!fin.limite, ronda: fin.ronda, duracionMs: Date.now() - inicioPartida, personajes };
   botonesResultado(gano);
   if (ui.horda) return void finHorda(base, false);
-  if (ui.raid) return void finRaid(base);
+  if (ui.raid) return void finRaid(base, fin);
   if (ui.arena) return void finArena(base, fin);
   if (!ui.camp) return void temporizar(() => esta === partida && mostrarResultados({ ...base, recompensas: fin.recompensas || [] }), 700);
   // Campaña: estrellas y cobro en el servidor; luego (si es una serie) la siguiente repetición
@@ -779,13 +781,13 @@ function enviarRaid() {
   });
   return r.envio;
 }
-async function finRaid(base) {
+async function finRaid(base, fin) {
   const r = ui.raid, esta = partida;
   let res = null, error = '';
   try { res = await enviarRaid(); } catch (e) { error = D.mensajeError(e); }
   await wait(700);
   if (esta !== partida) return;
-  mostrarResultados({ ...base, gano: !!res?.derrotado, empate: false, recompensas: [] });
+  mostrarResultados({ ...base, gano: !!res?.derrotado || !!fin.limite, empate: false, recompensas: [] });   // en rojo solo si tu equipo cayó
   const sin = document.querySelector('.res-sin'); if (sin) sin.textContent = 'Tu cofre se reclama en la pantalla del Jefe de Raid, al derrotarlo o al cerrar el día.';
   $('#ov-title').textContent = res?.derrotado ? '👑 ¡Jefe derrotado!' : res ? `❄️ ${miles(res.dano)} de daño` : '⚠️ Daño sin guardar';
   $('#ov-sub').textContent = res ? `${r.nombreDif} · Tu total de hoy: ${miles(res.total)} · ${res.cofre ? `Cofre ${res.cofre} de 4` : 'Aún sin cofre'} · ${res.derrotado ? 'Ya puedes reclamar tu cofre' : `Quedan ${miles(res.hp_restante)} de HP`}`

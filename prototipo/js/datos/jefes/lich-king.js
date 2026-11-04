@@ -6,6 +6,8 @@ export default {
   nombre: 'Lich King',
   rol: 'Tanque',
   emoji: '👑', color: '#60a5fa', imagen: 'assets/personajes/lich-king-jefe.webp',
+  arteCarta: 'assets/personajes/lich-king-jefe-carta.webp',   // la carta del campo es solo esta imagen, sin barra ni estadísticas
+  auraJefe: 'hielo',                                         // aura de la carta: hielo · fuego · oscuro
   base: { hp: 3000, dmg: 70, spd: 100 },
   extra: { armor: .20, res: .50 },
   slots: [],
@@ -33,8 +35,8 @@ export default {
     {
       categoria: 'over', nombre: 'Furia de Frostmourne', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x38bdf8, elemento: 'hielo', ambiente: 'furia',
       pct: 1.8, escala: 'dano', cd: 0,
-      desc: 'Causa 180% a todos los enemigos y les quita todos sus buffs.',
-      efectos: [{ accion: { tipo: 'disipar' } }],
+      desc: 'Causa 180% a todos los enemigos, les quita todos sus buffs e invoca a Sindragosa (actúa 2 veces; se puede Disipar).',
+      efectos: [{ accion: { tipo: 'disipar' } }, { cuando: 'final', accion: { tipo: 'invocar', key: 'sindragosa', a: 'propio' } }],
     },
   ],
 };

@@ -298,6 +298,15 @@ __m["datos/invocaciones.js"] = (() => { const __e: any = {};
 // luminosa: true para imágenes con fondo negro (se dibujan en modo "pantalla": solo brilla lo claro)
 
 const INVOCACIONES = {
+  // ---------------------------------------------------------------- Jefe de Raid: Lich King
+  // vuelo: true → en el campo del jefe cruza la pantalla al aparecer y al atacar
+  sindragosa: {
+    nombre: 'Sindragosa', rareza: 'Legendario', emoji: '🐉', color: 0x38bdf8, imagen: 'assets/invocaciones/sindragosa.webp', dur: 2,
+    enfoque: [.62, .36], luminosa: true, vuelo: true,
+    desc: 'La Reina de los Vermis de Escarcha. Al aparecer aplica Desgaste a todos los enemigos. Cada turno, Aliento de Escarcha: golpea 70% a todos los enemigos, con 25% de probabilidad de Congelación.',
+    alAparecer: [{ tipo: 'efecto', id: 'wear', a: 'todosEnemigos' }],
+    acciones: [{ tipo: 'golpe', pct: .70, elegir: 'todos', efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .25 } }] }],
+  },
   // ---------------------------------------------------------------- Naruto
   clonSombra: {
     nombre: 'Clon de Sombra', rareza: 'Común', emoji: '🥷', color: 0xf97316, imagen: 'assets/invocaciones/clon-de-sombra.webp', dur: 2, max: 3,
@@ -8032,43 +8041,6 @@ __e["OFICIALES"] = OFICIALES;
 __e["porId"] = porId;
 return __e; })();
 
-__m["datos/cuenta.js"] = (() => { const __e: any = {};
-// Armar fichas de batalla con datos de una cuenta (estrellas y reliquias equipadas). Sin DOM: lo usan el juego y el servidor
-// (la verificación de batallas de la Arena repite la batalla con estas mismas funciones).
-const { instancia, espaciosDeCuenta, RELIQUIAS } = __m["datos/reliquias.js"];
-const { OFICIALES } = __m["datos/personajes/index.js"];
-
-const abiertosDe = r => r?.espacios_abiertos?.length || !r?.espacios ? (r?.espacios_abiertos || []) : ['arma2', 'equip2', 'acc2'].slice(0, r.espacios);
-
-// Datos de batalla de un equipo que manda el servidor: { col: [{campeon, estrellas, espacios, espacios_abiertos}], reliquias: [filas] }
-function cuentaDesdeServidor(j) {
-  const equipo = {};
-  for (const f of j?.reliquias || []) if (f.campeon && f.espacio) (equipo[f.campeon] ||= {})[f.espacio] = instancia(f);
-  return { col: new Map((j?.col || []).map(r => [r.campeon, r])), equipo, reliquias: true };
-}
-
-// Ficha lista para la batalla: estrellas y reliquias de la cuenta (un campeón que no tienes pelea con 0★ y sin reliquias)
-function conCuenta(def, cuenta) {
-  if (!cuenta) return def;
-  const r = cuenta.col.get(def.id);
-  const out = { ...def, estrellas: r?.estrellas || 0 };
-  if (cuenta.reliquias) out.slots = espaciosDeCuenta(cuenta.equipo[def.id] || {}, abiertosDe(r));
-  return out;
-}
-
-// Versión del juego (huella de las fichas y reliquias): en vivo solo se emparejan jugadores con la misma, y el servidor
-// solo verifica batallas jugadas con la versión que conoce
-const VERSION = (() => {
-  const t = JSON.stringify([OFICIALES.map(p => [p.id, p.base, p.extra, p.movimientos, p.pasiva, p.lider]), Object.keys(RELIQUIAS)]);
-  let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return String(h >>> 0);
-})();
-
-__e["VERSION"] = VERSION;
-__e["abiertosDe"] = abiertosDe;
-__e["conCuenta"] = conCuenta;
-__e["cuentaDesdeServidor"] = cuentaDesdeServidor;
-return __e; })();
-
 __m["datos/jefes/lich-king.js"] = (() => { const __e: any = {};
 // Jefe de Raid: Lich King. Ficha propia, distinta del campeón: es la batalla en lo alto de la Ciudadela de la Corona de Hielo.
 // hp es el HP de referencia: los efectos por % de HP máx. se calculan sobre él; el HP real es la barra que comparten todos los jugadores.
@@ -8078,6 +8050,8 @@ __e.default = {
   nombre: 'Lich King',
   rol: 'Tanque',
   emoji: '👑', color: '#60a5fa', imagen: 'assets/personajes/lich-king-jefe.webp',
+  arteCarta: 'assets/personajes/lich-king-jefe-carta.webp',   // la carta del campo es solo esta imagen, sin barra ni estadísticas
+  auraJefe: 'hielo',                                         // aura de la carta: hielo · fuego · oscuro
   base: { hp: 3000, dmg: 70, spd: 100 },
   extra: { armor: .20, res: .50 },
   slots: [],
@@ -8105,8 +8079,8 @@ __e.default = {
     {
       categoria: 'over', nombre: 'Furia de Frostmourne', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x38bdf8, elemento: 'hielo', ambiente: 'furia',
       pct: 1.8, escala: 'dano', cd: 0,
-      desc: 'Causa 180% a todos los enemigos y les quita todos sus buffs.',
-      efectos: [{ accion: { tipo: 'disipar' } }],
+      desc: 'Causa 180% a todos los enemigos, les quita todos sus buffs e invoca a Sindragosa (actúa 2 veces; se puede Disipar).',
+      efectos: [{ accion: { tipo: 'disipar' } }, { cuando: 'final', accion: { tipo: 'invocar', key: 'sindragosa', a: 'propio' } }],
     },
   ],
 };
@@ -8140,6 +8114,45 @@ __e["FURIA_RAID"] = FURIA_RAID;
 __e["JEFES_RAID"] = JEFES_RAID;
 __e["RONDAS_RAID"] = RONDAS_RAID;
 __e["opcionesRaid"] = opcionesRaid;
+return __e; })();
+
+__m["datos/cuenta.js"] = (() => { const __e: any = {};
+// Armar fichas de batalla con datos de una cuenta (estrellas y reliquias equipadas). Sin DOM: lo usan el juego y el servidor
+// (la verificación de batallas de la Arena repite la batalla con estas mismas funciones).
+const { instancia, espaciosDeCuenta, RELIQUIAS } = __m["datos/reliquias.js"];
+const { OFICIALES } = __m["datos/personajes/index.js"];
+const { JEFES_RAID } = __m["datos/jefes/raid.js"];
+const { INVOCACIONES } = __m["datos/invocaciones.js"];
+
+const abiertosDe = r => r?.espacios_abiertos?.length || !r?.espacios ? (r?.espacios_abiertos || []) : ['arma2', 'equip2', 'acc2'].slice(0, r.espacios);
+
+// Datos de batalla de un equipo que manda el servidor: { col: [{campeon, estrellas, espacios, espacios_abiertos}], reliquias: [filas] }
+function cuentaDesdeServidor(j) {
+  const equipo = {};
+  for (const f of j?.reliquias || []) if (f.campeon && f.espacio) (equipo[f.campeon] ||= {})[f.espacio] = instancia(f);
+  return { col: new Map((j?.col || []).map(r => [r.campeon, r])), equipo, reliquias: true };
+}
+
+// Ficha lista para la batalla: estrellas y reliquias de la cuenta (un campeón que no tienes pelea con 0★ y sin reliquias)
+function conCuenta(def, cuenta) {
+  if (!cuenta) return def;
+  const r = cuenta.col.get(def.id);
+  const out = { ...def, estrellas: r?.estrellas || 0 };
+  if (cuenta.reliquias) out.slots = espaciosDeCuenta(cuenta.equipo[def.id] || {}, abiertosDe(r));
+  return out;
+}
+
+// Versión del juego (huella de las fichas y reliquias): en vivo solo se emparejan jugadores con la misma, y el servidor
+// solo verifica batallas jugadas con la versión que conoce
+const VERSION = (() => {
+  const t = JSON.stringify([OFICIALES.map(p => [p.id, p.base, p.extra, p.movimientos, p.pasiva, p.lider]), Object.keys(RELIQUIAS), JEFES_RAID, INVOCACIONES]);
+  let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return String(h >>> 0);
+})();
+
+__e["VERSION"] = VERSION;
+__e["abiertosDe"] = abiertosDe;
+__e["conCuenta"] = conCuenta;
+__e["cuentaDesdeServidor"] = cuentaDesdeServidor;
 return __e; })();
 
 __m["motor/verificar.js"] = (() => { const __e: any = {};

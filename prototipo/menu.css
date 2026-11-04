@@ -1019,7 +1019,7 @@ body.eq-sin-rival .eq-fila[data-lado="rival"], body.eq-sin-rival .eq-modo { disp
 /* ---------- panel social: en línea, chat y desafíos */
 #social { position: absolute; left: 14px; top: 14px; bottom: 62px; width: 300px; z-index: 5; display: flex; flex-direction: column; padding: 10px; border: 1px solid rgba(253, 230, 138, .35); border-radius: 10px; background: rgba(8, 11, 24, .84); backdrop-filter: blur(6px); color: #e5e7eb; font: 500 12px Inter, sans-serif; text-align: left; }
 #soc-con:not(.hidden) { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 8px; }
-#soc-cerrar { display: none; align-self: flex-end; background: none; border: 0; color: #e5e7eb; font-size: 14px; cursor: pointer; }
+#soc-cerrar { display: block; align-self: flex-end; line-height: 1; padding: 0 4px; background: none; border: 0; color: #e5e7eb; font-size: 14px; cursor: pointer; }
 .soc-lista { flex: 0 1 38%; min-height: 96px; display: flex; flex-direction: column; }
 .soc-lista h3 { margin: 0 0 6px; color: var(--gold); font: 700 13px Cinzel, serif; display: flex; align-items: center; gap: 6px; }
 .soc-lista h3 b { margin-left: auto; font: 700 12px Inter, sans-serif; }
@@ -1060,11 +1060,12 @@ body.eq-sin-rival .eq-fila[data-lado="rival"], body.eq-sin-rival .eq-modo { disp
 #desafio-reloj { position: fixed; top: 10px; right: 14px; z-index: 9000; padding: 6px 10px; border: 1px solid var(--gold); border-radius: 8px; background: rgba(10, 13, 28, .95); color: var(--gold); font: 700 13px Inter, sans-serif; }
 #soc-toasts { position: fixed; top: 16px; right: 16px; z-index: 10001; display: grid; gap: 6px; width: min(320px, calc(100vw - 32px)); pointer-events: none; }
 .soc-toast { padding: 9px 12px; border: 1px solid rgba(253, 230, 138, .45); border-radius: 8px; background: rgba(10, 13, 28, .96); color: #f3f4f6; font: 500 13px Inter, sans-serif; }
+body.social-min #social { display: none; }
+body.social-min #soc-abrir { display: block; }
 @media (max-width: 1100px) {
   #soc-abrir { display: block; }
   #social { display: none; top: 8px; left: 8px; bottom: 8px; width: min(340px, calc(100vw - 16px)); z-index: 7; }
   body.social-abierto #social { display: flex; }
-  #soc-cerrar { display: block; }
 }
 
 /* ---------- aviso de nueva versión */
@@ -1091,3 +1092,6 @@ body.eq-sin-rival .eq-fila[data-lado="rival"], body.eq-sin-rival .eq-modo { disp
 .rd-mio { margin: 8px 0; font-size: 13px; color: #e5e7eb; }
 .rd-rangos img { height: 16px; vertical-align: middle; }
 .rd-cofre { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; font-size: 13px; color: #e5e7eb; border-top: 1px solid rgba(255, 255, 255, .08); flex-wrap: wrap; }
+
+.rd-rel { white-space: nowrap; font-size: 11px; color: var(--muted); }
+.tc-maximos { justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 8px 12px; border: 1px solid rgba(253, 230, 138, .35); border-radius: 10px; background: rgba(253, 230, 138, .06); font-size: 13px; color: var(--text); }

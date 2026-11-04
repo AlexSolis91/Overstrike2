@@ -14,6 +14,7 @@ import { RELIQUIAS, espaciosDeCuenta } from '../datos/reliquias.js';
 import { crearCombate } from '../motor/combate.js';
 import { habilidadesHtml } from './menu.js';
 
+const MAX_ESTRELLAS = 5;   // estrellas máximas de hoy; también en _estrellas_maximas() (docs/sql/027_raid_ajustes.sql)
 const $ = s => document.querySelector(s);
 const ROL = { Support: 'Soporte', Invoker: 'Invocador' };
 const COSTO_ESPACIO = { copias: [1, 3, 5], oro: [100000, 500000, 1000000] };   // igual que en el servidor
@@ -292,7 +293,10 @@ function htmlColeccion() {
   if (detalle) return htmlDetalle(porId(detalle));
   const tengo = OFICIALES.filter(p => col.has(p.id)).length;
   const orden = [...OFICIALES].sort((a, b) => (col.has(b.id) - col.has(a.id)) || a.nombre.localeCompare(b.nombre));
+  const sobrantes = [...col.values()].filter(r => r.estrellas >= MAX_ESTRELLAS && r.copias > 0);
+  const nSobrantes = sobrantes.reduce((s, r) => s + r.copias, 0);
   return `<p class="tc-nota">Tienes <b>${tengo}/${OFICIALES.length}</b> campeones. Toca uno para ascenderlo, abrir espacios de reliquias o desfragmentar copias.</p>
+    ${nSobrantes ? `<div class="tc-fila tc-maximos"><span>🧩 ${num(nSobrantes)} copia${nSobrantes > 1 ? 's' : ''} de ${sobrantes.length} ${sobrantes.length > 1 ? 'campeones' : 'campeón'} con ${MAX_ESTRELLAS}★ (el máximo)</span><button class="eq-btn" data-desfrag-max>Desfragmentar todas</button></div>` : ''}
     <div class="tc-grid">${orden.map(p => { const r = col.get(p.id);
       return `<button class="tc-carta ${r ? '' : 'falta'}" data-ver="${p.id}" style="--c:${p.color}">
         <div class="tc-img">${retrato(p)}</div>
@@ -500,6 +504,11 @@ async function ejecutar(e) {
     const con = b.dataset.espacio, sig = col.get(detalle).espacios, esp = b.dataset.esp, nombre = ESPACIOS.find(e => e.id === esp)?.label || `el espacio ${sig + 1}`;
     if (con === 'oro' && !confirm(`¿Abrir ${nombre} por ${num(COSTO_ESPACIO.oro[sig])} de oro?`)) return;
     return accion(async () => { await D.desbloquearEspacio(detalle, con, esp); await recargar(); pintar(); aviso(`${nombre} desbloqueado.`); });
+  }
+  if ('desfragMax' in b.dataset) {
+    const lista = [...col.values()].filter(r => r.estrellas >= MAX_ESTRELLAS && r.copias > 0), total = lista.reduce((s, r) => s + r.copias, 0);
+    if (!confirm(`¿Desfragmentar ${num(total)} copia${total > 1 ? 's' : ''} de ${lista.length} ${lista.length > 1 ? 'campeones' : 'campeón'} con ${MAX_ESTRELLAS}★? Esto no se puede deshacer.`)) return;
+    return accion(async () => { const r = await D.desfragmentarMaximos(); await recargar(); pintar(); aviso(`Desfragmentaste ${num(r.copias)} copia${r.copias > 1 ? 's' : ''} de ${r.campeones} ${r.campeones > 1 ? 'campeones' : 'campeón'}: 🧩 ${num(r.frag_runa)} de Runa y 💠 ${num(r.frag_otros)} de otros fragmentos.`); });
   }
   if ('desfrag' in b.dataset) {
     const n = Math.floor(Number($('#tc-cant').value)), max = col.get(detalle).copias;

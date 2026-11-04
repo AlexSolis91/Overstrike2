@@ -8,6 +8,7 @@ import { JEFES_RAID, DIFICULTADES_RAID, RONDAS_RAID, FURIA_RAID, opcionesRaid } 
 import { RELIQUIAS } from '../datos/reliquias.js';
 import { VERSION } from '../datos/cuenta.js';
 import { ICONO_RUNA_PORTAL } from '../datos/recompensas.js';
+import { INVOCACIONES } from '../datos/invocaciones.js';
 
 const $ = s => document.querySelector(s);
 const miles = n => Math.round(n).toLocaleString('es-MX');
@@ -16,6 +17,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 let jugar = null, E = null, error = '', sel = null, reloj = null, ocupado = false;
 
 // Cofre 1–4: se paga 25, 50, 75 y 100% de oro, polvo y runas; derrotar al jefe los duplica
+const MAX_LLAVES = 2;
 const CAT = { basico: 'Básico', especial: 'Especial', over: 'Over' };
 
 async function cargar() {
@@ -50,17 +52,17 @@ function pintarRelojes() {
 function htmlRangos(d) {
   const filas = d.rangos.map((r, i) => {
     const f = (i + 1) * .25, sig = d.rangos[i + 1];
-    return `<tr class="${d.cofre === i + 1 ? 'yo' : ''}"><td>Cofre ${i + 1}</td><td>${miles(r)}${sig ? ` – ${miles(sig - 1)}` : ' o más'}</td><td>🪙 ${miles(d.oro * f)}</td><td>${miles(d.polvo * f)}</td><td>${Math.round(d.runas * f)}</td></tr>`;
+    return `<tr class="${d.cofre === i + 1 ? 'yo' : ''}"><td>Cofre ${i + 1}</td><td>${miles(r)}${sig ? ` – ${miles(sig - 1)}` : ' o más'}</td><td>🪙 ${miles(d.oro * f)}</td><td>${miles(d.polvo * f)}</td><td>${Math.round(d.runas * f)}</td><td class="rd-rel">${pct(d.p_rara * f)} · ${pct(d.p_especial * f)} · ${pct(d.p_epica * f)}</td></tr>`;
   }).join('');
-  return `<table class="hd-ranking rd-rangos"><tr><th>Cofre</th><th>Tu daño del día</th><th>Oro</th><th>Polvo</th><th>${ICONO_RUNA_PORTAL}</th></tr>${filas}</table>
-    <p class="hd-nota">Si el jefe cae, se duplican oro, polvo y runas. Reliquias en cualquier cofre: Rara ${pct(d.p_rara)} · Especial ${pct(d.p_especial)} · Épica ${pct(d.p_epica)}.</p>
+  return `<table class="hd-ranking rd-rangos"><tr><th>Cofre</th><th>Tu daño del día</th><th>Oro</th><th>Polvo</th><th>${ICONO_RUNA_PORTAL}</th><th>Rara · Especial · Épica</th></tr>${filas}</table>
+    <p class="hd-nota">Si el jefe cae, se duplican oro, polvo y runas; las reliquias no.</p>
     <p class="hd-nota">Receta de ${RELIQUIAS[E.legendaria]?.name || 'Legendaria'}: ${pct(d.p_receta)}. Hay 1 tirada al día, en la dificultad más alta donde alcanzaste cofre.</p>`;
 }
 
 function pintar() {
   const jefe = JEFES_RAID[E?.jefe || 'lich-king'], d = E?.dificultades.find(x => x.id === sel);
   const sinSesion = !perfilActual();
-  $('#rd-llaves').innerHTML = E ? `<span title="Llaves">🗝️ ${E.llaves}/4${E.proxima_llave ? ` · <small id="rd-llave"></small>` : ''}</span><span title="Tiempo para el reinicio">⏳ <small id="rd-cierra"></small></span>` : '';
+  $('#rd-llaves').innerHTML = E ? `<span title="Llaves">🗝️ ${E.llaves}/${MAX_LLAVES}${E.proxima_llave ? ` · <small id="rd-llave"></small>` : ''}</span><span title="Tiempo para el reinicio">⏳ <small id="rd-cierra"></small></span>` : '';
   const hp = d ? d.hp_restante / d.hp_total : 1;
   const sig = d && d.cofre < 4 ? d.rangos[d.cofre] - d.mi_dano : 0;
   $('#rd-cuerpo').innerHTML = `
@@ -77,7 +79,7 @@ function pintar() {
         <p class="rd-mio">Tu daño hoy: <b>${miles(d.mi_dano)}</b>${d.cofre ? ` · Cofre ${d.cofre} de 4` : ' · Aún sin cofre'}${sig > 0 ? ` · Faltan ${miles(sig)} para el siguiente` : ''}</p>
         ${d.derrotado ? '<p class="hd-nota">✅ El jefe ya cayó en esta dificultad. Vuelve mañana o ataca otra.</p>' : ''}
         <button id="rd-atacar" class="hd-btn" ${!E.llaves || d.derrotado || ocupado ? 'disabled' : ''}>⚔️ Atacar (1 llave)</button>
-        ${!E.llaves ? '<p class="hd-nota">Sin llaves: recibes 1 cada 6 horas, hasta 4.</p>' : ''}
+        ${!E.llaves ? '<p class="hd-nota">Sin llaves: recibes 1 cada 6 horas, hasta ${MAX_LLAVES}.</p>' : ''}
       </div>
       <div class="hd-panel"><h4>🎁 Rangos de ${d.nombre}</h4>${htmlRangos(d)}</div>` : ''}
       ${E.cofres.length ? `<div class="hd-panel"><h4>🧰 Tus cofres</h4>${E.cofres.map(c => `<div class="rd-cofre"><span><b>${c.nombre}</b> · Cofre ${c.cofre} de 4 · ${miles(c.dano)} de daño${c.derrotado ? ' · ×2' : ''}</span>
@@ -92,6 +94,7 @@ function pintar() {
       <p><b>${jefe.pasiva.nombre}:</b> ${jefe.pasiva.desc}</p>
       ${jefe.movimientos.map(m => `<p><b>${CAT[m.categoria]} · ${m.nombre}:</b> ${m.desc}</p>`).join('')}
       <p><b>Orden:</b> ${jefe.ciclo.map(c => jefe.movimientos.find(m => m.categoria === c).nombre).join(' → ')}.</p>
+      <p><b>Sindragosa:</b> ${INVOCACIONES.sindragosa.desc}</p>
       <h4>Recompensas</h4>
       <p>El cofre se reclama al derrotar al jefe o al cerrar el día. Si el jefe cae, se duplican oro, Polvo Arcano y Runas de Portal.</p>
     </aside>`;

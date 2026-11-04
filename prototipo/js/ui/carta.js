@@ -20,6 +20,25 @@ function puntoBorde() {                              // punto al azar del contor
 
 // Sombra y resplandores ya desenfocados (se crean una vez y los comparten todas las cartas)
 let TEX_SOMBRA, TEX_LIDER, TEX_FORMA, TEX_CORONA;
+
+// Aura de jefe (ficha: auraJefe), según su lore: corona que late, rayos que giran y partículas que suben desde los bordes
+const AURAS_JEFE = {
+  hielo: { corona: 0x38bdf8, rayos: 0x7dd3fc, chispas: [0xffffff, 0xe0f2fe, 0x7dd3fc, 0x38bdf8], onda: 0xbae6fd },
+  fuego: { corona: 0xff7a1a, rayos: 0xffd36b, chispas: [0xfff3a0, 0xffc23a, 0xff8a1a, 0xff5a00], onda: 0xffb020 },
+  oscuro: { corona: 0x7c3aed, rayos: 0xa78bfa, chispas: [0xddd6fe, 0xa78bfa, 0x7c3aed, 0x4c1d95], onda: 0x8b5cf6 },
+};
+// Carta de jefe: la imagen completa dentro de un marco, sin nombre, barra ni estadísticas
+function texturaJefe(p) {
+  return canvasTex(CW, CH, (g, w, h) => {
+    rr(g, 0, 0, w, h, 12); g.fillStyle = shade(p.color, -.2); g.fill();
+    g.save(); rr(g, 3, 3, w - 6, h - 6, 10); g.clip();
+    g.fillStyle = '#05070b'; g.fillRect(0, 0, w, h);
+    const img = IMG[p.arteCarta];
+    if (img) drawCover(g, img, 3, 3, w - 6, h - 6, .5, .3);
+    g.restore();
+    rr(g, 3, 3, w - 6, h - 6, 10); g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1; g.stroke();
+  });
+}
 function texturasCompartidas() {
   TEX_SOMBRA ||= texturaDesenfocada(CW, CH, 14, 10, { color: '#000000', alpha: .5 });
   TEX_LIDER ||= texturaDesenfocada(CW + 6, CH + 6, 14, 6, { forma: 'borde', grosor: 7, color: '#f7c948', alpha: .35 });
@@ -125,7 +144,7 @@ export class Carta {
     this.shadow = new PIXI.Sprite(TEX_SOMBRA); this.shadow.anchor.set(.5); this.shadow.position.set(4, 12); c.addChild(this.shadow);
 
     const body = this.body = new PIXI.Container(); c.addChild(body);
-    this.face = new PIXI.Sprite(textura(p)); this.face.anchor.set(.5); this.face.scale.set(.5); body.addChild(this.face);
+    this.face = new PIXI.Sprite(p.arteCarta ? texturaJefe(p) : textura(p)); this.face.anchor.set(.5); this.face.scale.set(.5); body.addChild(this.face);
     this.hpG = new PIXI.Graphics(); body.addChild(this.hpG);
     this.hpText = txt('', { size: 9, weight: '900', stroke: 3 }); this.hpText.position.set(0, 80); body.addChild(this.hpText);
     this.dmgText = txt('', { size: 12, weight: '900', fill: '#ffd2b8', stroke: 3 }); this.dmgText.position.set(-28, 56); body.addChild(this.dmgText);
@@ -161,6 +180,20 @@ export class Carta {
       this.auraCorona.blendMode = 'add'; this.auraCorona.visible = false;
       body.addChildAt(this.auraCorona, 0); body.addChildAt(r, 0);
       this.auraN = 0; this.llamaradas = []; this.llamT = 0;
+    }
+    if (p.arteCarta) for (const o of [this.hpG, this.hpText, this.dmgText, this.spdText]) o.visible = false;
+    if (p.auraJefe) {
+      const st = this.auraDeJefe = AURAS_JEFE[p.auraJefe];
+      TEX_CORONA ||= texturaDesenfocada(CW + 10, CH + 10, 16, 9, { forma: 'borde', grosor: 12, color: '#ffffff', alpha: 1 });
+      const r = this.jefeRayos = new PIXI.Graphics();
+      for (let i = 0; i < 16; i++) {
+        const a = i * Math.PI / 8, b = i % 2 ? .05 : .08, L = i % 2 ? 165 : 200;
+        r.poly([0, 0, Math.cos(a - b) * L, Math.sin(a - b) * L, Math.cos(a + b) * L, Math.sin(a + b) * L]).fill({ color: st.rayos, alpha: i % 2 ? .10 : .17 });
+      }
+      r.blendMode = 'add';
+      this.jefeCorona = new PIXI.Sprite(TEX_CORONA); this.jefeCorona.anchor.set(.5); this.jefeCorona.tint = st.corona; this.jefeCorona.blendMode = 'add';
+      body.addChildAt(this.jefeCorona, 0); body.addChildAt(r, 0);
+      this.jefeOnda = 2;
     }
     this.statusRow = new PIXI.Container(); this.statusRow.y = CH / 2;   // sobre el borde inferior de la carta
     c.addChild(this.statusRow);
@@ -232,6 +265,22 @@ export class Carta {
     if (this.liderGlow) this.liderGlow.alpha = v.muerto ? 0 : 1;
     this.dibujarForma();
     if (this.auraRayos) this.actualizarAura(primera || instantaneo);
+  }
+
+  tickAuraJefe(dt, T, x, y) {
+    const vivo = !this.v?.muerto, st = this.auraDeJefe;
+    this.jefeCorona.visible = this.jefeRayos.visible = vivo;
+    if (!vivo) return;
+    const k = this.c.scale.x * this.body.scale.x, cy = y + this.body.y * this.c.scale.y;
+    this.jefeCorona.alpha = .7 + .3 * Math.sin(T * 1.8);
+    this.jefeCorona.scale.set(1 + .03 * Math.sin(T * 1.8));
+    this.jefeRayos.rotation += .004 * dt; this.jefeRayos.alpha = .75 + .25 * Math.sin(T * 1.3);
+    if (Math.random() < (MOVIL ? .7 : 1.4) * dt) {
+      const b = puntoBorde();
+      spawn({ x: x + (b.x + b.nx * rand(0, 6)) * k, y: cy + (b.y + b.ny * rand(0, 6)) * k, vx: b.nx * rand(.2, .8) + rand(-.2, .2), vy: rand(-1, -2.6) + b.ny * .4,
+        color: pick(st.chispas), size: rand(.12, .28), life: rand(28, 48), drag: .99, grow: -.7 });
+    }
+    if ((this.jefeOnda -= dt / 60) <= 0) { this.jefeOnda = 2.6; ringWave(x, cy, st.onda, { scale: 4.5, width: 3, dur: .9 }); }
   }
 
   // Aura de cargas: cuenta las cargas de la vista; al llegar al máximo durante la partida, estalla
@@ -410,6 +459,7 @@ export class Carta {
       }
     }
     if (this.auraRayos) this.tickAura(dt, T, x, y);
+    if (this.jefeCorona) this.tickAuraJefe(dt, T, x, y);
     const tiene = id => v.estados.some(e => e.id === id);
     // Al elegir objetivo: las cartas del lado apuntado que NO se pueden elegir (Provocación, Sigilo, Incitar) se apagan
     // y la(s) válida(s) crecen un poco para que se note a quién hay que atacar

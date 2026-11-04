@@ -128,6 +128,25 @@ export function almaAlJefe(carta, jefe) {
     onComplete: () => { if (!s.destroyed) { burst(s.x, s.y, { n: 12, colors: [0xffffff, 0x7dd3fc], speed: 5, size: .22, life: 22 }); s.destroy(); } } });
 }
 
+// Una invocación con vuelo (Sindragosa) cruza el campo. El negro de su imagen desaparece con el modo "pantalla".
+export async function vueloInvocacion(imagen, { fuerza = 1, segundos = 1.8 } = {}) {
+  if (!A) return;
+  const tex = await PIXI.Assets.load(imagen);
+  if (!A) return;
+  const w = A.w, h = A.h, s = new PIXI.Sprite(tex);
+  s.anchor.set(.5); s.blendMode = 'screen'; s.alpha = 0; s.eventMode = 'none';
+  const lado = Math.max(w * .75, h * .75) / tex.width;
+  s.scale.set(lado); s.position.set(w * 1.15, h * .2);
+  A.frente.addChildAt(s, A.frente.children.length - 2);        // delante de la nieve, detrás de la niebla y el destello
+  tormenta(fuerza, segundos, .14);
+  destellar(.2, .4);
+  shakeScene(8);
+  gsap.timeline({ onComplete: () => { if (!s.destroyed) s.destroy(); } })
+    .to(s, { alpha: .95, duration: .35 }, 0)
+    .to(s, { x: w * -.15, y: h * .32, duration: segundos, ease: 'none' }, 0)
+    .to(s, { alpha: 0, duration: .4 }, segundos - .4);
+}
+
 // Furia del Rey: desde esa ronda, la tormenta ya no vuelve a calmarse del todo
 export function furiaDelCampo() {
   if (!A) return;

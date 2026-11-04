@@ -26,6 +26,7 @@ export const abrirSobre = id => rpc('abrir_sobre', { p_sobre: id });
 export const ascender = c => rpc('ascender', { p_campeon: c });
 export const desbloquearEspacio = (c, con, espacio) => rpc('desbloquear_espacio', { p_campeon: c, p_con: con, p_espacio: espacio });
 export const desfragmentar = (c, n) => rpc('desfragmentar', { p_campeon: c, p_cantidad: n });
+export const desfragmentarMaximos = () => rpc('desfragmentar_maximos');   // docs/sql/027_raid_ajustes.sql
 export const combinarRuna = () => rpc('combinar_runa');
 export const invocarPortal = c => rpc('invocar_portal', { p_campeon: c });
 export const abrirSobreVale = id => rpc('abrir_sobre_vale', { p_sobre: id });

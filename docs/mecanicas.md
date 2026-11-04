@@ -803,3 +803,16 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
   - `rival.dmgPct`: daño por dificultad sin tocar el HP.
 - **Lich King jefe** (`js/datos/jefes/lich-king.js`, ficha distinta del campeón): Daño 70, Velocidad 100, Armadura 20%, Resistencia 50%, HP de referencia 3,000. Inmune a Control. Ciclo: Invierno sin Remordimiento → Segador de Almas → Invierno → Segador → Furia de Frostmourne. Daño por dificultad: ×1, ×1.5, ×2, ×3, ×4.
 - **Campo:** `js/ui/ambiente.js`. Fondo propio, nieve constante y un efecto por movimiento (campo `ambiente` de la ficha): `ventisca` (tormenta de nieve), `rayos` (rayos de hielo), `furia` (destello, tormenta máxima y rayos a todos). Cada campeón caído manda su alma al jefe. Desde la Furia del Rey, la tormenta ya no se calma del todo.
+
+## 36. Ajustes del Jefe de Raid, Sindragosa y desfragmentar en lote (2026-11-04, `docs/sql/027_raid_ajustes.sql`)
+- **Llaves:** máximo 2; sigue llegando 1 cada 6 horas.
+- **Reliquias:** dependen de la dificultad y del cofre. El cofre 1, 2, 3 y 4 da 25, 50, 75 y 100% de esta tabla (Rara/Especial/Épica): Fácil 30/5/0 · Normal 45/12/3 · Difícil 60/20/8 · Brutal 75/30/16 · Pesadilla 90/45/30. No se duplican si el jefe cae.
+- **Resultados:** el título sale en rojo solo si tu equipo cayó. Llegar a la ronda 30 o derrotar al jefe no se ve como derrota.
+- **Carta de jefe** (`arteCarta` en la ficha): solo la imagen completa, sin nombre, barra ni estadísticas. Los datos siguen en el panel y en la barra compartida.
+- **Aura de jefe** (`auraJefe`: `hielo`, `fuego` u `oscuro`): corona que late, rayos que giran, partículas y ondas, con los colores de `AURAS_JEFE` en `js/ui/carta.js`.
+- **Sindragosa** (invocación, Legendario, `js/datos/invocaciones.js`): la invoca Furia de Frostmourne. Actúa 2 veces y se puede Disipar. Al aparecer aplica Desgaste a todos los enemigos; cada turno, Aliento de Escarcha: 70% a todos, con 25% de Congelación.
+- **`vuelo: true`** en una invocación: en el campo del jefe cruza la pantalla con tormenta al aparecer y al atacar (`vueloInvocacion` en `js/ui/ambiente.js`). Su imagen conserva el fondo negro y usa modo pantalla (`luminosa`).
+- **`VERSION`** ahora incluye a los jefes y las invocaciones. Con fichas nuevas, una función `verificar-raid` vieja acepta el daño reportado en vez de rechazarlo.
+- **Función `verificar-raid`:** se genera con `node prototipo/herramientas/empaquetar_verificador.mjs` y lleva el motor adentro. Hay que generarla y publicarla otra vez cuando cambien las fichas, las invocaciones o el motor de combate. Un cambio solo en el motor no cambia `VERSION`, así que en ese caso **se debe publicar antes de que los jugadores ataquen**: una repetición que no coincide cuenta 0 de daño.
+- **Panel social:** se minimiza con «–» y se abre con 💬, también en pantallas grandes. Se recuerda en cada dispositivo.
+- **Desfragmentar todas** (Colección → Campeones): `desfragmentar_maximos` desfragmenta todas las copias de los campeones con las estrellas máximas. Cada copia da 3 fragmentos, igual que una por una. Las estrellas máximas están en `_estrellas_maximas()` y en `MAX_ESTRELLAS` (`js/ui/coleccion.js`); si suben, hay que cambiar los dos.

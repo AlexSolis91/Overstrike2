@@ -2,6 +2,8 @@
 // (la verificación de batallas de la Arena repite la batalla con estas mismas funciones).
 import { instancia, espaciosDeCuenta, RELIQUIAS } from './reliquias.js';
 import { OFICIALES } from './personajes/index.js';
+import { JEFES_RAID } from './jefes/raid.js';
+import { INVOCACIONES } from './invocaciones.js';
 
 export const abiertosDe = r => r?.espacios_abiertos?.length || !r?.espacios ? (r?.espacios_abiertos || []) : ['arma2', 'equip2', 'acc2'].slice(0, r.espacios);
 
@@ -24,6 +26,6 @@ export function conCuenta(def, cuenta) {
 // Versión del juego (huella de las fichas y reliquias): en vivo solo se emparejan jugadores con la misma, y el servidor
 // solo verifica batallas jugadas con la versión que conoce
 export const VERSION = (() => {
-  const t = JSON.stringify([OFICIALES.map(p => [p.id, p.base, p.extra, p.movimientos, p.pasiva, p.lider]), Object.keys(RELIQUIAS)]);
+  const t = JSON.stringify([OFICIALES.map(p => [p.id, p.base, p.extra, p.movimientos, p.pasiva, p.lider]), Object.keys(RELIQUIAS), JEFES_RAID, INVOCACIONES]);
   let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return String(h >>> 0);
 })();
