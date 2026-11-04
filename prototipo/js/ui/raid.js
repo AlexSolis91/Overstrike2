@@ -5,7 +5,7 @@ import { supabase } from '../servicios/supabase.js';
 import { perfilActual } from './cuenta.js';
 import { equipoCampana, irA } from './menu.js';
 import { JEFES_RAID, DIFICULTADES_RAID, RONDAS_RAID, FURIA_RAID, opcionesRaid } from '../datos/jefes/raid.js';
-import { RELIQUIAS } from '../datos/reliquias.js';
+import { RELIQUIAS, RAREZAS } from '../datos/reliquias.js';
 import { VERSION } from '../datos/cuenta.js';
 import { ICONO_RUNA_PORTAL } from '../datos/recompensas.js';
 import { INVOCACIONES } from '../datos/invocaciones.js';
@@ -26,7 +26,7 @@ async function cargar() {
   try {
     E = await D.raidEstado();
     const avisos = E.recetas || [];
-    if (avisos.length) alert(avisos.map(r => `🎉 El Jefe de Raid soltó una receta de ${RELIQUIAS[r.legendaria]?.name || r.legendaria}. Búscala en Colección → Forja de los Dioses.`).join('\n'));
+    if (avisos.length) ventanaPremio('🎉 ¡Receta legendaria!', 'Búscala en Colección → Forja de los Dioses', avisos.map(r => itemReliquia(r.legendaria, 'Receta de ')));
     if (E.pendientes?.length) {                  // ataques cuya verificación no terminó: se reintentan
       const sb = await supabase();
       await Promise.all(E.pendientes.map(ataque => sb.functions.invoke('verificar-raid', { body: { ataque } }).catch(() => null)));
@@ -75,7 +75,7 @@ function pintar() {
       <div class="rd-difs">${E.dificultades.map(x => `<button class="rd-dif ${x.id === sel ? 'on' : ''}" data-dif="${x.id}" style="--dc:${DIFICULTADES_RAID[x.id].color}" ${x.abierta ? '' : 'disabled'}>${x.abierta ? (x.derrotado ? '✅ ' : '') : '🔒 '}${x.nombre}</button>`).join('')}</div>
       ${d ? `<div class="hd-panel">
         <div class="rd-hp"><i style="width:${Math.max(0, hp * 100)}%"></i><span>${miles(d.hp_restante)} / ${miles(d.hp_total)}</span></div>
-        <p class="rd-mio">Tu daño hoy: <b>${miles(d.mi_dano)}</b>${d.cofre ? ` · Cofre ${d.cofre} de 4` : ' · Aún sin cofre'}${sig > 0 ? ` · Faltan ${miles(sig)} para el siguiente` : ''}</p>
+        <p class="rd-mio">Tu daño hoy: <b>${miles(d.mi_dano)}</b>${d.cofre ? ` · Cofre ${d.cofre} de 4` : ' · Aún sin cofre'}${d.reclamado ? ' · ✅ Ya reclamaste este cofre' : sig > 0 && !d.derrotado ? ` · Faltan ${miles(sig)} para el siguiente` : ''}</p>
         ${d.derrotado ? '<p class="hd-nota">✅ El jefe ya cayó en esta dificultad. Vuelve mañana o ataca otra.</p>' : ''}
         <button id="rd-atacar" class="hd-btn" ${!E.llaves || d.derrotado || ocupado ? 'disabled' : ''}>⚔️ Atacar (1 llave)</button>
         ${!E.llaves ? `<p class="hd-nota">Sin llaves: recibes 1 cada 6 horas, hasta ${MAX_LLAVES}.</p>` : ''}
@@ -121,12 +121,33 @@ async function atacar() {
   });
 }
 
+// Ventana de premios, con el mismo estilo que el botín de la Horda
+const itemPremio = (img, txt, color = '#374151') => `<div class="hov-item" style="--rc:${color}">${img}${txt}</div>`;
+const emoji = e => `<div class="rd-premio-emoji">${e}</div>`;
+function itemReliquia(id, antes = '') {
+  const r = RELIQUIAS[id];
+  if (!r) return itemPremio(emoji('💎'), `${antes}${id}`);
+  const color = RAREZAS[r.rarity]?.color || '#374151';
+  return itemPremio(`<img src="${r.imagen}" alt="">`, `<span style="color:${color}">${antes}${r.name}</span>`, color);
+}
+function ventanaPremio(titulo, sub, items) {
+  const v = $('#rd-premio');
+  v.querySelector('.hov-caja').innerHTML = `<h2>${titulo}</h2><div class="hov-sub">${sub}</div><div class="hov-botin">${items.join('')}</div>
+    <div class="hov-botones"><button id="rd-premio-ok" class="hd-btn">Aceptar</button></div>`;
+  v.classList.remove('hidden');
+}
+
 async function reclamar(dia, dif) {
+  const nombre = E.cofres.find(c => c.dia === dia && c.dificultad === dif)?.nombre || 'Jefe de Raid';
   ocupado = true; pintar();
   try {
     const r = await D.raidReclamar(dia, dif);
-    const rel = (r.reliquias || []).map(x => RELIQUIAS[x.reliquia]?.name || x.reliquia);
-    alert(`🧰 Cofre ${r.cofre} de 4${r.duplicado ? ' (×2, el jefe cayó)' : ''}\n🪙 ${miles(r.oro)} de oro\n✨ ${miles(r.polvo)} de Polvo Arcano\nRunas de Portal: ${r.runas}${rel.length ? `\nReliquias: ${rel.join(', ')}` : ''}`);
+    ventanaPremio(`🧰 Cofre ${r.cofre} de 4`, `${nombre}${r.duplicado ? ' · El jefe cayó: oro, polvo y runas ×2' : ''}`, [
+      itemPremio(emoji('🪙'), `+${miles(r.oro)} de oro`),
+      itemPremio(emoji('🧪'), `+${miles(r.polvo)} de Polvo Arcano`),
+      ...(r.runas ? [itemPremio('<img src="assets/items/runaPortal.png" alt="">', `+${r.runas} Runa${r.runas > 1 ? 's' : ''} de Portal`)] : []),
+      ...(r.reliquias || []).map(x => itemReliquia(x.reliquia)),
+    ]);
     dispatchEvent(new Event('inventario:cambio'));
   } catch (e) { alert(D.mensajeError(e)); }
   ocupado = false; await cargar(); pintar();
@@ -145,6 +166,7 @@ export function iniciarRaid(opc) {
   $('#rd-volver').addEventListener('click', () => irA('menu'));
   $('#pantalla-raid').addEventListener('click', e => {
     const dif = e.target.closest('.rd-dif'); if (dif) { sel = dif.dataset.dif; return pintar(); }
+    if (e.target.closest('#rd-premio-ok') || e.target.id === 'rd-premio') return $('#rd-premio').classList.add('hidden');
     if (e.target.closest('#rd-atacar')) return atacar();
     const c = e.target.closest('.rd-reclamar'); if (c) return reclamar(c.dataset.dia, c.dataset.dif);
   });

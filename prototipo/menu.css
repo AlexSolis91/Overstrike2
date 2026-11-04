@@ -1099,3 +1099,9 @@ body.social-min #soc-abrir { display: block; }
 .eq-efecto.on { color: #1a1205; background: var(--gold); border-color: var(--gold); }
 .eq-efecto option, .eq-efecto optgroup { color: #e5e7eb; background: #121826; }
 .eq-sin { grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--muted); }
+
+#rd-premio { position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center; background: rgba(3, 6, 12, .72); backdrop-filter: blur(3px); }
+#rd-premio.hidden { display: none; }
+.rd-premio-caja { border-color: rgba(125, 211, 252, .5); box-shadow: 0 0 40px rgba(56, 189, 248, .3); max-height: 92vh; overflow-y: auto; }
+.rd-premio-caja h2 { color: #bae6fd; }
+.rd-premio-emoji { font-size: 34px; line-height: 64px; height: 64px; }

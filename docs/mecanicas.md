@@ -833,3 +833,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - **Sobre la dificultad:** el % se calcula sobre el daño de esa dificultad, no sobre el daño base. En Pesadilla (×4), +20% significa ×4.8.
 - **Datos:** `FURIA_RAID` en `js/datos/jefes/raid.js`. La pantalla de batalla muestra «Daño del jefe: +N%».
 - **`REGLAS_RAID`** (`js/datos/jefes/raid.js`): subir este número al cambiar cómo se pelea contra el jefe. Junto con la dificultad, el límite de rondas y `FURIA_RAID`, entra en `VERSION`, así que una función `verificar-raid` vieja acepta el daño reportado en vez de contar 0. Después hay que generarla y publicarla otra vez.
+
+## 41. Ventana de premios del Jefe de Raid (2026-11-04, `docs/sql/028_raid_reclamado.sql`)
+- Reclamar un cofre o ganar una receta abre una ventana con el estilo del botín de la Horda: emojis, la imagen de la Runa de Portal y la de cada reliquia.
+- `raid_estado` indica si ya reclamaste el cofre de cada dificultad, y la pantalla lo muestra junto a tu daño. Un cofre reclamado sale de «Tus cofres».
