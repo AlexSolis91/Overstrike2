@@ -852,3 +852,6 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 
 ## 44. Prueba de administrador en el Jefe de Raid (2026-11-04)
 - Un administrador puede abrir cualquier dificultad, también bloqueada o ya derrotada, con «🧪 Probar como admin», con su cuenta y el HP completo. La batalla corre solo en su pantalla (`raid.prueba`): el servidor no se entera, así que no gasta llaves, no da recompensas y no cuenta para el ranking, las misiones ni la barra de todos.
+
+## 45. Herramienta de pruebas (2026-11-04)
+- El botón 🧪 Pruebas de la batalla solo aparece al administrador y solo en Partida rápida.

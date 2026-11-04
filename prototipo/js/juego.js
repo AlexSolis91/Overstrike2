@@ -14,7 +14,7 @@ import { iniciarMenu, irA, presentarVS, cargarSeleccion } from './ui/menu.js';
 import { iniciarGuia, cerrarGuia, guiaAbierta } from './ui/guia.js';
 import { mostrarResultados, iniciarResultados } from './ui/resultados.js';
 import { sonar, musica, finDePartida, nuevaPartida, iniciarAjustes, ajustesAbiertos, cerrarAjustes, ajustes, temaDePartida } from './ui/audio.js';
-import { iniciarCuenta } from './ui/cuenta.js';
+import { iniciarCuenta, esAdmin } from './ui/cuenta.js';
 import { iniciarColeccion } from './ui/coleccion.js';
 import { iniciarMisiones } from './ui/misiones.js';
 import { EFECTOS } from './motor/efectos.js';
@@ -86,6 +86,9 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   ui = { actual: null, inspeccionado: P[0].uid, miTurno: false, movSel: null, objetivosValidos: null, tipoObjetivo: null, ocupado: true, opciones: null,
     camp: opciones?.campana || null, horda: opciones?.horda || null, arena: opciones?.arena || null, raid: opciones?.raid || null, vivo: null, serie, auto: !!serie || autoActivo };
   setVelocidad(serie ? 2 : velocidad); marcarControles();
+  ui.pruebas = !opciones && esAdmin();                         // herramienta de pruebas: solo el administrador y solo en Partida rápida
+  $('#btn-test').classList.toggle('hidden', !ui.pruebas);
+  if (!ui.pruebas) $('#test-panel').classList.add('hidden');
   vistas = {}; cartas = {};
   if (ui.raid) await iniciarAmbiente({ fondo: ui.raid.fondo });
   document.body.classList.toggle('en-raid', !!ui.raid);
@@ -985,7 +988,7 @@ $('#btn-menu').addEventListener('click', () => { if (ui.fin || confirm('¿Abando
 $('#menu-full').addEventListener('click', () => $('#btn-full').click());
 $('#test-panel').addEventListener('click', async e => {
   const b = e.target.closest('button');
-  if (!b || !ui.miTurno || ui.ocupado) return;
+  if (!b || !ui.pruebas || !ui.miTurno || ui.ocupado) return;
   cancelarObjetivo();
   await procesar(combate.probar(ui.inspeccionado, b.dataset.fx));
 });
