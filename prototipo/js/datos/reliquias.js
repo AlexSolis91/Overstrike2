@@ -86,7 +86,7 @@ export const RANGOS = {
 };
 
 // ---------------------------------------------------------------- 3) catálogo
-// enSobre: sale en el sobre de reliquias (por defecto sí, salvo Legendarias). soloReceta: solo se consigue crafteando.
+// enSobre: sale en el sobre de reliquias (por defecto sí; Legendarias al 0.01%). soloReceta: solo se consigue crafteando.
 export const RELIQUIAS = {
   obsidiana: { name: 'Espada de Obsidiana', rarity: 'Raro', type: 'Espada', imagen: 'assets/reliquias/obsidiana.webp',
     legado: { flat: ['dmg', 9, 6, 10], rolls: [['critDmg', 0.08, 0.05, 0.08]] } },
@@ -100,21 +100,21 @@ export const RELIQUIAS = {
     legado: { flat: ['dmg', 19, 15, 22], rolls: [['block', 0.03, 0.02, 0.05], ['armor', 0.17, 0.12, 0.18], ['hpPct', 0.21, 0.15, 0.22]] } },
   amuletoPantano: { name: 'Amuleto del Pantano', rarity: 'Épico', type: 'Amuleto', imagen: 'assets/reliquias/amuletoPantano.webp',
     legado: { flat: ['dmg', 17, 15, 22], rolls: [['dot', 0.12, 0.11, 0.14], ['dot', 0.14, 0.11, 0.14], ['dot', 0.13, 0.11, 0.14]] } },
-  frostmourne: { name: 'Frostmourne', rarity: 'Legendario', type: 'Espada', imagen: 'assets/reliquias/frostmourne.webp', soloReceta: true,
+  frostmourne: { name: 'Frostmourne', rarity: 'Legendario', type: 'Espada', imagen: 'assets/reliquias/frostmourne.webp',
     passive: 'Si el portador elimina a uno o más enemigos con un ataque, revive a uno de ellos al azar como su aliado durante 2 rondas, con 30% de su HP máx. y sin habilidad de líder (una vez por ronda, máx. 2 por batalla). Al terminar vuelve a morir y ya no puede revivir. Cada golpe del portador tiene 5% de probabilidad de hacer daño triple o 25% de hacer daño doble (se multiplica con el crítico).',
     motor: { convertir: { hp: .3, rondas: 2, maxBatalla: 2 }, multiGolpe: [[.05, 3], [.25, 2]] },
     legado: { flat: ['dmg', 35, 30, 35], rolls: [['critRate', 0.19, 0.15, 0.20], ['dmgPct', 0.23, 0.18, 0.25], ['critDmg', 0.27, 0.20, 0.27]] } },
   // motor: pasiva de reliquia que el motor ejecuta (pieza universal, ver combate.js → pasivasDeReliquia)
-  shadowmourne: { name: 'Shadowmourne', rarity: 'Legendario', type: 'Hacha', imagen: 'assets/reliquias/shadowmourne.webp', soloReceta: true,
+  shadowmourne: { name: 'Shadowmourne', rarity: 'Legendario', type: 'Hacha', imagen: 'assets/reliquias/shadowmourne.webp',
     passive: 'Los ataques en área (AOE) del portador tienen +100% de Daño Crítico. Cada movimiento en área o de varios golpes que ejecuta le da 1 Alma (máx. 20): cada Alma da +15 de Daño. Duran toda la batalla.',
     motor: { critDmgAoe: 1, contador: { efecto: 'almasShadowmourne', al: ['aoe', 'multigolpe'], max: 20, bono: { dmg: 15 } } } },
-  anilloTiempo: { name: 'Anillo del Tiempo', rarity: 'Legendario', type: 'Anillo', imagen: 'assets/reliquias/anilloTiempo.webp', soloReceta: true,
+  anilloTiempo: { name: 'Anillo del Tiempo', rarity: 'Legendario', type: 'Anillo', imagen: 'assets/reliquias/anilloTiempo.webp',
     passive: 'Si el portador es eliminado, revive al final de la ronda siguiente con 50% de su HP máx. (una vez por batalla). Sus movimientos tienen 40% menos de cooldown (redondeado hacia arriba), incluida la espera inicial del Over.',
     motor: { cooldownPct: .6, revivir: { hp: .5 } } },
-  escudoHyliano: { name: 'Escudo Hyliano', rarity: 'Legendario', type: 'Escudo', imagen: 'assets/reliquias/escudoHyliano.webp', soloReceta: true,
+  escudoHyliano: { name: 'Escudo Hyliano', rarity: 'Legendario', type: 'Escudo', imagen: 'assets/reliquias/escudoHyliano.webp',
     passive: 'El portador es inmune a Aturdimiento, Congelación, Posesión y Confusión (también en su versión Mega). Al final de cada ronda se cura el 60% del HP que perdió por golpes en esa ronda (hasta su HP máx.).',
     motor: { inmuneA: ['stun', 'freeze', 'possess', 'confuse'], recuperaGolpes: .6 } },
-  armaduraMithril: { name: 'Armadura de Mithril', rarity: 'Legendario', type: 'Pechera', imagen: 'assets/reliquias/armaduraMithril.webp', soloReceta: true,
+  armaduraMithril: { name: 'Armadura de Mithril', rarity: 'Legendario', type: 'Pechera', imagen: 'assets/reliquias/armaduraMithril.webp',
     passive: 'El portador tiene +50% de HP máx. Al final de cada ronda gana +5% de HP máx. más (hasta +50% extra) y también esa vida. Mientras está muerto no crece.',
     motor: { bono: { hpPct: .5 }, crece: { stat: 'hpPct', valor: .05, max: .5 } } },
   anilloCobre: { name: 'Anillo de Cobre', rarity: 'Común', type: 'Anillo', imagen: 'assets/reliquias/anilloCobre.webp',
@@ -223,7 +223,7 @@ for (const [id, r] of Object.entries(RELIQUIAS)) {
   if (!LOTES[r.lote ??= 'orcos']) throw new Error(`Reliquia ${id}: lote desconocido ${r.lote}`);                                  // reliquia nueva de otro lote: poner lote: 'elfosOscuros' / 'demonios'
   if (!TIPOS[r.type]) throw new Error(`Reliquia ${id}: tipo desconocido ${r.type}`);
   r.id = id; r.category = TIPOS[r.type].categoria;
-  r.enSobre ??= r.rarity !== 'Legendario' && !r.soloReceta;
+  r.enSobre ??= !r.soloReceta;
 }
 
 // ---------------------------------------------------------------- copias (instancias)
@@ -259,7 +259,7 @@ export function sortear(id, rng = Math.random) {
 // Calidad 0–100: promedio de qué tan cerca del máximo quedó cada línea (plana y cada tirada)
 export function calidad(rel) {
   const q = [rel.flat, ...rel.rolls].map(([, v, mn, mx]) => mx === mn ? 1 : Math.max(0, Math.min(1, (v - mn) / (mx - mn))));
-  return Math.round(q.reduce((a, b) => a + b, 0) / q.length * 100);
+  return Math.round(q.reduce((a, b) => a + b, 0) / q.length * 100 + 1e-9);   // el mismo redondeo que _calidad_reliquia en el servidor
 }
 
 // ---------------------------------------------------------------- espacios de un campeón

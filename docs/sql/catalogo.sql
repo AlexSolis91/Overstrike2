@@ -175,11 +175,11 @@ insert into public.reliquias_catalogo (id, nombre, rareza, tipo, en_sobre, solo_
   ('katanaCarmesi', 'Katana Carmesí', 'Especial', 'Espada', true, false, true, 'orcos'),
   ('anilloLuz', 'Anillo de la Luz', 'Épico', 'Anillo', true, false, true, 'orcos'),
   ('amuletoPantano', 'Amuleto del Pantano', 'Épico', 'Amuleto', true, false, true, 'orcos'),
-  ('frostmourne', 'Frostmourne', 'Legendario', 'Espada', false, true, true, 'orcos'),
-  ('shadowmourne', 'Shadowmourne', 'Legendario', 'Hacha', false, true, true, 'orcos'),
-  ('anilloTiempo', 'Anillo del Tiempo', 'Legendario', 'Anillo', false, true, true, 'orcos'),
-  ('escudoHyliano', 'Escudo Hyliano', 'Legendario', 'Escudo', false, true, true, 'orcos'),
-  ('armaduraMithril', 'Armadura de Mithril', 'Legendario', 'Pechera', false, true, true, 'orcos'),
+  ('frostmourne', 'Frostmourne', 'Legendario', 'Espada', true, false, true, 'orcos'),
+  ('shadowmourne', 'Shadowmourne', 'Legendario', 'Hacha', true, false, true, 'orcos'),
+  ('anilloTiempo', 'Anillo del Tiempo', 'Legendario', 'Anillo', true, false, true, 'orcos'),
+  ('escudoHyliano', 'Escudo Hyliano', 'Legendario', 'Escudo', true, false, true, 'orcos'),
+  ('armaduraMithril', 'Armadura de Mithril', 'Legendario', 'Pechera', true, false, true, 'orcos'),
   ('anilloCobre', 'Anillo de Cobre', 'Común', 'Anillo', true, false, true, 'orcos'),
   ('yelmo', 'Yelmo del Centinela', 'Raro', 'Yelmo', true, false, true, 'orcos'),
   ('pechera', 'Pechera de Escamas', 'Especial', 'Pechera', true, false, true, 'orcos'),
@@ -272,13 +272,3 @@ insert into public.reliquias_catalogo (id, nombre, rareza, tipo, en_sobre, solo_
 on conflict (id) do update set nombre = excluded.nombre, rareza = excluded.rareza, tipo = excluded.tipo,
   en_sobre = excluded.en_sobre, solo_receta = excluded.solo_receta, activo = excluded.activo, lote = excluded.lote;
 -- 100 reliquias · 24 tipos
-
--- ============================================================ RECETAS DE LEGENDARIAS (requiere docs/sql/007_recetas.sql)
-insert into public.recetas (legendaria, definidas, comodines, activo) values
-  ('shadowmourne', '{"bestiari":3,"guanteletesColoso":2,"dagaViudaNegra":2}'::jsonb, 3, true),
-  ('armaduraMithril', '{"cinturonArcano":3,"mascaraDragon":2,"celestia":2}'::jsonb, 3, true),
-  ('frostmourne', '{"nichirin":3,"coronaReyCaido":3,"capaEclipse":2}'::jsonb, 2, true),
-  ('escudoHyliano', '{"arcoVacioEstelar":3,"botasTrueno":3,"lanzaValquiria":2}'::jsonb, 2, true),
-  ('anilloTiempo', '{"anilloLuz":3,"piedraSol":3,"amuletoPantano":2}'::jsonb, 2, true)
-on conflict (legendaria) do update set definidas = excluded.definidas, comodines = excluded.comodines, activo = excluded.activo;
--- 5 recetas

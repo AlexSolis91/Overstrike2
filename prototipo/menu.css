@@ -647,8 +647,8 @@ body.tc-ocupado #tc-cont, body.tc-ocupado .st-packs { opacity: .6; }
   .tc-caja { height: 100%; border-radius: 0; }
   .tc-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
   .tc-det-img { width: 90px; }
-  .tc-tabs { flex-wrap: nowrap; gap: 4px; }
-  .tc-tabs button { padding: 6px 9px; font-size: 12px; }
+  .tc-tabs { flex-wrap: nowrap; gap: 4px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .tc-tabs button { padding: 6px 9px; font-size: 12px; flex: none; white-space: nowrap; }
 }
 @media (prefers-reduced-motion: reduce) { .tc-sobre-arte::after { animation: none; } }
 
@@ -949,6 +949,8 @@ body.eq-campana .eq-modo, body.eq-campana .eq-azar[data-lado="rival"], body.eq-c
 .tc-receta small { color: var(--muted); font-size: 11px; }
 .tc-ing { display: grid; gap: 2px; margin-top: 6px; font: 700 12px Inter, sans-serif; color: #fca5a5; }
 .tc-ing .ok { color: #86efac; }
+.tc-ing small { font-size: 11px; font-weight: 600; opacity: .8; }
+.tc-rel.no-apta { opacity: .45; filter: grayscale(.6); }
 .tc-forjable { display: block; margin-top: 6px; font: 900 12px Inter, sans-serif; color: #fde68a; font-style: normal; }
 @keyframes brilloLegendario { 0%, 100% { filter: drop-shadow(0 0 6px #fbbf24) drop-shadow(0 0 14px rgba(251, 191, 36, .55)); }
   50% { filter: drop-shadow(0 0 12px #fde68a) drop-shadow(0 0 26px rgba(251, 191, 36, .85)); } }

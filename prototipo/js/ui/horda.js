@@ -24,7 +24,7 @@ const lunesMx = () => { const h = new Date(new Date().toLocaleString('en-US', { 
 const HITOS = [
   { oleada: 10, txt: `🪙 10,000 de oro · 1 vale de sobre · 25 Trofeos` },
   { oleada: 20, txt: `🪙 20,000 de oro · 2 vales de sobre · 75 Trofeos` },
-  { oleada: 30, txt: `1 Épica al azar del lote · 🪙 40,000 de oro · 150 Trofeos · 🏆 Hazaña (desbloquea las recetas de Legendarias)` },
+  { oleada: 30, txt: `1 Épica al azar del lote · 🪙 40,000 de oro · 150 Trofeos` },
 ];
 const tienda = () => Object.entries(RELIQUIAS).filter(([, r]) => (r.lote || 'orcos') === 'orcos' && PRECIO_TROFEOS[r.rarity] && !r.soloReceta)
   .map(([id, r]) => ({ id, ...r }));

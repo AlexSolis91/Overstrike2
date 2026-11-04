@@ -41,7 +41,10 @@ export const bloquearReliquia = (id, si) => rpc('bloquear_reliquia', { p_reliqui
 export const descomponerReliquias = ids => rpc('descomponer_reliquias', { p_ids: ids });
 export const mejorarReliquia = (id, linea) => rpc('mejorar_reliquia', { p_reliquia: id, p_linea: linea });
 export const fusionarReliquias = ids => rpc('fusionar_reliquias', { p_ids: ids });
-export const forjarLegendaria = (id, ids) => rpc('forjar_legendaria', { p_legendaria: id, p_ids: ids });   // docs/sql/007_recetas.sql
+// Forja de los Dioses (docs/sql/025_forja_dioses.sql)
+export const misRecetas = () => q(sb => sb.from('recetas_jugador').select('id, legendaria, ingredientes, obtenida').order('obtenida'));
+export const forjarLegendaria = (receta, ids) => rpc('forjar_legendaria', { p_receta: receta, p_ids: ids });
+export const adminDarReceta = (nombre, legendaria) => rpc('admin_dar_receta', { p_nombre: nombre, p_legendaria: legendaria });
 
 // Horda (docs/sql/006_horda.sql): entrar cuesta 1 Runa de Portal; el servidor cobra cada oleada y cierra la partida
 export const hordaEntrar = horda => rpc('horda_entrar', { p_horda: horda });

@@ -9,7 +9,7 @@ import * as D from '../servicios/datos.js';
 import { RAREZAS, ESPACIOS, STAT_META, PORCENTUALES, instancia, calidad, motivoNoEquipar } from '../datos/reliquias.js';
 import { cartaReliquia } from './panel.js';
 import { activarTip, comparacion, hojaTactil, conCursor, ocultarTip, cerrarHoja } from './tipReliquia.js';
-import { RECETAS, revisarReceta, proponerIngredientes } from '../datos/recetas.js';
+import { COSTO_FORJA, CALIDAD_MINIMA, estadoReceta, proponerIngredientes, recetaCompleta, motivoNoApta } from '../datos/recetas.js';
 import { RELIQUIAS, espaciosDeCuenta } from '../datos/reliquias.js';
 import { crearCombate } from '../motor/combate.js';
 import { habilidadesHtml } from './menu.js';
@@ -25,12 +25,12 @@ const estrellas = n => `<span class="tc-estrellas">${'★'.repeat(n)}<i>${'★'.
 
 let col = new Map();          // campeón → { copias, estrellas, espacios }
 let inv = { oro: 0, frag_runa: 0, frag_otros: 0, runas: 0, vales_sobre: 0, rel_sobres: 0 };
-let rels = [], sinReliquias = false, hazana = null;   // copias de reliquias del jugador; hazana: superó la oleada 30 de la Horda (null = sin SQL 011)
+let rels = [], sinReliquias = false, recetas = [];   // copias de reliquias del jugador; recetas ganadas (null = falta docs/sql/025_forja_dioses.sql)
 // (sinReliquias: falta docs/sql/005_reliquias.sql)
 let relFiltro = { cat: '', rareza: '' }, relSel = null, slotSel = null;   // pestaña Reliquias y espacio elegido en la ficha
 let relAtributo = '';                                                      // ficha: atributo por el que se filtran y ordenan las reliquias a equipar
 let relModo = 'ver', relMarcadas = new Set();
-let recetaSel = null, recetaMarcadas = new Set();   // pestaña Recetas: Legendaria elegida y las 10 Épicas que se entregan   // pestaña Reliquias: 'ver' | 'descomponer' | 'fusionar' y las reliquias elegidas
+let recetaSel = null, recetaMarcadas = new Set();   // Forja: receta elegida y las 5 Épicas que se entregan   // pestaña Reliquias: 'ver' | 'descomponer' | 'fusionar' y las reliquias elegidas
 // Polvo Arcano y fusión (igual que en el servidor, docs/sql/006_horda.sql)
 const POLVO = { 'Común': 1, 'Raro': 5, 'Especial': 20, 'Épico': 100 };
 const COSTO_MEJORA = { 'Común': 2, 'Raro': 8, 'Especial': 25, 'Épico': 80, 'Legendario': 200 };
@@ -51,7 +51,7 @@ export function aviso(texto, tipo = 'ok') {
 async function recargar() {
   const [c, i, s, r] = await Promise.all([D.miColeccion(), D.miInventario(), D.configSobres(),
     D.misReliquias().then(x => { sinReliquias = false; return x; }).catch(() => { sinReliquias = true; return []; })]);
-  hazana = await D.misHitosHorda('orcos').then(h => (h || []).some(x => x.oleada === 30)).catch(() => null);
+  recetas = await D.misRecetas().then(x => x || []).catch(() => null);
   col = new Map((c || []).map(r => [r.campeon, r]));
   inv = i || inv; cfg = s || [];
   rels = (r || []).map(instancia).filter(Boolean);
@@ -115,43 +115,45 @@ function htmlGarantias() {
     return `<span style="--rc:${RAREZAS[rz].color}">${nombre}: <b>${k === 1 ? '¡el próximo!' : `en ${k} sobres`}</b></span>`; }).join('')}</div>`;
 }
 
-// ---------------------------------------------------------------- pestaña Recetas (forjar Legendarias con 10 Épicas)
-const epicasLibres = () => rels.filter(r => r.rarity === 'Épico' && !r.campeon && !r.bloqueada);
-function htmlRecetas() {
-  if (sinReliquias) return '<p class="tc-vacio">Las recetas se activan con las reliquias del servidor.</p>';
-  if (recetaSel) return htmlReceta(recetaSel);
-  const libres = epicasLibres();
-  return `<p class="tc-nota">Cada receta pide <b>10 Épicas</b>: algunas definidas y otras <b>comodín</b> (cualquier Épica). Las equipadas o con candado no cuentan. Puedes forjar cada Legendaria las veces que quieras.</p>
-    ${hazana === false ? '<p class="tc-nota">🔒 <b>Hazaña requerida:</b> para forjar las Legendarias de la Horda de Orcos primero tienes que superar la <b>oleada 30</b> de la Horda (una vez).</p>' : hazana ? '<p class="tc-nota">🏆 Hazaña de la oleada 30 conseguida.</p>' : ''}
-    <div class="tc-recetas">${Object.entries(RECETAS).map(([id, r]) => {
-      const leg = RELIQUIAS[id], prop = proponerIngredientes(id, libres, calidad), ok = revisarReceta(id, prop).ok;
-      return `<button class="tc-receta ${ok ? 'lista' : ''}" data-receta="${id}">
+// ---------------------------------------------------------------- pestaña Forja de los Dioses (recetas ganadas a los jefes de clan)
+const epicas = () => rels.filter(r => r.rarity === 'Épico');
+const lineaIngrediente = (e, marcadas) => { const n = marcadas ? marcadas.filter(x => x.id === e.id).length : e.aptas, ok = n >= e.pide;
+  const nota = !ok && !marcadas ? [e.bajas ? `${e.bajas} bajo ${CALIDAD_MINIMA}%` : '', e.candado ? `${e.candado} con 🔒` : ''].filter(Boolean).join(' · ') : '';
+  return `<span class="${ok ? 'ok' : ''}">${ok ? '✔' : '✖'} ${RELIQUIAS[e.id].name} ${Math.min(n, e.pide)}/${e.pide}${nota ? ` <small>(${nota})</small>` : ''}</span>`; };
+const lineaOro = () => { const ok = inv.oro >= COSTO_FORJA; return `<span class="${ok ? 'ok' : ''}">${ok ? '✔' : '✖'} ${num(COSTO_FORJA)} de oro</span>`; };
+function htmlForja() {
+  if (sinReliquias) return '<p class="tc-vacio">La Forja se activa con las reliquias del servidor.</p>';
+  if (recetas === null) return '<p class="tc-vacio">La Forja se activa cuando se ejecute <b>docs/sql/025_forja_dioses.sql</b> en el servidor.</p>';
+  const sel = recetas.find(r => r.id === recetaSel);
+  if (sel) return htmlReceta(sel);
+  if (!recetas.length) return '<p class="tc-vacio">⚒️ Aún no tienes recetas. Derrota a los jefes de clan para conseguir una.</p>';
+  const mias = epicas();
+  return `<p class="tc-nota">Cada receta es solo de tu cuenta y se gasta al forjar. Pide <b>5 Épicas con ${CALIDAD_MINIMA}% de calidad o más</b> y <b>${num(COSTO_FORJA)} de oro</b>. Las equipadas sí cuentan (se quitan solas del campeón); las que tienen candado, no.</p>
+    <div class="tc-recetas">${recetas.map(r => { const leg = RELIQUIAS[r.legendaria], est = estadoReceta(r.ingredientes, mias, calidad);
+      const ok = est.every(e => e.aptas >= e.pide) && inv.oro >= COSTO_FORJA;
+      return `<button class="tc-receta ${ok ? 'lista' : ''}" data-receta="${r.id}">
         <img class="tc-receta-img" src="${leg.imagen}" alt="">
         <div><b>${leg.name}</b><small>${leg.category} · ${leg.type}</small>
-          <div class="tc-ing">${Object.entries(r.definidas).map(([e, n]) => { const t = libres.filter(x => x.id === e).length;
-            return `<span class="${t >= n ? 'ok' : ''}">${t >= n ? '✔' : '✖'} ${RELIQUIAS[e].name} ${Math.min(t, n)}/${n}</span>`; }).join('')}
-            <span class="${prop.length === 10 && ok ? 'ok' : ''}">${ok ? '✔' : '✖'} ${r.comodines} Épicas cualquiera</span></div>
+          <div class="tc-ing">${est.map(e => lineaIngrediente(e)).join('')}${lineaOro()}</div>
           ${ok ? '<em class="tc-forjable">✨ ¡Puedes forjarla!</em>' : ''}</div></button>`; }).join('')}</div>`;
 }
-function htmlReceta(id) {
-  const r = RECETAS[id], leg = RELIQUIAS[id], libres = epicasLibres();
-  const elegidas = libres.filter(x => recetaMarcadas.has(x.uid)), rev = revisarReceta(id, elegidas);
-  return `<button class="eq-btn tc-volver" data-receta-volver>← Recetas</button>
+function htmlReceta(rec) {
+  const leg = RELIQUIAS[rec.legendaria], mias = epicas().filter(x => rec.ingredientes.includes(x.id));
+  const elegidas = mias.filter(x => recetaMarcadas.has(x.uid)), est = estadoReceta(rec.ingredientes, mias, calidad);
+  const lista = recetaCompleta(rec.ingredientes, elegidas, calidad) && inv.oro >= COSTO_FORJA;
+  return `<button class="eq-btn tc-volver" data-receta-volver>← Forja de los Dioses</button>
     <div class="tc-rel-det"><div class="rc legendaria" style="--rc:${RAREZAS.Legendario.color}"><img class="rc-img" src="${leg.imagen}" alt="">
       <div class="rc-head"><div class="rc-name">${leg.name}</div><div class="rc-rarity">Legendaria</div></div><div class="rc-type">${leg.category} · ${leg.type}</div>
       <div class="rc-passive"><b>Pasiva</b>${leg.passive}</div></div>
       <div class="tc-rel-acc">
-        <h5>Ingredientes (${elegidas.length}/10)</h5>
-        <div class="tc-ing">${Object.entries(r.definidas).map(([e, n]) => { const t = elegidas.filter(x => x.id === e).length;
-          return `<span class="${t >= n ? 'ok' : ''}">${t >= n ? '✔' : '✖'} ${RELIQUIAS[e].name} ${Math.min(t, n)}/${n}</span>`; }).join('')}
-          <span class="${rev.ok ? 'ok' : ''}">${rev.ok ? '✔' : '✖'} Comodines (cualquier Épica) ${Math.max(0, rev.comodines)}/${r.comodines}</span></div>
-        <p class="tc-tenue">Te propusimos tus copias de menor calidad. Toca una Épica para quitarla o agregarla.</p>
-        ${hazana === false ? '<p class="tc-tenue">🔒 Necesitas la Hazaña: supera la oleada 30 de la Horda.</p>' : ''}
-        <button class="eq-listo" data-forjar="${id}" ${rev.ok && hazana !== false ? '' : 'disabled'}>🔨 Forjar ${leg.name}</button>
+        <h5>Ingredientes (${elegidas.length}/5)</h5>
+        <div class="tc-ing">${est.map(e => lineaIngrediente(e, elegidas)).join('')}${lineaOro()}</div>
+        <p class="tc-tenue">Te propusimos tus copias de menor calidad que cumplen, primero las que no están equipadas. Toca una Épica para quitarla o agregarla.</p>
+        <button class="eq-listo" data-forjar="${rec.id}" ${lista ? '' : 'disabled'}>🔨 Forjar ${leg.name}</button>
       </div></div>
-    <div class="tc-rels">${libres.sort((a, b) => (b.id in r.definidas) - (a.id in r.definidas) || calidad(a) - calidad(b))
-      .map(x => miniaturaRel(x, `data-ingrediente="${x.uid}"`).replace('class="tc-rel ', `class="tc-rel ${recetaMarcadas.has(x.uid) ? 'marcada' : ''} `)).join('')
-      || '<p class="tc-vacio">No tienes Épicas libres.</p>'}</div>`;
+    <div class="tc-rels">${mias.sort((a, b) => a.name.localeCompare(b.name) || calidad(b) - calidad(a))
+      .map(x => miniaturaRel(x, `data-ingrediente="${x.uid}"`).replace('class="tc-rel ', `class="tc-rel ${recetaMarcadas.has(x.uid) ? 'marcada' : ''} ${motivoNoApta(x, calidad) ? 'no-apta' : ''} `)).join('')
+      || '<p class="tc-vacio">Todavía no tienes ninguna de estas Épicas.</p>'}</div>`;
 }
 
 // ---------------------------------------------------------------- pestaña Reliquias (inventario)
@@ -163,7 +165,7 @@ const txtAtributo = (k, v) => PORCENTUALES.includes(k) ? `+${Math.round(v * 1000
 const nombreAtributo = k => `${STAT_META[k].icon} ${STAT_META[k].label}${/Pct$/.test(k) ? ' %' : ''}`;
 function miniaturaRel(r, attrs = '', valor = '') {
   const conTip = attrs.includes('data-tip');   // con ficha flotante: sin el título nativo del navegador
-  return `<button class="tc-rel ${r.campeon ? 'puesta' : ''} ${r.rarity === 'Legendario' ? 'legendaria' : ''} ${relMarcadas.has(r.uid) ? 'marcada' : ''}" data-uid="${r.uid}" ${attrs} style="--rc:${RAREZAS[r.rarity].color}" ${conTip ? 'data-x' : 'title'}=""${r.name} · ${r.rarity} · Calidad ${calidad(r)}%${r.campeon ? ` · en ${dondeEsta(r)}` : ''}">
+  return `<button class="tc-rel ${r.campeon ? 'puesta' : ''} ${r.rarity === 'Legendario' ? 'legendaria' : ''} ${relMarcadas.has(r.uid) ? 'marcada' : ''}" data-uid="${r.uid}" ${attrs} style="--rc:${RAREZAS[r.rarity].color}" ${conTip ? 'data-x' : 'title'}="${r.name} · ${r.rarity} · Calidad ${calidad(r)}%${r.campeon ? ` · en ${dondeEsta(r)}` : ''}">
     ${r.imagen ? `<img src="${r.imagen}" alt="" loading="lazy">` : `<span>${r.name}</span>`}
     ${valor ? `<i class="tc-rel-val">${valor}</i>` : ''}<i class="tc-rel-q">${calidad(r)}%</i>${r.campeon ? `<i class="tc-rel-en">${porId(r.campeon)?.emoji || '👤'}</i>` : ''}${r.bloqueada ? '<i class="tc-rel-lock">🔒</i>' : ''}</button>`;
 }
@@ -355,7 +357,7 @@ function pintar() {
   if ($('#tc').classList.contains('hidden')) return;
   pintarInventario();
   for (const b of document.querySelectorAll('.tc-tabs button')) b.classList.toggle('on', b.dataset.tab === pestana);
-  $('#tc-cont').innerHTML = pestana === 'tienda' ? htmlTienda() : pestana === 'portal' ? htmlPortal() : pestana === 'reliquias' ? htmlReliquias() : pestana === 'recetas' ? htmlRecetas() : htmlColeccion();
+  $('#tc-cont').innerHTML = pestana === 'tienda' ? htmlTienda() : pestana === 'portal' ? htmlPortal() : pestana === 'reliquias' ? htmlReliquias() : pestana === 'recetas' ? htmlForja() : htmlColeccion();
 }
 
 export async function abrirTC(tab = 'tienda') {
@@ -438,15 +440,26 @@ async function ejecutar(e) {
   if (b.dataset.sobre) return abrirSobre(b.dataset.sobre, +b.dataset.n || 1);
   if ('reliquias' in b.dataset) return abrirReliquias(+b.dataset.n || 1);
   if (b.dataset.filtro) { relFiltro[b.dataset.filtro] = b.dataset.valor; return pintar(); }
-  if (b.dataset.receta) { recetaSel = b.dataset.receta; recetaMarcadas = new Set(proponerIngredientes(recetaSel, epicasLibres(), calidad).map(x => x.uid)); return pintar(); }
+  if (b.dataset.receta) { recetaSel = b.dataset.receta; const rec = recetas.find(r => r.id === recetaSel); recetaMarcadas = new Set(proponerIngredientes(rec.ingredientes, epicas(), calidad).map(x => x.uid)); return pintar(); }
   if ('recetaVolver' in b.dataset) { recetaSel = null; recetaMarcadas.clear(); return pintar(); }
-  if (b.dataset.ingrediente) { const u = b.dataset.ingrediente; if (recetaMarcadas.has(u)) recetaMarcadas.delete(u); else if (recetaMarcadas.size < 10) recetaMarcadas.add(u); return pintar(); }
+  if (b.dataset.ingrediente) {
+    const x = rels.find(r => r.uid === b.dataset.ingrediente), rec = recetas.find(r => r.id === recetaSel), no = motivoNoApta(x, calidad);
+    if (recetaMarcadas.has(x.uid)) recetaMarcadas.delete(x.uid);
+    else if (no) return aviso(`Esta ${x.name} no sirve: ${no}.`, 'error');
+    else {   // si ya están todas las que pide de esa Épica, reemplaza a la primera
+      const iguales = [...recetaMarcadas].filter(u => rels.find(r => r.uid === u)?.id === x.id);
+      if (iguales.length >= rec.ingredientes.filter(e => e === x.id).length) recetaMarcadas.delete(iguales[0]);
+      recetaMarcadas.add(x.uid);
+    }
+    return pintar();
+  }
   if (b.dataset.forjar) {
-    const id = b.dataset.forjar, ids = [...recetaMarcadas];
-    if (!confirm(`¿Forjar ${RELIQUIAS[id].name}? Se consumen estas 10 Épicas. Esto no se puede deshacer.`)) return;
+    const rec = recetas.find(r => r.id === b.dataset.forjar), ids = [...recetaMarcadas], nombre = RELIQUIAS[rec.legendaria].name;
+    const puestas = ids.map(u => rels.find(r => r.uid === u)).filter(r => r?.campeon).map(r => `• ${r.name} (${dondeEsta(r)})`);
+    if (!confirm(`¿Forjar ${nombre}? Se consumen estas 5 Épicas, la receta y ${num(COSTO_FORJA)} de oro. Esto no se puede deshacer.${puestas.length ? `\n\nSe quitarán de sus campeones:\n${puestas.join('\n')}\n\nSi alguno está en tu equipo de Arena, peleará sin ellas.` : ''}`)) return;
     return accion(async () => {
-      const fila = await D.forjarLegendaria(id, ids); recetaMarcadas.clear(); recetaSel = null;
-      await revelarCartas({ sobre: { nombre: 'Forja Legendaria', icono: '🔨', color: RAREZAS.Legendario.color }, reliquias: [instancia(fila)].filter(Boolean) });
+      const fila = await D.forjarLegendaria(rec.id, ids); recetaMarcadas.clear(); recetaSel = null;
+      await revelarCartas({ sobre: { nombre: 'Forja de los Dioses', icono: '⚒️', color: RAREZAS.Legendario.color }, reliquias: [instancia(fila)].filter(Boolean) });
       await recargar(); pintar();
     });
   }

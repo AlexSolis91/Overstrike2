@@ -1,7 +1,9 @@
 // Cuenta del jugador: registro, inicio de sesión, perfil y cierre de sesión (Supabase).
 // Por ahora la cuenta es OPCIONAL: se puede jugar sin ella. Más adelante guardará la colección y la progresión.
 import { supabase } from '../servicios/supabase.js';
-import { configSobres, adminGuardarSobre, adminDarOro, catalogoProbabilidades, adminProbabilidad, mensajeError } from '../servicios/datos.js';
+import { RELIQUIAS } from '../datos/reliquias.js';
+import { JEFE_DE_LEGENDARIA } from '../datos/recetas.js';
+import { configSobres, adminGuardarSobre, adminDarOro, adminDarReceta, catalogoProbabilidades, adminProbabilidad, mensajeError } from '../servicios/datos.js';
 import { SOBRES } from '../datos/sobres.js';
 
 const $ = s => document.querySelector(s);
@@ -92,6 +94,8 @@ async function pintarAdmin(msg = '', tipo = '') {
     <button id="adm-probs" class="eq-btn">Guardar probabilidades</button>`}
     <p class="cu-nota">Dar oro a un jugador:</p>
     <form id="adm-oro" class="adm-oro"><input id="adm-nombre" placeholder="Nombre del jugador" required><input id="adm-cant" type="number" min="1" step="1" value="10000" required title="Oro a dar"><button class="eq-btn">Dar</button></form>
+    <p class="cu-nota">Dar una receta de Legendaria a un jugador (sus 5 Épicas se sortean):</p>
+    <form id="adm-receta" class="adm-oro"><input id="adm-rec-nombre" placeholder="Nombre del jugador" required><select id="adm-rec-leg">${Object.entries(JEFE_DE_LEGENDARIA).map(([id, jefe]) => `<option value="${id}">${RELIQUIAS[id].name} (${jefe})</option>`).join('')}</select><button class="eq-btn">Dar</button></form>
     ${msg ? `<p class="cu-msg ${tipo}">${msg}</p>` : ''}`;
 }
 const NIVELES = [['normal', 'Normal (1)'], ['baja', 'Baja (0.75)'], ['muy_baja', 'Muy baja (0.5)'], ['minima', 'Mínima (0.25)']];
@@ -116,6 +120,12 @@ async function guardarSobres() {
     }
     pintarAdmin('Sobres guardados. Los jugadores los verán al abrir la tienda.', 'ok');
   } catch (e) { pintarAdmin(mensajeError(e), 'error'); }
+}
+async function darReceta(e) {
+  e.preventDefault();
+  const nombre = $('#adm-rec-nombre').value.trim(), leg = $('#adm-rec-leg').value;
+  try { await adminDarReceta(nombre, leg); pintarAdmin(`Listo: ${nombre} recibió la receta de ${RELIQUIAS[leg].name}.`, 'ok'); dispatchEvent(new Event('inventario:cambio')); }
+  catch (err) { pintarAdmin(mensajeError(err), 'error'); }
 }
 async function darOro(e) {
   e.preventDefault();
@@ -160,7 +170,7 @@ export function iniciarCuenta() {
         pintar('Te enviamos un correo para cambiar tu contraseña.', 'ok'); } catch (err) { pintar(traducir(err), 'error'); }
     }
   });
-  $('#cuenta').addEventListener('submit', e => { if (e.target.id === 'cu-form') enviar(e); else if (e.target.id === 'adm-oro') darOro(e); });
+  $('#cuenta').addEventListener('submit', e => { if (e.target.id === 'cu-form') enviar(e); else if (e.target.id === 'adm-oro') darOro(e); else if (e.target.id === 'adm-receta') darReceta(e); });
   pintarBoton();
   // Sesión guardada y cambios de sesión (entrar / salir / confirmar correo)
   supabase().then(async sb => {

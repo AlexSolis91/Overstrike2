@@ -29,6 +29,7 @@ delete from public.campana_cofres;
 delete from public.campana_progreso;
 
 -- Reliquias, colección e historial de aperturas
+do $$ begin if to_regclass('public.recetas_jugador') is not null then delete from public.recetas_jugador; end if; end $$;
 delete from public.reliquias;
 delete from public.coleccion;
 delete from public.aperturas;
