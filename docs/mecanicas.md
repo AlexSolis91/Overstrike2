@@ -826,4 +826,4 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 ## 39. Filtro por buff o debuff y Over de Yorichi (2026-11-04)
 - **Selector de equipos:** además del rol, se puede filtrar por un buff o debuff. La lista sale de leer cada ficha (`js/datos/efectosCampeon.js`: movimientos, pasiva, líder, transformaciones e invocaciones), así que un campeón nuevo aparece solo. Se aplica en todos los selectores que usan `renderEquipo`.
 - **`reducirCooldown` con `prob`:** la reducción puede tener probabilidad.
-- **Yorichi, Las 13 Posturas del Sol:** cooldown 7, 13 golpes de 50
+- **Yorichi, Las 13 Posturas del Sol:** cooldown 7, 13 golpes de 50%, y cada crítico tiene 50% de probabilidad de bajar 1 su cooldown.
