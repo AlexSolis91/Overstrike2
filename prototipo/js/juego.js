@@ -772,7 +772,7 @@ function enviarRaid() {
   if (r.envio) return r.envio;
   const j = P.find(p => p.lado === 'rival');
   const dano = Math.max(0, Math.round(r.hpInicio - Math.max(0, j.hp)));
-  r.envio = D.raidTerminar(r.ataque, dano, r.decisiones || []).then(async res => {
+  r.envio = D.raidTerminar(r.ataque, dano, r.decisiones || [], r.ronda || 0).then(async res => {
     if (!res?.pendiente) return { ...res, dano };
     const sb = await supabase(), v = await sb.functions.invoke('verificar-raid', { body: { ataque: r.ataque } });
     if (v.error) throw v.error;

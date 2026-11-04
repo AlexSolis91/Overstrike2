@@ -1,4 +1,4 @@
-// Ventana de Misiones diarias: progreso de las 10 misiones y botón para cobrar cada premio. El servidor cuenta y paga
+// Ventana de Misiones diarias: progreso de las misiones y botón para cobrar cada premio. El servidor cuenta y paga
 // (docs/sql/016_misiones_runas.sql); el botón del menú muestra cuántos premios hay listos para cobrar.
 import { MISIONES, COLOR_DIFICULTAD, avance } from '../datos/misiones.js';
 import { ICONO_RUNA_PORTAL } from '../datos/recompensas.js';
@@ -17,8 +17,9 @@ const PREMIO = {
   frag_runa:    n => `🧩 ${n}`,
   trofeos:      n => `🏅 ${n}`,
   vales:        n => `🎟️ ${n} Vale de sobre`,
+  rel_sobres:   n => `🎫 ${n} Sobre Relics of Power`,
 };
-const NOMBRE = { oro: 'oro', polvo: 'Polvo Arcano', runas_portal: 'Runa de Portal', frag_runa: 'Fragmentos', trofeos: 'Trofeos de Orco', vales: 'Vale de sobre' };
+const NOMBRE = { oro: 'oro', polvo: 'Polvo Arcano', runas_portal: 'Runa de Portal', frag_runa: 'Fragmentos', trofeos: 'Trofeos de Orco', vales: 'Vale de sobre', rel_sobres: 'Sobre Relics of Power, listo para abrir' };
 const premioHtml = p => Object.entries(p).map(([k, n]) => `<span title="${NOMBRE[k]}">${PREMIO[k](n)}</span>`).join(' ');
 
 const cobrada = m => (est?.cobradas || []).includes(m.id);
@@ -35,7 +36,7 @@ function pintar() {
   const c = $('#mi-cont'); if (!c) return;
   if (error) return void (c.innerHTML = `<p class="tc-vacio">${error}</p>`);
   if (!est) return void (c.innerHTML = '<p class="tc-vacio">Cargando…</p>');
-  c.innerHTML = `<p class="tc-nota">Se renuevan cada día a medianoche (hora de México). Completa las 9 para cobrar la última.</p>
+  c.innerHTML = `<p class="tc-nota">Se renuevan cada día a medianoche (hora de México). Completa 10 misiones para cobrar la última.</p>
     ${MISIONES.map(m => {
       const n = avance(m, est.progreso), hecha = cobrada(m), ok = n >= m.meta;
       return `<div class="mi-fila${hecha ? ' hecha' : ok ? ' lista' : ''}" style="--c:${COLOR_DIFICULTAD[m.dificultad]}">

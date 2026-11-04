@@ -48,7 +48,9 @@ export function repetirRaid(a, jefe = 'lich-king') {
     const rnd = crearRng(semillaIA(Number(a.semilla)));
     const lista = a.decisiones || [];
     const b = combate.personajes.find(p => p.lado === 'rival');
-    let r = combate.iniciar(), i = 0;
+    let r = combate.iniciar(), i = 0, ronda = 0;
+    const leerRonda = () => { for (const e of r.eventos || []) if (e.t === 'ronda') ronda = e.n; };
+    leerRonda();
     while (!r.fin && r.esperando) {
       const d = lista[i++];
       if (!d) break;
@@ -58,7 +60,8 @@ export function repetirRaid(a, jefe = 'lich-king') {
         if (ia.categoria !== d.c || (ia.objetivo || null) !== (d.o || null)) return { ok: false, motivo: `Decisión del jefe alterada (turno ${i})` };
       }
       r = combate.actuar({ categoria: d.c, objetivo: d.o || null });
+      leerRonda();
     }
-    return { ok: true, dano: Math.max(0, Math.round(Number(a.hp_inicio) - Math.max(0, b.hp))) };
+    return { ok: true, ronda, dano: Math.max(0, Math.round(Number(a.hp_inicio) - Math.max(0, b.hp))) };
   } catch (e) { return { ok: false, motivo: String(e?.message || e) }; }
 }

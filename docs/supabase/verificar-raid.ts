@@ -8233,7 +8233,9 @@ function repetirRaid(a, jefe = 'lich-king') {
     const rnd = crearRng(semillaIA(Number(a.semilla)));
     const lista = a.decisiones || [];
     const b = combate.personajes.find(p => p.lado === 'rival');
-    let r = combate.iniciar(), i = 0;
+    let r = combate.iniciar(), i = 0, ronda = 0;
+    const leerRonda = () => { for (const e of r.eventos || []) if (e.t === 'ronda') ronda = e.n; };
+    leerRonda();
     while (!r.fin && r.esperando) {
       const d = lista[i++];
       if (!d) break;
@@ -8243,8 +8245,9 @@ function repetirRaid(a, jefe = 'lich-king') {
         if (ia.categoria !== d.c || (ia.objetivo || null) !== (d.o || null)) return { ok: false, motivo: `Decisión del jefe alterada (turno ${i})` };
       }
       r = combate.actuar({ categoria: d.c, objetivo: d.o || null });
+      leerRonda();
     }
-    return { ok: true, dano: Math.max(0, Math.round(Number(a.hp_inicio) - Math.max(0, b.hp))) };
+    return { ok: true, ronda, dano: Math.max(0, Math.round(Number(a.hp_inicio) - Math.max(0, b.hp))) };
   } catch (e) { return { ok: false, motivo: String(e?.message || e) }; }
 }
 
@@ -8270,8 +8273,8 @@ Deno.serve(async req => {
     const { data: a } = await admin.from('raid_ataques').select('*').eq('id', ataque).single();
     if (!a || a.jugador !== user.id) return json({ error: 'No existe ese ataque' }, 404);
     if (a.estado !== 'pendiente') return json({ error: 'Ese ataque no espera verificación' }, 400);
-    const r = a.version === VERSION ? repetirRaid(a) : { ok: true, dano: a.dano };
-    const { data, error } = await admin.rpc('raid_resultado_verificado', { p_ataque: ataque, p_dano: r.ok ? r.dano : 0 });
+    const r = a.version === VERSION ? repetirRaid(a) : { ok: true, dano: a.dano, ronda: a.ronda };
+    const { data, error } = await admin.rpc('raid_resultado_verificado', { p_ataque: ataque, p_dano: r.ok ? r.dano : 0, p_ronda: r.ok ? r.ronda : 0 });
     if (error) return json({ error: error.message }, 400);
     return json({ ...data, verificado: r.ok, motivo: r.motivo || '' });
   } catch (e) { return json({ error: String(e?.message || e) }, 500); }

@@ -709,7 +709,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 
 ## 26. Misiones diarias y Runas de Portal (2026-10-26, `docs/sql/016_misiones_runas.sql`)
 - **Meta:** ~1 Runa de Portal al día por jugador activo.
-- **10 misiones diarias** (se renuevan a medianoche, hora de México; menú → 📜 Misiones, con contador de premios listos). Textos en `js/datos/misiones.js`, que debe coincidir con `public._misiones()`.
+- **15 misiones diarias** (se renuevan a medianoche, hora de México; menú → 📜 Misiones, con contador de premios listos). Textos en `js/datos/misiones.js`, que debe coincidir con `public._misiones()`.
 
 | # | Misión | Dificultad | Premio |
 |---|---|---|---|
@@ -722,10 +722,15 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 | 7 | Supera la oleada 20 de la Horda | Media | 20 Trofeos de Orco |
 | 8 | Gana 10 combates de Arena | Difícil | 20,000 oro + 10 Fragmentos |
 | 9 | Supera la oleada 40 de la Horda | Difícil | 60 Trofeos + 20 Fragmentos |
-| 10 | Completa todas las misiones diarias | Final | 1 Vale de sobre |
+| 11 | Ataca al Jefe de Raid 1 vez | Fácil | 3,000 oro |
+| 12 | Reclama 1 cofre del Jefe de Raid | Fácil | 10 Polvo Arcano |
+| 13 | Causa 25,000 de daño o más con una sola llave | Media | 1 Vale de sobre |
+| 14 | Causa 250,000 de daño o más con dos llaves (tus 2 mejores ataques del día) | Difícil | 1 Runa de Portal + 35,000 oro |
+| 15 | Supera la ronda 30 contra el Jefe de Raid | Difícil | 1 Sobre Relics of Power + 25,000 oro |
+| 10 | Completa 10 misiones diarias | Final | 1 Vale de sobre |
 
-- **Contadores en el servidor** (tabla `misiones_diarias`, disparadores): aperturas de sobres (`sobre`, `vale`, `reliquias`), reliquias equipadas, oleada máxima del día en la Horda, ataques de Arena y Arena en vivo terminados; la Campaña suma desde `campana_completar`. La misión 10 cuenta las otras 9 completadas (no hace falta cobrarlas antes).
-- **Fuentes de Runa de Portal:** misión 4 (1/día) · Arena 3.3% por combate, ganes o pierdas (~1 cada 30; también en vivo, sin aviso en pantalla) · recompensas semanales de liga · regalo inicial de 3. Nada más: ni la Tienda, ni la Campaña, ni los hitos de la Horda dan Runas de Portal (`docs/sql/019_runas_portal_fuentes.sql`).
+- **Contadores en el servidor** (tabla `misiones_diarias`, disparadores): aperturas de sobres (`sobre`, `vale`, `reliquias`), reliquias equipadas, oleada máxima del día en la Horda, ataques de Arena y Arena en vivo terminados; la Campaña suma desde `campana_completar`. La misión final cuenta 10 de las otras (no hace falta cobrarlas antes). Las del Jefe de Raid valen para cualquier jefe y un ataque cuenta si termina con daño (`docs/sql/029_misiones_raid.sql`).
+- **Fuentes de Runa de Portal:** misión 4 (1/día) · misión 14 (1/día) · Arena 3.3% por combate, ganes o pierdas (~1 cada 30; también en vivo, sin aviso en pantalla) · recompensas semanales de liga · regalo inicial de 3. Nada más: ni la Tienda, ni la Campaña, ni los hitos de la Horda dan Runas de Portal (`docs/sql/019_runas_portal_fuentes.sql`).
 
 ## 27. Juego en segundo plano (2026-10-27)
 - Con la ventana oculta, tapada o minimizada el navegador deja de dibujar y frena los temporizadores de la página. `js/ui/graficos.js` crea un **Worker** (`reloj`) que no sufre ese freno:

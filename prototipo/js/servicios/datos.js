@@ -63,7 +63,9 @@ export const hordaRanking = horda => rpc('horda_ranking', { p_horda: horda });  
 // Jefe de Raid (docs/sql/026_jefe_raid.sql)
 export const raidEstado = () => rpc('raid_estado');
 export const raidEntrar = (dificultad, equipo, version) => rpc('raid_entrar', { p_dif: dificultad, p_equipo: equipo, p_version: version });
-export const raidTerminar = (ataque, dano, decisiones) => rpc('raid_terminar', { p_ataque: ataque, p_dano: dano, p_decisiones: decisiones });
+// Manda también la ronda (docs/sql/029_misiones_raid.sql). Sin ese SQL se usa la versión anterior: el daño se guarda igual.
+export const raidTerminar = (ataque, dano, decisiones, ronda) => rpc('raid_terminar', { p_ataque: ataque, p_dano: dano, p_decisiones: decisiones, p_ronda: ronda })
+  .catch(e => { if (!/raid_terminar|schema cache|does not exist/i.test(e?.message || '')) throw e; return rpc('raid_terminar', { p_ataque: ataque, p_dano: dano, p_decisiones: decisiones }); });
 export const raidReclamar = (dia, dificultad) => rpc('raid_reclamar', { p_dia: dia, p_dif: dificultad });
 export const adminRaidEscala = pct => rpc('admin_raid_escala', { p_pct: pct });
 

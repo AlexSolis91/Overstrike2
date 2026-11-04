@@ -95,8 +95,8 @@ Deno.serve(async req => {
     const { data: a } = await admin.from('raid_ataques').select('*').eq('id', ataque).single();
     if (!a || a.jugador !== user.id) return json({ error: 'No existe ese ataque' }, 404);
     if (a.estado !== 'pendiente') return json({ error: 'Ese ataque no espera verificación' }, 400);
-    const r = a.version === VERSION ? repetirRaid(a) : { ok: true, dano: a.dano };
-    const { data, error } = await admin.rpc('raid_resultado_verificado', { p_ataque: ataque, p_dano: r.ok ? r.dano : 0 });
+    const r = a.version === VERSION ? repetirRaid(a) : { ok: true, dano: a.dano, ronda: a.ronda };
+    const { data, error } = await admin.rpc('raid_resultado_verificado', { p_ataque: ataque, p_dano: r.ok ? r.dano : 0, p_ronda: r.ok ? r.ronda : 0 });
     if (error) return json({ error: error.message }, 400);
     return json({ ...data, verificado: r.ok, motivo: r.motivo || '' });
   } catch (e) { return json({ error: String(e?.message || e) }, 500); }
