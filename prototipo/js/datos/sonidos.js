@@ -26,7 +26,7 @@ export const MUSICA = {
     'assets/audio/batalla-3.mp3',  // Keycard Theme #5 (Yu-Gi-Oh! Master Duel)
   ],
   hordaOrcos: 'assets/audio/horda-orcos.mp3',   // partida del Modo Horda (Orcos): Epic Music Mix Orcs (WoW)
-  jefeLichKing: 'assets/audio/jefe-lich-king.mp3',   // Jefe de Raid Lich King: Wrath of the Lich King (Main Title)
+  jefeLichKing: 'assets/audio/jefe-lich-king-arthas.mp3',   // Jefe de Raid Lich King: Arthas, My Son (World of Warcraft)
   victoria: 'assets/audio/victoria.mp3',
   derrota: 'assets/audio/derrota.mp3',
 };
