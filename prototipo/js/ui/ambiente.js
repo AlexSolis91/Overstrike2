@@ -80,7 +80,7 @@ function destellar(alpha = .5, dur = .35) {
 }
 
 // Rayo de hielo quebrado entre dos puntos (coordenadas del tablero)
-function rayo(desde, hasta, { grosor = 7, color = 0x7dd3fc, retardo = 0 } = {}) {
+function rayo(desde, hasta, { grosor = 7, color = 0x7dd3fc, retardo = 0, capa = null, antesDe = null } = {}) {
   const puntos = [[desde.x, desde.y]], tramos = 9;
   const dx = hasta.x - desde.x, dy = hasta.y - desde.y, largo = Math.hypot(dx, dy) || 1, nx = -dy / largo, ny = dx / largo;
   for (let i = 1; i < tramos; i++) { const t = i / tramos, d = azar(-34, 34) * Math.sin(t * Math.PI); puntos.push([desde.x + dx * t + nx * d, desde.y + dy * t + ny * d]); }
@@ -89,10 +89,10 @@ function rayo(desde, hasta, { grosor = 7, color = 0x7dd3fc, retardo = 0 } = {}) 
   const linea = (w, col, al) => { g.moveTo(...puntos[0]); for (const p of puntos.slice(1)) g.lineTo(...p); g.stroke({ width: w, color: col, alpha: al, cap: 'round', join: 'round' }); };
   linea(grosor * 2.6, color, .28); linea(grosor, color, .9); linea(grosor * .35, 0xffffff, 1);
   g.blendMode = 'add'; g.alpha = 0;
-  G.fxLayer.addChild(g);
+  if (capa) capa.addChildAt(g, capa.getChildIndex(antesDe)); else G.fxLayer.addChild(g);
   gsap.timeline({ delay: retardo, onComplete: () => { if (!g.destroyed) g.destroy(); } })
     .to(g, { alpha: 1, duration: .03 }).to(g, { alpha: .25, duration: .05 }).to(g, { alpha: 1, duration: .03 }).to(g, { alpha: 0, duration: .35, delay: .08 });
-  gsap.delayedCall(retardo + .03, () => { if (A) burst(hasta.x, hasta.y, { n: 14, colors: [0xffffff, 0xbae6fd, color], speed: 8, size: .26, life: 26 }); });
+  if (!capa) gsap.delayedCall(retardo + .03, () => { if (A) burst(hasta.x, hasta.y, { n: 14, colors: [0xffffff, 0xbae6fd, color], speed: 8, size: .26, life: 26 }); });
 }
 
 // Efecto de un ataque. desde/objetivos son cartas. Devuelve cuánto conviene esperar antes del impacto (ms).
@@ -128,23 +128,32 @@ export function almaAlJefe(carta, jefe) {
     onComplete: () => { if (!s.destroyed) { burst(s.x, s.y, { n: 12, colors: [0xffffff, 0x7dd3fc], speed: 5, size: .22, life: 22 }); s.destroy(); } } });
 }
 
-// Una invocación con vuelo (Sindragosa) cruza el campo. Su imagen ya viene recortada: se ve sólida, no translúcida.
-export async function vueloInvocacion(imagen, { fuerza = 1, segundos = 1.8 } = {}) {
+// Una invocación con vuelo (Sindragosa) aparece en el centro de la pantalla y lanza rayos de hielo en todas direcciones
+export async function vueloInvocacion(imagen, { fuerza = 1, segundos = 2 } = {}) {
   if (!A) return;
   const tex = await PIXI.Assets.load(imagen);
   if (!A) return;
-  const w = A.w, h = A.h, s = new PIXI.Sprite(tex);
-  s.anchor.set(.5); s.alpha = 0; s.eventMode = 'none';
-  const lado = Math.max(w * .75, h * .75) / tex.width;
-  s.scale.set(lado); s.position.set(w * 1.15, h * .2);
-  A.frente.addChildAt(s, A.frente.children.length - 2);        // delante de la nieve, detrás de la niebla y el destello
+  const w = A.w, h = A.h, frente = A.frente, niebla = A.niebla, s = new PIXI.Sprite(tex);
+  const lado = Math.min(w * .78, h * .85) / tex.width;
+  const cx = w / 2, cy = h * .44;
+  s.anchor.set(.5); s.alpha = 0; s.eventMode = 'none'; s.scale.set(lado * .86); s.position.set(cx, cy);
+  frente.addChildAt(s, frente.getChildIndex(niebla));          // delante de la nieve, detrás de la niebla y el destello
   tormenta(fuerza, segundos, .14);
   destellar(.2, .4);
   shakeScene(8);
   gsap.timeline({ onComplete: () => { if (!s.destroyed) s.destroy(); } })
-    .to(s, { alpha: 1, duration: .35 }, 0)
-    .to(s, { x: w * -.15, y: h * .32, duration: segundos, ease: 'none' }, 0)
-    .to(s, { alpha: 0, duration: .4 }, segundos - .4);
+    .to(s, { alpha: 1, duration: .25 }, 0)
+    .to(s.scale, { x: lado, y: lado, duration: segundos, ease: 'power1.out' }, 0)
+    .to(s, { alpha: 0, duration: .35 }, segundos - .35);
+  // Los rayos salen de su pecho brillante, repartidos por todo el círculo para no amontonarse en un lado
+  const origen = { x: cx - tex.width * lado * .03, y: cy + tex.height * lado * .02 };
+  const n = document.body.classList.contains('movil') ? 12 : 18, alcance = Math.hypot(w, h) * .55;
+  for (let i = 0; i < n; i++) {
+    const ang = (i * 2.399963) % (Math.PI * 2);                // ángulo áureo: cada rayo cae lejos del anterior
+    const largo = alcance * azar(.6, 1);
+    rayo(origen, { x: origen.x + Math.cos(ang) * largo, y: origen.y + Math.sin(ang) * largo },
+      { grosor: azar(4, 8), color: i % 3 ? 0x7dd3fc : 0x38bdf8, retardo: .15 + (segundos - .75) * i / n, capa: frente, antesDe: niebla });
+  }
 }
 
 // Furia del Rey: desde esa ronda, la tormenta ya no vuelve a calmarse del todo

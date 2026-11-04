@@ -14,7 +14,7 @@
 
 export const INVOCACIONES = {
   // ---------------------------------------------------------------- Jefe de Raid: Lich King
-  // vuelo: true → en el campo del jefe cruza la pantalla al aparecer y al atacar
+  // vuelo: true → en el campo del jefe aparece grande en el centro y lanza rayos, al ser invocada y al atacar
   sindragosa: {
     nombre: 'Sindragosa', rareza: 'Legendario', emoji: '🐉', color: 0x38bdf8, imagen: 'assets/invocaciones/sindragosa.webp', dur: 2,
     enfoque: [.62, .36], vuelo: true,
