@@ -1,6 +1,7 @@
 // Ambiente de un campo especial (Jefe de Raid): fondo propio, nieve que siempre cae y efectos de campo que acompañan a los ataques.
 // Un movimiento pide su efecto con el campo `ambiente` de su ficha: 'ventisca', 'rayos' o 'furia'.
 import { G, burst, shakeScene } from './graficos.js';
+import { sonar } from './audio.js';
 
 const { PIXI, gsap } = window;
 const azar = (a, b) => a + Math.random() * (b - a);
@@ -66,6 +67,7 @@ export function terminarAmbiente() {
 // La nieve se acelera hasta volverse tormenta y luego vuelve a la calma (o a la base, si ya empezó la furia)
 function tormenta(fuerza, segundos, niebla = .16) {
   if (!A) return;
+  sonar('ventisca');
   gsap.killTweensOf(A); gsap.killTweensOf(A.niebla);
   const a = A;
   gsap.to(a, { viento: fuerza, duration: .45, ease: 'power2.in' });

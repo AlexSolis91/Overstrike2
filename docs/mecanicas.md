@@ -855,3 +855,6 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 
 ## 45. Herramienta de pruebas (2026-11-04)
 - El botón 🧪 Pruebas de la batalla solo aparece al administrador y solo en Partida rápida.
+
+## 46. Sonido de la tormenta de nieve (2026-11-04)
+- Evento `ventisca` (`assets/audio/sfx/ventisca.mp3`, 4.4 s): suena junto con la tormenta del campo del jefe (Invierno sin Remordimiento, Furia de Frostmourne y Sindragosa), como máximo una vez cada 1.5 s. Los rayos de Segador de Almas no lo usan.
