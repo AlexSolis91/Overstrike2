@@ -322,10 +322,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
 
   function iniciarRonda() {
     S.ronda++;
-    const fr = opcionesRival.furiaRonda;                    // furia por rondas (Jefe de Raid): desde esa ronda el jefe pega más cada ronda
+    // furia por rondas (Jefe de Raid): desde esa ronda el jefe pega más cada ronda, en % de su daño de esa dificultad.
+    // Sus invocaciones escalan con sus estadísticas, así que también suben.
+    const fr = opcionesRival.furiaRonda;
     if (fr && S.ronda >= fr.desde) for (const j of P.filter(x => x.lado === 'rival' && !x.muerto)) {
-      j.campana.dmgPct = (j.campana.dmgPct || 0) + fr.dmgPct;
-      if (S.ronda === fr.desde) emitir('jefeFuria', { id: j.uid, texto: fr.texto }, j);
+      j.campana.dmgPct = (j.campana.dmgPct || 0) + fr.dmgPct * (1 + (opcionesRival.dmgPct || 0));
+      if (fr.texto && S.ronda === fr.desde) emitir('jefeFuria', { id: j.uid, texto: fr.texto }, j);
     }
     S.actuaron = new Set(); S.orden = [];
     for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; }

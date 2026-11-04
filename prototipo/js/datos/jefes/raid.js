@@ -4,7 +4,10 @@ import lichKing from './lich-king.js';
 
 export const JEFES_RAID = { 'lich-king': lichKing };
 export const RONDAS_RAID = 30;
-export const FURIA_RAID = { desde: 21, dmgPct: .10, texto: '❄️ ¡FURIA DEL REY! Su Daño sube cada ronda' };
+// Cada ronda el jefe y sus invocaciones hacen +2% de daño: +20% en la ronda 10, +50% en la 25
+export const FURIA_RAID = { desde: 1, dmgPct: .02 };
+// Subir este número al cambiar cómo se pelea contra el jefe (motor o reglas): así el servidor no rechaza ataques por una función desactualizada
+export const REGLAS_RAID = 2;
 // Cuánto pega el jefe en cada dificultad
 export const DIFICULTADES_RAID = {
   facil: { nombre: 'Fácil', dmg: 1, color: '#86efac' },

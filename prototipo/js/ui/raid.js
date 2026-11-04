@@ -88,7 +88,7 @@ function pintar() {
     <aside class="hd-info">
       <h4>Cómo funciona</h4>
       <p>Cada ataque gasta <b>1 llave</b> y dura hasta ${RONDAS_RAID} rondas, o hasta que caiga tu equipo. Tu daño se suma a la barra de todos y a tu cofre del día.</p>
-      <p>Desde la ronda ${FURIA_RAID.desde}, el jefe gana +${Math.round(FURIA_RAID.dmgPct * 100)}% de Daño cada ronda. Derrotarlo abre la siguiente dificultad para todos.</p>
+      <p>Cada ronda, el jefe y sus invocaciones hacen +${Math.round(FURIA_RAID.dmgPct * 100)}% de daño: +${Math.round(FURIA_RAID.dmgPct * 1000)}% en la ronda 10 y +${Math.round(FURIA_RAID.dmgPct * 2500)}% en la 25. Derrotarlo abre la siguiente dificultad para todos.</p>
       <h4>${jefe.nombre}</h4>
       <p><b>${jefe.pasiva.nombre}:</b> ${jefe.pasiva.desc}</p>
       ${jefe.movimientos.map(m => `<p><b>${CAT[m.categoria]} · ${m.nombre}:</b> ${m.desc}</p>`).join('')}

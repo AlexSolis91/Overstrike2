@@ -456,3 +456,5 @@ body.movil.en-raid #hint { top: 86px; }
 body.movil-v.en-raid #jefe-barra { top: 50px; }
 body.movil-v #raid-info { top: 86px; }
 body.movil-v.en-raid #hint { top: 112px; }
+#raid-info em { font-style: normal; color: #fca5a5; }
+body.movil #raid-info em { font-size: 11px; }

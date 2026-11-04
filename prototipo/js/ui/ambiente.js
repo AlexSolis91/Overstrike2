@@ -155,10 +155,3 @@ export async function vueloInvocacion(imagen, { fuerza = 1, segundos = 2 } = {})
       { grosor: azar(4, 8), color: i % 3 ? 0x7dd3fc : 0x38bdf8, retardo: .15 + (segundos - .75) * i / n, capa: frente, antesDe: niebla });
   }
 }
-
-// Furia del Rey: desde esa ronda, la tormenta ya no vuelve a calmarse del todo
-export function furiaDelCampo() {
-  if (!A) return;
-  A.base = .28;
-  tormenta(1.2, 1.6, .2);
-}

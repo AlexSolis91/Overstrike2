@@ -880,10 +880,12 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
 
   function iniciarRonda() {
     S.ronda++;
-    const fr = opcionesRival.furiaRonda;                    // furia por rondas (Jefe de Raid): desde esa ronda el jefe pega más cada ronda
+    // furia por rondas (Jefe de Raid): desde esa ronda el jefe pega más cada ronda, en % de su daño de esa dificultad.
+    // Sus invocaciones escalan con sus estadísticas, así que también suben.
+    const fr = opcionesRival.furiaRonda;
     if (fr && S.ronda >= fr.desde) for (const j of P.filter(x => x.lado === 'rival' && !x.muerto)) {
-      j.campana.dmgPct = (j.campana.dmgPct || 0) + fr.dmgPct;
-      if (S.ronda === fr.desde) emitir('jefeFuria', { id: j.uid, texto: fr.texto }, j);
+      j.campana.dmgPct = (j.campana.dmgPct || 0) + fr.dmgPct * (1 + (opcionesRival.dmgPct || 0));
+      if (fr.texto && S.ronda === fr.desde) emitir('jefeFuria', { id: j.uid, texto: fr.texto }, j);
     }
     S.actuaron = new Set(); S.orden = [];
     for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; }
@@ -8097,7 +8099,10 @@ const lichKing = __m["datos/jefes/lich-king.js"].default;
 
 const JEFES_RAID = { 'lich-king': lichKing };
 const RONDAS_RAID = 30;
-const FURIA_RAID = { desde: 21, dmgPct: .10, texto: '❄️ ¡FURIA DEL REY! Su Daño sube cada ronda' };
+// Cada ronda el jefe y sus invocaciones hacen +2% de daño: +20% en la ronda 10, +50% en la 25
+const FURIA_RAID = { desde: 1, dmgPct: .02 };
+// Subir este número al cambiar cómo se pelea contra el jefe (motor o reglas): así el servidor no rechaza ataques por una función desactualizada
+const REGLAS_RAID = 2;
 // Cuánto pega el jefe en cada dificultad
 const DIFICULTADES_RAID = {
   facil: { nombre: 'Fácil', dmg: 1, color: '#86efac' },
@@ -8114,6 +8119,7 @@ const opcionesRaid = (dificultad, hpInicio, hpTotal) => ({
 __e["DIFICULTADES_RAID"] = DIFICULTADES_RAID;
 __e["FURIA_RAID"] = FURIA_RAID;
 __e["JEFES_RAID"] = JEFES_RAID;
+__e["REGLAS_RAID"] = REGLAS_RAID;
 __e["RONDAS_RAID"] = RONDAS_RAID;
 __e["opcionesRaid"] = opcionesRaid;
 return __e; })();
@@ -8123,7 +8129,7 @@ __m["datos/cuenta.js"] = (() => { const __e: any = {};
 // (la verificación de batallas de la Arena repite la batalla con estas mismas funciones).
 const { instancia, espaciosDeCuenta, RELIQUIAS } = __m["datos/reliquias.js"];
 const { OFICIALES } = __m["datos/personajes/index.js"];
-const { JEFES_RAID } = __m["datos/jefes/raid.js"];
+const { JEFES_RAID, DIFICULTADES_RAID, FURIA_RAID, RONDAS_RAID, REGLAS_RAID } = __m["datos/jefes/raid.js"];
 const { INVOCACIONES } = __m["datos/invocaciones.js"];
 
 const abiertosDe = r => r?.espacios_abiertos?.length || !r?.espacios ? (r?.espacios_abiertos || []) : ['arma2', 'equip2', 'acc2'].slice(0, r.espacios);
@@ -8150,7 +8156,7 @@ function conCuenta(def, cuenta) {
 const VISUALES = new Set(['imagen', 'arteCarta', 'auraJefe', 'musica', 'ambiente', 'emoji', 'color', 'enfoque', 'luminosa', 'vuelo', 'desc', 'nombre', 'estilo']);
 const sinVisuales = o => JSON.parse(JSON.stringify(o, (k, v) => VISUALES.has(k) ? undefined : v));
 const VERSION = (() => {
-  const t = JSON.stringify([OFICIALES.map(p => [p.id, p.base, p.extra, p.movimientos, p.pasiva, p.lider]), Object.keys(RELIQUIAS), sinVisuales(JEFES_RAID), sinVisuales(INVOCACIONES)]);
+  const t = JSON.stringify([OFICIALES.map(p => [p.id, p.base, p.extra, p.movimientos, p.pasiva, p.lider]), Object.keys(RELIQUIAS), sinVisuales(JEFES_RAID), sinVisuales(INVOCACIONES), sinVisuales(DIFICULTADES_RAID), FURIA_RAID, RONDAS_RAID, REGLAS_RAID]);
   let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return String(h >>> 0);
 })();
 

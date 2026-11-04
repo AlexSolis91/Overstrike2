@@ -2,7 +2,7 @@
 // (la verificación de batallas de la Arena repite la batalla con estas mismas funciones).
 import { instancia, espaciosDeCuenta, RELIQUIAS } from './reliquias.js';
 import { OFICIALES } from './personajes/index.js';
-import { JEFES_RAID } from './jefes/raid.js';
+import { JEFES_RAID, DIFICULTADES_RAID, FURIA_RAID, RONDAS_RAID, REGLAS_RAID } from './jefes/raid.js';
 import { INVOCACIONES } from './invocaciones.js';
 
 export const abiertosDe = r => r?.espacios_abiertos?.length || !r?.espacios ? (r?.espacios_abiertos || []) : ['arma2', 'equip2', 'acc2'].slice(0, r.espacios);
@@ -29,6 +29,6 @@ export function conCuenta(def, cuenta) {
 const VISUALES = new Set(['imagen', 'arteCarta', 'auraJefe', 'musica', 'ambiente', 'emoji', 'color', 'enfoque', 'luminosa', 'vuelo', 'desc', 'nombre', 'estilo']);
 const sinVisuales = o => JSON.parse(JSON.stringify(o, (k, v) => VISUALES.has(k) ? undefined : v));
 export const VERSION = (() => {
-  const t = JSON.stringify([OFICIALES.map(p => [p.id, p.base, p.extra, p.movimientos, p.pasiva, p.lider]), Object.keys(RELIQUIAS), sinVisuales(JEFES_RAID), sinVisuales(INVOCACIONES)]);
+  const t = JSON.stringify([OFICIALES.map(p => [p.id, p.base, p.extra, p.movimientos, p.pasiva, p.lider]), Object.keys(RELIQUIAS), sinVisuales(JEFES_RAID), sinVisuales(INVOCACIONES), sinVisuales(DIFICULTADES_RAID), FURIA_RAID, RONDAS_RAID, REGLAS_RAID]);
   let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return String(h >>> 0);
 })();

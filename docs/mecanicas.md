@@ -784,7 +784,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 ## 35. Jefe de Raid (2026-11-04, `docs/sql/026_jefe_raid.sql`)
 - **Sin clanes:** todos los jugadores atacan la misma barra de HP por dificultad. Se reinicia a medianoche, hora de México. Derrotar una dificultad abre la siguiente para todos, y queda abierta.
 - **Llaves:** 1 cada 6 horas, máximo 4. Cada ataque gasta 1. Abandonar cuenta el daño hecho hasta ese momento.
-- **Batalla:** 5 campeones propios con sus estrellas y reliquias (congeladas al entrar) contra un jefe. Hasta 30 rondas; desde la 21, el jefe gana +10% de Daño cada ronda.
+- **Batalla:** 5 campeones propios con sus estrellas y reliquias (congeladas al entrar) contra un jefe. Hasta 30 rondas; cada ronda, el jefe y sus invocaciones hacen +2% de daño (ver sección 40).
 - **Valores base** (HP · rangos · oro del cofre 4, sin duplicar · polvo · runas · reliquia Rara/Especial/Épica · receta):
   - Fácil: 500,000 · 5k/20k/40k/80k · 47,500 · 20 · 0 · 30/5/0% · 1.5%
   - Normal: 1,000,000 · 4k/16k/32k/64k · 95,000 · 40 · 1 · 40/10/0.5% · 3%
@@ -802,7 +802,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
   - `rival.furiaRonda { desde, dmgPct, texto }`: el equipo rival gana daño cada ronda desde `desde`.
   - `rival.dmgPct`: daño por dificultad sin tocar el HP.
 - **Lich King jefe** (`js/datos/jefes/lich-king.js`, ficha distinta del campeón): Daño 70, Velocidad 100, Armadura 20%, Resistencia 50%, HP de referencia 3,000. Inmune a Control. Ciclo: Invierno sin Remordimiento → Segador de Almas → Invierno → Segador → Furia de Frostmourne. Daño por dificultad: ×1, ×1.5, ×2, ×3, ×4.
-- **Campo:** `js/ui/ambiente.js`. Fondo propio, nieve constante y un efecto por movimiento (campo `ambiente` de la ficha): `ventisca` (tormenta de nieve), `rayos` (rayos de hielo), `furia` (destello, tormenta máxima y rayos a todos). Cada campeón caído manda su alma al jefe. Desde la Furia del Rey, la tormenta ya no se calma del todo.
+- **Campo:** `js/ui/ambiente.js`. Fondo propio, nieve constante y un efecto por movimiento (campo `ambiente` de la ficha): `ventisca` (tormenta de nieve), `rayos` (rayos de hielo), `furia` (destello, tormenta máxima y rayos a todos). Cada campeón caído manda su alma al jefe. 
 
 ## 36. Ajustes del Jefe de Raid, Sindragosa y desfragmentar en lote (2026-11-04, `docs/sql/027_raid_ajustes.sql`)
 - **Llaves:** máximo 2; sigue llegando 1 cada 6 horas.
@@ -827,3 +827,9 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - **Selector de equipos:** además del rol, se puede filtrar por un buff o debuff. La lista sale de leer cada ficha (`js/datos/efectosCampeon.js`: movimientos, pasiva, líder, transformaciones e invocaciones), así que un campeón nuevo aparece solo. Se aplica en todos los selectores que usan `renderEquipo`.
 - **`reducirCooldown` con `prob`:** la reducción puede tener probabilidad.
 - **Yorichi, Las 13 Posturas del Sol:** cooldown 7, 13 golpes de 50%, y cada crítico tiene 50% de probabilidad de bajar 1 su cooldown.
+
+## 40. Daño creciente del Jefe de Raid (2026-11-04)
+- **Regla:** cada ronda, el jefe y sus invocaciones hacen +2% de daño, acumulado: +20% en la ronda 10, +50% en la 25. Sustituye al +10% por ronda desde la 21.
+- **Sobre la dificultad:** el % se calcula sobre el daño de esa dificultad, no sobre el daño base. En Pesadilla (×4), +20% significa ×4.8.
+- **Datos:** `FURIA_RAID` en `js/datos/jefes/raid.js`. La pantalla de batalla muestra «Daño del jefe: +N%».
+- **`REGLAS_RAID`** (`js/datos/jefes/raid.js`): subir este número al cambiar cómo se pelea contra el jefe. Junto con la dificultad, el límite de rondas y `FURIA_RAID`, entra en `VERSION`, así que una función `verificar-raid` vieja acepta el daño reportado en vez de contar 0. Después hay que generarla y publicarla otra vez.
