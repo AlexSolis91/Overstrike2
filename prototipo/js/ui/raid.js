@@ -115,7 +115,7 @@ async function atacar() {
       catch (e) { alert(D.mensajeError(e)); return irA('raid'); }
       jugar(eqJ.map(p => porId(p.id)), [jefe], {
         semilla: Number(a.semilla), rival: opcionesRaid(d.id, Number(a.hp_inicio), Number(a.hp_total)),
-        raid: { ataque: a.ataque, dificultad: d.id, nombreDif: d.nombre, hpInicio: Number(a.hp_inicio), hpTotal: Number(a.hp_total), equipoMio: a.equipo, fondo: 'assets/fondos/raid-lich-king.webp' },
+        raid: { tema: jefe.musica, ataque: a.ataque, dificultad: d.id, nombreDif: d.nombre, hpInicio: Number(a.hp_inicio), hpTotal: Number(a.hp_total), equipoMio: a.equipo, fondo: 'assets/fondos/raid-lich-king.webp' },
       });
     },
   });

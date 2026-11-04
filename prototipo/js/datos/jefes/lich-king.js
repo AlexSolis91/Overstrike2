@@ -7,6 +7,7 @@ export default {
   rol: 'Tanque',
   emoji: '👑', color: '#60a5fa', imagen: 'assets/personajes/lich-king-jefe.webp',
   arteCarta: 'assets/personajes/lich-king-jefe-carta.webp',   // la carta del campo es solo esta imagen, sin barra ni estadísticas
+  musica: 'jefeLichKing',                                    // pista exclusiva de este jefe (MUSICA en js/datos/sonidos.js)
   auraJefe: 'hielo',                                         // aura de la carta: hielo · fuego · oscuro
   base: { hp: 3000, dmg: 70, spd: 100 },
   extra: { armor: .20, res: .50 },

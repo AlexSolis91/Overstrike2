@@ -152,7 +152,7 @@ async function jugar(eqJ, eqR, rivalModo, opciones = null) {
   if (combate) limpiarPartida();
   nuevaPartida();
   const esta = ++arranques;
-  const tema = opciones?.horda ? `horda${opciones.horda.horda[0].toUpperCase()}${opciones.horda.horda.slice(1)}` : 'batalla';   // Horda de Orcos → 'hordaOrcos'
+  const tema = opciones?.raid?.tema || (opciones?.horda ? `horda${opciones.horda.horda[0].toUpperCase()}${opciones.horda.horda.slice(1)}` : 'batalla');   // jefe: su pista exclusiva · Horda de Orcos → 'hordaOrcos'
   temaDePartida(MUSICA[tema] ? tema : 'batalla');
   temporizar(() => { if (esta === arranques) musica(temaDePartida()); }, 2000);
   await presentarVS(eqJ, eqR);

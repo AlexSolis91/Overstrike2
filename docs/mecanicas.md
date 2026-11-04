@@ -819,3 +819,6 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 
 ## 37. Sonido de chat privado (2026-11-04)
 - Evento `mensajePrivado` (`assets/audio/sfx/mensaje-privado.mp3`): suena al recibir un chat privado, en cualquier pantalla y aunque esa conversación esté abierta. No suena con el chat global ni con tus propios mensajes. También suena si el privado llega por el latido (sin Realtime o recibido sin estar conectado). Respeta el silencio y el volumen de efectos.
+
+## 38. Música exclusiva de cada Jefe de Raid (2026-11-04)
+- La ficha del jefe indica su pista con `musica` (una clave de `MUSICA` en `js/datos/sonidos.js`). Solo suena en la batalla contra ese jefe. Lich King: `jefeLichKing` (`assets/audio/jefe-lich-king.mp3`). Para un jefe nuevo: copiar el MP3 a `assets/audio/`, agregar su clave y ponerla en la ficha. No cambia `VERSION`.
