@@ -1504,7 +1504,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           emitir('extension', { a: t.uid, texto: `✦ Invocaciones +${acc.turnos || 1} turno` }, t);
           break;
         }
-        case 'reducirCooldown': {           // baja el cooldown de los movimientos indicados de su objetivo
+        case 'reducirCooldown': {           // baja el cooldown de los movimientos indicados de su objetivo (prob: opcional)
+          if (acc.prob != null && rng() >= acc.prob) break;
           let n = 0;
           let cats = (acc.categorias || CATEGORIAS).filter(c => t.cds[c] > 0);
           if (acc.azar) { const l = cats.filter(c => t !== a || c !== ctx.categoriaMov); cats = l.length ? [rng.elegir(l)] : []; }   // azar: solo una, sin contar el movimiento que se está usando

@@ -5,6 +5,7 @@ import { imgHtml } from './imagenes.js';
 import { sonar, musica, temaDePartida } from './audio.js';
 import { FONDOS } from '../datos/fondos.js';
 import { temporizar } from './graficos.js';
+import { efectosDe, efectosParaFiltro } from '../datos/efectosCampeon.js';
 
 const $ = s => document.querySelector(s);
 const TAM = 5;                                   // los equipos siempre son de 5
@@ -21,8 +22,14 @@ const rolesDe = p => [p.rol, p.rolSecundario].filter(Boolean).map(r => ROL[r] ||
 const CAT = { basico: 'Básico', especial: 'Especial', over: 'Over' };
 const OBJ = { enemigo: 'Un enemigo', aliado: 'Un aliado', propio: 'Propio', todosEnemigos: 'Todos los enemigos', todosAliados: 'Todos los aliados', azar: 'Enemigos al azar' };
 const pct = v => `${Math.round(v * 1000) / 10}%`;
+// Filtro por buff o debuff: muestra a los campeones que pueden ponerlo
+function selectorEfectos() {
+  const { buffs, debuffs } = efectosParaFiltro();
+  const op = l => l.map(x => `<option value="${x.id}" ${E.efecto === x.id ? 'selected' : ''}>${x.nombre}</option>`).join('');
+  return `<select id="eq-efecto" class="eq-efecto ${E.efecto ? 'on' : ''}" aria-label="Filtrar por buff o debuff"><option value="">Buff o debuff: todos</option><optgroup label="Buffs">${op(buffs)}</optgroup><optgroup label="Debuffs">${op(debuffs)}</optgroup></select>`;
+}
 
-const E = { jugador: [], rival: [], rivalModo: 'azar', editando: 'jugador', filtro: null, sel: null, campana: null };
+const E = { jugador: [], rival: [], rivalModo: 'azar', editando: 'jugador', filtro: null, efecto: null, sel: null, campana: null };
 // campana (modo Campaña): { titulo, rivales: [fichas], propios: Set(ids), alListo(eqJ), alVolver() } · el rival es fijo y solo se eligen campeones propios
 let alJugar = null;
 
@@ -144,10 +151,10 @@ function renderEquipo() {
   // filtros
   const roles = [...new Set(OFICIALES.flatMap(rolesDe))];
   $('#eq-filtros').innerHTML = `<span class="eq-editando">Eligiendo para: <b>${E.editando === 'jugador' ? 'Tu equipo' : 'Rival'}</b></span>` +
-    [null, ...roles].map(r => `<button class="filtro ${E.filtro === r ? 'on' : ''}" data-rol="${r ?? ''}">${r ?? 'Todos'}</button>`).join('');
+    [null, ...roles].map(r => `<button class="filtro ${E.filtro === r ? 'on' : ''}" data-rol="${r ?? ''}">${r ?? 'Todos'}</button>`).join('') + selectorEfectos();
   // galería
-  const lista = OFICIALES.filter(p => (!E.filtro || rolesDe(p).includes(E.filtro)) && (!camp || camp.propios.has(p.id)));
-  $('#eq-galeria').innerHTML = lista.map(p => {
+  const lista = OFICIALES.filter(p => (!E.filtro || rolesDe(p).includes(E.filtro)) && (!E.efecto || efectosDe(p).has(E.efecto)) && (!camp || camp.propios.has(p.id)));
+  $('#eq-galeria').innerHTML = !lista.length ? '<p class="eq-sin">Ningún campeón coincide con estos filtros.</p>' : lista.map(p => {
     const pos = equipoDe(E.editando).findIndex(x => x.id === p.id);
     return `<div class="gc ${pos >= 0 ? 'elegido' : ''}" data-id="${p.id}" style="--c:${p.color}">
       ${retrato(p, 'gc-img')}
@@ -239,6 +246,7 @@ export function iniciarMenu({ jugar, salirDePartida, abrirCampana, abrirHorda, a
     if (e.target.closest('[data-modo="arena"]')) irA('arena');
     if (e.target.closest('[data-modo="jefe"]')) irA('raid');
   });
+  $('#eq-filtros').addEventListener('change', e => { if (e.target.id === 'eq-efecto') { E.efecto = e.target.value || null; renderEquipo(); } });
   $('#eq-volver').addEventListener('click', () => { if (E.campana) { const c = E.campana; E.campana = null; c.alVolver?.(); } else irA('menu'); });
   $('#pantalla-equipo').addEventListener('click', e => {
     const t = e.target;
@@ -271,6 +279,6 @@ export const equipoElegido = () => [...E.jugador];
 export function equipoCampana({ titulo, rivales, propios, alListo, alVolver, volverTxt, sinRival = false, inicial = null }) {
   E.campana = { titulo, rivales, propios, alListo, alVolver, volverTxt, sinRival };
   E.jugador = (inicial || E.jugador).filter(p => propios.has(p.id));   // conserva la última selección (si sigue siendo suya)
-  E.sel = null; E.filtro = null;
+  E.sel = null; E.filtro = null; E.efecto = null;
   irA('equipo');
 }

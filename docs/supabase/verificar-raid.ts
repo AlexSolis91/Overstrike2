@@ -2062,7 +2062,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           emitir('extension', { a: t.uid, texto: `✦ Invocaciones +${acc.turnos || 1} turno` }, t);
           break;
         }
-        case 'reducirCooldown': {           // baja el cooldown de los movimientos indicados de su objetivo
+        case 'reducirCooldown': {           // baja el cooldown de los movimientos indicados de su objetivo (prob: opcional)
+          if (acc.prob != null && rng() >= acc.prob) break;
           let n = 0;
           let cats = (acc.categorias || CATEGORIAS).filter(c => t.cds[c] > 0);
           if (acc.azar) { const l = cats.filter(c => t !== a || c !== ctx.categoriaMov); cats = l.length ? [rng.elegir(l)] : []; }   // azar: solo una, sin contar el movimiento que se está usando
@@ -7621,7 +7622,7 @@ return __e; })();
 __m["datos/personajes/yorichi.js"] = (() => { const __e: any = {};
 const { espacios } = __m["datos/reliquias.js"];
 
-// Ficha oficial (2026-10-29; Phantom of Chaos; sim: 52.3% contra equipos al azar, 47.6% como líder). Yorichi Tsugikuni (Demon Slayer), creador de la Respiración del Sol: marca a los enemigos con
+// Ficha oficial (2026-10-29; Phantom of Chaos; sim 2026-11-04: 49.9% contra equipos al azar). Yorichi Tsugikuni (Demon Slayer), creador de la Respiración del Sol: marca a los enemigos con
 // Quemadura Solar, acelera sus cooldowns al golpear a los marcados y remata con las 13 Posturas del Sol.
 __e.default = {
   id: 'yorichi',
@@ -7662,10 +7663,10 @@ __e.default = {
     },
     {
       categoria: 'over', nombre: 'Las 13 Posturas del Sol', objetivo: 'enemigo', estilo: 'melee', color: 0xfacc15,
-      pct: .36, cd: 5, golpes: 13,
-      desc: '13 golpes de 36% al mismo enemigo. Cada crítico baja 1 turno el cooldown de este movimiento. Si el objetivo tenía Quemadura Solar, gana un turno extra.',
+      pct: .50, cd: 7, golpes: 13,
+      desc: '13 golpes de 50% al mismo enemigo. Cada crítico tiene 50% de probabilidad de bajar 1 turno el cooldown de este movimiento. Si el objetivo tenía Quemadura Solar, gana un turno extra.',
       efectos: [
-        { cuando: 'critico', accion: { tipo: 'reducirCooldown', cantidad: 1, categorias: ['over'], a: 'propio' } },
+        { cuando: 'critico', accion: { tipo: 'reducirCooldown', cantidad: 1, categorias: ['over'], a: 'propio', prob: .50 } },
         { cuando: 'final', condicion: { algunGolpeadoTenia: 'solarBurn' }, accion: { tipo: 'turnoExtra', a: 'propio' } },
       ],
     },

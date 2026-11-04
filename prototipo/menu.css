@@ -1094,3 +1094,8 @@ body.social-min #soc-abrir { display: block; }
 
 .rd-rel { white-space: nowrap; font-size: 11px; color: var(--muted); }
 .tc-maximos { justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 8px 12px; border: 1px solid rgba(253, 230, 138, .35); border-radius: 10px; background: rgba(253, 230, 138, .06); font-size: 13px; color: var(--text); }
+
+.eq-efecto { font: 700 11.5px Inter, sans-serif; padding: 5px 8px; border-radius: 99px; cursor: pointer; color: var(--muted); background: #121826; border: 1px solid rgba(255, 255, 255, .14); max-width: 190px; flex-shrink: 0; }
+.eq-efecto.on { color: #1a1205; background: var(--gold); border-color: var(--gold); }
+.eq-efecto option, .eq-efecto optgroup { color: #e5e7eb; background: #121826; }
+.eq-sin { grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--muted); }
