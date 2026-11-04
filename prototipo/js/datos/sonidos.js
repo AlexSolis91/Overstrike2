@@ -6,7 +6,7 @@
 //             gap (ms mínimos entre repeticiones del mismo sonido), duck (segundos que baja la música mientras suena).
 //
 // EVENTOS DISPONIBLES
-//   Interfaz:     clic (cualquier botón) · elegir · quitar (galería) · listo · abrir · cerrar (paneles)
+//   Interfaz:     clic (cualquier botón) · elegir · quitar (galería) · listo · abrir · cerrar (paneles) · mensajePrivado
 //   Movimientos:  melee · lanzar · magia (apoyo) · area · over · fuego (golpe que aplica Quemadura) · disparoHielo (golpe de hielo:
 //                 elemento 'hielo' o que aplica Congelación) · disparo (cualquier otro golpe a distancia)
 //                 (fuego y disparo suenan cuando sale el efecto visual del disparo)
@@ -33,6 +33,7 @@ export const MUSICA = {
 const sfx = n => `assets/audio/sfx/${n}.mp3`;
 export const SONIDOS = {
   clic:                 { archivo: sfx('boton-ps4'), v: .8, gap: 30 },
+  mensajePrivado:       { archivo: sfx('mensaje-privado'), v: 1, gap: 800 },   // recibir un chat privado
   golpe:                { archivo: sfx('golpe'), v: .85, var: .05, gap: 35 },
   critico:              { archivo: sfx('critico'), v: 1, var: .03, gap: 150 },  // bate de home run (2.1 s)
   escudoGolpe:          { archivo: sfx('golpe'), v: .55, var: .05, gap: 35 },

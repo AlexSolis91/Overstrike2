@@ -89,10 +89,11 @@ function agregarMensaje(m) {
   mensajes.set(id, lista);
   if (id === 'global') ultimoGlobal = Math.max(ultimoGlobal, m.id);
   if (m.de !== miId()) {
+    if (m.para === miId()) sonar('mensajePrivado');   // solo los privados que recibes; el chat global no suena
     if (id !== 'global' && !salas.has(id)) salas.set(id, { nombre: m.de_nombre, no_leidos: 0 });
     if (sala === id && panelVisible()) { if (id !== 'global') D.chatLeer(id).catch(() => null); }
     else if (id === 'global') sinLeerGlobal++;
-    else { salas.get(id).no_leidos++; sonar('curacion'); }
+    else salas.get(id).no_leidos++;
   }
   pintarTabs();
   if (sala === id) pintarMensajes();
@@ -261,8 +262,13 @@ async function latido() {
     }
     for (const n of r.no_leidos || []) {
       if (!salas.has(n.de)) salas.set(n.de, { nombre: n.de_nombre, no_leidos: 0 });
-      if (sala === n.de && panelVisible()) { mensajes.set(n.de, await D.chatHistorial(n.de)); D.chatLeer(n.de).catch(() => null); pintarMensajes(); }
-      else if (salas.get(n.de).no_leidos !== n.n) { salas.get(n.de).no_leidos = n.n; mensajes.delete(n.de); }
+      // Por aquí llegan los privados que Realtime no entregó y los que se recibieron sin estar conectado: también suenan
+      if (sala === n.de && panelVisible()) {
+        const antes = mensajes.get(n.de)?.at(-1)?.id, lista = await D.chatHistorial(n.de), ultimo = lista.at(-1);
+        if (ultimo && ultimo.id !== antes && ultimo.de !== miId()) sonar('mensajePrivado');
+        mensajes.set(n.de, lista); D.chatLeer(n.de).catch(() => null); pintarMensajes();
+      }
+      else if (salas.get(n.de).no_leidos !== n.n) { if (n.n > salas.get(n.de).no_leidos) sonar('mensajePrivado'); salas.get(n.de).no_leidos = n.n; mensajes.delete(n.de); }
     }
     pintarTabs();
   } catch (e) { /* sin conexión o sin el SQL 024: se reintenta en el siguiente latido */ }

@@ -816,3 +816,6 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - **Función `verificar-raid`:** se genera con `node prototipo/herramientas/empaquetar_verificador.mjs` y lleva el motor adentro. Hay que generarla y publicarla otra vez cuando cambien las fichas, las invocaciones o el motor de combate. Un cambio solo en el motor no cambia `VERSION`, así que en ese caso **se debe publicar antes de que los jugadores ataquen**: una repetición que no coincide cuenta 0 de daño.
 - **Panel social:** se minimiza con «–» y se abre con 💬, también en pantallas grandes. Se recuerda en cada dispositivo.
 - **Desfragmentar todas** (Colección → Campeones): `desfragmentar_maximos` desfragmenta todas las copias de los campeones con las estrellas máximas. Cada copia da 3 fragmentos, igual que una por una. Las estrellas máximas están en `_estrellas_maximas()` y en `MAX_ESTRELLAS` (`js/ui/coleccion.js`); si suben, hay que cambiar los dos.
+
+## 37. Sonido de chat privado (2026-11-04)
+- Evento `mensajePrivado` (`assets/audio/sfx/mensaje-privado.mp3`): suena al recibir un chat privado, en cualquier pantalla y aunque esa conversación esté abierta. No suena con el chat global ni con tus propios mensajes. También suena si el privado llega por el latido (sin Realtime o recibido sin estar conectado). Respeta el silencio y el volumen de efectos.
