@@ -1,12 +1,13 @@
 // Edge Function "verificar-raid" (Supabase → Edge Functions → Deploy a new function → Via Editor → nombre: verificar-raid).
-// Repite un ataque al Jefe de Raid con el MISMO motor del juego (importado de GitHub Pages) y cuenta el daño que sale de esa repetición.
+// Supabase no acepta imports desde github.io: el motor llega por jsDelivr, fijado a un commit. Al volver a publicarla, poner el commit nuevo en las 2 URLs.
+// Repite un ataque al Jefe de Raid con el MISMO motor del juego y cuenta el daño que sale de esa repetición.
 // Si el ataque se jugó con otra versión del juego (fichas distintas), acepta el daño reportado, igual que la Arena.
 // Las llaves SUPABASE_URL, SUPABASE_ANON_KEY y SUPABASE_SERVICE_ROLE_KEY las pone Supabase solo: no hay que escribir ninguna.
 // Después de publicarla (y cada vez que cambien las fichas, volver a publicarla), encender en el SQL Editor:
 //   update public.raid_config set verificar = true;
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { repetirRaid } from 'https://alexsolis91.github.io/Overstrike2/prototipo/js/motor/verificar.js';
-import { VERSION } from 'https://alexsolis91.github.io/Overstrike2/prototipo/js/datos/cuenta.js';
+import { repetirRaid } from 'https://cdn.jsdelivr.net/gh/AlexSolis91/Overstrike2@86c3f5fffd43cbd170ee2a4e89fbc13ee443b168/prototipo/js/motor/verificar.js';
+import { VERSION } from 'https://cdn.jsdelivr.net/gh/AlexSolis91/Overstrike2@86c3f5fffd43cbd170ee2a4e89fbc13ee443b168/prototipo/js/datos/cuenta.js';
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const json = (d: unknown, status = 200) => new Response(JSON.stringify(d), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
