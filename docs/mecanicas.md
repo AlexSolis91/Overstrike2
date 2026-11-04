@@ -829,7 +829,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - **Yorichi, Las 13 Posturas del Sol:** cooldown 7, 13 golpes de 50%, y cada crítico tiene 50% de probabilidad de bajar 1 su cooldown.
 
 ## 40. Daño creciente del Jefe de Raid (2026-11-04)
-- **Regla:** el jefe y sus invocaciones suben de daño cada ronda: rondas 1–5 +5% · 6–15 +15% · 16–20 +20% · 21–25 +25% · 26–30 +50% · desde la 31 +100%. Acumulado: +25% en la ronda 5, +100% en la 10, +175% en la 15, +275% en la 20, +400% en la 25, +650% en la 30. No hay límite de rondas (`limiteRondas: Infinity`).
+- **Regla:** el jefe y sus invocaciones suben de daño cada ronda: rondas 1–5 +5% · 6–10 +10% · 11–15 +15% · 16–20 +20% · 21–25 +25% · 26–30 +50% · desde la 31 +100%. Acumulado: +25% en la ronda 5, +75% en la 10, +150% en la 15, +250% en la 20, +375% en la 25, +625% en la 30. No hay límite de rondas (`limiteRondas: Infinity`).
 - **Sobre la dificultad:** el % se calcula sobre el daño de esa dificultad, no sobre el daño base. En Pesadilla (×4), +20% significa ×4.8.
 - **Datos:** `FURIA_RAID` en `js/datos/jefes/raid.js` (`tramos` por ronda; `furiaAcumulada(ronda)` da el total). La pantalla de batalla muestra «Daño del jefe: +N%».
 - **`REGLAS_RAID`** (`js/datos/jefes/raid.js`): subir este número al cambiar cómo se pelea contra el jefe. Junto con la dificultad, el límite de rondas y `FURIA_RAID`, entra en `VERSION`, así que una función `verificar-raid` vieja acepta el daño reportado en vez de contar 0. Después hay que generarla y publicarla otra vez.
