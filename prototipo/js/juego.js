@@ -28,7 +28,7 @@ import { guardarLocal, borrarLocal } from './servicios/hordaGuardada.js';
 import { iniciarArena, abrirArena } from './ui/arena.js';
 import { iniciarRaid, abrirRaid } from './ui/raid.js';
 import { iniciarAmbiente, terminarAmbiente, efectoAtaque, almaAlJefe, vueloInvocacion } from './ui/ambiente.js';
-import { JEFES_RAID, RONDAS_RAID, FURIA_RAID } from './datos/jefes/raid.js';
+import { JEFES_RAID, furiaAcumulada } from './datos/jefes/raid.js';
 import { iniciarSocial } from './ui/social.js';
 import { iniciarActualizacion } from './ui/actualizacion.js';
 import { conectarVivo, swapUid, ganadorRelativo } from './servicios/arenaVivo.js';
@@ -211,7 +211,7 @@ function actualizarRaid() {
   bar.querySelector('i').style.width = `${Math.max(0, v.hp / r.hpTotal * 100)}%`;
   const quien = i => j.movimientos.find(m => m.categoria === j.ciclo[((j.cicloI || 0) + i) % j.ciclo.length]).nombre;
   $('#raid-info').classList.remove('hidden');
-  $('#raid-info').innerHTML = `<b>Tu daño: ${miles(r.hpInicio - Math.max(0, v.hp))}</b><em>Daño del jefe: +${Math.round(FURIA_RAID.dmgPct * (r.ronda || 0) * 100)}%</em><span>Sigue: ${quien(0)}</span><small>Después: ${quien(1)}</small>`;
+  $('#raid-info').innerHTML = `<b>Tu daño: ${miles(r.hpInicio - Math.max(0, v.hp))}</b><em>Daño del jefe: +${Math.round(furiaAcumulada(r.ronda || 0) * 100)}%</em><span>Sigue: ${quien(0)}</span><small>Después: ${quien(1)}</small>`;
 }
 
 function refrescarPanel() { renderPanel(por(ui.inspeccionado), vistas[ui.inspeccionado], ui); refrescarAccion(); }
@@ -288,7 +288,7 @@ async function manejar(e) {
   const s = sonidoDe(e); if (s) sonar(s);
   switch (e.t) {
     case 'ronda':
-      $('#round-label').textContent = `Ronda ${e.n}${ui.raid ? ` / ${RONDAS_RAID}` : ''}`;
+      $('#round-label').textContent = `Ronda ${e.n}`;
       if (ui.raid) { ui.raid.ronda = e.n; actualizarRaid(); }
       renderOrden(e.orden, P, vistas);
       log(`— Ronda ${e.n} —`, 'sys');

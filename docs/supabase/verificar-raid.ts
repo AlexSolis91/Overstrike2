@@ -880,11 +880,12 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
 
   function iniciarRonda() {
     S.ronda++;
-    // furia por rondas (Jefe de Raid): desde esa ronda el jefe pega más cada ronda, en % de su daño de esa dificultad.
+    // furia por rondas (Jefe de Raid): cada ronda el jefe pega más, en % de su daño de esa dificultad. tramos: [{ hasta, pct }], el último sin hasta.
     // Sus invocaciones escalan con sus estadísticas, así que también suben.
     const fr = opcionesRival.furiaRonda;
     if (fr && S.ronda >= fr.desde) for (const j of P.filter(x => x.lado === 'rival' && !x.muerto)) {
-      j.campana.dmgPct = (j.campana.dmgPct || 0) + fr.dmgPct * (1 + (opcionesRival.dmgPct || 0));
+      const subeRonda = fr.tramos ? fr.tramos.find(t => t.hasta == null || S.ronda <= t.hasta).pct : fr.dmgPct;
+      j.campana.dmgPct = (j.campana.dmgPct || 0) + subeRonda * (1 + (opcionesRival.dmgPct || 0));
       if (fr.texto && S.ronda === fr.desde) emitir('jefeFuria', { id: j.uid, texto: fr.texto }, j);
     }
     S.actuaron = new Set(); S.orden = [];
@@ -1088,7 +1089,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     while (!comprobarFin()) {
       let n = S.ronda ? siguiente() : null;
       if (!n) {
-        if (S.ronda) { finRonda(); if (comprobarFin()) return; if (S.ronda - S.rondaBase >= (opcionesRival.limiteRondas || LIMITE_RONDAS)) { finPorLimite(); return; } }
+        if (S.ronda) { finRonda(); if (comprobarFin()) return; if (S.ronda - S.rondaBase >= (opcionesRival.limiteRondas ?? LIMITE_RONDAS)) { finPorLimite(); return; } }
         iniciarRonda();
         n = siguiente();
         if (!n) return;
@@ -8098,11 +8099,18 @@ __m["datos/jefes/raid.js"] = (() => { const __e: any = {};
 const lichKing = __m["datos/jefes/lich-king.js"].default;
 
 const JEFES_RAID = { 'lich-king': lichKing };
-const RONDAS_RAID = 30;
-// Cada ronda el jefe y sus invocaciones hacen +2% de daño: +20% en la ronda 10, +50% en la 25
-const FURIA_RAID = { desde: 1, dmgPct: .02 };
+const RONDAS_RAID = Infinity;   // sin tope: la pelea termina cuando cae tu equipo o el jefe
+// Cuánto sube el daño del jefe y de sus invocaciones en cada ronda. Acumulado: +25% en la ronda 5, +100% en la 10, +175% en la 15,
+// +275% en la 20, +400% en la 25 y +650% en la 30; después, +100% por ronda.
+const FURIA_RAID = { desde: 1, tramos: [{ hasta: 5, pct: .05 }, { hasta: 10, pct: .15 }, { hasta: 15, pct: .15 }, { hasta: 20, pct: .20 }, { hasta: 25, pct: .25 }, { hasta: 30, pct: .50 }, { pct: 1 }] };
+// Daño extra acumulado en una ronda, como fracción (ronda 10 → 1 = +100%)
+const furiaAcumulada = ronda => {
+  let total = 0;
+  for (let r = 1; r <= ronda; r++) total += FURIA_RAID.tramos.find(t => t.hasta == null || r <= t.hasta).pct;
+  return total;
+};
 // Subir este número al cambiar cómo se pelea contra el jefe (motor o reglas): así el servidor no rechaza ataques por una función desactualizada
-const REGLAS_RAID = 2;
+const REGLAS_RAID = 3;
 // Cuánto pega el jefe en cada dificultad
 const DIFICULTADES_RAID = {
   facil: { nombre: 'Fácil', dmg: 1, color: '#86efac' },
@@ -8121,6 +8129,7 @@ __e["FURIA_RAID"] = FURIA_RAID;
 __e["JEFES_RAID"] = JEFES_RAID;
 __e["REGLAS_RAID"] = REGLAS_RAID;
 __e["RONDAS_RAID"] = RONDAS_RAID;
+__e["furiaAcumulada"] = furiaAcumulada;
 __e["opcionesRaid"] = opcionesRaid;
 return __e; })();
 

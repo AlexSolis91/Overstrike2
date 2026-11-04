@@ -4,7 +4,7 @@ import * as D from '../servicios/datos.js';
 import { supabase } from '../servicios/supabase.js';
 import { perfilActual } from './cuenta.js';
 import { equipoCampana, irA } from './menu.js';
-import { JEFES_RAID, DIFICULTADES_RAID, RONDAS_RAID, FURIA_RAID, opcionesRaid } from '../datos/jefes/raid.js';
+import { JEFES_RAID, DIFICULTADES_RAID, furiaAcumulada, opcionesRaid } from '../datos/jefes/raid.js';
 import { RELIQUIAS, RAREZAS } from '../datos/reliquias.js';
 import { VERSION } from '../datos/cuenta.js';
 import { ICONO_RUNA_PORTAL } from '../datos/recompensas.js';
@@ -87,8 +87,8 @@ function pintar() {
     </section>
     <aside class="hd-info">
       <h4>Cómo funciona</h4>
-      <p>Cada ataque gasta <b>1 llave</b> y dura hasta ${RONDAS_RAID} rondas, o hasta que caiga tu equipo. Tu daño se suma a la barra de todos y a tu cofre del día.</p>
-      <p>Cada ronda, el jefe y sus invocaciones hacen +${Math.round(FURIA_RAID.dmgPct * 100)}% de daño: +${Math.round(FURIA_RAID.dmgPct * 1000)}% en la ronda 10 y +${Math.round(FURIA_RAID.dmgPct * 2500)}% en la 25. Derrotarlo abre la siguiente dificultad para todos.</p>
+      <p>Cada ataque gasta <b>1 llave</b> y dura hasta que caiga tu equipo: no hay límite de rondas. Tu daño se suma a la barra de todos y a tu cofre del día.</p>
+      <p>Cada ronda, el jefe y sus invocaciones hacen más daño: ${[5, 10, 15, 20, 25, 30].map(r => `+${Math.round(furiaAcumulada(r) * 100)}% en la ronda ${r}`).join(', ')}, y después +100% más por ronda. Derrotarlo abre la siguiente dificultad para todos.</p>
       <h4>${jefe.nombre}</h4>
       <p><b>${jefe.pasiva.nombre}:</b> ${jefe.pasiva.desc}</p>
       ${jefe.movimientos.map(m => `<p><b>${CAT[m.categoria]} · ${m.nombre}:</b> ${m.desc}</p>`).join('')}

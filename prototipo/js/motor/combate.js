@@ -322,11 +322,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
 
   function iniciarRonda() {
     S.ronda++;
-    // furia por rondas (Jefe de Raid): desde esa ronda el jefe pega más cada ronda, en % de su daño de esa dificultad.
+    // furia por rondas (Jefe de Raid): cada ronda el jefe pega más, en % de su daño de esa dificultad. tramos: [{ hasta, pct }], el último sin hasta.
     // Sus invocaciones escalan con sus estadísticas, así que también suben.
     const fr = opcionesRival.furiaRonda;
     if (fr && S.ronda >= fr.desde) for (const j of P.filter(x => x.lado === 'rival' && !x.muerto)) {
-      j.campana.dmgPct = (j.campana.dmgPct || 0) + fr.dmgPct * (1 + (opcionesRival.dmgPct || 0));
+      const subeRonda = fr.tramos ? fr.tramos.find(t => t.hasta == null || S.ronda <= t.hasta).pct : fr.dmgPct;
+      j.campana.dmgPct = (j.campana.dmgPct || 0) + subeRonda * (1 + (opcionesRival.dmgPct || 0));
       if (fr.texto && S.ronda === fr.desde) emitir('jefeFuria', { id: j.uid, texto: fr.texto }, j);
     }
     S.actuaron = new Set(); S.orden = [];
@@ -530,7 +531,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     while (!comprobarFin()) {
       let n = S.ronda ? siguiente() : null;
       if (!n) {
-        if (S.ronda) { finRonda(); if (comprobarFin()) return; if (S.ronda - S.rondaBase >= (opcionesRival.limiteRondas || LIMITE_RONDAS)) { finPorLimite(); return; } }
+        if (S.ronda) { finRonda(); if (comprobarFin()) return; if (S.ronda - S.rondaBase >= (opcionesRival.limiteRondas ?? LIMITE_RONDAS)) { finPorLimite(); return; } }
         iniciarRonda();
         n = siguiente();
         if (!n) return;
