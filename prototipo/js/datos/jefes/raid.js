@@ -14,7 +14,7 @@ export const furiaAcumulada = ronda => {
   return total;
 };
 // Subir este número al cambiar cómo se pelea contra el jefe (motor o reglas): así el servidor no rechaza ataques por una función desactualizada
-export const REGLAS_RAID = 5;
+export const REGLAS_RAID = 6;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 export const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad

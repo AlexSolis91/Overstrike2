@@ -303,9 +303,9 @@ const INVOCACIONES = {
   sindragosa: {
     nombre: 'Sindragosa', rareza: 'Legendario', emoji: '🐉', color: 0x38bdf8, imagen: 'assets/invocaciones/sindragosa.webp', dur: 2,
     enfoque: [.62, .36], vuelo: true,
-    desc: 'La Reina de los Vermis de Escarcha. Al aparecer aplica Desgaste a todos los enemigos. Cada turno, Aliento de Escarcha: golpea 70% a todos los enemigos, ignorando sus Escudos, con 25% de probabilidad de Congelación.',
+    desc: 'La Reina de los Vermis de Escarcha. Al aparecer aplica Desgaste a todos los enemigos. Cada turno, Aliento de Escarcha: golpea 70% a todos los enemigos, con 25% de probabilidad de Congelación.',
     alAparecer: [{ tipo: 'efecto', id: 'wear', a: 'todosEnemigos' }],
-    acciones: [{ tipo: 'golpe', pct: .70, elegir: 'todos', ignoraEscudo: true, efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .25 } }] }],
+    acciones: [{ tipo: 'golpe', pct: .70, elegir: 'todos', efectos: [{ accion: { tipo: 'efecto', id: 'freeze', prob: .25 } }] }],
   },
   // ---------------------------------------------------------------- Naruto
   clonSombra: {
@@ -8114,7 +8114,7 @@ const furiaAcumulada = ronda => {
   return total;
 };
 // Subir este número al cambiar cómo se pelea contra el jefe (motor o reglas): así el servidor no rechaza ataques por una función desactualizada
-const REGLAS_RAID = 5;
+const REGLAS_RAID = 6;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad
