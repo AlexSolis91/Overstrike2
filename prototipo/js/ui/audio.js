@@ -15,10 +15,14 @@ let voces = 0;
 const buffers = {};                  // archivo -> AudioBuffer (efectos con archivo real)
 
 function iniciar() {
-  if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+  if (ctx) {
+    if (ctx.state !== 'running') ctx.resume().then(recuperarMusica).catch(() => null); else recuperarMusica();
+    return;
+  }
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return;
   ctx = new AC();
+  ctx.addEventListener('statechange', recuperarMusica);   // el sistema pausó el audio (p. ej. cambió la salida de sonido) y volvió
   master = ctx.createGain(); master.connect(ctx.destination);
   busMusica = ctx.createGain(); busMusica.connect(master);
   busEfectos = ctx.createGain(); busEfectos.connect(master);
@@ -27,6 +31,15 @@ function iniciar() {
   if (deseada) musica(deseada);
 }
 for (const ev of ['pointerdown', 'keydown', 'touchend']) addEventListener(ev, iniciar, { capture: true, passive: true });
+
+// Si la pista que debería sonar no está sonando (el navegador rechazó o interrumpió su inicio), se vuelve a intentar.
+// Se llama con cada toque del jugador y cuando el audio vuelve a estar activo.
+function recuperarMusica() {
+  if (!ctx || ctx.state !== 'running' || !deseada) return;
+  if (actual?.nombre === deseada && !actual.p.el.paused) return;
+  if (actual?.nombre === deseada) actual = null;
+  musica(deseada);
+}
 
 function aplicarVolumenes() {
   if (!ctx) return;
@@ -79,7 +92,7 @@ const rutaDe = nombre => {
 function pista(nombre) {
   if (pistas[nombre]) return pistas[nombre];
   const el = new Audio(); el.src = rutaDe(nombre); el.loop = nombre !== 'victoria' && nombre !== 'derrota'; el.preload = 'auto'; el.crossOrigin = 'anonymous';
-  const p = pistas[nombre] = { el, gain: ctx.createGain(), ok: true, vol: VOLUMEN_MUSICA[nombre] ?? 1 };
+  const p = pistas[nombre] = { el, gain: ctx.createGain(), ok: true, vol: VOLUMEN_MUSICA[rutaDe(nombre)] ?? 1 };
   p.gain.gain.value = 0;
   ctx.createMediaElementSource(el).connect(p.gain); p.gain.connect(busMusica);   // por Web Audio: el volumen funciona también en iPhone
   el.addEventListener('error', () => { p.ok = false; });
@@ -104,8 +117,11 @@ export function musica(nombre) {
   const p = pista(nombre);
   if (!p.ok) return;
   p.el.currentTime = 0;
-  p.el.play().then(() => desvanecer(p, p.vol, 1.2)).catch(() => { /* el navegador aún no deja: sonará al próximo toque */ });
-  actual = { nombre, p };
+  const esta = actual = { nombre, p };
+  p.el.play().then(() => desvanecer(p, p.vol, 1.2)).catch(e => {
+    console.warn('No se pudo iniciar la música', nombre, e?.name);     // sonará al próximo toque (ver recuperarMusica)
+    if (actual === esta) actual = null;
+  });
 }
 // Fin de partida: se va la música de batalla y suena el tema de Victoria o Derrota; la del menú entra "retrasoMenu" ms
 // después (para que no se empalme con la de Victoria/Derrota).

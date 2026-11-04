@@ -18,8 +18,12 @@
 //   Momentos:     transformacion · revivir · invocacion · invocacionLegendaria · pasiva · lider · sigiloRoto
 
 // Música de fondo (assets/audio/)
-// Volumen propio de una pista (1 = normal), para igualar archivos grabados más bajos
-export const VOLUMEN_MUSICA = { jefeLichKing: 1.8 };
+// Volumen propio de un archivo (1 = normal), para igualar pistas grabadas más bajas que las demás
+export const VOLUMEN_MUSICA = {
+  'assets/audio/batalla-2.mp3': 2.5,
+  'assets/audio/batalla-3.mp3': 2,
+  'assets/audio/jefe-lich-king-arthas.mp3': 2,
+};
 export const MUSICA = {
   menu: 'assets/audio/menu.mp3',
   batalla: [                       // temas de partida: en cada partida se elige uno al azar
