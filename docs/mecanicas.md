@@ -858,3 +858,10 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 
 ## 46. Sonido de la tormenta de nieve (2026-11-04)
 - Evento `ventisca` (`assets/audio/sfx/ventisca.mp3`, 4.4 s): suena junto con la tormenta del campo del jefe (Invierno sin Remordimiento, Furia de Frostmourne y Sindragosa), como máximo una vez cada 1.5 s. Los rayos de Segador de Almas no lo usan.
+
+## Piezas nuevas (2026-11-05, Superman)
+- **Líder `alFinalRonda { acción }`:** al final de cada ronda (antes de bajar duraciones) el líder ejecuta la acción. P. ej. Símbolo de Esperanza.
+- **Acción `absorberEfecto { efecto, carga, max }`:** quita ese efecto de **todos** (aliados y enemigos) y el destino gana 1 carga por cada uno quitado (`max` opcional; sin él no hay tope).
+- **Pasiva `absorbeCriticos { bono }`:** si un aliado va a recibir un golpe **crítico** de un enemigo, el dueño recibe el 100% de ese daño en su lugar, con su propia Armadura, y gana `bono` (estadísticas permanentes, sin tope). Se resuelve antes que `protector`. No funciona si el dueño tiene Control.
+- **`curar` con `base: 'danoCausado'`:** al final de un movimiento, cura un % del daño total que causó ese movimiento.
+- **Marca `energiaSolar`** (contador de Superman, sin máximo): la da Símbolo de Esperanza y la gasta Superflare (`consumeCargas`, +25% por cada una).

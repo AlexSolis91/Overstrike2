@@ -171,6 +171,8 @@ const EFECTOS = {
     desc: 'No puede recibir buffs nuevos mientras dure (los que ya tiene, los permanentes y las cargas no se ven afectados).' },
   oscuridad: { nombre: 'Oscuridad', icono: '🌑', color: 0x7c3aed, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Cargas de Saga (máx. 3): las gana al aplicar Confusión o Posesión. Con 3, su lado malvado toma el control: se transforma en Saga Oscuro por 4 turnos. No se disipa ni se limpia.' },
+  energiaSolar: { nombre: 'Energía Solar', icono: '☀️', color: 0xfbbf24, tipo: 'marca', tags: ['Carga'], noDisipable: true,
+    desc: 'Contador de Superman (sin máximo): la gana siendo líder, por cada Quemadura Solar que absorbe al final de la ronda. Superflare las gasta todas: +25% de daño por cada una. No se disipa ni se limpia.' },
   grayskull: { nombre: 'Poder de Grayskull', icono: '⚡', color: 0xfacc15, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Cargas de He-Man (máx. 5): las gana al proteger a un aliado y con su Básico. Golpe de Grayskull las consume. No se disipa ni se limpia.' },
   poderRobado: { nombre: 'Poder Robado', icono: '💀', color: 0x8b5cf6, tipo: 'marca', tags: ['Carga'], noDisipable: true,
@@ -918,6 +920,10 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
   }
 
   function finRonda() {
+    for (const l of P.filter(x => x.esLider && !x.muerto && x.lider?.alFinalRonda)) {   // líder: al final de cada ronda (p. ej. Símbolo de Esperanza)
+      emitir('liderActua', { id: l.uid, nombre: l.lider.nombre });
+      ejecutarAccion(l, l.lider.alFinalRonda, {});
+    }
     for (const p of P) {                                    // reliquia "recuperaGolpes": cura X veces el HP perdido por golpes en la ronda
       const perdido = p.perdidoGolpesRonda || 0; p.perdidoGolpesRonda = 0;
       if (p.muerto || !perdido) continue;
@@ -1452,10 +1458,25 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     }
     let ignora = mov.ignoraArmadura || 0;
     if (mov.ignoraArmaduraSi && get(t, mov.ignoraArmaduraSi.efecto)) ignora += mov.ignoraArmaduraSi.puntos;   // solo si el objetivo tiene X
+    const dAntesArmadura = d;
     d *= 1 - Math.min(Math.max(0, st.armor - ignora), TOPES.armor);   // ignorar Armadura: resta puntos
     if (get(t, 'weaken')) d *= 1 + DEBUFFS.debilitar;
     if (get(t, 'expuesto')) d *= 1 + DEBUFFS.expuesto;
     d *= 1 - reduccion(t, 'golpe');
+    // pasiva "absorbeCriticos": un aliado de t recibe el 100% de un golpe crítico en su lugar, con su propia Armadura, y gana un bono permanente
+    const abs = critico && t.lado !== a.lado && aliadosDe(t).find(x => x !== t && !x.muerto && x.pasiva?.absorbeCriticos && !conControl(x));
+    if (abs && d > 0) {
+      let d2 = dAntesArmadura * (1 - Math.min(Math.max(0, stats(abs).armor - ignora), TOPES.armor)) * (1 - reduccion(abs, 'golpe'));
+      if (get(abs, 'weaken')) d2 *= 1 + DEBUFFS.debilitar;
+      d = 0;
+      const r2 = repartir(abs, d2, sa.pen);
+      emitir('danoEfecto', { de: a.uid, a: abs.uid, dano: r2.aHp, escudo: r2.aEsc, color: 0x60a5fa }, abs);
+      emitir('bonoVisible', { a: abs.uid, texto: `🛡️ Protege a ${t.nombre}` }, abs);
+      recibioDano(abs, r2.aHp + r2.aEsc, a);
+      if (r2.aEsc > 0) perdioEscudo(abs);
+      if (abs.hp <= 0) morir(abs, a);
+      else for (const [stat, pct] of Object.entries(abs.pasiva.absorbeCriticos.bono || {})) ejecutarAccion(abs, { tipo: 'bonoPermanente', stat, pct, a: 'propio' }, {});
+    }
     // pasiva "protector": un aliado de t recibe en su lugar un % del golpe (con su propia Armadura y reducciones)
     const prot = t.lado !== a.lado && aliadosDe(t).find(x => x !== t && x.pasiva?.protector && !conControl(x));
     if (prot && d > 0) {
@@ -2033,7 +2054,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           }
           break;
         case 'curar': {
-          const base = acc.base === 'dano' ? (ctx.dano || 0) : acc.base === 'hpMaxObjetivo' ? maxHp(t) : acc.base === 'hpMaxGolpeado' ? (ctx.objetivo ? maxHp(ctx.objetivo) : 0) : acc.base === 'curacion' ? (ctx.curacion || 0) : baseDe(a, acc.escala);
+          const base = acc.base === 'dano' ? (ctx.dano || 0) : acc.base === 'danoCausado' ? (ctx.danoCausado || 0) : acc.base === 'hpMaxObjetivo' ? maxHp(t) : acc.base === 'hpMaxGolpeado' ? (ctx.objetivo ? maxHp(ctx.objetivo) : 0) : acc.base === 'curacion' ? (ctx.curacion || 0) : baseDe(a, acc.escala);
           const veces = acc.porCada ? (ctx[acc.porCada] || 0)     // porCada: 'eliminados' = una vez por cada enemigo eliminado
             : acc.porEnemigoCon ? enemigosDe(a).filter(x => get(x, acc.porEnemigoCon)).length   // porEnemigoCon: una vez por cada enemigo con ese efecto (p. ej. Muzan)
             : acc.porAliadoCon ? aliadosDe(a).filter(x => get(x, acc.porAliadoCon)).length : 1;   // porAliadoCon: por cada aliado con esa marca (p. ej. Yoda)
@@ -2194,6 +2215,17 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           break;
         }
         case 'ganarCargas': ganarCargas(t, acc.cantidad || 1, acc.max || 5, acc.efecto); break;   // p. ej. Espada del Poder
+        case 'absorberEfecto': {        // quita ese efecto de todos (aliados y enemigos) y el destino gana 1 carga por cada uno; p. ej. Símbolo de Esperanza
+          let n = 0;
+          for (const x of P.filter(x => !x.muerto)) {
+            const e = get(x, acc.efecto);
+            if (!e) continue;
+            quitar(x, e); n++;
+            emitir(x.lado === t.lado ? 'limpieza' : 'disipar', { a: x.uid, n: 1 }, x);
+          }
+          if (n) ganarCargas(t, n, acc.max ?? Infinity, acc.carga);
+          break;
+        }
         case 'invocar': if (acc.prob == null || rng() < acc.prob) invocar(t, acc.key); break;   // p. ej. Clon de Sombra
         case 'reducirHpMax': {         // baja el HP máx. del objetivo para el resto de la partida (con tope); p. ej. Modo Barión
           const nd = acc.porDebuffs ? [...(ctx.teniaAntes || [])].filter(id => EFECTOS[id]?.tipo === 'debuff').length : 1;   // porDebuffs: × debuffs que tenía antes
@@ -7965,6 +7997,63 @@ __e.default = {
 
 return __e; })();
 
+__m["datos/personajes/superman.js"] = (() => { const __e: any = {};
+const { espacios } = __m["datos/reliquias.js"];
+
+// Ficha oficial (2026-11-05, kit del usuario). Daño + Tanque: protege a sus aliados de los críticos y se endurece al pelear.
+// Como líder absorbe la Quemadura Solar del campo y guarda Energía Solar para su Over (solo siendo líder).
+__e.default = {
+  id: 'superman',
+  franquicia: 'DC', grupos: ['justicieros'],   // campaña: temas de las etapas
+  nombre: 'Superman',
+  rol: 'Daño', rolSecundario: 'Tanque',
+  sobres: ['unbreakable'],  // sobres de la tienda (ver js/datos/sobres.js)
+  emoji: '🦸', color: '#2563eb', imagen: 'assets/personajes/superman.webp',
+  base: { hp: 750, dmg: 72, spd: 115 },
+  extra: { armor: .10 },
+  slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
+
+  lider: {
+    nombre: 'Símbolo de Esperanza',
+    desc: 'Los aliados ganan +25% de Armadura. Al final de cada ronda quita todas las Quemaduras Solares activas de aliados y enemigos, y por cada una Superman gana 1 de Energía Solar.',
+    bonoStat: { armor: .25 },
+    alFinalRonda: { tipo: 'absorberEfecto', efecto: 'solarBurn', carga: 'energiaSolar', a: 'propio' },
+  },
+  pasiva: {
+    nombre: 'Hijo de Krypton',
+    desc: 'Cada vez que recibe daño, baja 1 turno el cooldown de una de sus habilidades. Si un aliado va a recibir un golpe crítico, Superman recibe el 100% de ese daño en su lugar (con su propia Armadura) y gana +2% de Daño y +2% de HP máx. permanentes.',
+    gatillo: 'alRecibirDano',
+    accion: { tipo: 'reducirCooldown', cantidad: 1, azar: true, a: 'propio' },
+    absorbeCriticos: { bono: { dmgPct: .02, hpPct: .02 } },
+  },
+  movimientos: [
+    {
+      categoria: 'basico', nombre: 'Puños de Acero', objetivo: 'enemigo', estilo: 'melee', color: 0x3b82f6,
+      pct: 1.40, cd: 0,
+      desc: 'Causa 140% a un enemigo. Superman gana +2% de Armadura permanente (máx. +25%).',
+      efectos: [{ cuando: 'final', accion: { tipo: 'bonoPermanente', stat: 'armor', pct: .02, tope: .25, a: 'propio' } }],
+    },
+    {
+      categoria: 'especial', nombre: 'Visión de Calor', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xef4444,
+      pct: 1.10, cd: 4, ignoraArmadura: .25,
+      desc: 'Causa 110% a todos los enemigos e ignora 25 puntos de su Armadura. 60% de probabilidad de aplicar Quemadura (5%, 2 rondas) y 60% de aplicar Quemadura Solar (2 rondas).',
+      efectos: [
+        { accion: { tipo: 'efecto', id: 'burn', valor: .05, dur: 2, prob: .60 } },
+        { accion: { tipo: 'efecto', id: 'solarBurn', dur: 2, prob: .60 } },
+      ],
+    },
+    {
+      categoria: 'over', nombre: 'Superflare', objetivo: 'enemigo', estilo: 'melee', color: 0xfacc15,
+      pct: 3.40, cd: 6, criticoSiMasRapido: true, consumeCargas: { efecto: 'energiaSolar', pct: .25 },
+      desc: 'Gasta toda su Energía Solar: +25% de daño por cada una. Causa 340% a un enemigo, con crítico seguro si Superman es más rápido que el objetivo, y se cura el 50% del daño causado.',
+      efectos: [{ cuando: 'final', accion: { tipo: 'curar', base: 'danoCausado', pct: .50, a: 'propio' } }],
+    },
+  ],
+};
+
+
+return __e; })();
+
 __m["datos/personajes/index.js"] = (() => { const __e: any = {};
 // Registro de personajes. Cada ficha oficial nueva se agrega aquí y aparece sola en la construcción de equipos.
 const madara = __m["datos/personajes/madara-uchiha.js"].default;
@@ -8041,8 +8130,9 @@ const nezuko = __m["datos/personajes/nezuko-kamado.js"].default;
 const jonSnow = __m["datos/personajes/jon-snow.js"].default;
 const yoda = __m["datos/personajes/yoda.js"].default;
 const capitanAmerica = __m["datos/personajes/capitan-america.js"].default;
+const superman = __m["datos/personajes/superman.js"].default;
 
-const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow];
+const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman];
 const porId = id => OFICIALES.find(p => p.id === id);
 
 __e["OFICIALES"] = OFICIALES;

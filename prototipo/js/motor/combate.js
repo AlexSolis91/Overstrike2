@@ -360,6 +360,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   }
 
   function finRonda() {
+    for (const l of P.filter(x => x.esLider && !x.muerto && x.lider?.alFinalRonda)) {   // líder: al final de cada ronda (p. ej. Símbolo de Esperanza)
+      emitir('liderActua', { id: l.uid, nombre: l.lider.nombre });
+      ejecutarAccion(l, l.lider.alFinalRonda, {});
+    }
     for (const p of P) {                                    // reliquia "recuperaGolpes": cura X veces el HP perdido por golpes en la ronda
       const perdido = p.perdidoGolpesRonda || 0; p.perdidoGolpesRonda = 0;
       if (p.muerto || !perdido) continue;
@@ -894,10 +898,25 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     }
     let ignora = mov.ignoraArmadura || 0;
     if (mov.ignoraArmaduraSi && get(t, mov.ignoraArmaduraSi.efecto)) ignora += mov.ignoraArmaduraSi.puntos;   // solo si el objetivo tiene X
+    const dAntesArmadura = d;
     d *= 1 - Math.min(Math.max(0, st.armor - ignora), TOPES.armor);   // ignorar Armadura: resta puntos
     if (get(t, 'weaken')) d *= 1 + DEBUFFS.debilitar;
     if (get(t, 'expuesto')) d *= 1 + DEBUFFS.expuesto;
     d *= 1 - reduccion(t, 'golpe');
+    // pasiva "absorbeCriticos": un aliado de t recibe el 100% de un golpe crítico en su lugar, con su propia Armadura, y gana un bono permanente
+    const abs = critico && t.lado !== a.lado && aliadosDe(t).find(x => x !== t && !x.muerto && x.pasiva?.absorbeCriticos && !conControl(x));
+    if (abs && d > 0) {
+      let d2 = dAntesArmadura * (1 - Math.min(Math.max(0, stats(abs).armor - ignora), TOPES.armor)) * (1 - reduccion(abs, 'golpe'));
+      if (get(abs, 'weaken')) d2 *= 1 + DEBUFFS.debilitar;
+      d = 0;
+      const r2 = repartir(abs, d2, sa.pen);
+      emitir('danoEfecto', { de: a.uid, a: abs.uid, dano: r2.aHp, escudo: r2.aEsc, color: 0x60a5fa }, abs);
+      emitir('bonoVisible', { a: abs.uid, texto: `🛡️ Protege a ${t.nombre}` }, abs);
+      recibioDano(abs, r2.aHp + r2.aEsc, a);
+      if (r2.aEsc > 0) perdioEscudo(abs);
+      if (abs.hp <= 0) morir(abs, a);
+      else for (const [stat, pct] of Object.entries(abs.pasiva.absorbeCriticos.bono || {})) ejecutarAccion(abs, { tipo: 'bonoPermanente', stat, pct, a: 'propio' }, {});
+    }
     // pasiva "protector": un aliado de t recibe en su lugar un % del golpe (con su propia Armadura y reducciones)
     const prot = t.lado !== a.lado && aliadosDe(t).find(x => x !== t && x.pasiva?.protector && !conControl(x));
     if (prot && d > 0) {
@@ -1475,7 +1494,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           }
           break;
         case 'curar': {
-          const base = acc.base === 'dano' ? (ctx.dano || 0) : acc.base === 'hpMaxObjetivo' ? maxHp(t) : acc.base === 'hpMaxGolpeado' ? (ctx.objetivo ? maxHp(ctx.objetivo) : 0) : acc.base === 'curacion' ? (ctx.curacion || 0) : baseDe(a, acc.escala);
+          const base = acc.base === 'dano' ? (ctx.dano || 0) : acc.base === 'danoCausado' ? (ctx.danoCausado || 0) : acc.base === 'hpMaxObjetivo' ? maxHp(t) : acc.base === 'hpMaxGolpeado' ? (ctx.objetivo ? maxHp(ctx.objetivo) : 0) : acc.base === 'curacion' ? (ctx.curacion || 0) : baseDe(a, acc.escala);
           const veces = acc.porCada ? (ctx[acc.porCada] || 0)     // porCada: 'eliminados' = una vez por cada enemigo eliminado
             : acc.porEnemigoCon ? enemigosDe(a).filter(x => get(x, acc.porEnemigoCon)).length   // porEnemigoCon: una vez por cada enemigo con ese efecto (p. ej. Muzan)
             : acc.porAliadoCon ? aliadosDe(a).filter(x => get(x, acc.porAliadoCon)).length : 1;   // porAliadoCon: por cada aliado con esa marca (p. ej. Yoda)
@@ -1636,6 +1655,17 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'ganarCargas': ganarCargas(t, acc.cantidad || 1, acc.max || 5, acc.efecto); break;   // p. ej. Espada del Poder
+        case 'absorberEfecto': {        // quita ese efecto de todos (aliados y enemigos) y el destino gana 1 carga por cada uno; p. ej. Símbolo de Esperanza
+          let n = 0;
+          for (const x of P.filter(x => !x.muerto)) {
+            const e = get(x, acc.efecto);
+            if (!e) continue;
+            quitar(x, e); n++;
+            emitir(x.lado === t.lado ? 'limpieza' : 'disipar', { a: x.uid, n: 1 }, x);
+          }
+          if (n) ganarCargas(t, n, acc.max ?? Infinity, acc.carga);
+          break;
+        }
         case 'invocar': if (acc.prob == null || rng() < acc.prob) invocar(t, acc.key); break;   // p. ej. Clon de Sombra
         case 'reducirHpMax': {         // baja el HP máx. del objetivo para el resto de la partida (con tope); p. ej. Modo Barión
           const nd = acc.porDebuffs ? [...(ctx.teniaAntes || [])].filter(id => EFECTOS[id]?.tipo === 'debuff').length : 1;   // porDebuffs: × debuffs que tenía antes

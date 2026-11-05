@@ -58,6 +58,8 @@ export const EFECTOS = {
     desc: 'No puede recibir buffs nuevos mientras dure (los que ya tiene, los permanentes y las cargas no se ven afectados).' },
   oscuridad: { nombre: 'Oscuridad', icono: '🌑', color: 0x7c3aed, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Cargas de Saga (máx. 3): las gana al aplicar Confusión o Posesión. Con 3, su lado malvado toma el control: se transforma en Saga Oscuro por 4 turnos. No se disipa ni se limpia.' },
+  energiaSolar: { nombre: 'Energía Solar', icono: '☀️', color: 0xfbbf24, tipo: 'marca', tags: ['Carga'], noDisipable: true,
+    desc: 'Contador de Superman (sin máximo): la gana siendo líder, por cada Quemadura Solar que absorbe al final de la ronda. Superflare las gasta todas: +25% de daño por cada una. No se disipa ni se limpia.' },
   grayskull: { nombre: 'Poder de Grayskull', icono: '⚡', color: 0xfacc15, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Cargas de He-Man (máx. 5): las gana al proteger a un aliado y con su Básico. Golpe de Grayskull las consume. No se disipa ni se limpia.' },
   poderRobado: { nombre: 'Poder Robado', icono: '💀', color: 0x8b5cf6, tipo: 'marca', tags: ['Carga'], noDisipable: true,
