@@ -14,6 +14,16 @@ export const furiaAcumulada = ronda => {
   return total;
 };
 // Subir este número al cambiar cómo se pelea contra el jefe (motor o reglas): así el servidor no rechaza ataques por una función desactualizada
+// Cofres 1–4 del Jefe de Raid (solo visual; sin imagen se muestra 🧰)
+export const COFRES_RAID = [
+  { nombre: 'Cofre de Madera', imagen: 'assets/cofres/cofre-de-madera.webp' },
+  { nombre: 'Cofre de Plata', imagen: null },
+  { nombre: 'Cofre de Oro', imagen: null },
+  { nombre: 'Cofre Arcano', imagen: null },
+];
+export const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
+export const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
+
 export const REGLAS_RAID = 6;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 export const CRECE_HEMO_RAID = .1;

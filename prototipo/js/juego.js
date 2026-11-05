@@ -28,7 +28,7 @@ import { guardarLocal, borrarLocal } from './servicios/hordaGuardada.js';
 import { iniciarArena, abrirArena } from './ui/arena.js';
 import { iniciarRaid, abrirRaid } from './ui/raid.js';
 import { iniciarAmbiente, terminarAmbiente, efectoAtaque, almaAlJefe, vueloInvocacion } from './ui/ambiente.js';
-import { JEFES_RAID, furiaAcumulada } from './datos/jefes/raid.js';
+import { JEFES_RAID, furiaAcumulada, nombreCofre } from './datos/jefes/raid.js';
 import { iniciarSocial } from './ui/social.js';
 import { iniciarActualizacion } from './ui/actualizacion.js';
 import { conectarVivo, swapUid, ganadorRelativo } from './servicios/arenaVivo.js';
@@ -804,7 +804,7 @@ async function finRaid(base, fin) {
   mostrarResultados({ ...base, gano: !!res?.derrotado || !!fin.limite, empate: false, recompensas: [] });   // en rojo solo si tu equipo cayó
   const sin = document.querySelector('.res-sin'); if (sin) sin.textContent = 'Tu cofre se reclama en la pantalla del Jefe de Raid, al derrotarlo o al cerrar el día.';
   $('#ov-title').textContent = res?.derrotado ? '👑 ¡Jefe derrotado!' : res ? `❄️ ${miles(res.dano)} de daño` : '⚠️ Daño sin guardar';
-  $('#ov-sub').textContent = res ? `${r.nombreDif} · Tu total de hoy: ${miles(res.total)} · ${res.cofre ? `Cofre ${res.cofre} de 4` : 'Aún sin cofre'} · ${res.derrotado ? 'Ya puedes reclamar tu cofre' : `Quedan ${miles(res.hp_restante)} de HP`}`
+  $('#ov-sub').textContent = res ? `${r.nombreDif} · Tu total de hoy: ${miles(res.total)} · ${res.cofre ? nombreCofre(res.cofre) : 'Aún sin cofre'} · ${res.derrotado ? 'Ya puedes reclamar tu cofre' : `Quedan ${miles(res.hp_restante)} de HP`}`
     : `⚠️ ${error || 'No se pudo guardar el daño'}. Si se está verificando, se sumará en cuanto el servidor lo confirme.`;
 }
 

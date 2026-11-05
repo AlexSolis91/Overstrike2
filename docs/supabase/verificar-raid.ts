@@ -8264,6 +8264,16 @@ const furiaAcumulada = ronda => {
   return total;
 };
 // Subir este número al cambiar cómo se pelea contra el jefe (motor o reglas): así el servidor no rechaza ataques por una función desactualizada
+// Cofres 1–4 del Jefe de Raid (solo visual; sin imagen se muestra 🧰)
+const COFRES_RAID = [
+  { nombre: 'Cofre de Madera', imagen: 'assets/cofres/cofre-de-madera.webp' },
+  { nombre: 'Cofre de Plata', imagen: null },
+  { nombre: 'Cofre de Oro', imagen: null },
+  { nombre: 'Cofre Arcano', imagen: null },
+];
+const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
+const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
+
 const REGLAS_RAID = 6;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
@@ -8280,6 +8290,7 @@ const opcionesRaid = (dificultad, hpInicio, hpTotal) => ({
   dmgPct: DIFICULTADES_RAID[dificultad].dmg - 1, barra: { hp: hpInicio, total: hpTotal, creceHemo: CRECE_HEMO_RAID }, limiteRondas: RONDAS_RAID, furiaRonda: FURIA_RAID,
 });
 
+__e["COFRES_RAID"] = COFRES_RAID;
 __e["CRECE_HEMO_RAID"] = CRECE_HEMO_RAID;
 __e["DIFICULTADES_RAID"] = DIFICULTADES_RAID;
 __e["FURIA_RAID"] = FURIA_RAID;
@@ -8287,6 +8298,8 @@ __e["JEFES_RAID"] = JEFES_RAID;
 __e["REGLAS_RAID"] = REGLAS_RAID;
 __e["RONDAS_RAID"] = RONDAS_RAID;
 __e["furiaAcumulada"] = furiaAcumulada;
+__e["imgCofre"] = imgCofre;
+__e["nombreCofre"] = nombreCofre;
 __e["opcionesRaid"] = opcionesRaid;
 return __e; })();
 

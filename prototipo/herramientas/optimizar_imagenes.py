@@ -33,6 +33,7 @@ EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.bmp', '.gif'}
 PERSONAJE_SIZE = (800, 680)   # misma proporción que la ilustración de la carta
 INVOCACION_SIZE = 512
 RELIQUIA_SIZE = 256
+COFRE_SIZE = 256
 
 
 def slug(path: Path) -> str:
@@ -212,6 +213,7 @@ def main():
         ('transformaciones', personaje),
         ('horda', personaje),                 # enemigos de la Horda (mismo recorte que los campeones)
         ('invocaciones', lambda a, b: recorte_transparente(a, b, INVOCACION_SIZE)),
+        ('cofres', lambda a, b: recorte_transparente(a, b, COFRE_SIZE)),   # cofres del Jefe de Raid (fondo quitado)
         # reliquias: las monta herramientas/marcos_reliquias.py dentro del marco de su rareza
     ]
     hechas = 0
