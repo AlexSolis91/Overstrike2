@@ -5,7 +5,7 @@ import { imgHtml } from './imagenes.js';
 import { sonar, musica, temaDePartida } from './audio.js';
 import { FONDOS } from '../datos/fondos.js';
 import { temporizar } from './graficos.js';
-import { efectosDe, efectosParaFiltro } from '../datos/efectosCampeon.js';
+import { efectosDe, selectorEfectos } from '../datos/efectosCampeon.js';
 
 const $ = s => document.querySelector(s);
 const TAM = 5;                                   // los equipos siempre son de 5
@@ -22,12 +22,6 @@ const rolesDe = p => [p.rol, p.rolSecundario].filter(Boolean).map(r => ROL[r] ||
 const CAT = { basico: 'Básico', especial: 'Especial', over: 'Over' };
 const OBJ = { enemigo: 'Un enemigo', aliado: 'Un aliado', propio: 'Propio', todosEnemigos: 'Todos los enemigos', todosAliados: 'Todos los aliados', azar: 'Enemigos al azar' };
 const pct = v => `${Math.round(v * 1000) / 10}%`;
-// Filtro por buff o debuff: muestra a los campeones que pueden ponerlo
-function selectorEfectos() {
-  const { buffs, debuffs } = efectosParaFiltro();
-  const op = l => l.map(x => `<option value="${x.id}" ${E.efecto === x.id ? 'selected' : ''}>${x.nombre}</option>`).join('');
-  return `<select id="eq-efecto" class="eq-efecto ${E.efecto ? 'on' : ''}" aria-label="Filtrar por buff o debuff"><option value="">Buff o debuff: todos</option><optgroup label="Buffs">${op(buffs)}</optgroup><optgroup label="Debuffs">${op(debuffs)}</optgroup></select>`;
-}
 
 const E = { jugador: [], rival: [], rivalModo: 'azar', editando: 'jugador', filtro: null, efecto: null, sel: null, campana: null };
 // campana (modo Campaña): { titulo, rivales: [fichas], propios: Set(ids), alListo(eqJ), alVolver() } · el rival es fijo y solo se eligen campeones propios
@@ -151,7 +145,7 @@ function renderEquipo() {
   // filtros
   const roles = [...new Set(OFICIALES.flatMap(rolesDe))];
   $('#eq-filtros').innerHTML = `<span class="eq-editando">Eligiendo para: <b>${E.editando === 'jugador' ? 'Tu equipo' : 'Rival'}</b></span>` +
-    [null, ...roles].map(r => `<button class="filtro ${E.filtro === r ? 'on' : ''}" data-rol="${r ?? ''}">${r ?? 'Todos'}</button>`).join('') + selectorEfectos();
+    [null, ...roles].map(r => `<button class="filtro ${E.filtro === r ? 'on' : ''}" data-rol="${r ?? ''}">${r ?? 'Todos'}</button>`).join('') + selectorEfectos('eq-efecto', E.efecto);
   // galería
   const lista = OFICIALES.filter(p => (!E.filtro || rolesDe(p).includes(E.filtro)) && (!E.efecto || efectosDe(p).has(E.efecto)) && (!camp || camp.propios.has(p.id)));
   $('#eq-galeria').innerHTML = !lista.length ? '<p class="eq-sin">Ningún campeón coincide con estos filtros.</p>' : lista.map(p => {

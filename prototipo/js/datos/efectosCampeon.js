@@ -43,3 +43,10 @@ export function efectosParaFiltro() {
     .map(id => ({ id, nombre: EFECTOS[id].nombre })).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   return (lista = { buffs: de('buff'), debuffs: de('debuff') });
 }
+
+// Lista desplegable del filtro. La usan el selector de equipos y la Colección.
+export function selectorEfectos(id, elegido) {
+  const { buffs, debuffs } = efectosParaFiltro();
+  const op = l => l.map(x => `<option value="${x.id}" ${elegido === x.id ? 'selected' : ''}>${x.nombre}</option>`).join('');
+  return `<select id="${id}" class="eq-efecto ${elegido ? 'on' : ''}" aria-label="Filtrar por buff o debuff"><option value="">Buff o debuff: todos</option><optgroup label="Buffs">${op(buffs)}</optgroup><optgroup label="Debuffs">${op(debuffs)}</optgroup></select>`;
+}

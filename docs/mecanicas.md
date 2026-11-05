@@ -829,7 +829,7 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - La ficha del jefe indica su pista con `musica` (una clave de `MUSICA` en `js/datos/sonidos.js`). Solo suena en la batalla contra ese jefe. Lich King: `jefeLichKing` (`assets/audio/jefe-lich-king-arthas.mp3`, Arthas, My Son). Se repite al terminar. `VOLUMEN_MUSICA` iguala pistas grabadas más bajas, por archivo (batalla-2: 2.5, batalla-3: 2, Lich King: 2). Para un jefe nuevo: copiar el MP3 a `assets/audio/`, agregar su clave y ponerla en la ficha. No cambia `VERSION`.
 
 ## 39. Filtro por buff o debuff y Over de Yorichi (2026-11-04)
-- **Selector de equipos:** además del rol, se puede filtrar por un buff o debuff. La lista sale de leer cada ficha (`js/datos/efectosCampeon.js`: movimientos, pasiva, líder, transformaciones e invocaciones), así que un campeón nuevo aparece solo. Se aplica en todos los selectores que usan `renderEquipo`.
+- **Selector de equipos:** además del rol, se puede filtrar por un buff o debuff. La lista sale de leer cada ficha (`js/datos/efectosCampeon.js`: movimientos, pasiva, líder, transformaciones e invocaciones), así que un campeón nuevo aparece solo. Se aplica en todos los selectores que usan `renderEquipo`. La Colección (pestaña de campeones) tiene el mismo filtro, y muestra también a los que aún no tienes.
 - **`reducirCooldown` con `prob`:** la reducción puede tener probabilidad.
 - **Yorichi, Las 13 Posturas del Sol:** cooldown 7, 13 golpes de 50%, y cada crítico tiene 50% de probabilidad de bajar 1 su cooldown.
 

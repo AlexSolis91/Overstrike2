@@ -13,6 +13,7 @@ import { COSTO_FORJA, CALIDAD_MINIMA, estadoReceta, proponerIngredientes, receta
 import { RELIQUIAS, espaciosDeCuenta } from '../datos/reliquias.js';
 import { crearCombate } from '../motor/combate.js';
 import { habilidadesHtml } from './menu.js';
+import { efectosDe, selectorEfectos } from '../datos/efectosCampeon.js';
 
 const MAX_ESTRELLAS = 5;   // estrellas máximas de hoy; también en _estrellas_maximas() (docs/sql/027_raid_ajustes.sql)
 const $ = s => document.querySelector(s);
@@ -38,6 +39,7 @@ const COSTO_MEJORA = { 'Común': 2, 'Raro': 8, 'Especial': 25, 'Épico': 80, 'Le
 const ORO_FUSION = { 'Común': 1000, 'Raro': 5000, 'Especial': 20000 };
 const SIG_RAREZA = { 'Común': 'Raro', 'Raro': 'Especial', 'Especial': 'Épico' };
 let cfg = [];                 // sobres_config del servidor
+let colEfecto = null;         // pestaña Colección: buff o debuff por el que se filtran los campeones
 let pestana = 'tienda', detalle = null, elegidoPortal = null, ocupado = false;
 
 // ---------------------------------------------------------------- avisos
@@ -292,11 +294,12 @@ function htmlStatsCuenta(p, r) {
 function htmlColeccion() {
   if (detalle) return htmlDetalle(porId(detalle));
   const tengo = OFICIALES.filter(p => col.has(p.id)).length;
-  const orden = [...OFICIALES].sort((a, b) => (col.has(b.id) - col.has(a.id)) || a.nombre.localeCompare(b.nombre));
+  const orden = OFICIALES.filter(p => !colEfecto || efectosDe(p).has(colEfecto)).sort((a, b) => (col.has(b.id) - col.has(a.id)) || a.nombre.localeCompare(b.nombre));
   const sobrantes = [...col.values()].filter(r => r.estrellas >= MAX_ESTRELLAS && r.copias > 0);
   const nSobrantes = sobrantes.reduce((s, r) => s + r.copias, 0);
   return `<p class="tc-nota">Tienes <b>${tengo}/${OFICIALES.length}</b> campeones. Toca uno para ascenderlo, abrir espacios de reliquias o desfragmentar copias.</p>
     ${nSobrantes ? `<div class="tc-fila tc-maximos"><span>🧩 ${num(nSobrantes)} copia${nSobrantes > 1 ? 's' : ''} de ${sobrantes.length} ${sobrantes.length > 1 ? 'campeones' : 'campeón'} con ${MAX_ESTRELLAS}★ (el máximo)</span><button class="eq-btn" data-desfrag-max>Desfragmentar todas</button></div>` : ''}
+    <div class="tc-fila tc-col-filtro">${selectorEfectos('tc-efecto', colEfecto)}${colEfecto ? `<span>${orden.length} ${orden.length === 1 ? 'campeón puede ponerlo' : 'campeones pueden ponerlo'} · tienes ${orden.filter(p => col.has(p.id)).length}</span>` : ''}</div>
     <div class="tc-grid">${orden.map(p => { const r = col.get(p.id);
       return `<button class="tc-carta ${r ? '' : 'falta'}" data-ver="${p.id}" style="--c:${p.color}">
         <div class="tc-img">${retrato(p)}</div>
@@ -569,7 +572,10 @@ export function iniciarColeccion() {
   $('#btn-tienda').addEventListener('click', () => abrirTC('tienda'));
   $('#btn-coleccion').addEventListener('click', () => abrirTC('coleccion'));
   $('#tc').addEventListener('click', ejecutar);
-  $('#tc').addEventListener('change', e => { if (e.target.matches('[data-atributo]')) { relAtributo = e.target.value; pintar(); } });
+  $('#tc').addEventListener('change', e => {
+    if (e.target.matches('[data-atributo]')) { relAtributo = e.target.value; pintar(); }
+    if (e.target.id === 'tc-efecto') { colEfecto = e.target.value || null; pintar(); }
+  });
   activarTip($('#tc'), '.tc-slot-panel [data-tip]', el => fichaEquipar(el.dataset.uid));
   $('#starter').addEventListener('click', e => {
     if (e.target.closest('#starter-x')) return $('#starter').classList.add('hidden');
