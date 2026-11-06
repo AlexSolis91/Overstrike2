@@ -66,4 +66,4 @@ jobs:
           fi
           mkdir -p supabase/functions/verificar-raid
           cp docs/supabase/verificar-raid.ts supabase/functions/verificar-raid/index.ts
-          supabase functions deploy verificar-raid --project-ref "$PROJECT_REF" --no-verify-jwt
+          supabase functions deploy verificar-raid --remote="$PROJECT_REF" --no-verify-jwt --yes
