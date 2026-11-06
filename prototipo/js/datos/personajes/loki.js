@@ -2,7 +2,7 @@ import { espacios } from '../reliquias.js';
 
 // Ficha oficial #16 (diseñada el 2026-10-06). Loki, Dios del Engaño. Basado en Pelops el Vencedor (Raid): tanque que
 // envenena y confunde a quien lo ataca, roba todos los buffs a los envenenados y con su Over protege a su equipo con
-// Escudo y Furia mientras él atrae los golpes con Provocación y Espejismo. Usurpó el trono de Asgard: tiene habilidad de líder.
+// Escudo, Furia y Espejismo (como el Escudo de Magma de Pelops) mientras él atrae los golpes con Provocación. Usurpó el trono de Asgard: tiene habilidad de líder.
 export default {
   id: 'loki',
   franquicia: 'Marvel', grupos: ['asgard', 'dioses'],   // campaña: temas de las etapas
@@ -52,11 +52,11 @@ export default {
     {
       categoria: 'over', nombre: 'Glorioso Propósito', objetivo: 'propio', estilo: 'support', color: 0x67e8f9,
       cd: 5,
-      desc: 'Todos los aliados ganan Furia y un Escudo del 50% del HP máx. de Loki (2 rondas). Loki gana Provocación y Espejismo (2 rondas: devuelve el 30% del daño de cada golpe recibido). Efecto pasivo: mientras Loki viva y no tenga Desgaste, su equipo recibe −20% de daño.',
+      desc: 'Todos los aliados ganan Furia, Espejismo (devuelve el 30% del daño de cada golpe recibido) y un Escudo del 50% del HP máx. de Loki (2 rondas). Loki gana Provocación (2 rondas). Efecto pasivo: mientras Loki viva y no tenga Desgaste, su equipo recibe −20% de daño.',
       efectos: [
         { cuando: 'final', accion: { tipo: 'efecto', id: 'dmgUp', dur: 2, a: 'todosAliados' } },
         { cuando: 'final', accion: { tipo: 'escudo', pct: .50, escala: 'hpMax', dur: 2, a: 'todosAliados' } },
-        { cuando: 'final', accion: { tipo: 'efecto', id: 'mirror', dur: 2, a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'efecto', id: 'mirror', dur: 2, a: 'todosAliados' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'taunt', dur: 2, a: 'propio' } },
       ],
     },

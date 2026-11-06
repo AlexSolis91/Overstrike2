@@ -23,12 +23,12 @@ export default {
   },
   pasiva: {
     nombre: 'Nido de Serpientes',
-    desc: 'Sello Maldito del Cielo: al empezar la partida, Orochimaru y cada aliado que aplique Veneno reciben el Sello Maldito (+15% de Daño, +12% de HP máx. y +10% de Velocidad toda la partida). Todo su equipo hace +25% de daño a enemigos envenenados. Veneno de Manda: mientras Orochimaru viva, los Venenos que aplique su equipo se acumulan hasta 8 (en vez de 5). Muda de Piel: cada vez que un Veneno hace daño a un enemigo, Orochimaru se cura 2% de su HP máx. (máximo 3 veces por ronda).',
+    desc: 'Sello Maldito del Cielo: al empezar la partida, Orochimaru y cada aliado que aplique Veneno reciben el Sello Maldito (+15% de Daño, +12% de HP máx. y +10% de Velocidad toda la partida). Todo su equipo hace +25% de daño a enemigos envenenados. Veneno de Manda: mientras Orochimaru viva, los Venenos que aplique su equipo se acumulan hasta 8 (en vez de 5). Muda de Piel: cada vez que un Veneno hace daño a un enemigo, Orochimaru se cura 5% de su HP máx. (sin límite de veces).',
     venenoMax: 8,
     auraContra: { efecto: 'poison', pct: .25 },
     marcaAliadosQueAplican: { efecto: 'poison', marca: 'selloMaldito', bono: { dmgPct: .15, hpPct: .12, spdPct: .10 } },
-    gatillo: 'alDanoDoT', filtro: { tipo: 'poison', en: 'enemigos' }, maxPorRonda: 3,
-    accion: { tipo: 'curar', pct: .02, escala: 'hpMax', a: 'propio' },
+    gatillo: 'alDanoDoT', filtro: { tipo: 'poison', en: 'enemigos' },
+    accion: { tipo: 'curar', pct: .05, escala: 'hpMax', a: 'propio' },
   },
   movimientos: [
     {
