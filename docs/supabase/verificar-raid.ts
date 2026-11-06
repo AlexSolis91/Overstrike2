@@ -962,6 +962,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       p.estados = p.estados.filter(e => (e.dur === undefined || e.dur > 0) && !(e.id === 'bomb' && e.contador <= 0));
     }
     for (const [p, b] of explotan) if (!p.muerto) explotarBomba(p, b, false);
+    for (const x of P) if (x.muerto && x.revivePasivaRonda && x.revivePasivaRonda <= S.ronda) revivir(x);   // pasiva "revivir { rondaSiguiente }"
     for (const x of P) if (x.muerto && x.reviveRonda && x.reviveRonda <= S.ronda && !x.revivioReliquia) {   // reliquia "revivir"
       x.revivioReliquia = true; revivir(x, x.reviveRelHp);
       if (!x.muerto) emitir('bonoVisible', { a: x.uid, texto: '⏳ ¡Vuelve en el tiempo!' }, x);
@@ -1327,7 +1328,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
   function revivir(x, hpPct) {
     if (x.noRevivir) return;                         // p. ej. un esclavo de Frostmourne que ya cumplió su tiempo
     if (!enemigosDe(x).length) return;               // la partida ya terminó
-    Object.assign(x, { muerto: false, estados: [], escudo: 0, inmune: false, recienLiberado: false, reviveEn: 0, reviveRonda: 0 });
+    Object.assign(x, { muerto: false, estados: [], escudo: 0, inmune: false, recienLiberado: false, reviveEn: 0, reviveRonda: 0, revivePasivaRonda: 0 });
     for (const id of x.pasiva?.efectosPermanentes || []) x.estados.push({ id, permanente: true });
     x.hp = maxHp(x) * (hpPct ?? x.pasiva?.revivir?.hp ?? 1);
     if (x.pasiva?.rival) elegirRival(x);
@@ -1734,7 +1735,11 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     const rv = t.pasiva?.revivir;                      // pasiva "revivir": vuelve tras N turnos (de cualquiera), una vez por partida
     const rr = !t.revivioReliquia && pasivasDeReliquia(t).find(m => m.revivir);   // reliquia "revivir" (p. ej. Anillo del Tiempo)
     if (rr) { t.reviveRonda = S.ronda + 1; t.reviveRelHp = rr.revivir.hp ?? 1; emitir('extension', { a: t.uid, texto: '⏳ Revivirá al final de la próxima ronda' }, t); }
-    if (rv && !t.revivio) { t.revivio = true; t.reviveEn = rv.turnos + (S.actual ? 1 : 0); emitir('extension', { a: t.uid, texto: `🐒 Revivirá en ${rv.turnos} turnos` }, t); }
+    if (rv && (rv.ilimitado || !t.revivio) && !t.noRevivir) {
+      t.revivio = true;
+      if (rv.rondaSiguiente) { t.revivePasivaRonda = S.ronda + 1; emitir('extension', { a: t.uid, texto: '🐒 Revivirá al final de la próxima ronda' }, t); }   // p. ej. Wukong
+      else { t.reviveEn = rv.turnos + (S.actual ? 1 : 0); emitir('extension', { a: t.uid, texto: `🐒 Revivirá en ${rv.turnos} turnos` }, t); }
+    }
     for (const b of bombas) explotarBomba(t, b, true);
     if (asesino && asesino.lado !== t.lado) pasivas(asesino, 'alEliminar', { objetivo: t });
     for (const v of rivalDe) {
@@ -2122,7 +2127,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           break;
         }
         case 'reanimar': {              // revive hasta N aliados caídos con % de HP y les pone una marca (p. ej. Edo Tensei)
-          const caidos = P.filter(x => x.lado === a.lado && x.muerto && x !== a && !(x.reviveEn > 0)).sort(() => rng() - .5).slice(0, acc.cantidad || 1);
+          const caidos = P.filter(x => x.lado === a.lado && x.muerto && x !== a && !(x.reviveEn > 0) && !(x.revivePasivaRonda > 0)).sort(() => rng() - .5).slice(0, acc.cantidad || 1);
           for (const x of caidos) {
             revivir(x, acc.hp ?? .5);
             if (x.muerto || !acc.marca) continue;            // sin marca: solo revive (p. ej. Gul'dan)
@@ -4642,7 +4647,7 @@ const { espacios } = __m["datos/reliquias.js"];
 
 // Ficha oficial #22 (2026-10-08). Inspirado en el Sun Wukong de Raid: Shadow Legends, adaptado: Aturdir (más si el
 // enemigo tiene buffs), golpe que ignora Armadura y pasa el daño sobrante, robo de todos los buffs enemigos con
-// Bloquear Buffs, y revive una vez por partida. Líder: Gran Sabio Igual al Cielo (el aura de Velocidad de Raid).
+// Bloquear Buffs, y revive al final de la ronda siguiente (sin límite). Líder: Gran Sabio Igual al Cielo (el aura de Velocidad de Raid).
 __e.default = {
   id: 'wukong',
   franquicia: 'Black Myth: Wukong', grupos: ['dioses', 'guerreros'],   // campaña: temas de las etapas
@@ -4661,8 +4666,8 @@ __e.default = {
   },
   pasiva: {
     nombre: 'Wukong Invencible',
-    desc: 'Cuando muere, revive 3 turnos después (cuentan los turnos de cualquiera) con el 100% de su HP. Una vez por partida.',
-    revivir: { turnos: 3, hp: 1 },
+    desc: 'Cuando muere, revive al final de la ronda siguiente con el 100% de su HP. Sin límite de veces por partida.',
+    revivir: { rondaSiguiente: true, ilimitado: true, hp: 1 },
   },
   movimientos: [
     {
@@ -8287,7 +8292,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 8;
+const REGLAS_RAID = 9;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad

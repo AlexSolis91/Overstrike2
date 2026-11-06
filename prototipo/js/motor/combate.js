@@ -401,6 +401,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       p.estados = p.estados.filter(e => (e.dur === undefined || e.dur > 0) && !(e.id === 'bomb' && e.contador <= 0));
     }
     for (const [p, b] of explotan) if (!p.muerto) explotarBomba(p, b, false);
+    for (const x of P) if (x.muerto && x.revivePasivaRonda && x.revivePasivaRonda <= S.ronda) revivir(x);   // pasiva "revivir { rondaSiguiente }"
     for (const x of P) if (x.muerto && x.reviveRonda && x.reviveRonda <= S.ronda && !x.revivioReliquia) {   // reliquia "revivir"
       x.revivioReliquia = true; revivir(x, x.reviveRelHp);
       if (!x.muerto) emitir('bonoVisible', { a: x.uid, texto: '⏳ ¡Vuelve en el tiempo!' }, x);
@@ -766,7 +767,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   function revivir(x, hpPct) {
     if (x.noRevivir) return;                         // p. ej. un esclavo de Frostmourne que ya cumplió su tiempo
     if (!enemigosDe(x).length) return;               // la partida ya terminó
-    Object.assign(x, { muerto: false, estados: [], escudo: 0, inmune: false, recienLiberado: false, reviveEn: 0, reviveRonda: 0 });
+    Object.assign(x, { muerto: false, estados: [], escudo: 0, inmune: false, recienLiberado: false, reviveEn: 0, reviveRonda: 0, revivePasivaRonda: 0 });
     for (const id of x.pasiva?.efectosPermanentes || []) x.estados.push({ id, permanente: true });
     x.hp = maxHp(x) * (hpPct ?? x.pasiva?.revivir?.hp ?? 1);
     if (x.pasiva?.rival) elegirRival(x);
@@ -1173,7 +1174,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     const rv = t.pasiva?.revivir;                      // pasiva "revivir": vuelve tras N turnos (de cualquiera), una vez por partida
     const rr = !t.revivioReliquia && pasivasDeReliquia(t).find(m => m.revivir);   // reliquia "revivir" (p. ej. Anillo del Tiempo)
     if (rr) { t.reviveRonda = S.ronda + 1; t.reviveRelHp = rr.revivir.hp ?? 1; emitir('extension', { a: t.uid, texto: '⏳ Revivirá al final de la próxima ronda' }, t); }
-    if (rv && !t.revivio) { t.revivio = true; t.reviveEn = rv.turnos + (S.actual ? 1 : 0); emitir('extension', { a: t.uid, texto: `🐒 Revivirá en ${rv.turnos} turnos` }, t); }
+    if (rv && (rv.ilimitado || !t.revivio) && !t.noRevivir) {
+      t.revivio = true;
+      if (rv.rondaSiguiente) { t.revivePasivaRonda = S.ronda + 1; emitir('extension', { a: t.uid, texto: '🐒 Revivirá al final de la próxima ronda' }, t); }   // p. ej. Wukong
+      else { t.reviveEn = rv.turnos + (S.actual ? 1 : 0); emitir('extension', { a: t.uid, texto: `🐒 Revivirá en ${rv.turnos} turnos` }, t); }
+    }
     for (const b of bombas) explotarBomba(t, b, true);
     if (asesino && asesino.lado !== t.lado) pasivas(asesino, 'alEliminar', { objetivo: t });
     for (const v of rivalDe) {
@@ -1561,7 +1566,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'reanimar': {              // revive hasta N aliados caídos con % de HP y les pone una marca (p. ej. Edo Tensei)
-          const caidos = P.filter(x => x.lado === a.lado && x.muerto && x !== a && !(x.reviveEn > 0)).sort(() => rng() - .5).slice(0, acc.cantidad || 1);
+          const caidos = P.filter(x => x.lado === a.lado && x.muerto && x !== a && !(x.reviveEn > 0) && !(x.revivePasivaRonda > 0)).sort(() => rng() - .5).slice(0, acc.cantidad || 1);
           for (const x of caidos) {
             revivir(x, acc.hp ?? .5);
             if (x.muerto || !acc.marca) continue;            // sin marca: solo revive (p. ej. Gul'dan)

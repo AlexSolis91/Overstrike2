@@ -2,7 +2,7 @@ import { espacios } from '../reliquias.js';
 
 // Ficha oficial #22 (2026-10-08). Inspirado en el Sun Wukong de Raid: Shadow Legends, adaptado: Aturdir (más si el
 // enemigo tiene buffs), golpe que ignora Armadura y pasa el daño sobrante, robo de todos los buffs enemigos con
-// Bloquear Buffs, y revive una vez por partida. Líder: Gran Sabio Igual al Cielo (el aura de Velocidad de Raid).
+// Bloquear Buffs, y revive al final de la ronda siguiente (sin límite). Líder: Gran Sabio Igual al Cielo (el aura de Velocidad de Raid).
 export default {
   id: 'wukong',
   franquicia: 'Black Myth: Wukong', grupos: ['dioses', 'guerreros'],   // campaña: temas de las etapas
@@ -21,8 +21,8 @@ export default {
   },
   pasiva: {
     nombre: 'Wukong Invencible',
-    desc: 'Cuando muere, revive 3 turnos después (cuentan los turnos de cualquiera) con el 100% de su HP. Una vez por partida.',
-    revivir: { turnos: 3, hp: 1 },
+    desc: 'Cuando muere, revive al final de la ronda siguiente con el 100% de su HP. Sin límite de veces por partida.',
+    revivir: { rondaSiguiente: true, ilimitado: true, hp: 1 },
   },
   movimientos: [
     {
