@@ -46,9 +46,15 @@ def slug(path: Path) -> str:
 
 
 # ---------------------------------------------------------------- personajes
+# Altura del recorte por imagen (0 = conserva toda la parte de arriba y recorta solo abajo; 1 = al revés). Por defecto 0.35.
+RECORTE_VERTICAL = {
+    'madara-uchiha': 0.0,   # 2026-11-06: no cortar el pelo
+}
+
+
 def personaje(src: Path, dst: Path):
     im = ImageOps.exif_transpose(Image.open(src)).convert('RGB')
-    im = ImageOps.fit(im, PERSONAJE_SIZE, Image.LANCZOS, centering=(0.5, 0.35))
+    im = ImageOps.fit(im, PERSONAJE_SIZE, Image.LANCZOS, centering=(0.5, RECORTE_VERTICAL.get(slug(src), 0.35)))
     im.save(dst, 'WEBP', quality=82, method=6)
 
 

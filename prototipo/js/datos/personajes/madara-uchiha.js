@@ -7,7 +7,7 @@ export default {
   nombre: 'Madara',
   rol: 'Daño',
   sobres: ['bloodline', 'phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
-  emoji: '🔥', color: '#b91c1c', imagen: 'assets/personajes/madara-uchiha.webp?v=3',
+  emoji: '🔥', color: '#b91c1c', imagen: 'assets/personajes/madara-uchiha.webp?v=4',
   base: { hp: 750, dmg: 75, spd: 110 },
   extra: {},                                   // secundarias por encima de la base común
   slots: espacios('obsidiana', 'yelmo', 'anilloCobre'),
