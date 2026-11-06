@@ -33,6 +33,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Pruebas del motor (si alguna falla, no se publica)
+        run: node --test "prototipo/pruebas/*.test.mjs"
+
       - name: Revisar que la función esté al día con el motor
         run: |
           node prototipo/herramientas/empaquetar_verificador.mjs
