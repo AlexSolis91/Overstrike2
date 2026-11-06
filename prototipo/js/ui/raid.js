@@ -150,7 +150,7 @@ async function reclamar(dia, dif) {
     const r = await D.raidReclamar(dia, dif);
     ventanaPremio(`${imgCofre(r.cofre, 'rd-premio-cofre')}${nombreCofre(r.cofre)}`, `${nombre}${r.duplicado ? ' · El jefe cayó: oro, polvo y runas ×2' : ''}`, [
       itemPremio(emoji('🪙'), `+${miles(r.oro)} de oro`),
-      itemPremio(emoji('🧪'), `+${miles(r.polvo)} de Polvo Arcano`),
+      itemPremio('<img src="assets/items/polvoArcano.png" alt="">', `+${miles(r.polvo)} de Polvo Arcano`),
       ...(r.runas ? [itemPremio('<img src="assets/items/runaPortal.png" alt="">', `+${r.runas} Runa${r.runas > 1 ? 's' : ''} de Portal`)] : []),
       ...(r.reliquias || []).map(x => itemReliquia(x.reliquia)),
     ]);
