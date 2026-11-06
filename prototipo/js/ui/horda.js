@@ -92,7 +92,7 @@ function pintar() {
         ${HITOS.map(x => `<div class="hd-hito ${hitos.has(x.oleada) ? 'ok' : ''}"><b>${hitos.has(x.oleada) ? '✅' : '🔒'} Oleada ${x.oleada}</b><span>${x.txt}</span></div>`).join('')}
       </div>
       <div class="hd-panel">
-        <h4>🏅 Tienda de la Horda <small>${trofeos != null ? `Tienes ${trofeos} Trofeos de Orco` : '(falta ejecutar docs/sql/011_horda_extras.sql)'}</small></h4>
+        <h4>🏅 Tienda de la Horda <small>${trofeos != null ? `Tienes ${trofeos} Trofeos de Orco` : sinSesion ? '(inicia sesión para ver tus Trofeos)' : '(falta ejecutar docs/sql/011_horda_extras.sql)'}</small></h4>
         ${trofeos != null && !('horda_epica_semana' in inv) ? '<p class="hd-nota">⚠️ Falta ejecutar docs/sql/015_tienda_horda_precios.sql: el servidor todavía cobra los precios anteriores.</p>' : ''}
         <p class="hd-nota">${conCursor() ? 'Pasa el cursor por una reliquia para ver qué atributos le pueden salir.' : 'Toca una reliquia para ver qué atributos le pueden salir.'} Elige exactamente la reliquia de la Horda de Orcos que buscas. Ganas 1 Trofeo por oleada (×3 mini-jefe, ×5 jefe). <b>Épicas: 1 por semana</b> (se renueva el lunes).${filtro === 'Épico' && epicaUsada ? ' ✅ Ya compraste la de esta semana.' : ''}</p>
         <div class="hd-filtros">${Object.keys(PRECIO_TROFEOS).map(rz => `<button class="hd-fil ${rz === filtro ? 'on' : ''}" data-rz="${rz}" style="--rc:${RAREZAS[rz].color}">${RAREZAS[rz].plural} · ${PRECIO_TROFEOS[rz]} 🏅</button>`).join('')}</div>

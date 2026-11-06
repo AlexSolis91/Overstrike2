@@ -1137,3 +1137,13 @@ body.social-min #soc-abrir { display: block; }
 .nov-antes { margin: 18px 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); border-top: 1px solid rgba(255, 255, 255, .1); padding-top: 10px; }
 #btn-novedades.nov-nueva { position: relative; }
 #btn-novedades.nov-nueva::after { content: ''; position: absolute; top: 3px; right: 3px; width: 9px; height: 9px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+
+/* ---------- celular vertical (revisión 2026-11-06) */
+.eq-equipos { grid-template-columns: minmax(0, 1fr); }   /* la fila no se estira más que la pantalla */
+@media (max-width: 520px) and (orientation: portrait) {
+  .eq-fila { flex-wrap: wrap; row-gap: 0; padding: 6px 8px; }
+  .eq-etq { width: 100%; display: flex; align-items: center; gap: 8px; }   /* "Tu equipo" / "Rival" arriba de los lugares */
+  .eq-modo { flex-direction: row; margin-top: 0; }
+  .eq-slots { gap: 6px; padding-top: 10px; }
+  .slot { width: 48px; height: 48px; }
+}

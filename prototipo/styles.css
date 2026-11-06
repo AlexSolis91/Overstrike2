@@ -458,3 +458,13 @@ body.movil-v #raid-info { top: 86px; }
 body.movil-v.en-raid #hint { top: 112px; }
 #raid-info em { font-style: normal; color: #fca5a5; }
 body.movil #raid-info em { font-size: 11px; }
+
+/* celular en vertical (revisión 2026-11-06): los botones de arriba ocupan casi todo el ancho,
+   así que la barra de ronda/turnos baja a su propia línea y lo de abajo se recorre */
+body.movil-v #topbar { top: calc(max(6px, env(safe-area-inset-top)) + 38px); max-width: calc(100% - 16px); }
+body.movil-v #hint { top: 90px; }
+body.movil-v #girar:not(.cerrado) { top: 122px; }
+body.movil-v #arena-rival { top: 160px; }
+body.movil-v.en-raid #jefe-barra { top: 90px; }
+body.movil-v #raid-info { top: 126px; }
+body.movil-v.en-raid #hint { top: 152px; }
