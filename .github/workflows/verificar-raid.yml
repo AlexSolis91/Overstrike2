@@ -1,0 +1,69 @@
+# Publica la Edge Function verificar-raid en Supabase cada vez que cambia en main.
+# Antes revisa que docs/supabase/verificar-raid.ts esté al día con el motor (si alguien olvidó regenerarlo, falla y no publica).
+#
+# Requiere UN secreto en GitHub (Settings → Secrets and variables → Actions → New repository secret):
+#   SUPABASE_ACCESS_TOKEN = token personal de Supabase (supabase.com → Account → Access Tokens).
+# La función revisa al jugador por su cuenta (auth.getUser), por eso se publica con --no-verify-jwt.
+name: Publicar verificar-raid
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/supabase/verificar-raid.ts'
+      - 'prototipo/js/**'
+      - 'prototipo/herramientas/empaquetar_verificador.mjs'
+  workflow_dispatch:
+
+concurrency:
+  group: verificar-raid
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_REF: udjvwyzixqdghahinxqr
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # para comparar con el commit anterior
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Revisar que la función esté al día con el motor
+        run: |
+          node prototipo/herramientas/empaquetar_verificador.mjs
+          if ! git diff --quiet --ignore-cr-at-eol -- docs/supabase/verificar-raid.ts; then
+            echo "::error::docs/supabase/verificar-raid.ts no está al día: corre 'node prototipo/herramientas/empaquetar_verificador.mjs' y súbelo."
+            exit 1
+          fi
+
+      - name: ¿Cambió la función?
+        id: cambio
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" 2>/dev/null | grep -q '^docs/supabase/verificar-raid.ts$'; then
+            echo "publicar=si" >> "$GITHUB_OUTPUT"
+          else
+            echo "La función no cambió; no hace falta publicarla."
+          fi
+
+      - uses: supabase/setup-cli@v1
+        if: steps.cambio.outputs.publicar == 'si'
+        with:
+          version: latest
+
+      - name: Publicar en Supabase
+        if: steps.cambio.outputs.publicar == 'si'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::error::Falta el secreto SUPABASE_ACCESS_TOKEN en GitHub (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+          mkdir -p supabase/functions/verificar-raid
+          cp docs/supabase/verificar-raid.ts supabase/functions/verificar-raid/index.ts
+          supabase functions deploy verificar-raid --project-ref "$PROJECT_REF" --no-verify-jwt

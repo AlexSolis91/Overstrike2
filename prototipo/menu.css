@@ -1121,3 +1121,19 @@ body.social-min #soc-abrir { display: block; }
 .dlg-caja h2 { font-size: 22px; color: var(--gold, #f3d58a); }
 .dlg-texto { margin: 8px 0 18px; font-size: 14px; line-height: 1.5; color: var(--text, #e5e7eb); white-space: pre-line; text-align: center; max-height: 55vh; overflow-y: auto; }
 @keyframes dlg-entra { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+
+/* Novedades (js/ui/novedades.js) */
+.nov-caja { width: min(640px, 94vw); text-align: left; }
+.nov-caja h2 { text-align: center; color: var(--gold, #f3d58a); font-size: 24px; }
+.nov-lista { max-height: 62vh; overflow-y: auto; margin: 10px 0 16px; padding-right: 6px; }
+.nov-entrada h3 { margin: 6px 0 8px; font: 800 16px Inter, sans-serif; color: var(--text, #e5e7eb); }
+.nov-entrada h3 small { font-weight: 600; font-size: 12px; color: var(--muted); margin-left: 6px; }
+.nov-entrada ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.nov-entrada li { font-size: 13.5px; line-height: 1.45; color: #d1d5db; padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, .04); border-left: 3px solid #64748b; }
+.nov-entrada li b { display: block; font-size: 11px; letter-spacing: .03em; margin-bottom: 2px; }
+.nov-entrada li.nov-nuevo { border-left-color: #bef264; } .nov-entrada li.nov-nuevo b { color: #bef264; }
+.nov-entrada li.nov-cambio { border-left-color: #fbbf24; } .nov-entrada li.nov-cambio b { color: #fbbf24; }
+.nov-entrada li.nov-mejora { border-left-color: #7dd3fc; } .nov-entrada li.nov-mejora b { color: #7dd3fc; }
+.nov-antes { margin: 18px 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); border-top: 1px solid rgba(255, 255, 255, .1); padding-top: 10px; }
+#btn-novedades.nov-nueva { position: relative; }
+#btn-novedades.nov-nueva::after { content: ''; position: absolute; top: 3px; right: 3px; width: 9px; height: 9px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 6px #ef4444; }

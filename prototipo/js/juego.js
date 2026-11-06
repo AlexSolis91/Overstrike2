@@ -38,6 +38,7 @@ import { supabase } from './servicios/supabase.js';
 import { RELIQUIAS, RAREZAS } from './datos/reliquias.js';
 import { liga } from './datos/arena.js';
 import { confirmar } from './ui/dialogo.js';
+import { iniciarNovedades, revisarNovedades } from './ui/novedades.js';
 
 const { gsap } = window;
 const $ = s => document.querySelector(s);
@@ -62,6 +63,7 @@ await precargar(
   (n, total) => { $('#loading-bar').style.width = `${n / total * 100}%`; $('#loading-text').textContent = `Cargando imágenes ${n}/${total}`; },
 );
 const ld = $('#loading'); ld.classList.add('fade'); setTimeout(() => ld.remove(), 500);
+iniciarNovedades(); setTimeout(revisarNovedades, 1200);   // "Qué cambió": se abre sola si hay una novedad sin ver
 
 // ---------------------------------------------------------------- partida (se crea con los equipos elegidos)
 let combate = null, P = [], ui = { ocupado: true }, vistas = {}, cartas = {};
