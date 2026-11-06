@@ -17,7 +17,7 @@ export const furiaAcumulada = ronda => {
 // Cofres 1–4 del Jefe de Raid (solo visual; sin imagen se muestra 🧰)
 export const COFRES_RAID = [
   { nombre: 'Cofre de Madera', imagen: 'assets/cofres/cofre-de-madera.webp' },
-  { nombre: 'Cofre de Plata', imagen: null },
+  { nombre: 'Cofre de Plata', imagen: 'assets/cofres/cofre-de-plata.webp' },
   { nombre: 'Cofre de Oro', imagen: null },
   { nombre: 'Cofre Arcano', imagen: null },
 ];

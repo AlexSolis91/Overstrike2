@@ -79,7 +79,7 @@ def fondo_estimado(rgb: np.ndarray):
     return None
 
 
-def quitar_fondo(rgb: np.ndarray, c1: np.ndarray, c2: np.ndarray) -> np.ndarray:
+def quitar_fondo(rgb: np.ndarray, c1: np.ndarray, c2: np.ndarray, solo_borde: bool = False) -> np.ndarray:
     """Devuelve RGBA. El fondo son píxeles cercanos al segmento c1–c2 (incluye las mezclas de
     las uniones del cuadriculado) conectados en regiones grandes. En los bordes se estima una
     transparencia parcial y se recupera el color real (brillos, rayos, humo)."""
@@ -95,6 +95,9 @@ def quitar_fondo(rgb: np.ndarray, c1: np.ndarray, c2: np.ndarray) -> np.ndarray:
     if n:
         sizes = ndimage.sum(cand, lab, range(1, n + 1))
         bg = np.isin(lab, np.nonzero(sizes > 150)[0] + 1)
+        if solo_borde:   # solo el fondo que toca el borde: conserva brillos blancos dentro de la figura (p. ej. metal)
+            toca = np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))
+            bg &= np.isin(lab, toca[toca > 0])
     else:
         bg = np.zeros_like(cand)
 
@@ -171,7 +174,7 @@ def desvanecer_cortes(rgba: Image.Image) -> Image.Image:
 LUMINOSAS: set[str] = set()
 
 
-def recorte_transparente(src: Path, dst: Path, size: int) -> str:
+def recorte_transparente(src: Path, dst: Path, size: int, solo_borde: bool = False) -> str:
     im = ImageOps.exif_transpose(Image.open(src))
     if im.mode in ('RGBA', 'LA', 'P') and np.asarray(im.convert('RGBA'))[..., 3].min() < 250:
         rgba, nota = im.convert('RGBA'), 'ya tenía transparencia'
@@ -190,7 +193,7 @@ def recorte_transparente(src: Path, dst: Path, size: int) -> str:
         elif res is not None:
             rgba, nota = Image.fromarray(res, 'RGBA'), 'fondo quitado (cuadriculado falso)'
         elif f:
-            rgba, nota = Image.fromarray(quitar_fondo(rgb, f[0], f[1]), 'RGBA'), f'fondo quitado ({f[2]})'
+            rgba, nota = Image.fromarray(quitar_fondo(rgb, f[0], f[1], solo_borde), 'RGBA'), f'fondo quitado ({f[2]})'
         else:
             rgba, nota = im.convert('RGBA'), 'fondo NO reconocido, se deja igual'
 
@@ -213,7 +216,7 @@ def main():
         ('transformaciones', personaje),
         ('horda', personaje),                 # enemigos de la Horda (mismo recorte que los campeones)
         ('invocaciones', lambda a, b: recorte_transparente(a, b, INVOCACION_SIZE)),
-        ('cofres', lambda a, b: recorte_transparente(a, b, COFRE_SIZE)),   # cofres del Jefe de Raid (fondo quitado)
+        ('cofres', lambda a, b: recorte_transparente(a, b, COFRE_SIZE, solo_borde=True)),   # cofres del Jefe de Raid (fondo quitado)
         # reliquias: las monta herramientas/marcos_reliquias.py dentro del marco de su rareza
     ]
     hechas = 0
