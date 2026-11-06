@@ -136,7 +136,7 @@ const EFECTOS = {
   stun:    { nombre: 'Aturdimiento', mega: 'Mega Aturdimiento', icono: '💫', color: 0xfacc15, tipo: 'debuff', tags: ['Control'],
     desc: `Pierde su próximo turno. Mega Aturdimiento: 2 turnos.` },
   freeze:  { nombre: 'Congelación',  mega: 'Mega Congelación',  icono: '❄️', color: 0x7dd3fc, tipo: 'debuff', tags: ['Control'],
-    desc: `Bloque de hielo de 1 capa y −${p(CONTROL.congelacionVel)} Velocidad (${CONTROL.durCongelacion} rondas). Si llega a su turno con hielo, lo pierde. Cada golpe rompe 1 capa (+${p(CONTROL.quiebreCongelacion)} de daño). Congelar a alguien congelado = Mega: 2 capas y −${p(CONTROL.congelacionVel * 2)} Velocidad.` },
+    desc: `Bloque de hielo de 1 capa y −${p(CONTROL.congelacionVel)} Velocidad (${CONTROL.durCongelacion} rondas). Si llega a su turno con hielo, lo pierde. Cada golpe rompe 1 capa (+${p(CONTROL.quiebreCongelacion)} de daño). Congelar a alguien congelado = Mega: 2 capas y −${p(CONTROL.congelacionVel * 2)} Velocidad. A quien es inmune al Control le entra sin hielo: nunca pierde el turno, solo baja su Velocidad.` },
   possess: { nombre: 'Posesión',     mega: 'Mega Posesión',     icono: '👁️', color: 0xc084fc, tipo: 'debuff', tags: ['Control'],
     desc: `En su turno ataca a un aliado suyo al azar con su Básico. Mega Posesión: 2 turnos.` },
   confuse: { nombre: 'Confusión',    icono: '🌀', color: 0xf0abfc, tipo: 'debuff', tags: ['Control'],
@@ -784,7 +784,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           texto = e.id === 'possess' ? `Ataca a sus aliados · ${e.turnos} turno(s)` : `Pierde ${e.turnos} turno(s)`;
           n = e.turnos; break;
         case 'freeze':
-          texto = `${e.capas ? `${e.capas} capa(s) de hielo: pierde su turno si no las rompen (cada golpe rompe 1, +${Math.round(CONTROL.quiebreCongelacion * 100)}% daño)` : 'Hielo roto: puede actuar'} · −${Math.round(CONTROL.congelacionVel * (e.mega ? 200 : 100))}% Velocidad · ${e.dur} ronda(s)`;
+          texto = `${e.capas ? `${e.capas} capa(s) de hielo: pierde su turno si no las rompen (cada golpe rompe 1, +${Math.round(CONTROL.quiebreCongelacion * 100)}% daño)` : e.sinHielo ? 'Sin hielo (inmune al Control): no pierde el turno' : 'Hielo roto: puede actuar'} · −${Math.round(CONTROL.congelacionVel * (e.mega ? 200 : 100))}% Velocidad · ${e.dur} ronda(s)`;
           n = e.capas || e.dur; break;
         case 'silence': texto = `No puede usar su ${NOMBRE_CAT[e.categoria]} · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'blind': texto = `−${Math.round(DEBUFFS.ceguera * 100)}% Puntería · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -1825,10 +1825,19 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
 
   function aplicarEfecto(a, t, acc) {
     // Protección contra el bloqueo infinito: aplica a CUALQUIER vía (movimientos, pasivas, efectos garantizados)
-    if (t.inmune && (CONTROL.pierdeTurno.includes(acc.id) || acc.id === 'silence')) { emitir('inmune', { a: t.uid }); return; }
+    // Congelación contra inmunidad al Control: entra SIN hielo (nunca pierde el turno), solo baja la Velocidad.
+    // La inmunidad específica a Congelación (pasiva o reliquia) o a todos los debuffs sí la bloquea.
+    let sinHielo = false;
+    if (t.inmune && (CONTROL.pierdeTurno.includes(acc.id) || acc.id === 'silence')) {
+      if (acc.id === 'freeze') sinHielo = true;
+      else { emitir('inmune', { a: t.uid }); return; }
+    }
     for (const m of pasivasDeReliquia(t)) if (m.inmuneA?.includes(acc.id)) { emitir('inmune', { a: t.uid, texto: `Inmune a ${EFECTOS[acc.id].nombre}` }); return; }   // reliquia (p. ej. Escudo Hyliano)
     const inm = t.pasiva?.inmuneA;
-    if (inm && (inm.includes(acc.id) || EFECTOS[acc.id].tags.some(tag => inm.includes(tag)) || (inm.includes('debuff') && EFECTOS[acc.id].tipo === 'debuff'))) { emitir('inmune', { a: t.uid, texto: `Inmune a ${EFECTOS[acc.id].nombre}` }); return; }
+    if (inm && (inm.includes(acc.id) || EFECTOS[acc.id].tags.some(tag => inm.includes(tag)) || (inm.includes('debuff') && EFECTOS[acc.id].tipo === 'debuff'))) {
+      if (acc.id === 'freeze' && !inm.includes('freeze') && !inm.includes('debuff')) sinHielo = true;   // solo inmune al Control
+      else { emitir('inmune', { a: t.uid, texto: `Inmune a ${EFECTOS[acc.id].nombre}` }); return; }
+    }
     const sa = stats(a);
     const def = EFECTOS[acc.id];
     if (def.tipo === 'buff' && get(t, 'blockBuffs')) { emitir('sinEfecto', { a: t.uid, texto: '🚫 Buffs bloqueados' }); return; }
@@ -1890,9 +1899,9 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       case 'freeze': {          // 1 capa (−25% Vel). Congelar a quien ya está congelado = Mega (2 capas, −50%). A una Mega no le hace nada
         const e = get(t, 'freeze'), dur = acc.dur ?? CONTROL.durCongelacion;
         if (e?.mega) { emitir('sinEfecto', { a: t.uid, texto: 'Ya tiene Mega Congelación' }); return; }
-        if (e) Object.assign(e, { mega: true, capas: 2, dur });
-        else t.estados.push({ id: 'freeze', mega: !!acc.mega, capas: acc.capas ?? (acc.mega ? 2 : 1), dur });
-        texto = get(t, 'freeze').mega ? def.mega : def.nombre;
+        if (e) Object.assign(e, { mega: true, capas: sinHielo ? 0 : 2, dur, sinHielo });
+        else t.estados.push({ id: 'freeze', mega: !!acc.mega, capas: sinHielo ? 0 : acc.capas ?? (acc.mega ? 2 : 1), dur, sinHielo });
+        texto = `${get(t, 'freeze').mega ? def.mega : def.nombre}${sinHielo ? ' (sin hielo)' : ''}`;
         break;
       }
       case 'silence': {        // bloquea al azar uno de sus movimientos que NO esté en cooldown
@@ -8221,8 +8230,8 @@ __e.default = {
   ciclo: ['especial', 'basico', 'especial', 'basico', 'over'],   // siempre en este orden; la pantalla muestra lo que sigue
   pasiva: {
     nombre: 'Cosecha de Almas',
-    desc: 'Inmune a todo Control. Cada campeón que cae alimenta a Frostmourne: +10% de Daño permanente, hasta +40%.',
-    inmuneA: ['Control'],
+    desc: 'Inmune a todo Control y a la Congelación. Cada campeón que cae alimenta a Frostmourne: +10% de Daño permanente, hasta +40%.',
+    inmuneA: ['Control', 'freeze'],
     gatillo: 'alMorirEnemigo',
     accion: { tipo: 'bonoPermanente', stat: 'dmgPct', pct: .10, tope: .40, a: 'propio' },
   },
@@ -8278,7 +8287,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 7;
+const REGLAS_RAID = 8;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad

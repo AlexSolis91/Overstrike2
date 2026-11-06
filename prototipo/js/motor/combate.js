@@ -223,7 +223,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           texto = e.id === 'possess' ? `Ataca a sus aliados · ${e.turnos} turno(s)` : `Pierde ${e.turnos} turno(s)`;
           n = e.turnos; break;
         case 'freeze':
-          texto = `${e.capas ? `${e.capas} capa(s) de hielo: pierde su turno si no las rompen (cada golpe rompe 1, +${Math.round(CONTROL.quiebreCongelacion * 100)}% daño)` : 'Hielo roto: puede actuar'} · −${Math.round(CONTROL.congelacionVel * (e.mega ? 200 : 100))}% Velocidad · ${e.dur} ronda(s)`;
+          texto = `${e.capas ? `${e.capas} capa(s) de hielo: pierde su turno si no las rompen (cada golpe rompe 1, +${Math.round(CONTROL.quiebreCongelacion * 100)}% daño)` : e.sinHielo ? 'Sin hielo (inmune al Control): no pierde el turno' : 'Hielo roto: puede actuar'} · −${Math.round(CONTROL.congelacionVel * (e.mega ? 200 : 100))}% Velocidad · ${e.dur} ronda(s)`;
           n = e.capas || e.dur; break;
         case 'silence': texto = `No puede usar su ${NOMBRE_CAT[e.categoria]} · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'blind': texto = `−${Math.round(DEBUFFS.ceguera * 100)}% Puntería · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -1264,10 +1264,19 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
 
   function aplicarEfecto(a, t, acc) {
     // Protección contra el bloqueo infinito: aplica a CUALQUIER vía (movimientos, pasivas, efectos garantizados)
-    if (t.inmune && (CONTROL.pierdeTurno.includes(acc.id) || acc.id === 'silence')) { emitir('inmune', { a: t.uid }); return; }
+    // Congelación contra inmunidad al Control: entra SIN hielo (nunca pierde el turno), solo baja la Velocidad.
+    // La inmunidad específica a Congelación (pasiva o reliquia) o a todos los debuffs sí la bloquea.
+    let sinHielo = false;
+    if (t.inmune && (CONTROL.pierdeTurno.includes(acc.id) || acc.id === 'silence')) {
+      if (acc.id === 'freeze') sinHielo = true;
+      else { emitir('inmune', { a: t.uid }); return; }
+    }
     for (const m of pasivasDeReliquia(t)) if (m.inmuneA?.includes(acc.id)) { emitir('inmune', { a: t.uid, texto: `Inmune a ${EFECTOS[acc.id].nombre}` }); return; }   // reliquia (p. ej. Escudo Hyliano)
     const inm = t.pasiva?.inmuneA;
-    if (inm && (inm.includes(acc.id) || EFECTOS[acc.id].tags.some(tag => inm.includes(tag)) || (inm.includes('debuff') && EFECTOS[acc.id].tipo === 'debuff'))) { emitir('inmune', { a: t.uid, texto: `Inmune a ${EFECTOS[acc.id].nombre}` }); return; }
+    if (inm && (inm.includes(acc.id) || EFECTOS[acc.id].tags.some(tag => inm.includes(tag)) || (inm.includes('debuff') && EFECTOS[acc.id].tipo === 'debuff'))) {
+      if (acc.id === 'freeze' && !inm.includes('freeze') && !inm.includes('debuff')) sinHielo = true;   // solo inmune al Control
+      else { emitir('inmune', { a: t.uid, texto: `Inmune a ${EFECTOS[acc.id].nombre}` }); return; }
+    }
     const sa = stats(a);
     const def = EFECTOS[acc.id];
     if (def.tipo === 'buff' && get(t, 'blockBuffs')) { emitir('sinEfecto', { a: t.uid, texto: '🚫 Buffs bloqueados' }); return; }
@@ -1329,9 +1338,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       case 'freeze': {          // 1 capa (−25% Vel). Congelar a quien ya está congelado = Mega (2 capas, −50%). A una Mega no le hace nada
         const e = get(t, 'freeze'), dur = acc.dur ?? CONTROL.durCongelacion;
         if (e?.mega) { emitir('sinEfecto', { a: t.uid, texto: 'Ya tiene Mega Congelación' }); return; }
-        if (e) Object.assign(e, { mega: true, capas: 2, dur });
-        else t.estados.push({ id: 'freeze', mega: !!acc.mega, capas: acc.capas ?? (acc.mega ? 2 : 1), dur });
-        texto = get(t, 'freeze').mega ? def.mega : def.nombre;
+        if (e) Object.assign(e, { mega: true, capas: sinHielo ? 0 : 2, dur, sinHielo });
+        else t.estados.push({ id: 'freeze', mega: !!acc.mega, capas: sinHielo ? 0 : acc.capas ?? (acc.mega ? 2 : 1), dur, sinHielo });
+        texto = `${get(t, 'freeze').mega ? def.mega : def.nombre}${sinHielo ? ' (sin hielo)' : ''}`;
         break;
       }
       case 'silence': {        // bloquea al azar uno de sus movimientos que NO esté en cooldown

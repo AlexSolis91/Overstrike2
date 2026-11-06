@@ -22,7 +22,7 @@ export const EFECTOS = {
   stun:    { nombre: 'Aturdimiento', mega: 'Mega Aturdimiento', icono: '💫', color: 0xfacc15, tipo: 'debuff', tags: ['Control'],
     desc: `Pierde su próximo turno. Mega Aturdimiento: 2 turnos.` },
   freeze:  { nombre: 'Congelación',  mega: 'Mega Congelación',  icono: '❄️', color: 0x7dd3fc, tipo: 'debuff', tags: ['Control'],
-    desc: `Bloque de hielo de 1 capa y −${p(CONTROL.congelacionVel)} Velocidad (${CONTROL.durCongelacion} rondas). Si llega a su turno con hielo, lo pierde. Cada golpe rompe 1 capa (+${p(CONTROL.quiebreCongelacion)} de daño). Congelar a alguien congelado = Mega: 2 capas y −${p(CONTROL.congelacionVel * 2)} Velocidad.` },
+    desc: `Bloque de hielo de 1 capa y −${p(CONTROL.congelacionVel)} Velocidad (${CONTROL.durCongelacion} rondas). Si llega a su turno con hielo, lo pierde. Cada golpe rompe 1 capa (+${p(CONTROL.quiebreCongelacion)} de daño). Congelar a alguien congelado = Mega: 2 capas y −${p(CONTROL.congelacionVel * 2)} Velocidad. A quien es inmune al Control le entra sin hielo: nunca pierde el turno, solo baja su Velocidad.` },
   possess: { nombre: 'Posesión',     mega: 'Mega Posesión',     icono: '👁️', color: 0xc084fc, tipo: 'debuff', tags: ['Control'],
     desc: `En su turno ataca a un aliado suyo al azar con su Básico. Mega Posesión: 2 turnos.` },
   confuse: { nombre: 'Confusión',    icono: '🌀', color: 0xf0abfc, tipo: 'debuff', tags: ['Control'],

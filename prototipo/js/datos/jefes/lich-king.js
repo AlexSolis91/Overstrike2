@@ -15,8 +15,8 @@ export default {
   ciclo: ['especial', 'basico', 'especial', 'basico', 'over'],   // siempre en este orden; la pantalla muestra lo que sigue
   pasiva: {
     nombre: 'Cosecha de Almas',
-    desc: 'Inmune a todo Control. Cada campeón que cae alimenta a Frostmourne: +10% de Daño permanente, hasta +40%.',
-    inmuneA: ['Control'],
+    desc: 'Inmune a todo Control y a la Congelación. Cada campeón que cae alimenta a Frostmourne: +10% de Daño permanente, hasta +40%.',
+    inmuneA: ['Control', 'freeze'],
     gatillo: 'alMorirEnemigo',
     accion: { tipo: 'bonoPermanente', stat: 'dmgPct', pct: .10, tope: .40, a: 'propio' },
   },
