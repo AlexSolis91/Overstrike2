@@ -120,7 +120,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | Debuff | Etiquetas | Cuándo hace daño | Regla |
 |---|---|---|---|
 | 🔥 Quemadura | DoT, Fuego | Inicio del turno | % HP máx. × (1 + Daño DoT). Una nueva deja la más fuerte + 10% de la más débil y reinicia la duración. Sin tope |
-| 🧪 Veneno | DoT, Veneno | Inicio del turno | Hasta 5 acumulaciones independientes (valor provisional: 2% + 5% Daño DoT) |
+| 🧪 Veneno | DoT, Veneno | Inicio del turno | **Escalonado**: cada Veneno vale 2% + 5% del Daño DoT de quien lo aplicó; las acumulaciones **no se suman**: el daño es el Veneno más alto × **1.5^(acumulaciones − 1)** (`DOT.multVeneno`). Hasta **10** acumulaciones (pasiva `venenoMax` las sube, p. ej. Orochimaru); al tope, un Veneno nuevo refresca el más débil. `activarDoT` usa el mismo cálculo |
 | 🩸 Sangrado | DoT, Sangrado | Cada golpe recibido | 3% + 10% Daño DoT. No se acumula (se queda el más alto). Sin duración. Si ya sangraba y recibe otro: 30% de convertirse en Hemorragia |
 | 🩸 Hemorragia | DoT, Sangrado | Cada golpe recibido **y** cada movimiento propio | Crece +1 punto por golpe recibido. Sin duración. Un Sangrado nuevo no le hace nada |
 | 💣 Bomba | DoT, Explosivo | Al llegar a 0 su contador | Máx. 3. Salpica 25% a los aliados del objetivo. Si el portador muere, explota solo la salpicadura. Limpiar la desactiva |

@@ -11,7 +11,7 @@ export const EFECTOS = {
   burn:    { nombre: 'Quemadura',   icono: '🔥', color: 0xff7a2a, tipo: 'debuff', tags: ['DoT', 'Fuego'],
     desc: `Al inicio de su turno pierde un % de su HP máx. (según quien la aplicó; sube con Daño DoT). Ignora Armadura y Escudo. Si recibe otra, se fusionan: queda la más fuerte + ${p(DOT.quemaduraSuma)} de la más débil.` },
   poison:  { nombre: 'Veneno',      icono: '🧪', color: 0x7ee36b, tipo: 'debuff', tags: ['DoT', 'Veneno'],
-    desc: `Al inicio de su turno pierde ${p(DOT.veneno(0))} de su HP máx. por cada Veneno (sube con Daño DoT). Se acumulan hasta ${DOT.maxVeneno}; cada uno dura ${DOT.durVeneno} rondas. Ignora Armadura y Escudo.` },
+    desc: `Al inicio de su turno pierde ${p(DOT.veneno(0))} de su HP máx. (+5% del Daño DoT de quien lo aplicó). Las acumulaciones no se suman: el Veneno más alto se multiplica ×${DOT.multVeneno} por cada acumulación extra (2 = ×${DOT.multVeneno}, 3 = ×${Math.round(DOT.multVeneno ** 2 * 100) / 100}…). Se acumulan hasta ${DOT.maxVeneno}; cada uno dura ${DOT.durVeneno} rondas. Ignora Armadura y Escudo.` },
   bleed:   { nombre: 'Sangrado',    icono: '🩸', color: 0xff3355, tipo: 'debuff', tags: ['DoT', 'Sangrado'],
     desc: `Cada golpe que recibe le quita además ${p(DOT.sangrado(0))} de su HP máx. (sube con Daño DoT). Dura hasta que lo limpien. Si recibe otro Sangrado, ${p(DOT.hemorragiaProb)} de convertirse en Hemorragia.` },
   hemo:    { nombre: 'Hemorragia',  icono: '🩸', color: 0xffd36b, tipo: 'debuff', tags: ['DoT', 'Sangrado'],

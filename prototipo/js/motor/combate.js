@@ -289,7 +289,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     }
     const ven = todos(p, 'poison');
     if (ven.length) out.push(grupo('poison', { nombre: `Veneno ×${ven.length}`, n: ven.length,
-      texto: `${pctTxt(ven.reduce((s, x) => s + x.valor, 0))} por turno · duraciones: ${ven.map(x => x.dur).join(', ')}` }));
+      texto: `${pctTxt(danoVeneno(ven))} por turno · duraciones: ${ven.map(x => x.dur).join(', ')}` }));
     const bom = todos(p, 'bomb');
     if (bom.length) out.push(grupo('bomb', { nombre: bom.length > 1 ? `Bomba ×${bom.length}` : 'Bomba', n: Math.min(...bom.map(x => x.contador)),
       texto: `Explota en ${bom.map(x => x.contador).join(', ')} ronda(s) · ${pctTxt(bom[0].valor)} HP máx. + 25% a sus aliados` }));
@@ -411,12 +411,15 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     emitir('finRonda', {}, ...P);
   }
 
+  // Veneno escalonado: el más alto de la pila × multVeneno^(acumulaciones − 1)
+  const danoVeneno = l => Math.max(...l.map(x => x.valor)) * DOT.multVeneno ** (l.length - 1);
+
   function inicioTurno(p) {
     if (get(p, 'regen')) curar(p, p, maxHp(p) * BUFFS.regeneracion);
     const q = get(p, 'burn');
     if (q) danoDoT(p, q.valor, 'burn', fuentesDe([q]));
     const v = todos(p, 'poison');
-    if (v.length && !p.muerto) danoDoT(p, v.reduce((s, x) => s + x.valor, 0), 'poison', fuentesDe(v));
+    if (v.length && !p.muerto) danoDoT(p, danoVeneno(v), 'poison', fuentesDe(v));
     const ag = get(p, 'aguja');                                   // Agujas Escarlata: la agonía crece con cada aguja
     if (ag && !p.muerto) danoDoT(p, ag.valor * DEBUFFS.agujaTurno, 'aguja', fuentesDe([ag]));
   }
@@ -1513,8 +1516,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'activarDoT': {           // hace el daño de un DoT al instante sin consumirlo (cuenta como daño DoT)
-          const l = todos(t, acc.efecto);           // todas las acumulaciones (p. ej. 5 Venenos)
-          if (l.length) danoDoT(t, l.reduce((s, x) => s + x.valor, 0), acc.efecto, a);
+          const l = todos(t, acc.efecto);           // todas las acumulaciones (Veneno: escalonado como al inicio del turno)
+          if (l.length) danoDoT(t, acc.efecto === 'poison' ? danoVeneno(l) : l.reduce((s, x) => s + x.valor, 0), acc.efecto, a);
           break;
         }
         case 'extenderDuracion': {

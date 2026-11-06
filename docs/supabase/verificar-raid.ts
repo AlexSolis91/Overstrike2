@@ -90,7 +90,8 @@ const DOT = {
   sangrado: dot => .03 + .10 * dot,
   bomba: dot => .20 * (1 + dot),
   quemadura: (base, dot) => base * (1 + dot),
-  maxVeneno: 5, durVeneno: 3,
+  maxVeneno: 10, durVeneno: 3,
+  multVeneno: 1.5,   // Veneno escalonado: daño = el Veneno más alto × 1.5 por cada acumulación extra (no se suman)
   maxBombas: 3, contadorBomba: 2, salpicaduraBomba: .25,
   hemorragiaProb: .30, hemorragiaCrece: .01,
   quemaduraSuma: .10,         // una quemadura nueva suma el 10% de la más débil
@@ -124,7 +125,7 @@ const EFECTOS = {
   burn:    { nombre: 'Quemadura',   icono: '🔥', color: 0xff7a2a, tipo: 'debuff', tags: ['DoT', 'Fuego'],
     desc: `Al inicio de su turno pierde un % de su HP máx. (según quien la aplicó; sube con Daño DoT). Ignora Armadura y Escudo. Si recibe otra, se fusionan: queda la más fuerte + ${p(DOT.quemaduraSuma)} de la más débil.` },
   poison:  { nombre: 'Veneno',      icono: '🧪', color: 0x7ee36b, tipo: 'debuff', tags: ['DoT', 'Veneno'],
-    desc: `Al inicio de su turno pierde ${p(DOT.veneno(0))} de su HP máx. por cada Veneno (sube con Daño DoT). Se acumulan hasta ${DOT.maxVeneno}; cada uno dura ${DOT.durVeneno} rondas. Ignora Armadura y Escudo.` },
+    desc: `Al inicio de su turno pierde ${p(DOT.veneno(0))} de su HP máx. (+5% del Daño DoT de quien lo aplicó). Las acumulaciones no se suman: el Veneno más alto se multiplica ×${DOT.multVeneno} por cada acumulación extra (2 = ×${DOT.multVeneno}, 3 = ×${Math.round(DOT.multVeneno ** 2 * 100) / 100}…). Se acumulan hasta ${DOT.maxVeneno}; cada uno dura ${DOT.durVeneno} rondas. Ignora Armadura y Escudo.` },
   bleed:   { nombre: 'Sangrado',    icono: '🩸', color: 0xff3355, tipo: 'debuff', tags: ['DoT', 'Sangrado'],
     desc: `Cada golpe que recibe le quita además ${p(DOT.sangrado(0))} de su HP máx. (sube con Daño DoT). Dura hasta que lo limpien. Si recibe otro Sangrado, ${p(DOT.hemorragiaProb)} de convertirse en Hemorragia.` },
   hemo:    { nombre: 'Hemorragia',  icono: '🩸', color: 0xffd36b, tipo: 'debuff', tags: ['DoT', 'Sangrado'],
@@ -849,7 +850,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     }
     const ven = todos(p, 'poison');
     if (ven.length) out.push(grupo('poison', { nombre: `Veneno ×${ven.length}`, n: ven.length,
-      texto: `${pctTxt(ven.reduce((s, x) => s + x.valor, 0))} por turno · duraciones: ${ven.map(x => x.dur).join(', ')}` }));
+      texto: `${pctTxt(danoVeneno(ven))} por turno · duraciones: ${ven.map(x => x.dur).join(', ')}` }));
     const bom = todos(p, 'bomb');
     if (bom.length) out.push(grupo('bomb', { nombre: bom.length > 1 ? `Bomba ×${bom.length}` : 'Bomba', n: Math.min(...bom.map(x => x.contador)),
       texto: `Explota en ${bom.map(x => x.contador).join(', ')} ronda(s) · ${pctTxt(bom[0].valor)} HP máx. + 25% a sus aliados` }));
@@ -971,12 +972,15 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     emitir('finRonda', {}, ...P);
   }
 
+  // Veneno escalonado: el más alto de la pila × multVeneno^(acumulaciones − 1)
+  const danoVeneno = l => Math.max(...l.map(x => x.valor)) * DOT.multVeneno ** (l.length - 1);
+
   function inicioTurno(p) {
     if (get(p, 'regen')) curar(p, p, maxHp(p) * BUFFS.regeneracion);
     const q = get(p, 'burn');
     if (q) danoDoT(p, q.valor, 'burn', fuentesDe([q]));
     const v = todos(p, 'poison');
-    if (v.length && !p.muerto) danoDoT(p, v.reduce((s, x) => s + x.valor, 0), 'poison', fuentesDe(v));
+    if (v.length && !p.muerto) danoDoT(p, danoVeneno(v), 'poison', fuentesDe(v));
     const ag = get(p, 'aguja');                                   // Agujas Escarlata: la agonía crece con cada aguja
     if (ag && !p.muerto) danoDoT(p, ag.valor * DEBUFFS.agujaTurno, 'aguja', fuentesDe([ag]));
   }
@@ -2073,8 +2077,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           break;
         }
         case 'activarDoT': {           // hace el daño de un DoT al instante sin consumirlo (cuenta como daño DoT)
-          const l = todos(t, acc.efecto);           // todas las acumulaciones (p. ej. 5 Venenos)
-          if (l.length) danoDoT(t, l.reduce((s, x) => s + x.valor, 0), acc.efecto, a);
+          const l = todos(t, acc.efecto);           // todas las acumulaciones (Veneno: escalonado como al inicio del turno)
+          if (l.length) danoDoT(t, acc.efecto === 'poison' ? danoVeneno(l) : l.reduce((s, x) => s + x.valor, 0), acc.efecto, a);
           break;
         }
         case 'extenderDuracion': {
@@ -5638,7 +5642,7 @@ __m["datos/personajes/orochimaru.js"] = (() => { const __e: any = {};
 const { espacios } = __m["datos/reliquias.js"];
 
 // Ficha oficial #37 (2026-10-15). Orochimaru, el Sannin de las Serpientes. Nido de Serpientes: mientras viva, los Venenos de su
-// equipo se acumulan hasta 8 (en vez de 5) y se cura con cada Veneno que hace daño (Muda de Piel). Over: Edo Tensei (sin daño):
+// equipo se acumulan hasta 12 (en vez de 10) y se cura con cada Veneno que hace daño (Muda de Piel). Over: Edo Tensei (sin daño):
 // reanima hasta 2 aliados caídos, que no pueden morir mientras Orochimaru viva y envenenan con sus golpes. Líder de Otogakure.
 // Sello Maldito del Cielo: marca con bono a él y a cada aliado envenenador; su equipo hace +25% a envenenados.
 __e.default = {
@@ -5660,8 +5664,8 @@ __e.default = {
   },
   pasiva: {
     nombre: 'Nido de Serpientes',
-    desc: 'Sello Maldito del Cielo: al empezar la partida, Orochimaru y cada aliado que aplique Veneno reciben el Sello Maldito (+15% de Daño, +12% de HP máx. y +10% de Velocidad toda la partida). Todo su equipo hace +25% de daño a enemigos envenenados. Veneno de Manda: mientras Orochimaru viva, los Venenos que aplique su equipo se acumulan hasta 8 (en vez de 5). Muda de Piel: cada vez que un Veneno hace daño a un enemigo, Orochimaru se cura 5% de su HP máx. (sin límite de veces).',
-    venenoMax: 8,
+    desc: 'Sello Maldito del Cielo: al empezar la partida, Orochimaru y cada aliado que aplique Veneno reciben el Sello Maldito (+15% de Daño, +12% de HP máx. y +10% de Velocidad toda la partida). Todo su equipo hace +25% de daño a enemigos envenenados. Veneno de Manda: mientras Orochimaru viva, los Venenos que aplique su equipo se acumulan hasta 12 (en vez de 10). Muda de Piel: cada vez que un Veneno hace daño a un enemigo, Orochimaru se cura 5% de su HP máx. (sin límite de veces).',
+    venenoMax: 12,
     auraContra: { efecto: 'poison', pct: .25 },
     marcaAliadosQueAplican: { efecto: 'poison', marca: 'selloMaldito', bono: { dmgPct: .15, hpPct: .12, spdPct: .10 } },
     gatillo: 'alDanoDoT', filtro: { tipo: 'poison', en: 'enemigos' },
@@ -8274,7 +8278,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 6;
+const REGLAS_RAID = 7;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad
