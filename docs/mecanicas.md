@@ -507,7 +507,7 @@ Pantalla: al iniciar sesión por primera vez (ver sección 19).
   - **Blazing:** Alexstrasza, Rhaenys Targaryen, Rengoku, Daenerys Targaryen, Scorpion, Antares, Ghost Rider.
   - **Frostborn:** Sub-Zero, Lich King, Jaina Proudmoore, Camus (4 exclusivos: el pack saca 3 al azar). ⚠️ Simulación 2026-10-09: Frostborn 67.7% contra equipos al azar; Blazing 33.5% y Noxious 39.0% (sus exclusivos son de los campeones más débiles). Revisar en el pase de balance antes de abrir el juego.
   - **Noxious:** The Joker, Reptile, Loki, Milo, Orochimaru, Sasori.
-  - **Libres:** Goku, Sun Jin Woo, Shaka, Batman, Aldebarán, Thor, Madara Uchiha.
+  - **Libres:** Goku, Sun Jin Woo, Shaka, Batman, Aldebarán, Thor, Madara.
 - Al crear un campeón nuevo se decide si es exclusivo de algún pack.
 
 ## 18. Sobres de la tienda
@@ -516,7 +516,7 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
 
 - Cada campeón declara en su ficha `sobres: [...]`: puede estar en **varios**. Los campeones de los Starter Packs **también** están en sobres; el Starter Pack es un arranque único, no se compra.
 - **Sobres actuales** (`activo: true/false` = si se ven en la tienda; por temporada):
-  - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Scorpion, Kratos, Sasuke Uchiha, Milo.
+  - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Scorpion, Kratos, Sasuke, Milo.
   - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King, Doctor Doom, Skeletor, Saga, Itachi Uchiha.
   - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki, Kratos, Wukong.
   - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema. **Goku, Vegeta, Naruto y He-Man salen solo aquí** (sin sobre temático + «Solo su sobre»).

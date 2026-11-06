@@ -4,10 +4,10 @@ import { espacios } from '../reliquias.js';
 export default {
   id: 'madara-uchiha',
   franquicia: 'Naruto', grupos: ['uchiha', 'renegados'],   // campaña: temas de las etapas
-  nombre: 'Madara Uchiha',
+  nombre: 'Madara',
   rol: 'Daño',
   sobres: ['bloodline', 'phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
-  emoji: '🔥', color: '#b91c1c', imagen: 'assets/personajes/madara-uchiha.webp?v=2',
+  emoji: '🔥', color: '#b91c1c', imagen: 'assets/personajes/madara-uchiha.webp?v=3',
   base: { hp: 750, dmg: 75, spd: 110 },
   extra: {},                                   // secundarias por encima de la base común
   slots: espacios('obsidiana', 'yelmo', 'anilloCobre'),

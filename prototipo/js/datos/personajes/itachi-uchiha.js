@@ -7,7 +7,7 @@ import { espacios } from '../reliquias.js';
 export default {
   id: 'itachi-uchiha',
   franquicia: 'Naruto', grupos: ['uchiha', 'akatsuki', 'konoha'],   // campaña: temas de las etapas
-  nombre: 'Itachi Uchiha',
+  nombre: 'Itachi',
   rol: 'Control', rolSecundario: 'Daño',
   sobres: ['phantom'],
   emoji: '🐦‍⬛', color: '#b91c1c', imagen: 'assets/personajes/itachi-uchiha.webp',

@@ -3357,10 +3357,10 @@ const { espacios } = __m["datos/reliquias.js"];
 __e.default = {
   id: 'madara-uchiha',
   franquicia: 'Naruto', grupos: ['uchiha', 'renegados'],   // campaña: temas de las etapas
-  nombre: 'Madara Uchiha',
+  nombre: 'Madara',
   rol: 'Daño',
   sobres: ['bloodline', 'phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
-  emoji: '🔥', color: '#b91c1c', imagen: 'assets/personajes/madara-uchiha.webp?v=2',
+  emoji: '🔥', color: '#b91c1c', imagen: 'assets/personajes/madara-uchiha.webp?v=3',
   base: { hp: 750, dmg: 75, spd: 110 },
   extra: {},                                   // secundarias por encima de la base común
   slots: espacios('obsidiana', 'yelmo', 'anilloCobre'),
@@ -4825,7 +4825,7 @@ const { espacios } = __m["datos/reliquias.js"];
 __e.default = {
   id: 'sasuke-uchiha',
   franquicia: 'Naruto', grupos: ['uchiha', 'konoha'],   // campaña: temas de las etapas
-  nombre: 'Sasuke Uchiha',
+  nombre: 'Sasuke',
   rol: 'Daño', rolSecundario: 'DoTer',
   sobres: ['bloodline'],
   emoji: '⚡', color: '#7c3aed', imagen: 'assets/personajes/sasuke-uchiha.webp',
@@ -5190,7 +5190,7 @@ const { espacios } = __m["datos/reliquias.js"];
 __e.default = {
   id: 'itachi-uchiha',
   franquicia: 'Naruto', grupos: ['uchiha', 'akatsuki', 'konoha'],   // campaña: temas de las etapas
-  nombre: 'Itachi Uchiha',
+  nombre: 'Itachi',
   rol: 'Control', rolSecundario: 'Daño',
   sobres: ['phantom'],
   emoji: '🐦‍⬛', color: '#b91c1c', imagen: 'assets/personajes/itachi-uchiha.webp',
@@ -6076,7 +6076,7 @@ const { espacios } = __m["datos/reliquias.js"];
 __e.default = {
   id: 'obito-uchiha',
   franquicia: 'Naruto', grupos: ['uchiha', 'akatsuki', 'renegados'],   // campaña: temas de las etapas
-  nombre: 'Obito Uchiha',
+  nombre: 'Obito',
   rol: 'Control', rolSecundario: 'Daño',
   sobres: ['phantom'],
   emoji: '🌀', color: '#ea580c', imagen: 'assets/personajes/obito-uchiha.webp',

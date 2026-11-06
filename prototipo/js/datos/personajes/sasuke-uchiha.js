@@ -5,7 +5,7 @@ import { espacios } from '../reliquias.js';
 export default {
   id: 'sasuke-uchiha',
   franquicia: 'Naruto', grupos: ['uchiha', 'konoha'],   // campaña: temas de las etapas
-  nombre: 'Sasuke Uchiha',
+  nombre: 'Sasuke',
   rol: 'Daño', rolSecundario: 'DoTer',
   sobres: ['bloodline'],
   emoji: '⚡', color: '#7c3aed', imagen: 'assets/personajes/sasuke-uchiha.webp',

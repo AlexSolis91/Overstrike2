@@ -7,7 +7,7 @@ import { espacios } from '../reliquias.js';
 export default {
   id: 'obito-uchiha',
   franquicia: 'Naruto', grupos: ['uchiha', 'akatsuki', 'renegados'],   // campaña: temas de las etapas
-  nombre: 'Obito Uchiha',
+  nombre: 'Obito',
   rol: 'Control', rolSecundario: 'Daño',
   sobres: ['phantom'],
   emoji: '🌀', color: '#ea580c', imagen: 'assets/personajes/obito-uchiha.webp',

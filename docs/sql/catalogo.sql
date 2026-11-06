@@ -1,7 +1,7 @@
 -- Catálogo de campeones para el servidor (GENERADO por herramientas/generar_catalogo.mjs, no editar a mano).
 -- Cómo usarlo: Supabase → SQL Editor → New query → pegar todo → Run. Se puede ejecutar las veces que haga falta.
 insert into public.campeones (id, nombre, starter, sobres, activo) values
-  ('madara-uchiha', 'Madara Uchiha', null, array['bloodline', 'phantom']::text[], true),
+  ('madara-uchiha', 'Madara', null, array['bloodline', 'phantom']::text[], true),
   ('rengoku', 'Rengoku', 'blazing', array[]::text[], true),
   ('alexstrasza', 'Alexstrasza', 'blazing', array['sacred']::text[], true),
   ('sun-jin-woo', 'Sun Jin Woo', null, array['phantom']::text[], true),
@@ -24,13 +24,13 @@ insert into public.campeones (id, nombre, starter, sobres, activo) values
   ('daenerys-targaryen', 'Daenerys Targaryen', 'blazing', array[]::text[], true),
   ('wukong', 'Wukong', null, array['sacred']::text[], true),
   ('naruto', 'Naruto', null, array[]::text[], true),
-  ('sasuke-uchiha', 'Sasuke Uchiha', null, array['bloodline']::text[], true),
+  ('sasuke-uchiha', 'Sasuke', null, array['bloodline']::text[], true),
   ('skeletor', 'Skeletor', null, array['phantom']::text[], true),
   ('he-man', 'He-Man', null, array[]::text[], true),
   ('saga', 'Saga', null, array['phantom']::text[], true),
   ('camus', 'Camus', 'frostborn', array[]::text[], true),
   ('milo', 'Milo', 'noxious', array['bloodline']::text[], true),
-  ('itachi-uchiha', 'Itachi Uchiha', null, array['phantom']::text[], true),
+  ('itachi-uchiha', 'Itachi', null, array['phantom']::text[], true),
   ('pain', 'Pain', null, array[]::text[], true),
   ('gilgamesh', 'Gilgamesh', null, array['sacred']::text[], true),
   ('ozymandias', 'Ozymandias', null, array['sacred']::text[], true),
@@ -44,7 +44,7 @@ insert into public.campeones (id, nombre, starter, sobres, activo) values
   ('carnage', 'Carnage', null, array['phantom', 'bloodline']::text[], true),
   ('gaara', 'Gaara', null, array['sacred']::text[], true),
   ('sasori', 'Sasori', 'noxious', array['phantom']::text[], true),
-  ('obito-uchiha', 'Obito Uchiha', null, array['phantom']::text[], true),
+  ('obito-uchiha', 'Obito', null, array['phantom']::text[], true),
   ('deidara', 'Deidara', null, array['phantom']::text[], true),
   ('broly', 'Broly', null, array[]::text[], true),
   ('gohan', 'Gohan', null, array[]::text[], true),
