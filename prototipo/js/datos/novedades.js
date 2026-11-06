@@ -13,7 +13,7 @@ export const NOVEDADES = [
       { tipo: 'cambio', texto: '🐍 Orochimaru: Muda de Piel cura 5% de su HP máx. cada vez que un Veneno hace daño, sin límite por ronda.' },
       { tipo: 'mejora', texto: '🧰 Los cofres del Jefe de Raid tienen nombre (Madera, Plata, Oro y Arcano) y los de Madera y Plata ya tienen su imagen.' },
       { tipo: 'mejora', texto: '💬 Las confirmaciones y avisos ahora aparecen en una ventana del juego, no del navegador.' },
-      { tipo: 'mejora', texto: '📱 Celular: al armar tu equipo ya se ven los 5 lugares y el botón 🎲, y en batalla vertical la barra de turnos ya no queda tapada por los botones.' },
+      { tipo: 'mejora', texto: '📱 Celular: al armar tu equipo ya se ven los 5 lugares y el botón 🎲; en batalla vertical la barra de turnos ya no queda tapada; el Jefe de Raid ya no se sale de la pantalla (dificultades, barra de HP y reloj visibles); las tablas de la Arena y del Raid se deslizan de lado, y el botón de Venganza siempre está a la vista.' },
     ],
   },
   {

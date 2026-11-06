@@ -1147,3 +1147,27 @@ body.social-min #soc-abrir { display: block; }
   .eq-slots { gap: 6px; padding-top: 10px; }
   .slot { width: 48px; height: 48px; }
 }
+/* Colección → Estadísticas: la tabla no se estira más que su panel en celular */
+@media (max-width: 760px) { .tc-stats-tabla { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 420px) { .tc-stats-tabla div { grid-template-columns: minmax(0, 1fr) 36px 36px 46px 44px; padding: 4px 6px; } }
+/* Arena: en celular las tablas (ranking, defensas, recompensas) se deslizan de lado en vez de cortarse */
+@media (max-width: 760px) {
+  .ar-tabla { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+  .ar-tabla th, .ar-tabla td { padding: 6px 6px; white-space: nowrap; }
+}
+/* notas tenues (Colección, Arena): tamaño de nota, no de texto principal */
+.tc-tenue { font-size: 12.5px; line-height: 1.45; }
+/* Defensas: el botón de Venganza queda siempre a la vista aunque la tabla se deslice */
+@media (max-width: 760px) { .ar-def td:last-child, .ar-def th:last-child { position: sticky; right: 0; background: #0b0f18; box-shadow: -8px 0 8px -6px rgba(0, 0, 0, .8); } }
+/* Jefe de Raid / Horda en celular: la columna no se estira con su contenido (antes la tabla de rangos la ensanchaba a 500px) */
+@media (max-width: 760px) {
+  .hd-cuerpo { grid-template-columns: minmax(0, 1fr); }
+  .rd-difs { flex-wrap: wrap; overflow-x: visible; }
+  .rd-dif { flex: 1 1 30%; padding: 8px 6px; }
+  .rd-rangos { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+@media (max-width: 520px) and (orientation: portrait) {
+  #pantalla-raid .eq-top { flex-wrap: wrap; row-gap: 6px; }
+  #rd-llaves { flex-basis: 100%; justify-content: center; }
+}
+@media (max-width: 760px) { .rd-rangos th, .rd-rangos td { white-space: nowrap; } }

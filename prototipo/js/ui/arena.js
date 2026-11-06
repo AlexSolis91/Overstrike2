@@ -64,9 +64,9 @@ function htmlRanking() {
 }
 function htmlDefensas() {
   if (!historial) return '<p class="tc-vacio">Cargando…</p>';
-  return historial.length ? `<table class="ar-tabla"><tr><th>Atacante</th><th>Resultado</th><th>Puntos</th><th>Cuándo</th><th></th></tr>
+  return historial.length ? `<table class="ar-tabla ar-def"><tr><th>Atacante</th><th>Resultado</th><th>Puntos</th><th>Cuándo</th><th></th></tr>
     ${historial.map(h => `<tr><td>${h.atacante}</td><td>${h.defendida ? '🛡️ Defendida' : '💥 Derrota'}</td><td>${h.delta_def > 0 ? '+' : ''}${h.delta_def ?? 0}</td>
-      <td>${new Date(h.iniciado).toLocaleString('es-MX')}</td>
+      <td>${new Date(h.iniciado).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}</td>
       <td>${h.puede_vengar ? `<button class="eq-btn" data-vengar="${h.combate}">⚔️ Venganza</button>` : h.vengado ? '✔ Vengado' : ''}</td></tr>`).join('')}</table>
     <p class="tc-tenue">Venganza: ataca a quien venció tu Defensa (una vez por derrota, dentro de 7 días). Cuenta como uno de tus ataques.</p>` : '<p class="tc-vacio">Nadie ha atacado tu Defensa todavía.</p>';
 }
