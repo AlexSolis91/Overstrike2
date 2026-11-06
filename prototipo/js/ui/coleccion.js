@@ -15,16 +15,22 @@ import { crearCombate } from '../motor/combate.js';
 import { habilidadesHtml } from './menu.js';
 import { efectosDe, selectorEfectos } from '../datos/efectosCampeon.js';
 import { confirmar } from './dialogo.js';
+import { bonoEstrellas } from '../motor/reglas.js';
 
-const MAX_ESTRELLAS = 5;   // estrellas máximas de hoy; también en _estrellas_maximas() (docs/sql/027_raid_ajustes.sql)
+const MAX_ESTRELLAS = 10;  // 5 normales + 5 moradas; también en _estrellas_maximas() y ascender() (docs/sql/031_estrellas_moradas.sql)
+const COSTO_MORADA = { copias: [10, 15, 20, 25, 30], polvo: [300, 500, 750, 1000, 1500] };   // igual que en el servidor
+const ICONO_ESTELAR = '<img class="tc-ico" src="assets/items/polvoEstelar.webp" alt="Polvo Estelar">';
 const $ = s => document.querySelector(s);
 const ROL = { Support: 'Soporte', Invoker: 'Invocador' };
 const COSTO_ESPACIO = { copias: [1, 3, 5], oro: [100000, 500000, 1000000] };   // igual que en el servidor
-const FRAG_POR_RUNA = 50, BONO_ESTRELLA = 3;
+const FRAG_POR_RUNA = 50;
 const num = n => Number(n || 0).toLocaleString('es-MX');
 const roles = p => [p.rol, p.rolSecundario].filter(Boolean).map(r => ROL[r] || r).join(' · ');
 const retrato = p => p.imagen ? `<img src="${p.imagen}" alt="" loading="lazy">` : `<span class="tc-emoji">${p.emoji}</span>`;
-const estrellas = n => `<span class="tc-estrellas">${'★'.repeat(n)}<i>${'★'.repeat(5 - n)}</i></span>`;
+// 5 estrellas: las moradas (de la 6 a la 10) pintan de morado las primeras
+const estrellas = n => { const m = Math.max(0, n - 5), g = Math.min(n, 5);
+  return `<span class="tc-estrellas">${'<span class="morada">★</span>'.repeat(m)}${'★'.repeat(g - m)}<i>${'★'.repeat(5 - g)}</i></span>`; };
+let selDesfrag = null;       // modo "Seleccionar para desfragmentar": campeón → cantidad
 
 let col = new Map();          // campeón → { copias, estrellas, espacios }
 let inv = { oro: 0, frag_runa: 0, frag_otros: 0, runas: 0, vales_sobre: 0, rel_sobres: 0 };
@@ -79,7 +85,7 @@ function pintarInventario() {
     ${inv.vales_sobre ? `<span title="Vales de sobre (ábrelos gratis en la Tienda)">🎟️ <b>${num(inv.vales_sobre)}</b></span>` : ''}
     <span title="Runas de Invocación">🔮 <b>${num(inv.runas)}</b></span>
     <span class="tc-frag" title="Fragmentos de Runa de Invocación (${FRAG_POR_RUNA} = 1 Runa)">🧩 <b>${inv.frag_runa}/${FRAG_POR_RUNA}</b><i style="--p:${pct}%"></i></span>
-    <span title="Otros fragmentos (sus usos llegarán pronto)">💠 <b>${num(inv.frag_otros)}</b></span>
+    <span title="Polvo Estelar (estrellas moradas)">${ICONO_ESTELAR} <b>${num(inv.frag_otros)}</b></span>
     ${inv.runas_portal != null ? `<span title="Runas de Portal (entrar a la Horda)"><img class="tc-ico" src="assets/items/runaPortal.png" alt=""> <b>${num(inv.runas_portal)}</b></span>` : ''}
     ${inv.polvo_arcano != null ? `<span title="Polvo Arcano (mejorar valores de reliquias)"><img class="tc-ico" src="assets/items/polvoArcano.png" alt=""> <b>${num(inv.polvo_arcano)}</b></span>` : ''}`;
 }
@@ -296,12 +302,15 @@ function htmlColeccion() {
   if (detalle) return htmlDetalle(porId(detalle));
   const tengo = OFICIALES.filter(p => col.has(p.id)).length;
   const orden = OFICIALES.filter(p => !colEfecto || efectosDe(p).has(colEfecto)).sort((a, b) => (col.has(b.id) - col.has(a.id)) || a.nombre.localeCompare(b.nombre));
-  const sobrantes = [...col.values()].filter(r => r.estrellas >= MAX_ESTRELLAS && r.copias > 0);
-  const nSobrantes = sobrantes.reduce((s, r) => s + r.copias, 0);
+  const conCopias = OFICIALES.some(p => col.get(p.id)?.copias > 0);
+  const nSel = selDesfrag ? [...selDesfrag.values()].reduce((s, n) => s + n, 0) : 0;
   return `<p class="tc-nota">Tienes <b>${tengo}/${OFICIALES.length}</b> campeones. Toca uno para ascenderlo, abrir espacios de reliquias o desfragmentar copias.</p>
-    ${nSobrantes ? `<div class="tc-fila tc-maximos"><span>🧩 ${num(nSobrantes)} copia${nSobrantes > 1 ? 's' : ''} de ${sobrantes.length} ${sobrantes.length > 1 ? 'campeones' : 'campeón'} con ${MAX_ESTRELLAS}★ (el máximo)</span><button class="eq-btn" data-desfrag-max>Desfragmentar todas</button></div>` : ''}
+    ${selDesfrag ? `<div class="tc-fila tc-maximos tc-selfrag-barra"><span>🧩 Toca los campeones con copias que quieres desfragmentar. ${nSel ? `<b>${num(nSel)} copia${nSel > 1 ? 's' : ''} de ${selDesfrag.size} ${selDesfrag.size > 1 ? 'campeones' : 'campeón'}</b> → ${num(nSel)}–${num(nSel * 2)} fragmentos de Runa.` : ''}</span>
+      <span class="tc-selfrag-bot"><button class="eq-btn" data-sel-desfrag>Cancelar</button><button class="eq-listo" data-desfrag-sel ${nSel ? '' : 'disabled'}>Desfragmentar</button></span></div>`
+      : conCopias ? '<div class="tc-fila tc-maximos"><span>🧩 Desfragmenta las copias de los campeones que no piensas ascender.</span><button class="eq-btn" data-sel-desfrag>Seleccionar para desfragmentar</button></div>' : ''}
     <div class="tc-fila tc-col-filtro">${selectorEfectos('tc-efecto', colEfecto)}${colEfecto ? `<span>${orden.length} ${orden.length === 1 ? 'campeón puede ponerlo' : 'campeones pueden ponerlo'} · tienes ${orden.filter(p => col.has(p.id)).length}</span>` : ''}</div>
     <div class="tc-grid">${orden.map(p => { const r = col.get(p.id);
+      if (selDesfrag) return celdaDesfrag(p, r);
       return `<button class="tc-carta ${r ? '' : 'falta'}" data-ver="${p.id}" style="--c:${p.color}">
         <div class="tc-img">${retrato(p)}</div>
         ${r && r.copias ? `<span class="tc-copias">×${r.copias}</span>` : ''}
@@ -309,10 +318,26 @@ function htmlColeccion() {
       </button>`; }).join('')}</div>`;
 }
 
+// Modo "Seleccionar para desfragmentar": tocar marca al campeón con todas sus copias; − / + ajustan cuántas
+function celdaDesfrag(p, r) {
+  const copias = r?.copias || 0, n = selDesfrag.get(p.id) || 0;
+  return `<div class="tc-celda${n ? ' marcada' : ''}">
+    <button class="tc-carta ${r ? '' : 'falta'}" data-selfrag="${p.id}" style="--c:${p.color}" ${copias ? '' : 'disabled'}>
+      <div class="tc-img">${retrato(p)}</div>
+      ${copias ? `<span class="tc-copias">×${copias}</span>` : ''}
+      ${n ? '<span class="tc-check">✓</span>' : ''}
+      <div class="tc-pie"><b>${p.nombre}</b>${r ? estrellas(r.estrellas) : '<small>No lo tienes</small>'}</div>
+    </button>
+    ${n ? `<div class="tc-selfrag-cant"><button class="eq-btn" data-selmenos="${p.id}">−</button><b>${n}/${copias}</b><button class="eq-btn" data-selmas="${p.id}" ${n >= copias ? 'disabled' : ''}>+</button></div>` : ''}
+  </div>`;
+}
+
 function htmlDetalle(p) {
   const r = col.get(p.id);
   if (!r) { detalle = null; return htmlColeccion(); }
-  const sigEstrella = r.estrellas + 1, puedeAscender = r.estrellas < 5 && r.copias >= sigEstrella;
+  const sigEstrella = r.estrellas + 1, morada = r.estrellas >= 5, im = r.estrellas - 5;
+  const costoCopias = morada ? COSTO_MORADA.copias[im] : sigEstrella, costoPolvo = morada ? COSTO_MORADA.polvo[im] : 0;
+  const puedeAscender = r.estrellas < MAX_ESTRELLAS && r.copias >= costoCopias && (inv.frag_otros || 0) >= costoPolvo;
   const sigEsp = r.espacios, espCopias = COSTO_ESPACIO.copias[sigEsp], espOro = COSTO_ESPACIO.oro[sigEsp];
   const cerrados = ESPACIOS.filter(e => e.extra && !abiertosDe(r).includes(e.id));
   return `<button class="eq-btn tc-volver" data-volver>← Colección</button>
@@ -320,13 +345,16 @@ function htmlDetalle(p) {
       <div class="tc-det-img">${retrato(p)}</div>
       <div class="tc-det-info">
         <h3>${p.nombre}</h3><small>${roles(p)}</small>
-        <div class="tc-det-est">${estrellas(r.estrellas)} <span class="tc-bono">+${r.estrellas * BONO_ESTRELLA}% a sus estadísticas</span></div>
+        <div class="tc-det-est">${estrellas(r.estrellas)} <span class="tc-bono">+${Math.round(bonoEstrellas(r.estrellas) * 100)}% a Vida, Daño y Velocidad</span></div>
         <p>Copias disponibles: <b>${r.copias}</b></p>
       </div>
     </div>
     <div class="tc-acciones">
       <section><h4>⭐ Ascender</h4>
-        ${r.estrellas >= 5 ? '<p>¡Ya tiene las 5 estrellas!</p>' : `<p>Sube a ${sigEstrella}★ (+${BONO_ESTRELLA}% a Vida, Daño y Velocidad, +1 a sus estadísticas en %). Cuesta <b>${sigEstrella} copia${sigEstrella > 1 ? 's' : ''}</b>.</p>
+        ${r.estrellas >= MAX_ESTRELLAS ? '<p>¡Ya tiene las 5 estrellas moradas!</p>'
+          : morada ? `<p>Sube a la <b class="tc-morada">${im + 1}ª estrella morada</b> (+5% a Vida, Daño y Velocidad). Cuesta <b>${costoCopias} copias</b> y <b>${ICONO_ESTELAR} ${num(costoPolvo)} de Polvo Estelar</b> (tienes ${num(inv.frag_otros)}).</p>
+        <button class="eq-listo" data-ascender ${puedeAscender ? '' : 'disabled'}>Ascender a estrella morada ${im + 1}</button>`
+          : `<p>Sube a ${sigEstrella}★ (+3% a Vida, Daño y Velocidad). Cuesta <b>${sigEstrella} copia${sigEstrella > 1 ? 's' : ''}</b>.${sigEstrella === 5 ? ' Después siguen las estrellas moradas.' : ''}</p>
         <button class="eq-listo" data-ascender ${puedeAscender ? '' : 'disabled'}>Ascender a ${sigEstrella}★</button>`}
       </section>
       <section><h4>💎 Espacios de reliquias <small>${r.espacios}/3</small></h4>
@@ -336,7 +364,7 @@ function htmlDetalle(p) {
           <button class="eq-btn" data-espacio="oro" data-esp="${e.id}" ${inv.oro >= espOro ? '' : 'disabled'}>🪙 ${num(espOro)}</button></div>`).join('')}`}
       </section>
       <section><h4>🧩 Desfragmentar</h4>
-        <p>Cada copia da 3 fragmentos: 1 o 2 de Runa de Invocación y el resto de otros tipos.</p>
+        <p>Cada copia da 1 o 2 fragmentos de Runa de Invocación (${FRAG_POR_RUNA} = 1 Runa).</p>
         ${r.copias ? `<div class="tc-fila"><input id="tc-cant" type="number" min="1" max="${r.copias}" value="1"><button class="eq-btn" data-desfrag>Desfragmentar</button></div>` : '<p class="tc-tenue">No tiene copias para desfragmentar.</p>'}
       </section>
     </div>
@@ -503,22 +531,32 @@ async function ejecutar(e) {
   if (b.dataset.vale) return abrirConVale(b.dataset.vale);
   if (b.dataset.ver) { detalle = b.dataset.ver; slotSel = null; return pintar(); }
   if ('volver' in b.dataset) { detalle = null; slotSel = null; return pintar(); }
-  if ('ascender' in b.dataset) return accion(async () => { const n = await D.ascender(detalle); await recargar(); pintar(); aviso(`¡${porId(detalle).nombre} ascendió a ${n}★!`); });
+  if ('ascender' in b.dataset) return accion(async () => { const n = await D.ascender(detalle); await recargar(); pintar();
+    aviso(n > 5 ? `¡${porId(detalle).nombre} ganó su ${n - 5}ª estrella morada!` : `¡${porId(detalle).nombre} ascendió a ${n}★!`); });
   if (b.dataset.espacio) {
     const con = b.dataset.espacio, sig = col.get(detalle).espacios, esp = b.dataset.esp, nombre = ESPACIOS.find(e => e.id === esp)?.label || `el espacio ${sig + 1}`;
     if (con === 'oro' && !await confirmar(`¿Abrir ${nombre} por ${num(COSTO_ESPACIO.oro[sig])} de oro?`)) return;
     return accion(async () => { await D.desbloquearEspacio(detalle, con, esp); await recargar(); pintar(); aviso(`${nombre} desbloqueado.`); });
   }
-  if ('desfragMax' in b.dataset) {
-    const lista = [...col.values()].filter(r => r.estrellas >= MAX_ESTRELLAS && r.copias > 0), total = lista.reduce((s, r) => s + r.copias, 0);
-    if (!await confirmar(`¿Desfragmentar ${num(total)} copia${total > 1 ? 's' : ''} de ${lista.length} ${lista.length > 1 ? 'campeones' : 'campeón'} con ${MAX_ESTRELLAS}★? Esto no se puede deshacer.`)) return;
-    return accion(async () => { const r = await D.desfragmentarMaximos(); await recargar(); pintar(); aviso(`Desfragmentaste ${num(r.copias)} copia${r.copias > 1 ? 's' : ''} de ${r.campeones} ${r.campeones > 1 ? 'campeones' : 'campeón'}: 🧩 ${num(r.frag_runa)} de Runa y 💠 ${num(r.frag_otros)} de otros fragmentos.`); });
+  if ('selDesfrag' in b.dataset) { selDesfrag = selDesfrag ? null : new Map(); return pintar(); }
+  if (b.dataset.selfrag && selDesfrag) {           // tocar un campeón: lo marca con todas sus copias o lo desmarca
+    const c = b.dataset.selfrag;
+    if (selDesfrag.has(c)) selDesfrag.delete(c); else selDesfrag.set(c, col.get(c).copias);
+    return pintar();
+  }
+  if (b.dataset.selmenos && selDesfrag) { const c = b.dataset.selmenos, n = (selDesfrag.get(c) || 0) - 1; if (n < 1) selDesfrag.delete(c); else selDesfrag.set(c, n); return pintar(); }
+  if (b.dataset.selmas && selDesfrag) { const c = b.dataset.selmas; selDesfrag.set(c, Math.min(col.get(c).copias, (selDesfrag.get(c) || 0) + 1)); return pintar(); }
+  if ('desfragSel' in b.dataset && selDesfrag?.size) {
+    const lista = [...selDesfrag].map(([campeon, cantidad]) => ({ campeon, cantidad })), total = lista.reduce((s, x) => s + x.cantidad, 0);
+    if (!await confirmar(`¿Desfragmentar ${num(total)} copia${total > 1 ? 's' : ''} de ${lista.length} ${lista.length > 1 ? 'campeones' : 'campeón'}?\n\n${lista.map(x => `• ${porId(x.campeon).nombre}: ${x.cantidad}`).join('\n')}\n\nEsto no se puede deshacer.`)) return;
+    return accion(async () => { const r = await D.desfragmentarVarios(lista); selDesfrag = null; await recargar(); pintar();
+      aviso(`Desfragmentaste ${num(r.copias)} copia${r.copias > 1 ? 's' : ''} de ${r.campeones} ${r.campeones > 1 ? 'campeones' : 'campeón'}: 🧩 ${num(r.frag_runa)} fragmentos de Runa.`); });
   }
   if ('desfrag' in b.dataset) {
     const n = Math.floor(Number($('#tc-cant').value)), max = col.get(detalle).copias;
     if (!(n >= 1 && n <= max)) return aviso(`Elige de 1 a ${max} copias.`, 'error');
     if (!await confirmar(`¿Desfragmentar ${n} copia${n > 1 ? 's' : ''} de ${porId(detalle).nombre}? Esto no se puede deshacer.`)) return;
-    return accion(async () => { const r = await D.desfragmentar(detalle, n); await recargar(); pintar(); aviso(`Obtuviste 🧩 ${r.frag_runa} de Runa y 💠 ${r.frag_otros} de otros fragmentos.`); });
+    return accion(async () => { const r = await D.desfragmentar(detalle, n); await recargar(); pintar(); aviso(`Obtuviste 🧩 ${r.frag_runa} fragmentos de Runa.`); });
   }
   if ('combinar' in b.dataset) return accion(async () => { await D.combinarRuna(); await recargar(); pintar(); aviso('¡Creaste una Runa de Invocación! 🔮'); });
   if (b.dataset.portal) { elegidoPortal = b.dataset.portal; return pintar(); }

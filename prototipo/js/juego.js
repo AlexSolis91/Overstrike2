@@ -657,7 +657,8 @@ async function oleadaGanada() {
   if (esta !== partida) return;
   const yaSumada = (h.botinHasta || 0) >= h.n;           // al continuar una partida: esta oleada ya estaba en el botín
   if (r && !yaSumada) { h.botin.oro += r.oro + (r.hito?.oro || 0); if (r.reliquia) h.botin.reliquias.push(r.reliquia); h.botin.fragmentos += r.fragmentos;
-    h.botin.trofeos = (h.botin.trofeos || 0) + (r.trofeos || 0) + (r.hito?.trofeos || 0); if (r.hito?.epica) h.botin.reliquias.push(r.hito.epica); h.botinHasta = h.n; }
+    h.botin.trofeos = (h.botin.trofeos || 0) + (r.trofeos || 0) + (r.hito?.trofeos || 0); if (r.hito?.epica) h.botin.reliquias.push(r.hito.epica);
+    h.botin.estelar = (h.botin.estelar || 0) + (r.polvo_estelar || 0); h.botinHasta = h.n; }
   if (h.g && r) { h.g.botin = h.botin; h.g.botinHasta = h.botinHasta; guardarLocal(h.g); guardarEnServidor(h); }
   h.prox = oleada(h.n + 1);
   const item = (img, txt, color = '#374151') => `<div class="hov-item" style="--rc:${color}">${img}${txt}</div>`;
@@ -671,9 +672,10 @@ async function oleadaGanada() {
       ${rel ? item(`<img src="${rel.imagen}" alt="">`, `<span style="color:${RAREZAS[rel.rarity].color}">${rel.name}</span>`, RAREZAS[rel.rarity].color) : ''}
       ${r?.fragmentos ? item('<div style="font-size:34px">🔷</div>', `+${r.fragmentos} Fragmento(s) de Runa`) : ''}
       ${r?.trofeos ? item('<div style="font-size:34px">🏅</div>', `+${r.trofeos} Trofeo(s) de Orco`) : ''}
+      ${r?.polvo_estelar ? item('<img src="assets/items/polvoEstelar.webp" alt="">', `+${r.polvo_estelar} de Polvo Estelar`, '#a855f7') : ''}
       ${r?.hito ? item('<div style="font-size:34px">🎉</div>', `<b>¡Primera vez en la oleada ${r.hito.oleada}!</b><br>${r.hito.oro ? `+${miles(r.hito.oro)} de oro 🪙` : `+${r.hito.runas_portal} ${ICONO_RUNA_PORTAL} Runas de Portal`}${r.hito.vales ? ` · +${r.hito.vales} vale(s) de sobre` : ''} · +${r.hito.trofeos} Trofeos${r.hito.epica ? ` · Épica: ${RELIQUIAS[r.hito.epica.reliquia]?.name || ''}` : ''}${r.hito.hazana ? '<br>🏆 <b>Hazaña conseguida:</b> ya puedes forjar Legendarias' : ''}`, '#f59e0b') : ''}
     </div>
-    <div class="hov-total">Total: 🪙 ${miles(h.botin.oro)} · 💎 ${h.botin.reliquias.length} reliquia(s) · 🔷 ${h.botin.fragmentos} · 🏅 ${h.botin.trofeos || 0}</div>
+    <div class="hov-total">Total: 🪙 ${miles(h.botin.oro)} · 💎 ${h.botin.reliquias.length} reliquia(s) · 🔷 ${h.botin.fragmentos} · 🏅 ${h.botin.trofeos || 0}${h.botin.estelar ? ` · ✨ ${h.botin.estelar} Polvo Estelar` : ''}</div>
     ${aviso ? `<div class="hov-sig">${aviso}</div>` : ''}
     <div class="hov-botones"><button id="hov-seguir" class="hd-btn">⚔️ Oleada ${h.n + 1} <span id="hov-cuenta"></span></button><button id="hov-esperar" class="hd-btn sec">⏸ Esperar</button><button id="hov-retirar" class="hd-btn sec">🏳️ Retirarse</button></div>`;
   $('#horda-ov').classList.remove('hidden');
@@ -727,7 +729,8 @@ async function finHorda(base, retirado) {
   if (esta !== partida) return;
   const recompensas = [{ tipo: 'oro', cantidad: h.botin.oro },
     ...h.botin.reliquias.map(f => { const c = RELIQUIAS[f.reliquia]; return { tipo: 'reliquia', cantidad: 1, rareza: c?.rarity, nombre: c?.name, imagen: c?.imagen }; }),
-    ...(h.botin.fragmentos ? [{ tipo: 'fragmento', cantidad: h.botin.fragmentos, nombre: 'Fragmentos de Runa' }] : [])];
+    ...(h.botin.fragmentos ? [{ tipo: 'fragmento', cantidad: h.botin.fragmentos, nombre: 'Fragmentos de Runa' }] : []),
+    ...(h.botin.estelar ? [{ tipo: 'polvoEstelar', cantidad: h.botin.estelar }] : [])];
   const superadas = res?.oleada ?? (retirado ? h.n : h.n - 1);
   mostrarResultados({ ...base, gano: retirado, recompensas });
   $('#ov-title').textContent = retirado ? '🏳️ Te retiraste' : '☠️ Tu equipo cayó';

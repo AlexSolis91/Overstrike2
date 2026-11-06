@@ -90,6 +90,7 @@ function pintar() {
       <div class="hd-panel">
         <h4>🎉 Primera vez</h4>
         ${HITOS.map(x => `<div class="hd-hito ${hitos.has(x.oleada) ? 'ok' : ''}"><b>${hitos.has(x.oleada) ? '✅' : '🔒'} Oleada ${x.oleada}</b><span>${x.txt}</span></div>`).join('')}
+        <p class="hd-nota"><img class="ico-runa" src="assets/items/polvoEstelar.webp" alt=""> Cada oleada de <b>jefe</b> (10, 20, 30…) tiene 30% de probabilidad de dar Polvo Estelar: 5 en la 10, 8 en la 20, 12 en la 30 y 15 de la 40 en adelante.</p>
       </div>
       <div class="hd-panel">
         <h4>🏅 Tienda de la Horda <small>${trofeos != null ? `Tienes ${trofeos} Trofeos de Orco` : sinSesion ? '(inicia sesión para ver tus Trofeos)' : '(falta ejecutar docs/sql/011_horda_extras.sql)'}</small></h4>

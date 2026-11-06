@@ -3,7 +3,7 @@
 // - Ningún personaje tiene código propio: sus fichas solo combinan piezas (acciones, gatillos, condiciones, efectos).
 // - Todo el azar pasa por un generador con semilla (misma semilla + mismas decisiones = misma partida).
 
-import { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, LIMITE_RONDAS, CONTROL, DOT, BUFFS, DEBUFFS, PUNTERIA, probAplicar, BONO_ESTRELLA } from './reglas.js';
+import { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, LIMITE_RONDAS, CONTROL, DOT, BUFFS, DEBUFFS, PUNTERIA, probAplicar, bonoEstrellas } from './reglas.js';
 import { EFECTOS, esDe } from './efectos.js';
 import { crearRng } from './rng.js';
 import { INVOCACIONES, TABLAS_INVOCACION } from '../datos/invocaciones.js';
@@ -106,10 +106,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] += v;
       }
     }
-    if (capas.estrellas && p.estrellas) {                            // estrellas de la cuenta: +3% HP/Daño/Velocidad y +1 punto a cada % por estrella
-      const n = p.estrellas;
-      pct.hp += BONO_ESTRELLA.base * n; pct.dmg += BONO_ESTRELLA.base * n; pct.spd += BONO_ESTRELLA.base * n;
-      for (const k of Object.keys(BASE_COMUN)) sec[k] += BONO_ESTRELLA.pct * n;
+    if (capas.estrellas && p.estrellas) {                            // estrellas de la cuenta: solo HP/Daño/Velocidad (+3% normal, +5% morada)
+      const b = bonoEstrellas(p.estrellas);
+      pct.hp += b; pct.dmg += b; pct.spd += b;
     }
     if (capas.reliquias) for (const m of pasivasDeReliquia(p)) {      // reliquia: bono fijo y lo que ha crecido
       for (const [k, v] of Object.entries({ ...m.bono }).concat(m.crece ? [[m.crece.stat, p.creceRel?.[m.crece.stat] || 0]] : [])) {

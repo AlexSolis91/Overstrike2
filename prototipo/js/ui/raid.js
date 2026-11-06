@@ -4,7 +4,7 @@ import * as D from '../servicios/datos.js';
 import { supabase } from '../servicios/supabase.js';
 import { perfilActual, esAdmin } from './cuenta.js';
 import { equipoCampana, irA } from './menu.js';
-import { JEFES_RAID, DIFICULTADES_RAID, furiaAcumulada, opcionesRaid, nombreCofre, imgCofre } from '../datos/jefes/raid.js';
+import { JEFES_RAID, DIFICULTADES_RAID, furiaAcumulada, opcionesRaid, nombreCofre, imgCofre, COFRES_RAID } from '../datos/jefes/raid.js';
 import { RELIQUIAS, RAREZAS } from '../datos/reliquias.js';
 import { VERSION } from '../datos/cuenta.js';
 import { BASE_COMUN } from '../motor/reglas.js';
@@ -55,10 +55,10 @@ function pintarRelojes() {
 function htmlRangos(d) {
   const filas = d.rangos.map((r, i) => {
     const f = (i + 1) * .25, sig = d.rangos[i + 1];
-    return `<tr class="${d.cofre === i + 1 ? 'yo' : ''}"><td class="rd-cofre-n">${imgCofre(i + 1, 'rd-cofre-mini')}${nombreCofre(i + 1)}</td><td>${miles(r)}${sig ? ` – ${miles(sig - 1)}` : ' o más'}</td><td>🪙 ${miles(d.oro * f)}</td><td>${miles(d.polvo * f)}</td><td>${Math.round(d.runas * f)}</td><td class="rd-rel">${pct(d.p_rara * f)} · ${pct(d.p_especial * f)} · ${pct(d.p_epica * f)}</td></tr>`;
+    return `<tr class="${d.cofre === i + 1 ? 'yo' : ''}"><td class="rd-cofre-n">${imgCofre(i + 1, 'rd-cofre-mini')}${nombreCofre(i + 1)}</td><td>${miles(r)}${sig ? ` – ${miles(sig - 1)}` : ' o más'}</td><td>🪙 ${miles(d.oro * f)}</td><td>${miles(d.polvo * f)}</td><td>${Math.round(d.runas * f)}</td><td class="rd-rel">${pct(d.p_rara * f)} · ${pct(d.p_especial * f)} · ${pct(d.p_epica * f)}</td><td class="rd-rel">${pct(COFRES_RAID[i].probEstelar)} · ${DIFICULTADES_RAID[d.id]?.estelar ?? '—'}</td></tr>`;
   }).join('');
-  return `<table class="hd-ranking rd-rangos"><tr><th>Cofre</th><th>Tu daño del día</th><th>Oro</th><th>Polvo</th><th>${ICONO_RUNA_PORTAL}</th><th>Rara · Especial · Épica</th></tr>${filas}</table>
-    <p class="hd-nota">Si el jefe cae, se duplican oro, polvo y runas; las reliquias no.</p>
+  return `<table class="hd-ranking rd-rangos"><tr><th>Cofre</th><th>Tu daño del día</th><th>Oro</th><th>Polvo</th><th>${ICONO_RUNA_PORTAL}</th><th>Rara · Especial · Épica</th><th><img src="assets/items/polvoEstelar.webp" alt="" title="Polvo Estelar"> Prob. · cant.</th></tr>${filas}</table>
+    <p class="hd-nota">Si el jefe cae, se duplican oro, Polvo Arcano, runas y Polvo Estelar; las reliquias no.</p>
     <p class="hd-nota">Receta de ${RELIQUIAS[E.legendaria]?.name || 'Legendaria'}: ${pct(d.p_receta)}. Hay 1 tirada al día, en la dificultad más alta donde alcanzaste cofre.</p>`;
 }
 
@@ -101,7 +101,7 @@ function pintar() {
       <p><b>Orden:</b> ${jefe.ciclo.map(c => jefe.movimientos.find(m => m.categoria === c).nombre).join(' → ')}.</p>
       <p><b>Sindragosa:</b> ${INVOCACIONES.sindragosa.desc}</p>
       <h4>Recompensas</h4>
-      <p>El cofre se reclama al derrotar al jefe o al cerrar el día. Si el jefe cae, se duplican oro, Polvo Arcano y Runas de Portal.</p>
+      <p>El cofre se reclama al derrotar al jefe o al cerrar el día. Puede traer <b>Polvo Estelar</b> (para las estrellas moradas): más probable en los cofres altos y en más cantidad en las dificultades altas. Si el jefe cae, se duplican oro, Polvo Arcano, Runas de Portal y Polvo Estelar.</p>
     </aside>`;
   pintarRelojes();
 }
@@ -153,10 +153,11 @@ async function reclamar(dia, dif) {
   ocupado = true; pintar();
   try {
     const r = await D.raidReclamar(dia, dif);
-    ventanaPremio(`${imgCofre(r.cofre, 'rd-premio-cofre')}${nombreCofre(r.cofre)}`, `${nombre}${r.duplicado ? ' · El jefe cayó: oro, polvo y runas ×2' : ''}`, [
+    ventanaPremio(`${imgCofre(r.cofre, 'rd-premio-cofre')}${nombreCofre(r.cofre)}`, `${nombre}${r.duplicado ? ' · El jefe cayó: oro, polvos y runas ×2' : ''}`, [
       itemPremio(emoji('🪙'), `+${miles(r.oro)} de oro`),
       itemPremio('<img src="assets/items/polvoArcano.png" alt="">', `+${miles(r.polvo)} de Polvo Arcano`),
       ...(r.runas ? [itemPremio('<img src="assets/items/runaPortal.png" alt="">', `+${r.runas} Runa${r.runas > 1 ? 's' : ''} de Portal`)] : []),
+      ...(r.polvo_estelar ? [itemPremio('<img src="assets/items/polvoEstelar.webp" alt="">', `+${miles(r.polvo_estelar)} de Polvo Estelar`, '#a855f7')] : []),
       ...(r.reliquias || []).map(x => itemReliquia(x.reliquia)),
     ]);
     dispatchEvent(new Event('inventario:cambio'));

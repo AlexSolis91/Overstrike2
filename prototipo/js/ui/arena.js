@@ -6,7 +6,7 @@ import * as D from '../servicios/datos.js';
 import { perfilActual } from './cuenta.js';
 import { equipoCampana, irA } from './menu.js';
 import { OFICIALES, porId } from '../datos/personajes/index.js';
-import { LIGAS, liga, siguienteLiga, ATAQUES_DIARIOS, CAMPEONES_MINIMOS, BUSQUEDA_SEG, ORO_VICTORIA, SEMANAL, TEMPORADA } from '../datos/arena.js';
+import { LIGAS, liga, siguienteLiga, ATAQUES_DIARIOS, CAMPEONES_MINIMOS, BUSQUEDA_SEG, ORO_VICTORIA, SEMANAL, TEMPORADA, TEMPORADA_ESTELAR } from '../datos/arena.js';
 import { imgHtml } from './imagenes.js';
 import { VERSION } from '../datos/cuenta.js';
 import { confirmar, avisar } from './dialogo.js';
@@ -73,7 +73,7 @@ function htmlDefensas() {
 function htmlRecompensas() {
   return `<table class="ar-tabla"><tr><th>Liga</th><th>Desde</th><th>Oro por victoria</th><th>Cada semana</th><th>Fin de temporada</th></tr>
     ${LIGAS.map(l => { const s = SEMANAL[l.id]; return `<tr><td>${insignia(l.id)}</td><td>${l.nota ? 'Top 100 · 2,800+' : num(l.min)}</td><td>🪙 ${num(ORO_VICTORIA[l.id])}</td>
-      <td>${ICONO_RUNA_PORTAL} ${s.runas} · 🪙 ${num(s.oro)}${s.frag ? ` · 🧩 ${s.frag}` : ''}${s.vales ? ` · 🎟️ ${s.vales}` : ''}</td><td>🪙 ${num(TEMPORADA[l.id])}</td></tr>`; }).join('')}</table>
+      <td>${ICONO_RUNA_PORTAL} ${s.runas} · 🪙 ${num(s.oro)}${s.frag ? ` · 🧩 ${s.frag}` : ''}${s.vales ? ` · 🎟️ ${s.vales}` : ''}</td><td>🪙 ${num(TEMPORADA[l.id])}${TEMPORADA_ESTELAR[l.id] ? ` · <img class="ico-runa" src="assets/items/polvoEstelar.webp" alt="Polvo Estelar" title="Polvo Estelar"> ${TEMPORADA_ESTELAR[l.id]}` : ''}</td></tr>`; }).join('')}</table>
     <p class="tc-tenue">Temporadas de 4 semanas: al terminar, todos vuelven a 0 puntos. 5 ataques diarios valen puntos completos; los extra, el 25% (tope +60 al día) y 10% del oro.
     Defensa exitosa: +10 (ataque diario) o +3 (extra), tope +100 al día. Si una batalla llega al límite de rondas, gana la Defensa.</p>`;
 }
@@ -100,7 +100,7 @@ function avisoHtml(html) {
 
 function mostrarAvisos() {
   for (const a of est?.avisos || []) {
-    const txt = a.tipo === 'temporada' ? `🏁 Temporada ${a.temporada} terminada en ${liga(a.liga).icono} ${a.liga}: +🪙 ${num(a.oro)}${a.puesto ? ` · ¡${TITULO[a.puesto]} de la temporada!` : ''}`
+    const txt = a.tipo === 'temporada' ? `🏁 Temporada ${a.temporada} terminada en ${liga(a.liga).icono} ${a.liga}: +🪙 ${num(a.oro)}${a.polvo_estelar ? ` · +${a.polvo_estelar} <img class="ico-runa" src="assets/items/polvoEstelar.webp" alt="Polvo Estelar"> Polvo Estelar` : ''}${a.puesto ? ` · ¡${TITULO[a.puesto]} de la temporada!` : ''}`
       : `📅 Recompensa semanal (${liga(a.liga).icono} ${a.liga}): ${ICONO_RUNA_PORTAL} ${a.runas} · 🪙 ${num(a.oro)}${a.fragmentos ? ` · 🧩 ${a.fragmentos}` : ''}${a.vales ? ` · 🎟️ ${a.vales}` : ''}`;
     avisoHtml(txt);
   }

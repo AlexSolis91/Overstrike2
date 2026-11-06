@@ -12,6 +12,7 @@ export const TIPOS_RECOMPENSA = {
   cofre:      { nombre: 'Cofre de estrellas', icono: '🎁' },
   portal:     { nombre: 'Runa de Portal', icono: '🌀', imagen: 'assets/items/runaPortal.png' },
   polvo:      { nombre: 'Polvo Arcano', icono: '🧪', imagen: 'assets/items/polvoArcano.png' },
+  polvoEstelar: { nombre: 'Polvo Estelar', icono: '✨', imagen: 'assets/items/polvoEstelar.webp' },
 };
 
 // Ícono de la Runa de Portal: SIEMPRE su imagen (nunca el emoji), en línea con el texto

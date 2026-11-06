@@ -22,4 +22,6 @@ export const SEMANAL = {
   Diamante: { runas: 3, oro: 60000, frag: 10, vales: 1 }, Campeones: { runas: 3, oro: 80000, frag: 15, vales: 1 },
   Master: { runas: 4, oro: 100000, frag: 20, vales: 2 }, Leyenda: { runas: 4, oro: 150000, frag: 20, vales: 2 },
 };
+// Polvo Estelar al cerrar la temporada (igual que _arena_al_dia en docs/sql/031_estrellas_moradas.sql)
+export const TEMPORADA_ESTELAR = { Bronce: 0, Plata: 20, Oro: 40, Platino: 70, Diamante: 100, Campeones: 150, Master: 200, Leyenda: 300 };
 export const TEMPORADA = { Bronce: 50000, Plata: 100000, Oro: 200000, Platino: 350000, Diamante: 500000, Campeones: 800000, Master: 1200000, Leyenda: 2000000 };

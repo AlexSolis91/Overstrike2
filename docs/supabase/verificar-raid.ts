@@ -21,7 +21,9 @@ const BASE_COMUN = {
 };
 
 // Estrellas de la cuenta (ascensión): por estrella, +3% HP/Daño/Velocidad y +1 punto a cada estadística en %
-const BONO_ESTRELLA = { base: .03, pct: .01 };
+// Estrellas de la cuenta: solo HP, Daño y Velocidad. 1★–5★ normales +3% cada una; 6–10 = estrellas moradas, +5% cada una (máx. +40%)
+const BONO_ESTRELLA = { normal: .03, morada: .05, maxNormales: 5 };
+const bonoEstrellas = n => BONO_ESTRELLA.normal * Math.min(n, BONO_ESTRELLA.maxNormales) + BONO_ESTRELLA.morada * Math.max(0, n - BONO_ESTRELLA.maxNormales);
 
 const TOPES = { block: .50, armor: .75 };
 
@@ -108,6 +110,7 @@ __e["ESCALADO"] = ESCALADO;
 __e["LIMITE_RONDAS"] = LIMITE_RONDAS;
 __e["PUNTERIA"] = PUNTERIA;
 __e["TOPES"] = TOPES;
+__e["bonoEstrellas"] = bonoEstrellas;
 __e["probAplicar"] = probAplicar;
 return __e; })();
 
@@ -564,7 +567,7 @@ __m["motor/combate.js"] = (() => { const __e: any = {};
 // - Ningún personaje tiene código propio: sus fichas solo combinan piezas (acciones, gatillos, condiciones, efectos).
 // - Todo el azar pasa por un generador con semilla (misma semilla + mismas decisiones = misma partida).
 
-const { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, LIMITE_RONDAS, CONTROL, DOT, BUFFS, DEBUFFS, PUNTERIA, probAplicar, BONO_ESTRELLA } = __m["motor/reglas.js"];
+const { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, LIMITE_RONDAS, CONTROL, DOT, BUFFS, DEBUFFS, PUNTERIA, probAplicar, bonoEstrellas } = __m["motor/reglas.js"];
 const { EFECTOS, esDe } = __m["motor/efectos.js"];
 const { crearRng } = __m["motor/rng.js"];
 const { INVOCACIONES, TABLAS_INVOCACION } = __m["datos/invocaciones.js"];
@@ -667,10 +670,9 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] += v;
       }
     }
-    if (capas.estrellas && p.estrellas) {                            // estrellas de la cuenta: +3% HP/Daño/Velocidad y +1 punto a cada % por estrella
-      const n = p.estrellas;
-      pct.hp += BONO_ESTRELLA.base * n; pct.dmg += BONO_ESTRELLA.base * n; pct.spd += BONO_ESTRELLA.base * n;
-      for (const k of Object.keys(BASE_COMUN)) sec[k] += BONO_ESTRELLA.pct * n;
+    if (capas.estrellas && p.estrellas) {                            // estrellas de la cuenta: solo HP/Daño/Velocidad (+3% normal, +5% morada)
+      const b = bonoEstrellas(p.estrellas);
+      pct.hp += b; pct.dmg += b; pct.spd += b;
     }
     if (capas.reliquias) for (const m of pasivasDeReliquia(p)) {      // reliquia: bono fijo y lo que ha crecido
       for (const [k, v] of Object.entries({ ...m.bono }).concat(m.crece ? [[m.crece.stat, p.creceRel?.[m.crece.stat] || 0]] : [])) {
@@ -8283,27 +8285,27 @@ const furiaAcumulada = ronda => {
   return total;
 };
 // Subir este número al cambiar cómo se pelea contra el jefe (motor o reglas): así el servidor no rechaza ataques por una función desactualizada
-// Cofres 1–4 del Jefe de Raid (solo visual; sin imagen se muestra 🧰)
+// Cofres 1–4 del Jefe de Raid (sin imagen se muestra 🧰). probEstelar: probabilidad de Polvo Estelar (igual que en docs/sql/031)
 const COFRES_RAID = [
-  { nombre: 'Cofre de Madera', imagen: 'assets/cofres/cofre-de-madera.webp' },
-  { nombre: 'Cofre de Plata', imagen: 'assets/cofres/cofre-de-plata.webp' },
-  { nombre: 'Cofre de Oro', imagen: null },
-  { nombre: 'Cofre Arcano', imagen: null },
+  { nombre: 'Cofre de Madera', imagen: 'assets/cofres/cofre-de-madera.webp', probEstelar: .15 },
+  { nombre: 'Cofre de Plata', imagen: 'assets/cofres/cofre-de-plata.webp', probEstelar: .25 },
+  { nombre: 'Cofre de Oro', imagen: null, probEstelar: .40 },
+  { nombre: 'Cofre Arcano', imagen: null, probEstelar: .60 },
 ];
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 10;
+const REGLAS_RAID = 11;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
-// Cuánto pega el jefe en cada dificultad (dmg) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;
+// Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;
 // Lich King: 50% en Fácil → 150% en Pesadilla)
 const DIFICULTADES_RAID = {
-  facil: { nombre: 'Fácil', dmg: 1, res: 0, color: '#86efac' },
-  normal: { nombre: 'Normal', dmg: 1.25, res: .25, color: '#7dd3fc' },
-  dificil: { nombre: 'Difícil', dmg: 1.5, res: .50, color: '#fde68a' },
-  brutal: { nombre: 'Brutal', dmg: 2, res: .75, color: '#fdba74' },
-  pesadilla: { nombre: 'Pesadilla', dmg: 2.5, res: 1, color: '#fca5a5' },
+  facil: { nombre: 'Fácil', dmg: 1, res: 0, estelar: 5, color: '#86efac' },
+  normal: { nombre: 'Normal', dmg: 1.25, res: .25, estelar: 8, color: '#7dd3fc' },
+  dificil: { nombre: 'Difícil', dmg: 1.5, res: .50, estelar: 12, color: '#fde68a' },
+  brutal: { nombre: 'Brutal', dmg: 2, res: .75, estelar: 18, color: '#fdba74' },
+  pesadilla: { nombre: 'Pesadilla', dmg: 2.5, res: 1, estelar: 25, color: '#fca5a5' },
 };
 // Opciones de crearCombate para el equipo del jefe
 const opcionesRaid = (dificultad, hpInicio, hpTotal) => ({

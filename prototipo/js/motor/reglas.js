@@ -8,7 +8,9 @@ export const BASE_COMUN = {
 };
 
 // Estrellas de la cuenta (ascensión): por estrella, +3% HP/Daño/Velocidad y +1 punto a cada estadística en %
-export const BONO_ESTRELLA = { base: .03, pct: .01 };
+// Estrellas de la cuenta: solo HP, Daño y Velocidad. 1★–5★ normales +3% cada una; 6–10 = estrellas moradas, +5% cada una (máx. +40%)
+export const BONO_ESTRELLA = { normal: .03, morada: .05, maxNormales: 5 };
+export const bonoEstrellas = n => BONO_ESTRELLA.normal * Math.min(n, BONO_ESTRELLA.maxNormales) + BONO_ESTRELLA.morada * Math.max(0, n - BONO_ESTRELLA.maxNormales);
 
 export const TOPES = { block: .50, armor: .75 };
 

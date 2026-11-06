@@ -14,27 +14,27 @@ export const furiaAcumulada = ronda => {
   return total;
 };
 // Subir este número al cambiar cómo se pelea contra el jefe (motor o reglas): así el servidor no rechaza ataques por una función desactualizada
-// Cofres 1–4 del Jefe de Raid (solo visual; sin imagen se muestra 🧰)
+// Cofres 1–4 del Jefe de Raid (sin imagen se muestra 🧰). probEstelar: probabilidad de Polvo Estelar (igual que en docs/sql/031)
 export const COFRES_RAID = [
-  { nombre: 'Cofre de Madera', imagen: 'assets/cofres/cofre-de-madera.webp' },
-  { nombre: 'Cofre de Plata', imagen: 'assets/cofres/cofre-de-plata.webp' },
-  { nombre: 'Cofre de Oro', imagen: null },
-  { nombre: 'Cofre Arcano', imagen: null },
+  { nombre: 'Cofre de Madera', imagen: 'assets/cofres/cofre-de-madera.webp', probEstelar: .15 },
+  { nombre: 'Cofre de Plata', imagen: 'assets/cofres/cofre-de-plata.webp', probEstelar: .25 },
+  { nombre: 'Cofre de Oro', imagen: null, probEstelar: .40 },
+  { nombre: 'Cofre Arcano', imagen: null, probEstelar: .60 },
 ];
 export const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 export const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-export const REGLAS_RAID = 10;
+export const REGLAS_RAID = 11;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 export const CRECE_HEMO_RAID = .1;
-// Cuánto pega el jefe en cada dificultad (dmg) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;
+// Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;
 // Lich King: 50% en Fácil → 150% en Pesadilla)
 export const DIFICULTADES_RAID = {
-  facil: { nombre: 'Fácil', dmg: 1, res: 0, color: '#86efac' },
-  normal: { nombre: 'Normal', dmg: 1.25, res: .25, color: '#7dd3fc' },
-  dificil: { nombre: 'Difícil', dmg: 1.5, res: .50, color: '#fde68a' },
-  brutal: { nombre: 'Brutal', dmg: 2, res: .75, color: '#fdba74' },
-  pesadilla: { nombre: 'Pesadilla', dmg: 2.5, res: 1, color: '#fca5a5' },
+  facil: { nombre: 'Fácil', dmg: 1, res: 0, estelar: 5, color: '#86efac' },
+  normal: { nombre: 'Normal', dmg: 1.25, res: .25, estelar: 8, color: '#7dd3fc' },
+  dificil: { nombre: 'Difícil', dmg: 1.5, res: .50, estelar: 12, color: '#fde68a' },
+  brutal: { nombre: 'Brutal', dmg: 2, res: .75, estelar: 18, color: '#fdba74' },
+  pesadilla: { nombre: 'Pesadilla', dmg: 2.5, res: 1, estelar: 25, color: '#fca5a5' },
 };
 // Opciones de crearCombate para el equipo del jefe
 export const opcionesRaid = (dificultad, hpInicio, hpTotal) => ({

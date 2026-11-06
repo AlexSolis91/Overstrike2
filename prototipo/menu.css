@@ -1171,3 +1171,15 @@ body.social-min #soc-abrir { display: block; }
   #rd-llaves { flex-basis: 100%; justify-content: center; }
 }
 @media (max-width: 760px) { .rd-rangos th, .rd-rangos td { white-space: nowrap; } }
+
+/* Estrellas moradas (segunda vuelta) y modo "Seleccionar para desfragmentar" */
+.tc-estrellas .morada { color: #c084fc; text-shadow: 0 0 6px rgba(192, 132, 252, .8); }
+.tc-morada { color: #c084fc; }
+.tc-celda { display: flex; flex-direction: column; gap: 4px; }
+.tc-celda .tc-carta:disabled { opacity: .35; cursor: default; }
+.tc-celda.marcada .tc-carta { outline: 3px solid #fbbf24; outline-offset: -3px; }
+.tc-check { position: absolute; top: 6px; left: 6px; z-index: 1; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 900 13px Inter, sans-serif; color: #1a1205; background: #fbbf24; }
+.tc-selfrag-cant { display: flex; align-items: center; justify-content: space-between; gap: 4px; font-size: 12px; }
+.tc-selfrag-cant .eq-btn { padding: 2px 10px; }
+.tc-selfrag-barra { position: sticky; top: 0; z-index: 3; background: rgba(15, 20, 32, .97); }
+.tc-selfrag-bot { display: flex; gap: 8px; }

@@ -3,6 +3,15 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-06b', fecha: '6 de noviembre de 2026', titulo: 'Estrellas moradas y Polvo Estelar',
+    cambios: [
+      { tipo: 'nuevo', texto: '🟣 Estrellas moradas: un campeón con 5★ puede seguir ascendiendo hasta 5 estrellas moradas. Cuestan 10/15/20/25/30 copias y 300/500/750/1,000/1,500 de Polvo Estelar. Cada una da +5% de Vida, Daño y Velocidad (hasta +40% en total con las normales).' },
+      { tipo: 'nuevo', texto: '✨ Polvo Estelar (antes «otros fragmentos»: lo que ya tenías se conserva). Se gana en los cofres del Jefe de Raid, en las oleadas de jefe de la Horda y al terminar la temporada de la Arena.' },
+      { tipo: 'cambio', texto: '⭐ Las estrellas ahora solo suben Vida, Daño y Velocidad; ya no dan puntos de crítico, puntería, resistencia, etc.' },
+      { tipo: 'cambio', texto: '🧩 Desfragmentar da solo fragmentos de Runa (1 o 2 por copia). «Desfragmentar todas» se cambió por «Seleccionar para desfragmentar»: eliges qué campeones y cuántas copias.' },
+    ],
+  },
+  {
     id: '2026-11-06', fecha: '6 de noviembre de 2026', titulo: 'Veneno, Congelación y Jefe de Raid',
     cambios: [
       { tipo: 'cambio', texto: '🧪 Veneno escalonado: las acumulaciones ya no se suman. El daño es el Veneno más alto ×1.5 por cada acumulación extra (3 Venenos = ×2.25). Tope de 10 acumulaciones; con Orochimaru, 12.' },
