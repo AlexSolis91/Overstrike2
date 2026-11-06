@@ -8,7 +8,8 @@ import { JEFES_RAID, DIFICULTADES_RAID, furiaAcumulada, opcionesRaid, nombreCofr
 import { RELIQUIAS, RAREZAS } from '../datos/reliquias.js';
 import { VERSION } from '../datos/cuenta.js';
 import { ICONO_RUNA_PORTAL } from '../datos/recompensas.js';
-import { INVOCACIONES } from '../datos/invocaciones.js';
+import { INVOCACIONES } from '../datos/invocaciones.js';
+import { avisar } from './dialogo.js';
 
 const $ = s => document.querySelector(s);
 const miles = n => Math.round(n).toLocaleString('es-MX');
@@ -105,8 +106,8 @@ function pintar() {
 async function atacar(prueba = false) {
   const d = E.dificultades.find(x => x.id === sel), jefe = JEFES_RAID[E.jefe];
   let propios;
-  try { propios = new Set((await D.miColeccion()).map(c => c.campeon)); } catch (e) { return alert(D.mensajeError(e)); }
-  if (propios.size < 5) return alert('Necesitas al menos 5 campeones en tu colección.');
+  try { propios = new Set((await D.miColeccion()).map(c => c.campeon)); } catch (e) { return avisar(D.mensajeError(e)); }
+  if (propios.size < 5) return avisar('Necesitas al menos 5 campeones en tu colección.');
   const { porId } = await import('../datos/personajes/index.js');
   equipoCampana({
     titulo: `${prueba ? '🧪 Prueba · ' : '👑 '}${jefe.nombre} · ${d.nombre} · elige tu equipo`, rivales: [jefe], propios, volverTxt: '← Jefe de Raid',
@@ -118,7 +119,7 @@ async function atacar(prueba = false) {
       });
       let a;
       try { a = await D.raidEntrar(d.id, eqJ.map(p => p.id), VERSION); }
-      catch (e) { alert(D.mensajeError(e)); return irA('raid'); }
+      catch (e) { avisar(D.mensajeError(e)); return irA('raid'); }
       jugar(eqJ.map(p => porId(p.id)), [jefe], {
         semilla: Number(a.semilla), rival: opcionesRaid(d.id, Number(a.hp_inicio), Number(a.hp_total)),
         raid: { tema: jefe.musica, ataque: a.ataque, dificultad: d.id, nombreDif: d.nombre, hpInicio: Number(a.hp_inicio), hpTotal: Number(a.hp_total), equipoMio: a.equipo, fondo: 'assets/fondos/raid-lich-king.webp' },
@@ -155,7 +156,7 @@ async function reclamar(dia, dif) {
       ...(r.reliquias || []).map(x => itemReliquia(x.reliquia)),
     ]);
     dispatchEvent(new Event('inventario:cambio'));
-  } catch (e) { alert(D.mensajeError(e)); }
+  } catch (e) { avisar(D.mensajeError(e)); }
   ocupado = false; await cargar(); pintar();
 }
 

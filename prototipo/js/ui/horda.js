@@ -9,7 +9,8 @@ import { ICONO_RUNA_PORTAL } from '../datos/recompensas.js';
 import { repetirHorda, oleadaGuardada, defsGuardadas, totalDecisiones } from '../motor/hordaReanudar.js';
 import { porId } from '../datos/personajes/index.js';
 import { guardarLocal, leerLocal, borrarLocal } from '../servicios/hordaGuardada.js';
-import { activarTip, cartaPosible, hojaTactil, conCursor, ocultarTip, cerrarHoja } from './tipReliquia.js';
+import { activarTip, cartaPosible, hojaTactil, conCursor, ocultarTip, cerrarHoja } from './tipReliquia.js';
+import { confirmar, avisar } from './dialogo.js';
 
 const $ = s => document.querySelector(s);
 const ICONO_PORTAL = 'assets/items/runaPortal.png';
@@ -127,9 +128,9 @@ export async function abrirHorda() {
 }
 
 async function entrar() {
-  if (abierta && !confirm(`Tienes una partida en la oleada ${abierta.g.olas.length}. Si abres otro portal, esa partida se cierra (conservas su botín). ¿Abrir otro?`)) return;
+  if (abierta && !await confirmar(`Tienes una partida en la oleada ${abierta.g.olas.length}. Si abres otro portal, esa partida se cierra (conservas su botín). ¿Abrir otro?`)) return;
   let col;
-  try { col = await D.miColeccion(); } catch (e) { return alert(D.mensajeError(e)); }
+  try { col = await D.miColeccion(); } catch (e) { return avisar(D.mensajeError(e)); }
   const propios = new Set((col || []).map(r => r.campeon));
   const o = oleada(1);
   equipoCampana({
@@ -138,7 +139,7 @@ async function entrar() {
     alListo: async eqJ => {
       let partida, filasCol, filasRel;
       try { [filasCol, filasRel] = await Promise.all([D.miColeccion(), D.misReliquias()]); partida = await D.hordaEntrar('orcos'); }
-      catch (e) { alert(D.mensajeError(e)); return irA('horda'); }
+      catch (e) { avisar(D.mensajeError(e)); return irA('horda'); }
       abierta = null;
       const equipo = eqJ.map(p => p.id), botin = { oro: 0, reliquias: [], fragmentos: 0 };
       // Todo lo necesario para reconstruir la partida; las estrellas y reliquias quedan congeladas mientras dure
@@ -162,7 +163,7 @@ async function continuar() {
     let txt = 'Tu partida no se pudo retomar porque el juego se actualizó. El botín que ya cobraste es tuyo.';
     try { txt += (await D.hordaNoReanudable(id)).devuelta ? ' Te devolvimos tu Runa de Portal.' : ''; borrarLocal(id); }
     catch (e2) { txt = D.mensajeError(e2); }
-    alert(txt);
+    avisar(txt);
     await cargar(); return pintar();
   }
   const n = g.olas.length, o = oleadaGuardada(g, n);
@@ -171,10 +172,10 @@ async function continuar() {
 
 async function comprar(id, confirmado = false) {
   const r = RELIQUIAS[id];
-  if (comprando || (!confirmado && !confirm(`¿Comprar ${r.name} (${r.rarity}) por ${PRECIO_TROFEOS[r.rarity]} Trofeos de Orco?`))) return;
+  if (comprando || (!confirmado && !await confirmar(`¿Comprar ${r.name} (${r.rarity}) por ${PRECIO_TROFEOS[r.rarity]} Trofeos de Orco?`))) return;
   comprando = true; pintar();
-  try { await D.tiendaHordaComprar(id); alert(`✅ ${r.name} se agregó a tus reliquias (Colección → Reliquias).`); }
-  catch (e) { alert(D.mensajeError(e)); }
+  try { await D.tiendaHordaComprar(id); avisar(`✅ ${r.name} se agregó a tus reliquias (Colección → Reliquias).`); }
+  catch (e) { avisar(D.mensajeError(e)); }
   comprando = false; await cargar(); pintar();
 }
 

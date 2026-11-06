@@ -8,7 +8,8 @@ import { equipoCampana, irA } from './menu.js';
 import { OFICIALES, porId } from '../datos/personajes/index.js';
 import { LIGAS, liga, siguienteLiga, ATAQUES_DIARIOS, CAMPEONES_MINIMOS, BUSQUEDA_SEG, ORO_VICTORIA, SEMANAL, TEMPORADA } from '../datos/arena.js';
 import { imgHtml } from './imagenes.js';
-import { VERSION } from '../datos/cuenta.js';
+import { VERSION } from '../datos/cuenta.js';
+import { confirmar, avisar } from './dialogo.js';
 
 const $ = s => document.querySelector(s);
 const num = n => Number(n || 0).toLocaleString('es-MX');
@@ -128,7 +129,7 @@ function editar(tipo) {
     inicial: (tipo === 'ataque' ? est.ataque : est.defensa).map(porId).filter(Boolean),
     alVolver: () => irA('arena'),
     alListo: async eq => {
-      try { await D.arenaGuardarEquipo(tipo, eq.map(p => p.id)); } catch (e) { alert(D.mensajeError(e)); }
+      try { await D.arenaGuardarEquipo(tipo, eq.map(p => p.id)); } catch (e) { avisar(D.mensajeError(e)); }
       irA('arena');
     },
   });
@@ -136,9 +137,9 @@ function editar(tipo) {
 
 // Pasa el Ataque a Defensa y la Defensa a Ataque en un solo paso (docs/sql/017_arena_intercambiar.sql)
 async function intercambiar() {
-  if (!confirm('¿Intercambiar tus equipos? Tu Ataque pasará a ser tu Defensa y tu Defensa tu Ataque.')) return;
+  if (!await confirmar('¿Intercambiar tus equipos? Tu Ataque pasará a ser tu Defensa y tu Defensa tu Ataque.')) return;
   try { await D.arenaIntercambiarEquipos(); }
-  catch (e) { return alert(/arena_intercambiar_equipos/i.test(e?.message || '') ? 'Falta ejecutar docs/sql/017_arena_intercambiar.sql en el servidor.' : D.mensajeError(e)); }
+  catch (e) { return avisar(/arena_intercambiar_equipos/i.test(e?.message || '') ? 'Falta ejecutar docs/sql/017_arena_intercambiar.sql en el servidor.' : D.mensajeError(e)); }
   await cargar(); pintar();
 }
 
@@ -156,7 +157,7 @@ async function buscar() {
   let vivo = null, sinVivo = false;
   while (n > 0 && !cancelado && !vivo) {                     // cada segundo: ¿alguien más busca ahora? → partida en vivo
     try { const m = await D.arenaVivoBuscar(est.ataque, VERSION); if (m?.partida) vivo = m; }
-    catch (e) { if (/arena_vivo|function/i.test(e?.message || '')) sinVivo = true; else { caja.remove(); buscando = null; return alert(D.mensajeError(e)); } }
+    catch (e) { if (/arena_vivo|function/i.test(e?.message || '')) sinVivo = true; else { caja.remove(); buscando = null; return avisar(D.mensajeError(e)); } }
     if (vivo) break;
     await new Promise(r => setTimeout(r, 1000)); n--; const c = caja.querySelector('.ar-cuenta'); if (c) c.textContent = n;
   }
@@ -169,7 +170,7 @@ async function buscar() {
   }
   caja.querySelector('h2').textContent = '⚔️ ¡Rival encontrado!'; caja.querySelector('.ar-cuenta').textContent = '';
   let r;
-  try { r = await D.arenaAtacar(est.ataque, VERSION); } catch (e) { caja.remove(); buscando = null; return alert(D.mensajeError(e)); }
+  try { r = await D.arenaAtacar(est.ataque, VERSION); } catch (e) { caja.remove(); buscando = null; return avisar(D.mensajeError(e)); }
   caja.remove(); buscando = null;
   pelear(r);
 }
@@ -179,9 +180,9 @@ function pelear(r) {
     arena: { combate: r.combate, diario: r.diario, bot: r.bot, rival: r.rival, equipoRival: r.equipo_rival || null, venganza: !!r.venganza } });
 }
 async function vengar(combate) {
-  if (est.ataque?.length !== 5) return alert('Primero arma tu equipo de Ataque.');
-  if (!confirm('¿Atacar a este jugador con tu equipo de Ataque? (cuenta como uno de tus ataques)')) return;
-  try { pelear(await D.arenaVenganza(combate, est.ataque, VERSION)); } catch (e) { alert(D.mensajeError(e)); }
+  if (est.ataque?.length !== 5) return avisar('Primero arma tu equipo de Ataque.');
+  if (!await confirmar('¿Atacar a este jugador con tu equipo de Ataque? (cuenta como uno de tus ataques)')) return;
+  try { pelear(await D.arenaVenganza(combate, est.ataque, VERSION)); } catch (e) { avisar(D.mensajeError(e)); }
 }
 
 export function iniciarArena(opc) {

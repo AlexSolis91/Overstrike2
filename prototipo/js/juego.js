@@ -36,7 +36,8 @@ import { crearRng } from './motor/rng.js';
 import { semillaIA } from './motor/verificar.js';
 import { supabase } from './servicios/supabase.js';
 import { RELIQUIAS, RAREZAS } from './datos/reliquias.js';
-import { liga } from './datos/arena.js';
+import { liga } from './datos/arena.js';
+import { confirmar } from './ui/dialogo.js';
 
 const { gsap } = window;
 const $ = s => document.querySelector(s);
@@ -984,7 +985,7 @@ $('#btn-vel').addEventListener('click', () => {
   velocidad = velocidad === 2 ? 1 : 2; setVelocidad(velocidad); marcarControles();
   try { localStorage.setItem('os2-vel', String(velocidad)); } catch (e) { /* sin almacenamiento */ }
 });
-$('#btn-menu').addEventListener('click', () => { if (ui.fin || confirm('¿Abandonar la partida y volver al menú?')) irA('menu'); });
+$('#btn-menu').addEventListener('click', async () => { if (ui.fin || await confirmar('¿Abandonar la partida y volver al menú?')) irA('menu'); });
 $('#menu-full').addEventListener('click', () => $('#btn-full').click());
 $('#test-panel').addEventListener('click', async e => {
   const b = e.target.closest('button');

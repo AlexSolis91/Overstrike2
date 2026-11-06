@@ -13,7 +13,8 @@ import { COSTO_FORJA, CALIDAD_MINIMA, estadoReceta, proponerIngredientes, receta
 import { RELIQUIAS, espaciosDeCuenta } from '../datos/reliquias.js';
 import { crearCombate } from '../motor/combate.js';
 import { habilidadesHtml } from './menu.js';
-import { efectosDe, selectorEfectos } from '../datos/efectosCampeon.js';
+import { efectosDe, selectorEfectos } from '../datos/efectosCampeon.js';
+import { confirmar } from './dialogo.js';
 
 const MAX_ESTRELLAS = 5;   // estrellas máximas de hoy; también en _estrellas_maximas() (docs/sql/027_raid_ajustes.sql)
 const $ = s => document.querySelector(s);
@@ -402,7 +403,7 @@ const avisoParcial = (r, n) => r.error && aviso(`Solo se abrieron ${r.res.length
 
 async function abrirSobre(id, n = 1) {
   const s = SOBRES[id], precio = cfg.find(c => c.id === id)?.precio || 0;
-  if (precio > 0 && !confirm(n > 1 ? `¿Abrir ${n} sobres ${s.nombre} por ${num(precio * n)} de oro?` : `¿Abrir ${s.nombre} por ${num(precio)} de oro?`)) return;
+  if (precio > 0 && !await confirmar(n > 1 ? `¿Abrir ${n} sobres ${s.nombre} por ${num(precio * n)} de oro?` : `¿Abrir ${s.nombre} por ${num(precio)} de oro?`)) return;
   await accion(async () => {
     marcarAbriendo(n);
     const r = await abrirVarios(n, () => D.abrirSobre(id));
@@ -415,7 +416,7 @@ async function abrirSobre(id, n = 1) {
 
 async function abrirReliquias(n = 1) {
   const s = SOBRES.reliquias, precio = cfg.find(c => c.id === 'reliquias')?.precio || 0;
-  if (precio > 0 && !confirm(n > 1 ? `¿Abrir ${n} sobres ${s.nombre} por ${num(precio * n)} de oro?` : `¿Abrir ${s.nombre} por ${num(precio)} de oro?`)) return;
+  if (precio > 0 && !await confirmar(n > 1 ? `¿Abrir ${n} sobres ${s.nombre} por ${num(precio * n)} de oro?` : `¿Abrir ${s.nombre} por ${num(precio)} de oro?`)) return;
   await accion(async () => {
     marcarAbriendo(n);
     const r = await abrirVarios(n, () => D.abrirSobreReliquias());
@@ -428,7 +429,7 @@ async function abrirReliquias(n = 1) {
 
 async function abrirConVale(id) {
   const s = SOBRES[id];
-  if (!confirm(`¿Usar 1 vale para abrir ${s.nombre}? (Te quedan ${inv.vales_sobre})`)) return;
+  if (!await confirmar(`¿Usar 1 vale para abrir ${s.nombre}? (Te quedan ${inv.vales_sobre})`)) return;
   await accion(async () => {
     const ids = await D.abrirSobreVale(id);
     await revelarCartas({ sobre: s, campeones: fichas(ids), nuevos: nuevosDe(ids) });
@@ -463,7 +464,7 @@ async function ejecutar(e) {
   if (b.dataset.forjar) {
     const rec = recetas.find(r => r.id === b.dataset.forjar), ids = [...recetaMarcadas], nombre = RELIQUIAS[rec.legendaria].name;
     const puestas = ids.map(u => rels.find(r => r.uid === u)).filter(r => r?.campeon).map(r => `• ${r.name} (${dondeEsta(r)})`);
-    if (!confirm(`¿Forjar ${nombre}? Se consumen estas 5 Épicas, la receta y ${num(COSTO_FORJA)} de oro. Esto no se puede deshacer.${puestas.length ? `\n\nSe quitarán de sus campeones:\n${puestas.join('\n')}\n\nSi alguno está en tu equipo de Arena, peleará sin ellas.` : ''}`)) return;
+    if (!await confirmar(`¿Forjar ${nombre}? Se consumen estas 5 Épicas, la receta y ${num(COSTO_FORJA)} de oro. Esto no se puede deshacer.${puestas.length ? `\n\nSe quitarán de sus campeones:\n${puestas.join('\n')}\n\nSi alguno está en tu equipo de Arena, peleará sin ellas.` : ''}`)) return;
     return accion(async () => {
       const fila = await D.forjarLegendaria(rec.id, ids); recetaMarcadas.clear(); recetaSel = null;
       await revelarCartas({ sobre: { nombre: 'Forja de los Dioses', icono: '⚒️', color: RAREZAS.Legendario.color }, reliquias: [instancia(fila)].filter(Boolean) });
@@ -476,12 +477,12 @@ async function ejecutar(e) {
   if ('desmarcar' in b.dataset) { relMarcadas.clear(); return pintar(); }
   if ('descomponer' in b.dataset) {
     const ids = [...relMarcadas];
-    if (!confirm(`¿Descomponer ${ids.length} reliquia(s)? Esto no se puede deshacer.`)) return;
+    if (!await confirmar(`¿Descomponer ${ids.length} reliquia(s)? Esto no se puede deshacer.`)) return;
     return accion(async () => { const polvo = await D.descomponerReliquias(ids); relMarcadas.clear(); await recargar(); pintar(); aviso(`Obtuviste ${num(polvo)} de Polvo Arcano.`); });
   }
   if ('fusionar' in b.dataset) {
     const ids = [...relMarcadas], rz = rels.find(r => r.uid === ids[0])?.rarity;
-    if (!confirm(`¿Fusionar estas 10 reliquias ${RAREZAS[rz].plural} por ${num(ORO_FUSION[rz])} de oro? Esto no se puede deshacer.`)) return;
+    if (!await confirmar(`¿Fusionar estas 10 reliquias ${RAREZAS[rz].plural} por ${num(ORO_FUSION[rz])} de oro? Esto no se puede deshacer.`)) return;
     return accion(async () => {
       const fila = await D.fusionarReliquias(ids); relMarcadas.clear();
       await revelarCartas({ sobre: { nombre: 'Fusión', icono: '⚗️', color: RAREZAS[SIG_RAREZA[rz]].color }, reliquias: [instancia(fila)].filter(Boolean) });
@@ -505,25 +506,25 @@ async function ejecutar(e) {
   if ('ascender' in b.dataset) return accion(async () => { const n = await D.ascender(detalle); await recargar(); pintar(); aviso(`¡${porId(detalle).nombre} ascendió a ${n}★!`); });
   if (b.dataset.espacio) {
     const con = b.dataset.espacio, sig = col.get(detalle).espacios, esp = b.dataset.esp, nombre = ESPACIOS.find(e => e.id === esp)?.label || `el espacio ${sig + 1}`;
-    if (con === 'oro' && !confirm(`¿Abrir ${nombre} por ${num(COSTO_ESPACIO.oro[sig])} de oro?`)) return;
+    if (con === 'oro' && !await confirmar(`¿Abrir ${nombre} por ${num(COSTO_ESPACIO.oro[sig])} de oro?`)) return;
     return accion(async () => { await D.desbloquearEspacio(detalle, con, esp); await recargar(); pintar(); aviso(`${nombre} desbloqueado.`); });
   }
   if ('desfragMax' in b.dataset) {
     const lista = [...col.values()].filter(r => r.estrellas >= MAX_ESTRELLAS && r.copias > 0), total = lista.reduce((s, r) => s + r.copias, 0);
-    if (!confirm(`¿Desfragmentar ${num(total)} copia${total > 1 ? 's' : ''} de ${lista.length} ${lista.length > 1 ? 'campeones' : 'campeón'} con ${MAX_ESTRELLAS}★? Esto no se puede deshacer.`)) return;
+    if (!await confirmar(`¿Desfragmentar ${num(total)} copia${total > 1 ? 's' : ''} de ${lista.length} ${lista.length > 1 ? 'campeones' : 'campeón'} con ${MAX_ESTRELLAS}★? Esto no se puede deshacer.`)) return;
     return accion(async () => { const r = await D.desfragmentarMaximos(); await recargar(); pintar(); aviso(`Desfragmentaste ${num(r.copias)} copia${r.copias > 1 ? 's' : ''} de ${r.campeones} ${r.campeones > 1 ? 'campeones' : 'campeón'}: 🧩 ${num(r.frag_runa)} de Runa y 💠 ${num(r.frag_otros)} de otros fragmentos.`); });
   }
   if ('desfrag' in b.dataset) {
     const n = Math.floor(Number($('#tc-cant').value)), max = col.get(detalle).copias;
     if (!(n >= 1 && n <= max)) return aviso(`Elige de 1 a ${max} copias.`, 'error');
-    if (!confirm(`¿Desfragmentar ${n} copia${n > 1 ? 's' : ''} de ${porId(detalle).nombre}? Esto no se puede deshacer.`)) return;
+    if (!await confirmar(`¿Desfragmentar ${n} copia${n > 1 ? 's' : ''} de ${porId(detalle).nombre}? Esto no se puede deshacer.`)) return;
     return accion(async () => { const r = await D.desfragmentar(detalle, n); await recargar(); pintar(); aviso(`Obtuviste 🧩 ${r.frag_runa} de Runa y 💠 ${r.frag_otros} de otros fragmentos.`); });
   }
   if ('combinar' in b.dataset) return accion(async () => { await D.combinarRuna(); await recargar(); pintar(); aviso('¡Creaste una Runa de Invocación! 🔮'); });
   if (b.dataset.portal) { elegidoPortal = b.dataset.portal; return pintar(); }
   if ('invocar' in b.dataset) {
     const p = porId(elegidoPortal);
-    if (!confirm(`¿Gastar 1 Runa de Invocación para invocar a ${p.nombre}?`)) return;
+    if (!await confirmar(`¿Gastar 1 Runa de Invocación para invocar a ${p.nombre}?`)) return;
     return accion(async () => {
       const id = await D.invocarPortal(p.id), nuevos = nuevosDe([id]);
       await revelarCartas({ sobre: { nombre: 'Portal de Invocación', icono: '🔮', color: '#a855f7' }, campeones: fichas([id]), nuevos });
@@ -551,7 +552,7 @@ export function mostrarStarter() {
 }
 async function elegirStarter() {
   const id = starterSel, s = STARTERS[id];
-  if (!id || !confirm(`¿Elegir ${s.nombre}? Solo puedes elegir un Starter Pack.`)) return;
+  if (!id || !await confirmar(`¿Elegir ${s.nombre}? Solo puedes elegir un Starter Pack.`)) return;
   await accion(async () => {
     const ids = await D.abrirStarter(id);
     perfilActual().starter_elegido = id;
