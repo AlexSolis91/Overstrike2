@@ -7,6 +7,7 @@ import { equipoCampana, irA } from './menu.js';
 import { JEFES_RAID, DIFICULTADES_RAID, furiaAcumulada, opcionesRaid, nombreCofre, imgCofre } from '../datos/jefes/raid.js';
 import { RELIQUIAS, RAREZAS } from '../datos/reliquias.js';
 import { VERSION } from '../datos/cuenta.js';
+import { BASE_COMUN } from '../motor/reglas.js';
 import { ICONO_RUNA_PORTAL } from '../datos/recompensas.js';
 import { INVOCACIONES } from '../datos/invocaciones.js';
 import { avisar } from './dialogo.js';
@@ -20,6 +21,7 @@ let jugar = null, E = null, error = '', sel = null, reloj = null, ocupado = fals
 // Cofre 1–4: se paga 25, 50, 75 y 100% de oro, polvo y runas; derrotar al jefe los duplica
 const MAX_LLAVES = 2;
 const CAT = { basico: 'Básico', especial: 'Especial', over: 'Over' };
+const resJefe = (jefe, dif) => BASE_COMUN.res + (jefe.extra?.res || 0) + (DIFICULTADES_RAID[dif]?.res || 0);
 
 async function cargar() {
   error = '';
@@ -77,6 +79,7 @@ function pintar() {
       ${d ? `<div class="hd-panel">
         <div class="rd-hp"><i style="width:${Math.max(0, hp * 100)}%"></i><span>${miles(d.hp_restante)} / ${miles(d.hp_total)}</span></div>
         <p class="rd-mio">Tu daño hoy: <b>${miles(d.mi_dano)}</b>${d.cofre ? ` · ${nombreCofre(d.cofre)}` : ' · Aún sin cofre'}${d.reclamado ? ' · ✅ Ya reclamaste este cofre' : sig > 0 && !d.derrotado ? ` · Faltan ${miles(sig)} para el siguiente` : ''}</p>
+        <p class="rd-mio">🧿 Resistencia del jefe: <b>${pct(resJefe(jefe, d.id))}</b> · necesitas ${pct(resJefe(jefe, d.id))} de Puntería para que tus debuffs entren siempre.</p>
         ${d.derrotado ? '<p class="hd-nota">✅ El jefe ya cayó en esta dificultad. Vuelve mañana o ataca otra.</p>' : ''}
         <button id="rd-atacar" class="hd-btn" ${!E.llaves || d.derrotado || !d.abierta || ocupado ? 'disabled' : ''}>⚔️ Atacar (1 llave)</button>
         ${esAdmin() ? '<button id="rd-probar" class="hd-btn sec">🧪 Probar como admin (sin llave)</button><p class="hd-nota">Prueba: cualquier dificultad, con el HP completo. No gasta llaves, no da recompensas y no cuenta para el ranking ni las misiones.</p>' : ''}
@@ -90,6 +93,7 @@ function pintar() {
     <aside class="hd-info">
       <h4>Cómo funciona</h4>
       <p>Cada ataque gasta <b>1 llave</b> y dura hasta que caiga tu equipo: no hay límite de rondas. Tu daño se suma a la barra de todos y a tu cofre del día.</p>
+      <p><b>Resistencia del jefe:</b> ${Object.keys(DIFICULTADES_RAID).map(k => `${DIFICULTADES_RAID[k].nombre} ${pct(resJefe(jefe, k))}`).join(' · ')}. Si tu Puntería es menor, cada punto de diferencia le quita 1% de probabilidad a tus debuffs (mínimo 10%).</p>
       <p>Cada ronda, el jefe y sus invocaciones hacen más daño: ${[5, 10, 15, 20, 25, 30].map(r => `+${Math.round(furiaAcumulada(r) * 100)}% en la ronda ${r}`).join(', ')}, y después +100% más por ronda. Derrotarlo abre la siguiente dificultad para todos.</p>
       <h4>${jefe.nombre}</h4>
       <p><b>${jefe.pasiva.nombre}:</b> ${jefe.pasiva.desc}</p>

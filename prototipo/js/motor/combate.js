@@ -2249,6 +2249,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (r.dmgPct) p.campana.dmgPct = r.dmgPct;
     if (r.poder && r.poder !== 1) { p.campana.hpPct = r.poder - 1; p.campana.dmgPct = r.poder - 1; }
     if (r.spdPct) p.campana.spdPct = r.spdPct;
+    if (r.res) p.campana.res = r.res;                          // +Resistencia (puntos), p. ej. dificultad del Jefe de Raid
     if (r.jefe && p.pos === 0) {                             // el Jefe: más HP y una fase de furia al bajar de cierto % de HP
       p.jefe = { furia: false, umbral: r.jefe.umbral ?? .5, dmgPct: r.jefe.dmgPct ?? .25, spdPct: r.jefe.spdPct ?? .15 };
       p.campana.hpPct = (p.campana.hpPct || 0) + (r.jefe.hpExtra ?? .5);

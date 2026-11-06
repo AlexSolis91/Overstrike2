@@ -24,18 +24,19 @@ export const COFRES_RAID = [
 export const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 export const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-export const REGLAS_RAID = 9;
+export const REGLAS_RAID = 10;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 export const CRECE_HEMO_RAID = .1;
-// Cuánto pega el jefe en cada dificultad
+// Cuánto pega el jefe en cada dificultad (dmg) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;
+// Lich King: 50% en Fácil → 150% en Pesadilla)
 export const DIFICULTADES_RAID = {
-  facil: { nombre: 'Fácil', dmg: 1, color: '#86efac' },
-  normal: { nombre: 'Normal', dmg: 1.25, color: '#7dd3fc' },
-  dificil: { nombre: 'Difícil', dmg: 1.5, color: '#fde68a' },
-  brutal: { nombre: 'Brutal', dmg: 2, color: '#fdba74' },
-  pesadilla: { nombre: 'Pesadilla', dmg: 2.5, color: '#fca5a5' },
+  facil: { nombre: 'Fácil', dmg: 1, res: 0, color: '#86efac' },
+  normal: { nombre: 'Normal', dmg: 1.25, res: .25, color: '#7dd3fc' },
+  dificil: { nombre: 'Difícil', dmg: 1.5, res: .50, color: '#fde68a' },
+  brutal: { nombre: 'Brutal', dmg: 2, res: .75, color: '#fdba74' },
+  pesadilla: { nombre: 'Pesadilla', dmg: 2.5, res: 1, color: '#fca5a5' },
 };
 // Opciones de crearCombate para el equipo del jefe
 export const opcionesRaid = (dificultad, hpInicio, hpTotal) => ({
-  dmgPct: DIFICULTADES_RAID[dificultad].dmg - 1, barra: { hp: hpInicio, total: hpTotal, creceHemo: CRECE_HEMO_RAID }, limiteRondas: RONDAS_RAID, furiaRonda: FURIA_RAID,
+  dmgPct: DIFICULTADES_RAID[dificultad].dmg - 1, res: DIFICULTADES_RAID[dificultad].res, barra: { hp: hpInicio, total: hpTotal, creceHemo: CRECE_HEMO_RAID }, limiteRondas: RONDAS_RAID, furiaRonda: FURIA_RAID,
 });

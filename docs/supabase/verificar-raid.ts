@@ -2810,6 +2810,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (r.dmgPct) p.campana.dmgPct = r.dmgPct;
     if (r.poder && r.poder !== 1) { p.campana.hpPct = r.poder - 1; p.campana.dmgPct = r.poder - 1; }
     if (r.spdPct) p.campana.spdPct = r.spdPct;
+    if (r.res) p.campana.res = r.res;                          // +Resistencia (puntos), p. ej. dificultad del Jefe de Raid
     if (r.jefe && p.pos === 0) {                             // el Jefe: más HP y una fase de furia al bajar de cierto % de HP
       p.jefe = { furia: false, umbral: r.jefe.umbral ?? .5, dmgPct: r.jefe.dmgPct ?? .25, spdPct: r.jefe.spdPct ?? .15 };
       p.campana.hpPct = (p.campana.hpPct || 0) + (r.jefe.hpExtra ?? .5);
@@ -8230,7 +8231,7 @@ __e.default = {
   musica: 'jefeLichKing',                                    // pista exclusiva de este jefe (MUSICA en js/datos/sonidos.js)
   auraJefe: 'hielo',                                         // aura de la carta: hielo · fuego · oscuro
   base: { hp: 3000, dmg: 175, spd: 100 },
-  extra: { armor: .20, res: .50 },
+  extra: { armor: .20 },   // Resistencia: la base (50%) + la de la dificultad (ver DIFICULTADES_RAID)
   slots: [],
   ciclo: ['especial', 'basico', 'especial', 'basico', 'over'],   // siempre en este orden; la pantalla muestra lo que sigue
   pasiva: {
@@ -8292,20 +8293,21 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 9;
+const REGLAS_RAID = 10;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
-// Cuánto pega el jefe en cada dificultad
+// Cuánto pega el jefe en cada dificultad (dmg) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;
+// Lich King: 50% en Fácil → 150% en Pesadilla)
 const DIFICULTADES_RAID = {
-  facil: { nombre: 'Fácil', dmg: 1, color: '#86efac' },
-  normal: { nombre: 'Normal', dmg: 1.25, color: '#7dd3fc' },
-  dificil: { nombre: 'Difícil', dmg: 1.5, color: '#fde68a' },
-  brutal: { nombre: 'Brutal', dmg: 2, color: '#fdba74' },
-  pesadilla: { nombre: 'Pesadilla', dmg: 2.5, color: '#fca5a5' },
+  facil: { nombre: 'Fácil', dmg: 1, res: 0, color: '#86efac' },
+  normal: { nombre: 'Normal', dmg: 1.25, res: .25, color: '#7dd3fc' },
+  dificil: { nombre: 'Difícil', dmg: 1.5, res: .50, color: '#fde68a' },
+  brutal: { nombre: 'Brutal', dmg: 2, res: .75, color: '#fdba74' },
+  pesadilla: { nombre: 'Pesadilla', dmg: 2.5, res: 1, color: '#fca5a5' },
 };
 // Opciones de crearCombate para el equipo del jefe
 const opcionesRaid = (dificultad, hpInicio, hpTotal) => ({
-  dmgPct: DIFICULTADES_RAID[dificultad].dmg - 1, barra: { hp: hpInicio, total: hpTotal, creceHemo: CRECE_HEMO_RAID }, limiteRondas: RONDAS_RAID, furiaRonda: FURIA_RAID,
+  dmgPct: DIFICULTADES_RAID[dificultad].dmg - 1, res: DIFICULTADES_RAID[dificultad].res, barra: { hp: hpInicio, total: hpTotal, creceHemo: CRECE_HEMO_RAID }, limiteRondas: RONDAS_RAID, furiaRonda: FURIA_RAID,
 });
 
 __e["COFRES_RAID"] = COFRES_RAID;
