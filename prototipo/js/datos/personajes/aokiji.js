@@ -10,7 +10,7 @@ export default {
   franquicia: 'One Piece', grupos: ['hielo'],   // campaña: Frío Eterno
   nombre: 'Aokiji',
   rol: 'Control', rolSecundario: 'Daño',
-  sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
+  sobres: ['winter'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🧊', color: '#0ea5e9', imagen: 'assets/personajes/aokiji.webp',
   base: { hp: 700, dmg: 65, spd: 100 },

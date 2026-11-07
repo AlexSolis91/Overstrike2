@@ -7,7 +7,7 @@ export default {
   franquicia: 'Saint Seiya', grupos: ['santos-de-oro', 'hielo'],   // campaña: temas de las etapas
   nombre: 'Camus',
   rol: 'Control', rolSecundario: 'Daño',
-  sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
+  sobres: ['winter'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🧊', color: '#22d3ee', imagen: 'assets/personajes/camus.webp',
   base: { hp: 650, dmg: 60, spd: 106 },

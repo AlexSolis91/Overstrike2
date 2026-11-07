@@ -49,7 +49,7 @@ export default {
   franquicia: 'Kimetsu no Yaiba', grupos: ['demonios', 'villanos'],
   nombre: 'Muzan Kibutsuji',
   rol: 'DoTer', rolSecundario: 'Support',
-  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['phantom', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🎩', color: '#881337', imagen: 'assets/personajes/muzan-kibutsuji.webp',
   base: { hp: 620, dmg: 55, spd: 103 },

@@ -8,7 +8,7 @@ export default {
   franquicia: 'Saint Seiya', grupos: ['santos-de-oro'],   // campaña: temas de las etapas
   nombre: 'Milo',
   rol: 'DoTer', rolSecundario: 'Support',
-  sobres: ['bloodline'],
+  sobres: ['bloodline', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                         // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦂', color: '#dc2626', imagen: 'assets/personajes/milo.webp',
   base: { hp: 600, dmg: 55, spd: 102 },

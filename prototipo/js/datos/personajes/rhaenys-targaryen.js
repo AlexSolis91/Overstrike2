@@ -8,7 +8,7 @@ export default {
   franquicia: 'Game of Thrones', grupos: ['targaryen', 'dragones'],   // campaña: temas de las etapas
   nombre: 'Rhaenys Targaryen',
   rol: 'Daño', rolSecundario: 'Control',
-  sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)
+  sobres: ['flames'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐉', color: '#dc2626', imagen: 'assets/personajes/rhaenys-targaryen.webp',
   base: { hp: 560, dmg: 85, spd: 110 },

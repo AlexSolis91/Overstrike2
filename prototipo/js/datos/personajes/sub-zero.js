@@ -7,7 +7,7 @@ export default {
   franquicia: 'Mortal Kombat', grupos: ['lin-kuei', 'hielo'],   // campaña: temas de las etapas
   nombre: 'Sub-Zero',
   rol: 'Control', rolSecundario: 'Daño',
-  sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)
+  sobres: ['winter'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🥶', color: '#38bdf8', imagen: 'assets/personajes/sub-zero.webp',
   base: { hp: 680, dmg: 62, spd: 98 },

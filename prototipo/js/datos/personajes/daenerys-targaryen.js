@@ -6,7 +6,7 @@ export default {
   franquicia: 'Game of Thrones', grupos: ['targaryen', 'dragones', 'reyes'],   // campaña: temas de las etapas
   nombre: 'Daenerys Targaryen',
   rol: 'Invoker', rolSecundario: 'DoTer',
-  sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)
+  sobres: ['flames'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐉', color: '#b91c1c', imagen: 'assets/personajes/daenerys-targaryen.webp',
   base: { hp: 600, dmg: 60, spd: 88 },

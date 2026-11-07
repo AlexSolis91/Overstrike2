@@ -6,7 +6,7 @@ export default {
   franquicia: 'Demon Slayer', grupos: ['cazadores-de-demonios', 'fuego'],   // campaña: temas de las etapas
   nombre: 'Rengoku',
   rol: 'Tanque', rolSecundario: 'DoTer',
-  sobres: [],  // sin sobre temático todavía: sale en Unbreakable Force (y en los aleatorios)
+  sobres: ['flames'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🔥', color: '#f97316', imagen: 'assets/personajes/rengoku.webp',
   base: { hp: 820, dmg: 55, spd: 93 },

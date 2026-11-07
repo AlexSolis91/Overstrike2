@@ -9,7 +9,7 @@ export default {
   franquicia: 'The King of Fighters', grupos: ['guerreros', 'fuego'],   // campaña: Guerreros Legendarios y Legión de Fuego
   nombre: 'Kyo Kusanagi',
   rol: 'DoTer', rolSecundario: 'Daño',
-  sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
+  sobres: ['flames'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🔥', color: '#ea580c', imagen: 'assets/personajes/kyo-kusanagi.webp',
   base: { hp: 600, dmg: 55, spd: 97 },

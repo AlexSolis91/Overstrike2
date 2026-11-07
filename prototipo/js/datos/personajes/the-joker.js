@@ -7,7 +7,7 @@ export default {
   franquicia: 'DC', grupos: ['villanos-de-gotham'],   // campaña: temas de las etapas
   nombre: 'The Joker',
   rol: 'DoTer', rolSecundario: 'Control',
-  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['phantom', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🃏', color: '#7c3aed', imagen: 'assets/personajes/the-joker.webp',
   base: { hp: 600, dmg: 55, spd: 92 },

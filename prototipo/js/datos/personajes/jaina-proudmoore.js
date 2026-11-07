@@ -7,7 +7,7 @@ export default {
   franquicia: 'Warcraft', grupos: ['alianza', 'hielo'],   // campaña: temas de las etapas
   nombre: 'Jaina Proudmoore',
   rol: 'Daño',
-  sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
+  sobres: ['winter'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🧙‍♀️', color: '#818cf8', imagen: 'assets/personajes/jaina-proudmoore.webp',
   base: { hp: 540, dmg: 85, spd: 108 },

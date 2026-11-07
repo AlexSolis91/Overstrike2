@@ -7,7 +7,7 @@ export default {
   franquicia: 'Mortal Kombat', grupos: ['espectros', 'fuego'],   // campaña: temas de las etapas
   nombre: 'Scorpion',
   rol: 'Daño', rolSecundario: 'DoTer',
-  sobres: ['bloodline', 'phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['bloodline', 'phantom', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦂', color: '#f59e0b', imagen: 'assets/personajes/scorpion.webp',
   base: { hp: 720, dmg: 72, spd: 105 },

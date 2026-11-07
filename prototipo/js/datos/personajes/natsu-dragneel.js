@@ -9,7 +9,7 @@ export default {
   franquicia: 'Fairy Tail', grupos: ['dragones', 'fuego'],   // campaña: Jinetes de Dragones (Dragon Slayer) y Legión de Fuego
   nombre: 'Natsu Dragneel',
   rol: 'DoTer', rolSecundario: 'Daño',
-  sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
+  sobres: ['flames'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐲', color: '#ef4444', imagen: 'assets/personajes/natsu-dragneel.webp',
   base: { hp: 620, dmg: 58, spd: 98 },

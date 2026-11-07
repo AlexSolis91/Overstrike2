@@ -10,7 +10,7 @@ export default {
   franquicia: 'DC', grupos: ['villanos-de-gotham', 'bombarderos'],   // campaña: Ciudad Gótica y Señores del Caos
   nombre: 'El Pingüino',
   rol: 'DoTer', rolSecundario: 'Daño',
-  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['phantom', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐧', color: '#475569', imagen: 'assets/personajes/el-pinguino.webp',
   base: { hp: 600, dmg: 50, spd: 85 },

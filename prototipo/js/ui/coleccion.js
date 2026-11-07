@@ -2,7 +2,7 @@
 // hace el SERVIDOR (datos.js); aquí solo se muestra y se piden las acciones. Las aperturas usan la animación de apertura.js.
 import { OFICIALES, porId } from '../datos/personajes/index.js';
 import { STARTERS } from '../datos/starters.js';
-import { SOBRES } from '../datos/sobres.js';
+import { SOBRES, campeonesDelSobre } from '../datos/sobres.js';
 import { perfilActual } from './cuenta.js';
 import { revelarCartas } from './apertura.js';
 import * as D from '../servicios/datos.js';
@@ -13,7 +13,7 @@ import { COSTO_FORJA, CALIDAD_MINIMA, estadoReceta, proponerIngredientes, receta
 import { RELIQUIAS, espaciosDeCuenta } from '../datos/reliquias.js';
 import { crearCombate } from '../motor/combate.js';
 import { habilidadesHtml } from './menu.js';
-import { efectosDe, selectorEfectos } from '../datos/efectosCampeon.js';
+import { efectosDe, selectorEfectos } from '../datos/efectosCampeon.js';
 import { confirmar } from './dialogo.js';
 import { bonoEstrellas } from '../motor/reglas.js';
 
@@ -111,6 +111,7 @@ function htmlSobres(lista) {
       return `<div class="tc-sobre ${esRel ? 'reliquias' : ''}" style="--c:${s.color}">
         ${s.imagen ? `<div class="tc-sobre-arte con-arte" style="--arte:url('${s.imagen}')"><img src="${s.imagen}" alt="${s.nombre}"></div>` : `<div class="tc-sobre-arte"><span>${s.icono}</span></div>`}
         <b>${s.nombre}</b>
+        ${esRel ? '' : `<small class="tc-sobre-pool">${c.id === 'unbreakable' ? `Campeones de todos los sobres (${campeonesDelSobre(c.id).length})` : `Solo sus ${campeonesDelSobre(c.id).length} campeones`}</small>`}
         <button class="eq-listo tc-abrir" ${esRel ? 'data-reliquias' : `data-sobre="${c.id}"`} ${alcanza ? '' : 'disabled'}>${c.precio > 0 ? `🪙 ${num(c.precio)}` : 'Gratis'}</button>
         ${c.precio > 0 ? `<div class="tc-varios">${VARIOS.map(n => `<button class="eq-btn" ${esRel ? 'data-reliquias' : `data-sobre="${c.id}"`} data-n="${n}" title="Abrir ${n} sobres por ${num(c.precio * n)} de oro" ${inv.oro >= c.precio * n ? '' : 'disabled'}>×${n}</button>`).join('')}</div>` : ''}
         ${esRel ? htmlGarantias() : inv.vales_sobre ? `<button class="eq-btn tc-vale" data-vale="${c.id}">🎟️ Usar vale</button>` : alcanza ? '' : '<em>Te falta oro</em>'}

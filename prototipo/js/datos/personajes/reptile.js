@@ -8,7 +8,7 @@ export default {
   franquicia: 'Mortal Kombat', grupos: ['outworld'],   // campaña: temas de las etapas
   nombre: 'Reptile',
   rol: 'Asesino', rolSecundario: 'DoTer',
-  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['phantom', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦎', color: '#65a30d', imagen: 'assets/personajes/reptile.webp',
   base: { hp: 560, dmg: 80, spd: 125 },

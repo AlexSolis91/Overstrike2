@@ -9,7 +9,7 @@ export default {
   franquicia: 'Naruto', grupos: ['sannin', 'renegados'],   // campaña: temas de las etapas
   nombre: 'Orochimaru',
   rol: 'DoTer', rolSecundario: 'Support',
-  sobres: ['phantom'],
+  sobres: ['phantom', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',
   emoji: '🐍', color: '#4d7c0f', imagen: 'assets/personajes/orochimaru.webp',
   base: { hp: 600, dmg: 50, spd: 95 },

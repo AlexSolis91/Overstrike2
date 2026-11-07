@@ -42,7 +42,7 @@ export default {
   franquicia: 'Warcraft', grupos: ['dragones', 'aspectos'],   // campaña: temas de las etapas
   nombre: 'Alexstrasza',
   rol: 'Support', rolSecundario: 'DoTer',
-  sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['sacred', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🌹', color: '#e11d48', imagen: 'assets/personajes/alexstrasza.webp',
   base: { hp: 650, dmg: 55, spd: 95 },

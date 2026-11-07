@@ -11,7 +11,7 @@ export default {
   franquicia: 'Kimetsu no Yaiba', grupos: ['cazadores-de-demonios'],   // campaña: Cazadores
   nombre: 'Shinobu Kocho',
   rol: 'DoTer', rolSecundario: 'Support',
-  sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
+  sobres: ['toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦋', color: '#a855f7', imagen: 'assets/personajes/shinobu-kocho.webp',
   base: { hp: 550, dmg: 48, spd: 105 },

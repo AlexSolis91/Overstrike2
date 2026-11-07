@@ -3,6 +3,13 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-07c', fecha: '7 de noviembre de 2026', titulo: 'Sobres temáticos y 3 sobres nuevos',
+    cambios: [
+      { tipo: 'cambio', texto: '🎴 Cada sobre temático ahora da solo campeones de su tema: si buscas a un campeón, ve a su sobre. Unbreakable Force sigue dando campeones de todos los sobres.' },
+      { tipo: 'nuevo', texto: '🔥 Lords of the Flames, ❄️ Winter Storm y 🧪 Toxic Nightmare: sobres de Quemadura, Congelación y Veneno, con los campeones de los Starter Packs.' },
+    ],
+  },
+  {
     id: '2026-11-07b', fecha: '7 de noviembre de 2026', titulo: 'Anakin Skywalker y Lord Vader',
     cambios: [
       { tipo: 'nuevo', texto: '⚔️ Anakin Skywalker (Daño) llega a los sobres Unbreakable Force y Phantom of Chaos: con Asistir y Contraataque responde con Djem So a todo, junta marcas de Héroe Caído y, con 30, se convierte para siempre en Lord Vader, que domina con Miedo, Aturdimiento y la Ejecución de la Orden 66.' },

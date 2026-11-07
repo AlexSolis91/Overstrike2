@@ -520,8 +520,9 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
   - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King, Doctor Doom, Skeletor, Saga, Itachi, Sukuna, Anakin Skywalker.
   - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki, Kratos, Wukong.
   - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema. **Goku, Vegeta, Naruto y He-Man salen solo aquí** (sin sobre temático + «Solo su sobre»). Anakin Skywalker.
-  - Sin sobre temático por ahora (salen en Unbreakable Force y en los aleatorios): Daenerys, Rhaenys, Rengoku, Sub-Zero. Llegarán sobres de Quemadura, Congelación, etc.
-- **Apertura** (`abrirSobre(id)`): 3 campeones, sin repetir dentro del mismo sobre. 1 o 2 (50/50) del tema y el resto al azar entre **todos** (a veces también caen del tema). Unbreakable: los 3 al azar entre todos.
+  - 🔥 **Lords of the Flames** (`flames`), ❄️ **Winter Storm** (`winter`) y 🧪 **Toxic Nightmare** (`toxic`): Quemadura, Congelación y Veneno; los mismos campeones que los Starter Packs Blazing, Frostborn y Noxious (2026-11-07).
+  - Sin sobre temático (solo en Unbreakable Force y el Portal): Goku, Vegeta, Naruto, He-Man (a propósito), Pain, Minato, Spider-Man, Broly, Gohan, Trunks, Hashirama, Capitán América, Jon Snow.
+- **Apertura** (`abrirSobre(id)`, servidor `_sortear_sobre` en docs/sql/032): 3 campeones sin repetir, **todos de su tema** (quien busca a un campeón va a su sobre). **Unbreakable Force**: 3 entre **todos** los campeones (más variado; conviene que sea más barato). La tienda muestra «Solo sus N campeones» / «Campeones de todos los sobres».
 - **Starter Pack** (`abrirStarter(id)` en `js/datos/starters.js`): 3 al azar de sus exclusivos + 2 al azar entre los elegibles, sin repetir.
 - **Probabilidad de salida según la fuerza** (`docs/sql/003_probabilidades.sql`): cada campeón tiene un **nivel** invisible para el jugador que pesa en **todos** los sorteos (tema y relleno de sobres, Unbreakable Force y los campeones del Starter Pack). Se asigna según su % de victorias en la simulación:
   - Normal (peso 1): menos de 60% · Baja (0.75): 60–69% · Muy baja (0.5): 70–79% · Mínima (0.25): 80% o más.

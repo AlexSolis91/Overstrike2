@@ -9,7 +9,7 @@ export default {
   franquicia: 'Solo Leveling', grupos: ['hielo'],   // campaña: Frío Eterno
   nombre: 'Baruka',
   rol: 'Control', rolSecundario: 'Daño',
-  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['phantom', 'winter'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🗡️', color: '#3b82f6', imagen: 'assets/personajes/baruka.webp',
   base: { hp: 640, dmg: 62, spd: 108 },

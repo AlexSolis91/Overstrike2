@@ -10,7 +10,7 @@ export default {
   franquicia: 'Vikings', grupos: ['reyes', 'guerreros'],   // campaña: Los Reyes y Guerreros Legendarios
   nombre: 'Bjorn Ironside',
   rol: 'Tanque', rolSecundario: 'Support',
-  sobres: ['bloodline'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['bloodline', 'winter'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🛡️', color: '#64748b', imagen: 'assets/personajes/bjorn-ironside.webp',
   base: { hp: 790, dmg: 48, spd: 84 },

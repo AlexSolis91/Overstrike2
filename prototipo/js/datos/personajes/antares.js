@@ -54,7 +54,7 @@ export default {
   franquicia: 'Solo Leveling', grupos: ['monarcas', 'dragones'],   // campaña: temas de las etapas
   nombre: 'Antares',
   rol: 'DoTer', rolSecundario: 'Control',
-  sobres: ['phantom'],
+  sobres: ['phantom', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',
   emoji: '🐲', color: '#dc2626', imagen: 'assets/personajes/antares.webp',
   base: { hp: 650, dmg: 60, spd: 100 },

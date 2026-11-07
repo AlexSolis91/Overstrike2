@@ -9,7 +9,7 @@ export default {
   franquicia: 'Solo Leveling', grupos: ['monarcas', 'hielo'],   // campaña: Los Monarcas y Frío Eterno
   nombre: 'Sillad',
   rol: 'Control', rolSecundario: 'Support',
-  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['phantom', 'winter'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🧊', color: '#38bdf8', imagen: 'assets/personajes/sillad.webp',
   base: { hp: 680, dmg: 60, spd: 98 },
