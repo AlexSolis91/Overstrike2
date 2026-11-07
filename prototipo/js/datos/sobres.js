@@ -13,7 +13,7 @@ export const SOBRES = {
   winter:      { nombre: 'Winter Storm',        tema: 'Congelación',                      icono: '❄️', color: '#38bdf8', imagen: 'assets/sobres/winter.webp', activo: true },
   toxic:       { nombre: 'Toxic Nightmare',     tema: 'Veneno',                           icono: '🧪', color: '#22c55e', imagen: 'assets/sobres/toxic.webp', activo: true },
   warriors:    { nombre: 'Legendary Warriors',  tema: 'Héroes y guerreros legendarios',   icono: '⚔️', color: '#84cc16', imagen: 'assets/sobres/warriors.webp', activo: true },
-  unbreakable: { nombre: 'Unbreakable Force',   tema: null,                               icono: '💪', color: '#f97316', imagen: 'assets/sobres/unbreakable.webp', activo: true },   // de todo
+  unbreakable: { nombre: 'Unbreakable Force',   tema: null,                               icono: '💪', color: '#f97316', imagen: 'assets/sobres/unbreakable.webp?v=2', activo: true },   // de todo
   // Sobre de RELIQUIAS (no de campeones): 3 reliquias, garantías por calendario. Lo abre el servidor (abrir_sobre_reliquias).
   reliquias:   { nombre: 'Relics of Power',     tema: 'Reliquias', tipo: 'reliquias',     icono: '⚔️', color: '#a855f7', imagen: 'assets/sobres/reliquias.webp', activo: true },
 };
