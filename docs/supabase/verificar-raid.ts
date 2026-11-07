@@ -8134,6 +8134,70 @@ __e.default = {
 
 return __e; })();
 
+__m["datos/personajes/sukuna.js"] = (() => { const __e: any = {};
+const { espacios } = __m["datos/reliquias.js"];
+
+// Ficha oficial (2026-11-07; sim: ~51% contra equipos al azar, ~68% como líder). Ryomen Sukuna, el Rey de las Maldiciones
+// (Jujutsu Kaisen). Daño + DoTer: Desmantelar hace sangrar, Partir convierte el Sangrado en Hemorragia y su Expansión de
+// Dominio, el Santuario Malévolo, corta a todos los enemigos cada ronda. Técnica Maldita Inversa: se regenera.
+__e.default = {
+  id: 'sukuna',
+  franquicia: 'Jujutsu Kaisen', grupos: [],   // campaña: temas de las etapas
+  nombre: 'Sukuna',
+  rol: 'Daño', rolSecundario: 'DoTer',
+  sobres: ['bloodline', 'phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  emoji: '👹', color: '#b91c1c', imagen: 'assets/personajes/sukuna.webp',
+  base: { hp: 700, dmg: 72, spd: 112 },   // banda Luchador
+  extra: { critRate: .15 },
+  slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
+
+  lider: {
+    nombre: 'Rey de las Maldiciones',
+    desc: 'Los aliados hacen +15% de daño y ganan +20% de Prob. Crítico, +20% de Puntería y +10% de Daño Crítico por cada enemigo con Sangrado. Cada vez que muere un enemigo, todo el equipo se cura 10% de su HP máx.',
+    bonoDano: .15,
+    bonoStat: { critRate: .20, acc: .20 },
+    bonoPorEfecto: { efecto: 'bleed', stat: 'critDmg', valor: .10 },
+    alMorirEnemigo: { tipo: 'curar', pct: .10, base: 'hpMaxObjetivo', a: 'todosAliados' },
+  },
+  pasiva: {
+    nombre: 'Técnica Maldita Inversa',
+    desc: 'Al inicio de cada ronda se cura 5% de su HP máx. y se limpia 1 debuff. Gana +5% de Prob. Crítico por cada enemigo con Sangrado.',
+    gatillo: 'alIniciarRonda',
+    accion: { tipo: 'multiple', a: 'propio', acciones: [{ tipo: 'curar', pct: .05, escala: 'hpMax' }, { tipo: 'limpiar', cantidad: 1 }] },
+    bonoPorEfecto: { efecto: 'bleed', stat: 'critRate', valor: .05 },
+  },
+  movimientos: [
+    {
+      categoria: 'basico', nombre: 'Desmantelar', objetivo: 'enemigo', golpes: 2, estilo: 'ranged', color: 0xdc2626,
+      pct: .70, cd: 0,
+      desc: 'Kai: 2 cortes de 70% a un enemigo, cada uno con 40% de probabilidad de aplicar Sangrado.',
+      efectos: [{ accion: { tipo: 'efecto', id: 'bleed', prob: .40 } }],
+    },
+    {
+      categoria: 'especial', nombre: 'Partir', objetivo: 'enemigo', estilo: 'melee', color: 0x991b1b,
+      pct: 1.75, cd: 3, ignoraArmadura: .50,
+      desc: 'Hachi: causa 175% a un enemigo e ignora 50 puntos de su Armadura. Si sangra, su Sangrado se convierte en Hemorragia.',
+      efectos: [{ cuando: 'final', accion: { tipo: 'hemorragia' } }],
+    },
+    {
+      categoria: 'over', nombre: 'Expansión de Dominio: Santuario Malévolo', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x7f1d1d,
+      pct: 1.00, cd: 5,
+      desc: 'Causa 100% a todos los enemigos con 60% de probabilidad de Sangrado, y levanta el Santuario Malévolo (2 rondas): al inicio de cada ronda, cada enemigo recibe un corte de 45%.',
+      efectos: [
+        { accion: { tipo: 'efecto', id: 'bleed', prob: .60 } },
+        { cuando: 'final', accion: { tipo: 'zona', dur: 2, a: 'propio', zona: {
+          nombre: 'Santuario Malévolo', icono: '⛩️',
+          desc: 'al inicio de cada ronda, cada enemigo recibe un corte de 45%',
+          alIniciarRonda: { tipo: 'golpeDirecto', pct: .45, nombre: 'Corte del Santuario', a: 'todosEnemigos' },
+        } } },
+      ],
+    },
+  ],
+};
+
+
+return __e; })();
+
 __m["datos/personajes/index.js"] = (() => { const __e: any = {};
 // Registro de personajes. Cada ficha oficial nueva se agrega aquí y aparece sola en la construcción de equipos.
 const madara = __m["datos/personajes/madara-uchiha.js"].default;
@@ -8212,8 +8276,9 @@ const yoda = __m["datos/personajes/yoda.js"].default;
 const capitanAmerica = __m["datos/personajes/capitan-america.js"].default;
 const superman = __m["datos/personajes/superman.js"].default;
 const satoruGojo = __m["datos/personajes/satoru-gojo.js"].default;
+const sukuna = __m["datos/personajes/sukuna.js"].default;
 
-const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo];
+const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna];
 const porId = id => OFICIALES.find(p => p.id === id);
 
 __e["OFICIALES"] = OFICIALES;

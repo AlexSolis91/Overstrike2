@@ -3,6 +3,12 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-07', fecha: '7 de noviembre de 2026', titulo: 'Sukuna, el Rey de las Maldiciones',
+    cambios: [
+      { tipo: 'nuevo', texto: '👹 Sukuna (Daño · DoTer) llega a los sobres Bloodline Awakening y Phantom of Chaos: Desmantelar hace sangrar, Partir convierte el Sangrado en Hemorragia y su Expansión de Dominio, el Santuario Malévolo, corta a todos los enemigos cada ronda. Como líder, su equipo se cura cada vez que cae un enemigo.' },
+    ],
+  },
+  {
     id: '2026-11-06b', fecha: '6 de noviembre de 2026', titulo: 'Estrellas moradas y Polvo Estelar',
     cambios: [
       { tipo: 'nuevo', texto: '🟣 Estrellas moradas: un campeón con 5★ puede seguir ascendiendo hasta 5 estrellas moradas. Cuestan 10/15/20/25/30 copias y 300/500/750/1,000/1,500 de Polvo Estelar. Cada una da +5% de Vida, Daño y Velocidad (hasta +40% en total con las normales).' },

@@ -76,9 +76,10 @@ insert into public.campeones (id, nombre, starter, sobres, activo) values
   ('nezuko-kamado', 'Nezuko Kamado', null, array['bloodline']::text[], true),
   ('jon-snow', 'Jon Snow', null, array[]::text[], true),
   ('superman', 'Superman', null, array['unbreakable']::text[], true),
-  ('satoru-gojo', 'Satoru Gojō', null, array['unbreakable']::text[], true)
+  ('satoru-gojo', 'Satoru Gojō', null, array['unbreakable']::text[], true),
+  ('sukuna', 'Sukuna', null, array['bloodline', 'phantom']::text[], true)
 on conflict (id) do update set nombre = excluded.nombre, starter = excluded.starter, sobres = excluded.sobres, activo = excluded.activo;
--- 76 campeones
+-- 77 campeones
 
 -- ============================================================ RELIQUIAS (requiere docs/sql/005_reliquias.sql y 006_horda.sql)
 insert into public.reliquia_tipos (tipo, categoria, planas, pcts) values
