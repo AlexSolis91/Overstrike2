@@ -8552,8 +8552,8 @@ const furiaAcumulada = ronda => {
 const COFRES_RAID = [
   { nombre: 'Cofre de Madera', imagen: 'assets/cofres/cofre-de-madera.webp', probEstelar: .15 },
   { nombre: 'Cofre de Plata', imagen: 'assets/cofres/cofre-de-plata.webp', probEstelar: .25 },
-  { nombre: 'Cofre de Oro', imagen: null, probEstelar: .40 },
-  { nombre: 'Cofre Arcano', imagen: null, probEstelar: .60 },
+  { nombre: 'Cofre de Oro', imagen: 'assets/cofres/cofre-de-oro.webp', probEstelar: .40 },
+  { nombre: 'Cofre Arcano', imagen: 'assets/cofres/cofre-arcano.webp', probEstelar: .60 },
 ];
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
