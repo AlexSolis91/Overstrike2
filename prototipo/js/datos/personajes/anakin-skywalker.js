@@ -63,7 +63,7 @@ export default {
   franquicia: 'Star Wars', grupos: ['jedi'],   // campaña: temas de las etapas
   nombre: 'Anakin Skywalker',
   rol: 'Daño',
-  sobres: ['unbreakable', 'phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '⚔️', color: '#3b82f6', imagen: 'assets/personajes/anakin-skywalker.webp',
   base: { hp: 580, dmg: 84, spd: 122 },   // banda Asesino
   extra: { critRate: .15 },

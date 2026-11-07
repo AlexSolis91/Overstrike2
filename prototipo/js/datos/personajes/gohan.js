@@ -44,7 +44,7 @@ export default {
   franquicia: 'Dragon Ball', grupos: ['sayajin', 'guerreros-z'],   // campaña: Guerreros Sayajin
   nombre: 'Gohan',
   rol: 'Support', rolSecundario: 'Control',
-  sobres: [],  // como Goku, Vegeta y Broly: solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🥋', color: '#7c3aed', imagen: 'assets/personajes/gohan.webp',
   base: { hp: 620, dmg: 55, spd: 98 },
   extra: { acc: .15 },

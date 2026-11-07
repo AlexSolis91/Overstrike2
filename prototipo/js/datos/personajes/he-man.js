@@ -8,7 +8,7 @@ export default {
   franquicia: 'He-Man', grupos: ['heroes-de-eternia', 'guerreros'],   // campaña: temas de las etapas
   nombre: 'He-Man',
   rol: 'Tanque', rolSecundario: 'Daño',
-  sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '⚔️', color: '#f59e0b', imagen: 'assets/personajes/he-man.webp',
   base: { hp: 820, dmg: 52, spd: 86 },
   extra: { armor: .10 },

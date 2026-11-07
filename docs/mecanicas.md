@@ -516,12 +516,12 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
 
 - Cada campeón declara en su ficha `sobres: [...]`: puede estar en **varios**. Los campeones de los Starter Packs **también** están en sobres; el Starter Pack es un arranque único, no se compra.
 - **Sobres actuales** (`activo: true/false` = si se ven en la tienda; por temporada):
-  - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Scorpion, Kratos, Sasuke, Milo, Sukuna.
-  - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King, Doctor Doom, Skeletor, Saga, Itachi, Sukuna, Anakin Skywalker.
+  - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Scorpion, Kratos, Sasuke, Milo, Carnage, Iori, Poison Ivy, Sukuna y otros (13).
+  - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos (17): Madara, Sun Jin Woo, Batman, The Joker, Doctor Doom, Skeletor, Saga, Itachi, Baran, Obito, Deidara, Doomsday, Meliodas, Tengen, Sukuna, Anakin Skywalker, Pain.
   - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki, Kratos, Wukong.
-  - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema. **Goku, Vegeta, Naruto y He-Man salen solo aquí** (sin sobre temático + «Solo su sobre»). Anakin Skywalker.
-  - 🔥 **Lords of the Flames** (`flames`), ❄️ **Winter Storm** (`winter`) y 🧪 **Toxic Nightmare** (`toxic`): Quemadura, Congelación y Veneno; los mismos campeones que los Starter Packs Blazing, Frostborn y Noxious (2026-11-07).
-  - Sin sobre temático (solo en Unbreakable Force y el Portal): Goku, Vegeta, Naruto, He-Man (a propósito), Pain, Minato, Spider-Man, Broly, Gohan, Trunks, Hashirama, Capitán América, Jon Snow.
+  - 💪 **Unbreakable Force** (`unbreakable`): campeones de **todos** los sobres (más barato: 40,000 contra 50,000 de los temáticos).
+  - 🔥 **Lords of the Flames** (`flames`), ❄️ **Winter Storm** (`winter`) y 🧪 **Toxic Nightmare** (`toxic`): Quemadura, Congelación y Veneno; los mismos campeones que los Starter Packs Blazing, Frostborn y Noxious (2026-11-07). **Regla:** todo campeón nuevo que juegue con Quemadura, Congelación o Veneno entra a la vez a su Starter Pack (`starter`) y a su sobre (`sobres`); estos grupos siguen creciendo.
+  - ⚔️ **Legendary Warriors** (`warriors`): héroes y guerreros legendarios (14): Goku, Vegeta, Naruto, He-Man, Minato, Spider-Man, Gohan, Trunks, Hashirama, Capitán América, Jon Snow, Superman, Satoru Gojō, Broly. Todos los campeones tienen sobre temático; Unbreakable ya no lleva campeones propios.
 - **Apertura** (`abrirSobre(id)`, servidor `_sortear_sobre` en docs/sql/032): 3 campeones sin repetir, **todos de su tema** (quien busca a un campeón va a su sobre). **Unbreakable Force**: 3 entre **todos** los campeones (más variado; conviene que sea más barato). La tienda muestra «Solo sus N campeones» / «Campeones de todos los sobres».
 - **Starter Pack** (`abrirStarter(id)` en `js/datos/starters.js`): 3 al azar de sus exclusivos + 2 al azar entre los elegibles, sin repetir.
 - **Probabilidad de salida según la fuerza** (`docs/sql/003_probabilidades.sql`): cada campeón tiene un **nivel** invisible para el jugador que pesa en **todos** los sorteos (tema y relleno de sobres, Unbreakable Force y los campeones del Starter Pack). Se asigna según su % de victorias en la simulación:

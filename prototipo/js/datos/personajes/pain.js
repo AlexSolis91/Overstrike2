@@ -9,7 +9,7 @@ export default {
   franquicia: 'Naruto', grupos: ['akatsuki', 'renegados'],   // campaña: temas de las etapas
   nombre: 'Pain',
   rol: 'Daño', rolSecundario: 'Invoker',
-  sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
+  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🌀', color: '#7c3aed', imagen: 'assets/personajes/pain.webp',
   base: { hp: 700, dmg: 70, spd: 100 },
   extra: {},

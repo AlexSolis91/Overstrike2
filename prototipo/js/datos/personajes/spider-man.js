@@ -9,7 +9,7 @@ export default {
   franquicia: 'Marvel', grupos: ['heroes-urbanos', 'vengadores'],   // campaña: temas de las etapas
   nombre: 'Spider-Man',
   rol: 'Control', rolSecundario: 'Daño',
-  sobres: [],  // solo en Unbreakable Force
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🕸️', color: '#dc2626', imagen: 'assets/personajes/spider-man.webp',
   base: { hp: 640, dmg: 58, spd: 108 },
   extra: { block: .20 },                     // Sentido Arácnido

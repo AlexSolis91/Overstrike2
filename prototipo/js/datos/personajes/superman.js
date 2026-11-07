@@ -7,7 +7,8 @@ export default {
   franquicia: 'DC', grupos: ['justicieros'],   // campaña: temas de las etapas
   nombre: 'Superman',
   rol: 'Daño', rolSecundario: 'Tanque',
-  sobres: ['unbreakable'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['flames', 'warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦸', color: '#2563eb', imagen: 'assets/personajes/superman.webp',
   base: { hp: 750, dmg: 72, spd: 115 },
   extra: { armor: .10 },

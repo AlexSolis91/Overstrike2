@@ -44,7 +44,7 @@ export default {
   franquicia: 'Dragon Ball', grupos: ['sayajin', 'guerreros-z'],   // campaña: temas de las etapas
   nombre: 'Vegeta',
   rol: 'Daño', rolSecundario: '',
-  sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '👑', color: '#2563eb', imagen: 'assets/personajes/vegeta.webp',
   base: { hp: 590, dmg: 88, spd: 120 },
   extra: {},

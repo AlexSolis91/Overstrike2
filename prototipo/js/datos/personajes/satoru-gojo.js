@@ -7,7 +7,7 @@ export default {
   franquicia: 'Jujutsu Kaisen', grupos: [],   // campaña: temas de las etapas
   nombre: 'Satoru Gojō',
   rol: 'Control', rolSecundario: 'Daño',
-  sobres: ['unbreakable'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🕶️', color: '#8b5cf6', imagen: 'assets/personajes/satoru-gojo.webp',
   base: { hp: 680, dmg: 64, spd: 108 },
   extra: { block: .30, acc: .25, critRate: .10 },   // Infinito: 30% de Bloqueo · Seis Ojos: Puntería y crítico

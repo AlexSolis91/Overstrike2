@@ -3,6 +3,13 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-07d', fecha: '7 de noviembre de 2026', titulo: 'Legendary Warriors y sobres reacomodados',
+    cambios: [
+      { tipo: 'nuevo', texto: '⚔️ Legendary Warriors: el sobre de los héroes y guerreros legendarios (Goku, Vegeta, Naruto, He-Man, Superman, Gojō, Broly y más).' },
+      { tipo: 'cambio', texto: '🎴 Sobres reacomodados: Phantom of Chaos queda con sus 17 campeones más oscuros; los de Veneno, Quemadura y Congelación se encuentran en sus sobres. Iori, Sasuke, Superman, Yorichi, Escanor y Marik se suman a Lords of the Flames y Blazing Legion. Todos los campeones tienen ya su sobre.' },
+    ],
+  },
+  {
     id: '2026-11-07c', fecha: '7 de noviembre de 2026', titulo: 'Sobres temáticos y 3 sobres nuevos',
     cambios: [
       { tipo: 'cambio', texto: '🎴 Cada sobre temático ahora da solo campeones de su tema: si buscas a un campeón, ve a su sobre. Unbreakable Force sigue dando campeones de todos los sobres.' },

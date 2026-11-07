@@ -8,7 +8,7 @@ export default {
   franquicia: 'Naruto', grupos: ['konoha', 'hokage'],   // campaña: temas de las etapas
   nombre: 'Minato Namikaze',
   rol: 'Daño', rolSecundario: 'Control',
-  sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '⚡', color: '#facc15', imagen: 'assets/personajes/minato.webp',
   base: { hp: 680, dmg: 70, spd: 120 },
   extra: { block: .25 },   // Hiraishin: se teletransporta fuera del golpe (25% de Bloqueo)

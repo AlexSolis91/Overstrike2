@@ -7,7 +7,8 @@ export default {
   franquicia: 'Naruto', grupos: ['uchiha', 'konoha'],   // campaña: temas de las etapas
   nombre: 'Sasuke',
   rol: 'Daño', rolSecundario: 'DoTer',
-  sobres: ['bloodline'],
+  sobres: ['bloodline', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '⚡', color: '#7c3aed', imagen: 'assets/personajes/sasuke-uchiha.webp',
   base: { hp: 560, dmg: 85, spd: 118 },
   extra: { dot: .30 },                          // Daño DoT 30%: Quemaduras y Sangrados más fuertes

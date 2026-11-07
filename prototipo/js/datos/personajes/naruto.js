@@ -75,7 +75,7 @@ export default {
   franquicia: 'Naruto', grupos: ['konoha'],   // campaña: temas de las etapas
   nombre: 'Naruto',
   rol: 'Daño', rolSecundario: 'Invocador',
-  sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🍥', color: '#f97316', imagen: 'assets/personajes/naruto.webp',
   base: { hp: 740, dmg: 72, spd: 108 },
   extra: {},

@@ -8,7 +8,8 @@ export default {
   franquicia: 'The King of Fighters', grupos: ['guerreros', 'fuego'],   // campaña: Guerreros Legendarios y Legión de Fuego
   nombre: 'Iori Yagami',
   rol: 'Daño', rolSecundario: 'DoTer',
-  sobres: ['bloodline', 'phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['bloodline', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🌙', color: '#7e22ce', imagen: 'assets/personajes/iori-yagami.webp',
   base: { hp: 680, dmg: 68, spd: 106 },
   extra: {},

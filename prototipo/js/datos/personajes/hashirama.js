@@ -9,7 +9,7 @@ export default {
   franquicia: 'Naruto', grupos: ['konoha', 'hokage', 'senju'],   // campaña: Héroes de la Hoja
   nombre: 'Hashirama Senju',
   rol: 'Tanque', rolSecundario: 'Support',
-  sobres: [],  // como los demás de Konoha: solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🌳', color: '#65a30d', imagen: 'assets/personajes/hashirama.webp',
   base: { hp: 840, dmg: 50, spd: 88 },
   extra: { res: .15 },

@@ -9,7 +9,7 @@ export default {
   franquicia: 'Marvel', grupos: ['simbiontes', 'villanos'],   // campaña: temas de las etapas
   nombre: 'Carnage',
   rol: 'Daño', rolSecundario: 'Control',
-  sobres: ['phantom', 'bloodline'],
+  sobres: ['bloodline'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🩸', color: '#b91c1c', imagen: 'assets/personajes/carnage.webp',
   base: { hp: 700, dmg: 75, spd: 108 },
   extra: {},

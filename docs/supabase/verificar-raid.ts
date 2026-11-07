@@ -3811,7 +3811,7 @@ __e.default = {
   franquicia: 'Dragon Ball', grupos: ['sayajin', 'guerreros-z'],   // campaña: temas de las etapas
   nombre: 'Goku',
   rol: 'Daño', rolSecundario: '',
-  sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🥋', color: '#f97316', imagen: 'assets/personajes/goku.webp',
   base: { hp: 600, dmg: 90, spd: 122 },
   extra: {},
@@ -4021,7 +4021,7 @@ __e.default = {
   franquicia: 'Mortal Kombat', grupos: ['outworld'],   // campaña: temas de las etapas
   nombre: 'Reptile',
   rol: 'Asesino', rolSecundario: 'DoTer',
-  sobres: ['phantom', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦎', color: '#65a30d', imagen: 'assets/personajes/reptile.webp',
   base: { hp: 560, dmg: 80, spd: 125 },
@@ -4138,7 +4138,7 @@ __e.default = {
   franquicia: 'Mortal Kombat', grupos: ['espectros', 'fuego'],   // campaña: temas de las etapas
   nombre: 'Scorpion',
   rol: 'Daño', rolSecundario: 'DoTer',
-  sobres: ['bloodline', 'phantom', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['bloodline', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦂', color: '#f59e0b', imagen: 'assets/personajes/scorpion.webp',
   base: { hp: 720, dmg: 72, spd: 105 },
@@ -4363,7 +4363,7 @@ __e.default = {
   franquicia: 'Marvel', grupos: ['asgard', 'dioses'],   // campaña: temas de las etapas
   nombre: 'Loki',
   rol: 'Tanque', rolSecundario: 'Control',
-  sobres: ['phantom', 'sacred', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['sacred', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐍', color: '#16a34a', imagen: 'assets/personajes/loki.webp',
   base: { hp: 780, dmg: 50, spd: 91 },
@@ -4432,7 +4432,7 @@ __e.default = {
   franquicia: 'Warcraft', grupos: ['plaga', 'reyes', 'hielo'],   // campaña: temas de las etapas
   nombre: 'Lich King',
   rol: 'Tanque', rolSecundario: 'Control',
-  sobres: ['phantom', 'winter'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['winter'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '👑', color: '#60a5fa', imagen: 'assets/personajes/lich-king.webp',
   base: { hp: 850, dmg: 55, spd: 85 },
@@ -4692,7 +4692,7 @@ __e.default = {
   franquicia: 'Dragon Ball', grupos: ['sayajin', 'guerreros-z'],   // campaña: temas de las etapas
   nombre: 'Vegeta',
   rol: 'Daño', rolSecundario: '',
-  sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '👑', color: '#2563eb', imagen: 'assets/personajes/vegeta.webp',
   base: { hp: 590, dmg: 88, spd: 120 },
   extra: {},
@@ -4863,7 +4863,7 @@ __e.default = {
   franquicia: 'Naruto', grupos: ['konoha'],   // campaña: temas de las etapas
   nombre: 'Naruto',
   rol: 'Daño', rolSecundario: 'Invocador',
-  sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🍥', color: '#f97316', imagen: 'assets/personajes/naruto.webp',
   base: { hp: 740, dmg: 72, spd: 108 },
   extra: {},
@@ -4914,7 +4914,8 @@ __e.default = {
   franquicia: 'Naruto', grupos: ['uchiha', 'konoha'],   // campaña: temas de las etapas
   nombre: 'Sasuke',
   rol: 'Daño', rolSecundario: 'DoTer',
-  sobres: ['bloodline'],
+  sobres: ['bloodline', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '⚡', color: '#7c3aed', imagen: 'assets/personajes/sasuke-uchiha.webp',
   base: { hp: 560, dmg: 85, spd: 118 },
   extra: { dot: .30 },                          // Daño DoT 30%: Quemaduras y Sangrados más fuertes
@@ -5022,7 +5023,7 @@ __e.default = {
   franquicia: 'He-Man', grupos: ['heroes-de-eternia', 'guerreros'],   // campaña: temas de las etapas
   nombre: 'He-Man',
   rol: 'Tanque', rolSecundario: 'Daño',
-  sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '⚔️', color: '#f59e0b', imagen: 'assets/personajes/he-man.webp',
   base: { hp: 820, dmg: 52, spd: 86 },
   extra: { armor: .10 },
@@ -5338,7 +5339,7 @@ __e.default = {
   franquicia: 'Naruto', grupos: ['akatsuki', 'renegados'],   // campaña: temas de las etapas
   nombre: 'Pain',
   rol: 'Daño', rolSecundario: 'Invoker',
-  sobres: [],  // sin sobre temático: sale en Unbreakable Force (y en los aleatorios)
+  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🌀', color: '#7c3aed', imagen: 'assets/personajes/pain.webp',
   base: { hp: 700, dmg: 70, spd: 100 },
   extra: {},
@@ -5533,7 +5534,7 @@ __e.default = {
   franquicia: 'Naruto', grupos: ['konoha', 'hokage'],   // campaña: temas de las etapas
   nombre: 'Minato Namikaze',
   rol: 'Daño', rolSecundario: 'Control',
-  sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '⚡', color: '#facc15', imagen: 'assets/personajes/minato.webp',
   base: { hp: 680, dmg: 70, spd: 120 },
   extra: { block: .25 },   // Hiraishin: se teletransporta fuera del golpe (25% de Bloqueo)
@@ -5633,7 +5634,7 @@ __e.default = {
   franquicia: 'Solo Leveling', grupos: ['monarcas', 'dragones'],   // campaña: temas de las etapas
   nombre: 'Antares',
   rol: 'DoTer', rolSecundario: 'Control',
-  sobres: ['phantom', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['flames'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',
   emoji: '🐲', color: '#dc2626', imagen: 'assets/personajes/antares.webp',
   base: { hp: 650, dmg: 60, spd: 100 },
@@ -5752,7 +5753,7 @@ __e.default = {
   franquicia: 'Naruto', grupos: ['sannin', 'renegados'],   // campaña: temas de las etapas
   nombre: 'Orochimaru',
   rol: 'DoTer', rolSecundario: 'Support',
-  sobres: ['phantom', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',
   emoji: '🐍', color: '#4d7c0f', imagen: 'assets/personajes/orochimaru.webp',
   base: { hp: 600, dmg: 50, spd: 95 },
@@ -5813,7 +5814,7 @@ __e.default = {
   franquicia: 'Marvel', grupos: ['espectros', 'fuego'],   // campaña: temas de las etapas
   nombre: 'Ghost Rider',
   rol: 'Daño', rolSecundario: 'DoTer',
-  sobres: ['phantom', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['flames'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',
   emoji: '💀', color: '#f97316', imagen: 'assets/personajes/ghost-rider.webp',
   base: { hp: 740, dmg: 70, spd: 100 },
@@ -5935,7 +5936,7 @@ __e.default = {
   franquicia: 'Marvel', grupos: ['heroes-urbanos', 'vengadores'],   // campaña: temas de las etapas
   nombre: 'Spider-Man',
   rol: 'Control', rolSecundario: 'Daño',
-  sobres: [],  // solo en Unbreakable Force
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🕸️', color: '#dc2626', imagen: 'assets/personajes/spider-man.webp',
   base: { hp: 640, dmg: 58, spd: 108 },
   extra: { block: .20 },                     // Sentido Arácnido
@@ -5988,7 +5989,7 @@ __e.default = {
   franquicia: 'Marvel', grupos: ['simbiontes', 'villanos'],   // campaña: temas de las etapas
   nombre: 'Carnage',
   rol: 'Daño', rolSecundario: 'Control',
-  sobres: ['phantom', 'bloodline'],
+  sobres: ['bloodline'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🩸', color: '#b91c1c', imagen: 'assets/personajes/carnage.webp',
   base: { hp: 700, dmg: 75, spd: 108 },
   extra: {},
@@ -6110,7 +6111,7 @@ __e.default = {
   franquicia: 'Naruto', grupos: ['akatsuki', 'renegados', 'arena', 'marionetistas'],   // campaña: temas de las etapas
   nombre: 'Sasori',
   rol: 'Invoker', rolSecundario: 'DoTer',
-  sobres: ['phantom', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',
   emoji: '🎭', color: '#b91c1c', imagen: 'assets/personajes/sasori.webp',
   base: { hp: 650, dmg: 62, spd: 92 },
@@ -6318,7 +6319,7 @@ __e.default = {
   franquicia: 'Dragon Ball', grupos: ['sayajin', 'villanos'],   // campaña: Guerreros Sayajin y Señores del Caos
   nombre: 'Broly',
   rol: 'Tanque', rolSecundario: 'Daño',
-  sobres: [],  // como Goku y Vegeta: solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '💚', color: '#65a30d', imagen: 'assets/personajes/broly.webp',
   base: { hp: 850, dmg: 55, spd: 88 },
   extra: { armor: .15 },
@@ -6408,7 +6409,7 @@ __e.default = {
   franquicia: 'Dragon Ball', grupos: ['sayajin', 'guerreros-z'],   // campaña: Guerreros Sayajin
   nombre: 'Gohan',
   rol: 'Support', rolSecundario: 'Control',
-  sobres: [],  // como Goku, Vegeta y Broly: solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🥋', color: '#7c3aed', imagen: 'assets/personajes/gohan.webp',
   base: { hp: 620, dmg: 55, spd: 98 },
   extra: { acc: .15 },
@@ -6499,7 +6500,7 @@ __e.default = {
   franquicia: 'Dragon Ball', grupos: ['sayajin', 'guerreros-z'],   // campaña: Guerreros Sayajin
   nombre: 'Trunks',
   rol: 'Daño', rolSecundario: 'Support',
-  sobres: [],  // como los demás Sayajin: solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🗡️', color: '#8b5cf6', imagen: 'assets/personajes/trunks.webp',
   base: { hp: 680, dmg: 68, spd: 112 },
   extra: {},
@@ -6553,7 +6554,7 @@ __e.default = {
   franquicia: 'Naruto', grupos: ['konoha', 'hokage', 'senju'],   // campaña: Héroes de la Hoja
   nombre: 'Hashirama Senju',
   rol: 'Tanque', rolSecundario: 'Support',
-  sobres: [],  // como los demás de Konoha: solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🌳', color: '#65a30d', imagen: 'assets/personajes/hashirama.webp',
   base: { hp: 840, dmg: 50, spd: 88 },
   extra: { res: .15 },
@@ -6669,7 +6670,7 @@ __e.default = {
   franquicia: 'DC', grupos: ['villanos-de-gotham', 'bombarderos'],   // campaña: Ciudad Gótica y Señores del Caos
   nombre: 'El Pingüino',
   rol: 'DoTer', rolSecundario: 'Daño',
-  sobres: ['phantom', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['flames'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐧', color: '#475569', imagen: 'assets/personajes/el-pinguino.webp',
   base: { hp: 600, dmg: 50, spd: 85 },
@@ -6832,7 +6833,8 @@ __e.default = {
   franquicia: 'The King of Fighters', grupos: ['guerreros', 'fuego'],   // campaña: Guerreros Legendarios y Legión de Fuego
   nombre: 'Iori Yagami',
   rol: 'Daño', rolSecundario: 'DoTer',
-  sobres: ['bloodline', 'phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['bloodline', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🌙', color: '#7e22ce', imagen: 'assets/personajes/iori-yagami.webp',
   base: { hp: 680, dmg: 68, spd: 106 },
   extra: {},
@@ -6886,7 +6888,7 @@ __e.default = {
   franquicia: 'Solo Leveling', grupos: ['monarcas', 'hielo'],   // campaña: Los Monarcas y Frío Eterno
   nombre: 'Sillad',
   rol: 'Control', rolSecundario: 'Support',
-  sobres: ['phantom', 'winter'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['winter'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🧊', color: '#38bdf8', imagen: 'assets/personajes/sillad.webp',
   base: { hp: 680, dmg: 60, spd: 98 },
@@ -7049,7 +7051,7 @@ __e.default = {
   franquicia: 'Kimetsu no Yaiba', grupos: ['demonios', 'villanos'],
   nombre: 'Muzan Kibutsuji',
   rol: 'DoTer', rolSecundario: 'Support',
-  sobres: ['phantom', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🎩', color: '#881337', imagen: 'assets/personajes/muzan-kibutsuji.webp',
   base: { hp: 620, dmg: 55, spd: 103 },
@@ -7110,7 +7112,7 @@ __e.default = {
   franquicia: 'DC', grupos: ['villanos-de-gotham'],   // campaña: Ciudad Gótica y Señores del Caos
   nombre: 'Poison Ivy',
   rol: 'DoTer', rolSecundario: 'Control',
-  sobres: ['phantom', 'bloodline', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['bloodline', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🌿', color: '#16a34a', imagen: 'assets/personajes/poison-ivy.webp',
   base: { hp: 590, dmg: 52, spd: 92 },
@@ -7168,7 +7170,7 @@ __e.default = {
   franquicia: 'Mortal Kombat', grupos: [],   // campaña: Torneo de Mortal Kombat
   nombre: 'Ermac',
   rol: 'DoTer', rolSecundario: 'Control',
-  sobres: ['phantom', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '👻', color: '#15803d', imagen: 'assets/personajes/ermac.webp',
   base: { hp: 580, dmg: 50, spd: 90 },
@@ -7289,7 +7291,7 @@ __e.default = {
   franquicia: 'DC', grupos: ['villanos-de-gotham', 'hielo'],   // campaña: Ciudad Gótica, Señores del Caos y Frío Eterno
   nombre: 'Mr. Freeze',
   rol: 'Tanque', rolSecundario: 'Control',
-  sobres: ['phantom', 'winter'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['winter'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🥶', color: '#67e8f9', imagen: 'assets/personajes/mr-freeze.webp',
   base: { hp: 780, dmg: 45, spd: 80 },
@@ -7342,7 +7344,7 @@ __e.default = {
   franquicia: 'Solo Leveling', grupos: ['hielo'],   // campaña: Frío Eterno
   nombre: 'Baruka',
   rol: 'Control', rolSecundario: 'Daño',
-  sobres: ['phantom', 'winter'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['winter'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🗡️', color: '#3b82f6', imagen: 'assets/personajes/baruka.webp',
   base: { hp: 640, dmg: 62, spd: 108 },
@@ -7556,7 +7558,8 @@ __e.default = {
   franquicia: 'Nanatsu no Taizai', grupos: [],   // campaña: aún sin tema propio
   nombre: 'Escanor',
   rol: 'Tanque', rolSecundario: 'Daño',
-  sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['sacred', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦁', color: '#f59e0b', imagen: 'assets/personajes/escanor.webp',
   base: { hp: 800, dmg: 55, spd: 85 },
   extra: { armor: .20 },
@@ -7716,7 +7719,8 @@ __e.default = {
   franquicia: 'Yu-Gi-Oh!', grupos: [],   // campaña: aún sin tema propio
   nombre: 'Marik Ishtar',
   rol: 'Invocador', rolSecundario: 'Control',
-  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['flames'],  // sobres de la tienda (ver js/datos/sobres.js)
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '👁️', color: '#a855f7', imagen: 'assets/personajes/marik-ishtar.webp',
   base: { hp: 620, dmg: 58, spd: 90 },
   extra: {},
@@ -7774,7 +7778,8 @@ __e.default = {
   franquicia: 'Demon Slayer', grupos: ['cazadores-de-demonios'],   // campaña: temas de las etapas
   nombre: 'Yorichi',
   rol: 'Daño',
-  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['flames'],  // sobres de la tienda (ver js/datos/sobres.js)
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '☀️', color: '#dc2626', imagen: 'assets/personajes/yorichi.webp',
   base: { hp: 720, dmg: 75, spd: 115 },
   extra: {},
@@ -7945,7 +7950,7 @@ __e.default = {
   franquicia: 'Game of Thrones', grupos: ['targaryen', 'reyes'],   // campaña: temas de las etapas
   nombre: 'Jon Snow',
   rol: 'Support', rolSecundario: 'Control',
-  sobres: [],  // sin sobre temático, como Daenerys y Rhaenys: sale en Unbreakable Force (y en los aleatorios)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🐺', color: '#94a3b8', imagen: 'assets/personajes/jon-snow.webp',
   base: { hp: 640, dmg: 55, spd: 97 },
   extra: {},
@@ -8055,7 +8060,7 @@ __e.default = {
   franquicia: 'Marvel', grupos: ['vengadores'],   // campaña: temas de las etapas
   nombre: 'Capitán América',
   rol: 'Tanque', rolSecundario: 'Support',
-  sobres: [],  // solo en Unbreakable Force
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🛡️', color: '#2563eb', imagen: 'assets/personajes/capitan-america.webp',
   base: { hp: 800, dmg: 50, spd: 90 },
   extra: {},
@@ -8113,7 +8118,8 @@ __e.default = {
   franquicia: 'DC', grupos: ['justicieros'],   // campaña: temas de las etapas
   nombre: 'Superman',
   rol: 'Daño', rolSecundario: 'Tanque',
-  sobres: ['unbreakable'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['flames', 'warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦸', color: '#2563eb', imagen: 'assets/personajes/superman.webp',
   base: { hp: 750, dmg: 72, spd: 115 },
   extra: { armor: .10 },
@@ -8170,7 +8176,7 @@ __e.default = {
   franquicia: 'Jujutsu Kaisen', grupos: [],   // campaña: temas de las etapas
   nombre: 'Satoru Gojō',
   rol: 'Control', rolSecundario: 'Daño',
-  sobres: ['unbreakable'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🕶️', color: '#8b5cf6', imagen: 'assets/personajes/satoru-gojo.webp',
   base: { hp: 680, dmg: 64, spd: 108 },
   extra: { block: .30, acc: .25, critRate: .10 },   // Infinito: 30% de Bloqueo · Seis Ojos: Puntería y crítico
@@ -8349,7 +8355,7 @@ __e.default = {
   franquicia: 'Star Wars', grupos: ['jedi'],   // campaña: temas de las etapas
   nombre: 'Anakin Skywalker',
   rol: 'Daño',
-  sobres: ['unbreakable', 'phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '⚔️', color: '#3b82f6', imagen: 'assets/personajes/anakin-skywalker.webp',
   base: { hp: 580, dmg: 84, spd: 122 },   // banda Asesino
   extra: { critRate: .15 },

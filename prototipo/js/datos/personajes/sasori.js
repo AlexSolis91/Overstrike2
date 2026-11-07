@@ -10,7 +10,7 @@ export default {
   franquicia: 'Naruto', grupos: ['akatsuki', 'renegados', 'arena', 'marionetistas'],   // campaña: temas de las etapas
   nombre: 'Sasori',
   rol: 'Invoker', rolSecundario: 'DoTer',
-  sobres: ['phantom', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',
   emoji: '🎭', color: '#b91c1c', imagen: 'assets/personajes/sasori.webp',
   base: { hp: 650, dmg: 62, spd: 92 },

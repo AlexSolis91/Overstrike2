@@ -42,7 +42,7 @@ export default {
   franquicia: 'Dragon Ball', grupos: ['sayajin', 'villanos'],   // campaña: Guerreros Sayajin y Señores del Caos
   nombre: 'Broly',
   rol: 'Tanque', rolSecundario: 'Daño',
-  sobres: [],  // como Goku y Vegeta: solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '💚', color: '#65a30d', imagen: 'assets/personajes/broly.webp',
   base: { hp: 850, dmg: 55, spd: 88 },
   extra: { armor: .15 },

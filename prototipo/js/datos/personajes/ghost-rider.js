@@ -9,7 +9,7 @@ export default {
   franquicia: 'Marvel', grupos: ['espectros', 'fuego'],   // campaña: temas de las etapas
   nombre: 'Ghost Rider',
   rol: 'Daño', rolSecundario: 'DoTer',
-  sobres: ['phantom', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['flames'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'blazing',
   emoji: '💀', color: '#f97316', imagen: 'assets/personajes/ghost-rider.webp',
   base: { hp: 740, dmg: 70, spd: 100 },

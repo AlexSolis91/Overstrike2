@@ -43,7 +43,7 @@ export default {
   franquicia: 'Dragon Ball', grupos: ['sayajin', 'guerreros-z'],   // campaña: Guerreros Sayajin
   nombre: 'Trunks',
   rol: 'Daño', rolSecundario: 'Support',
-  sobres: [],  // como los demás Sayajin: solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🗡️', color: '#8b5cf6', imagen: 'assets/personajes/trunks.webp',
   base: { hp: 680, dmg: 68, spd: 112 },
   extra: {},

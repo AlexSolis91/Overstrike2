@@ -55,7 +55,8 @@ export default {
   franquicia: 'Yu-Gi-Oh!', grupos: [],   // campaña: aún sin tema propio
   nombre: 'Marik Ishtar',
   rol: 'Invocador', rolSecundario: 'Control',
-  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['flames'],  // sobres de la tienda (ver js/datos/sobres.js)
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '👁️', color: '#a855f7', imagen: 'assets/personajes/marik-ishtar.webp',
   base: { hp: 620, dmg: 58, spd: 90 },
   extra: {},

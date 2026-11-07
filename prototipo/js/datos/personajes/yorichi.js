@@ -7,7 +7,8 @@ export default {
   franquicia: 'Demon Slayer', grupos: ['cazadores-de-demonios'],   // campaña: temas de las etapas
   nombre: 'Yorichi',
   rol: 'Daño',
-  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['flames'],  // sobres de la tienda (ver js/datos/sobres.js)
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '☀️', color: '#dc2626', imagen: 'assets/personajes/yorichi.webp',
   base: { hp: 720, dmg: 75, spd: 115 },
   extra: {},

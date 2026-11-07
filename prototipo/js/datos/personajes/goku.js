@@ -75,7 +75,7 @@ export default {
   franquicia: 'Dragon Ball', grupos: ['sayajin', 'guerreros-z'],   // campaña: temas de las etapas
   nombre: 'Goku',
   rol: 'Daño', rolSecundario: '',
-  sobres: [],  // solo en Unbreakable Force (marcar «Solo su sobre» en el panel de Administrador)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🥋', color: '#f97316', imagen: 'assets/personajes/goku.webp',
   base: { hp: 600, dmg: 90, spd: 122 },
   extra: {},

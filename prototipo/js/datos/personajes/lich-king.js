@@ -8,7 +8,7 @@ export default {
   franquicia: 'Warcraft', grupos: ['plaga', 'reyes', 'hielo'],   // campaña: temas de las etapas
   nombre: 'Lich King',
   rol: 'Tanque', rolSecundario: 'Control',
-  sobres: ['phantom', 'winter'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['winter'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '👑', color: '#60a5fa', imagen: 'assets/personajes/lich-king.webp',
   base: { hp: 850, dmg: 55, spd: 85 },

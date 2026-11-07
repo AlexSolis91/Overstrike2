@@ -8,7 +8,7 @@ export default {
   franquicia: 'Marvel', grupos: ['asgard', 'dioses'],   // campaña: temas de las etapas
   nombre: 'Loki',
   rol: 'Tanque', rolSecundario: 'Control',
-  sobres: ['phantom', 'sacred', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['sacred', 'toxic'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'noxious',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🐍', color: '#16a34a', imagen: 'assets/personajes/loki.webp',
   base: { hp: 780, dmg: 50, spd: 91 },

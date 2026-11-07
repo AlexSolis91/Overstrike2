@@ -9,7 +9,8 @@ export default {
   franquicia: 'Nanatsu no Taizai', grupos: [],   // campaña: aún sin tema propio
   nombre: 'Escanor',
   rol: 'Tanque', rolSecundario: 'Daño',
-  sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['sacred', 'flames'],  // sobres de la tienda (ver js/datos/sobres.js)
+  starter: 'blazing',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🦁', color: '#f59e0b', imagen: 'assets/personajes/escanor.webp',
   base: { hp: 800, dmg: 55, spd: 85 },
   extra: { armor: .20 },

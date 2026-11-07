@@ -9,7 +9,7 @@ export default {
   franquicia: 'DC', grupos: ['villanos-de-gotham', 'hielo'],   // campaña: Ciudad Gótica, Señores del Caos y Frío Eterno
   nombre: 'Mr. Freeze',
   rol: 'Tanque', rolSecundario: 'Control',
-  sobres: ['phantom', 'winter'],  // sobres de la tienda (ver js/datos/sobres.js)
+  sobres: ['winter'],  // sobres de la tienda (ver js/datos/sobres.js)
   starter: 'frostborn',                       // Starter Pack exclusivo (ver js/datos/starters.js)
   emoji: '🥶', color: '#67e8f9', imagen: 'assets/personajes/mr-freeze.webp',
   base: { hp: 780, dmg: 45, spd: 80 },

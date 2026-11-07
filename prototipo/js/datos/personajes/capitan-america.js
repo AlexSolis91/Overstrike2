@@ -8,7 +8,7 @@ export default {
   franquicia: 'Marvel', grupos: ['vengadores'],   // campaña: temas de las etapas
   nombre: 'Capitán América',
   rol: 'Tanque', rolSecundario: 'Support',
-  sobres: [],  // solo en Unbreakable Force
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🛡️', color: '#2563eb', imagen: 'assets/personajes/capitan-america.webp',
   base: { hp: 800, dmg: 50, spd: 90 },
   extra: {},

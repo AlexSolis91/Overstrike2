@@ -8,7 +8,7 @@ export default {
   franquicia: 'Game of Thrones', grupos: ['targaryen', 'reyes'],   // campaña: temas de las etapas
   nombre: 'Jon Snow',
   rol: 'Support', rolSecundario: 'Control',
-  sobres: [],  // sin sobre temático, como Daenerys y Rhaenys: sale en Unbreakable Force (y en los aleatorios)
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🐺', color: '#94a3b8', imagen: 'assets/personajes/jon-snow.webp',
   base: { hp: 640, dmg: 55, spd: 97 },
   extra: {},
