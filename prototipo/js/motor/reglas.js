@@ -73,6 +73,9 @@ export const CONTROL = {
   pierdeTurno: ['stun', 'freeze', 'possess'],   // controles que quitan turnos (y dan inmunidad al terminar)
 };
 
+// Respuestas fuera de turno (Contraataque, Asistir, respondeFueraDeTurno): máximo de respuestas encadenadas
+export const PROF_REACCION = 3;
+
 export const DOT = {
   // Valores provisionales hasta tener la lista de reliquias (máximo real de Daño DoT)
   veneno: dot => .02 + .05 * dot,

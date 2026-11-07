@@ -517,9 +517,9 @@ Registro en `js/datos/sobres.js` (nombre, tema, ícono y color). La apertura rea
 - Cada campeón declara en su ficha `sobres: [...]`: puede estar en **varios**. Los campeones de los Starter Packs **también** están en sobres; el Starter Pack es un arranque único, no se compra.
 - **Sobres actuales** (`activo: true/false` = si se ven en la tienda; por temporada):
   - 🩸 **Bloodline Awakening** (`bloodline`): Sangrado y robo de vida. Hoy: Madara, Scorpion, Kratos, Sasuke, Milo, Sukuna.
-  - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King, Doctor Doom, Skeletor, Saga, Itachi, Sukuna.
+  - 🌑 **Phantom of Chaos** (`phantom`): sombríos y caóticos según su historia. Hoy: Madara, Sun Jin Woo, Batman, The Joker, Reptile, Scorpion, Loki, Lich King, Doctor Doom, Skeletor, Saga, Itachi, Sukuna, Anakin Skywalker.
   - ✨ **Sacred Aegis** (`sacred`): divinos, sagrados y mitológicos. Hoy: Alexstrasza, Shaka, Aldebarán, Thor, Loki, Kratos, Wukong.
-  - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema. **Goku, Vegeta, Naruto y He-Man salen solo aquí** (sin sobre temático + «Solo su sobre»).
+  - 💪 **Unbreakable Force** (`unbreakable`): de todo, sin tema. **Goku, Vegeta, Naruto y He-Man salen solo aquí** (sin sobre temático + «Solo su sobre»). Anakin Skywalker.
   - Sin sobre temático por ahora (salen en Unbreakable Force y en los aleatorios): Daenerys, Rhaenys, Rengoku, Sub-Zero. Llegarán sobres de Quemadura, Congelación, etc.
 - **Apertura** (`abrirSobre(id)`): 3 campeones, sin repetir dentro del mismo sobre. 1 o 2 (50/50) del tema y el resto al azar entre **todos** (a veces también caen del tema). Unbreakable: los 3 al azar entre todos.
 - **Starter Pack** (`abrirStarter(id)` en `js/datos/starters.js`): 3 al azar de sus exclusivos + 2 al azar entre los elegibles, sin repetir.
@@ -867,3 +867,16 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - **Pasiva `absorbeCriticos { bono }`:** si un aliado va a recibir un golpe **crítico** de un enemigo, el dueño recibe el 100% de ese daño en su lugar, con su propia Armadura, y gana `bono` (estadísticas permanentes, sin tope). Se resuelve antes que `protector`. No funciona si el dueño tiene Control.
 - **`curar` con `base: 'danoCausado'`:** al final de un movimiento, cura un % del daño total que causó ese movimiento.
 - **Marca `energiaSolar`** (contador de Superman, sin máximo): la da Símbolo de Esperanza y la gasta Superflare (`consumeCargas`, +25% por cada una).
+
+## Piezas nuevas (2026-11-07, Anakin Skywalker / Lord Vader)
+- **Buff Contraataque** (`counter`): cuando un enemigo lo ataca (un objetivo o área), responde con su **básico** contra el atacante, una vez por movimiento enemigo. No gasta su turno ni cooldown. No responde con Control.
+- **Buff Asistir** (`assist`): cuando un **aliado** usa su ataque **Especial** (en su turno, que golpea enemigos), se une con su básico: al mismo objetivo si el Especial es a un enemigo de un golpe; si es de área o de varios golpes, a un enemigo al azar.
+- Pasiva `respondeFueraDeTurno { texto }`: cuando un enemigo usa una habilidad **fuera de su turno** (contraataques, asistencias, reacciones de pasivas), le responde con su básico.
+- **Profundidad de respuestas** (`PROF_REACCION = 3` en `reglas.js`): cada respuesta (Contraataque, Asistir, fuera de turno) sube un nivel; a partir del 3.º ya nada responde. No hay ciclos aunque se enfrenten dos Anakin.
+- Condiciones `objetivoConDebuff` (el objetivo tiene algún debuff), `criticosMin: N` (efectos `final`: el movimiento asestó N o más críticos a enemigos), `objetivoVivo` (el objetivo sobrevivió) y `propioHpMenor: x` (el dueño tiene menos de x × su HP máx.).
+- Acciones `duplicarCargas { efecto }`, `consumirCargas { efecto, cantidad }` (con `bonoPorCarga`, pierde también el bono de esas cargas) y `convertirEfecto { de, en }` (quita `de` y aplica `en` sin tirada; respeta inmunidades).
+- `ganarCargas` con `porBuffObjetivo: N`: N cargas por cada buff del objetivo golpeado (en efectos por golpe cuenta en cada golpe). `turnoExtra` con `maxPorRonda` y `clave`: tope de turnos extra por ronda de esa acción.
+- `bonoPorCarga` con `bonos: { stat: pct, ... }`: varias estadísticas por carga. `transformarConCargas` con `conserva: true`: no consume las cargas al transformarse.
+- Pasiva con gatillo `alEnemigoRecibeEfecto` + `filtro: { efectos }`: cuando a un enemigo le entra alguno de esos efectos (de cualquier fuente). Pasiva con `si: [condiciones]` (deben cumplirse todas) y `tambien: [{ gatillo, si, accion }]` (gatillos extra de la misma pasiva).
+- Al transformarse, los `efectosPermanentes` de la pasiva anterior que la nueva no declara se pierden (Contraataque y Asistir son solo de Anakin).
+- Marca **Héroe Caído 🌑** (contador de Anakin, sin máximo): +1% Daño, +1 Prob. Crítico, +1 Daño Crítico, +1% Velocidad y +1 Penetración por marca. Con 30, Anakin se transforma para siempre en **Lord Vader** y las conserva.

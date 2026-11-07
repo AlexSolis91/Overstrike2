@@ -3,6 +3,12 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-07b', fecha: '7 de noviembre de 2026', titulo: 'Anakin Skywalker y Lord Vader',
+    cambios: [
+      { tipo: 'nuevo', texto: '⚔️ Anakin Skywalker (Daño) llega a los sobres Unbreakable Force y Phantom of Chaos: con Asistir y Contraataque responde con Djem So a todo, junta marcas de Héroe Caído y, con 30, se convierte para siempre en Lord Vader, que domina con Miedo, Aturdimiento y la Ejecución de la Orden 66.' },
+    ],
+  },
+  {
     id: '2026-11-07', fecha: '7 de noviembre de 2026', titulo: 'Sukuna, el Rey de las Maldiciones',
     cambios: [
       { tipo: 'nuevo', texto: '👹 Sukuna (Daño · DoTer) llega a los sobres Bloodline Awakening y Phantom of Chaos: Desmantelar hace sangrar, Partir convierte el Sangrado en Hemorragia y su Expansión de Dominio, el Santuario Malévolo, corta a todos los enemigos cada ronda. Como líder, su equipo se cura cada vez que cae un enemigo.' },

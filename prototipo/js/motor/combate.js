@@ -3,7 +3,7 @@
 // - Ningún personaje tiene código propio: sus fichas solo combinan piezas (acciones, gatillos, condiciones, efectos).
 // - Todo el azar pasa por un generador con semilla (misma semilla + mismas decisiones = misma partida).
 
-import { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, LIMITE_RONDAS, CONTROL, DOT, BUFFS, DEBUFFS, PUNTERIA, probAplicar, bonoEstrellas } from './reglas.js';
+import { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, LIMITE_RONDAS, CONTROL, DOT, BUFFS, DEBUFFS, PUNTERIA, probAplicar, bonoEstrellas, PROF_REACCION } from './reglas.js';
 import { EFECTOS, esDe } from './efectos.js';
 import { crearRng } from './rng.js';
 import { INVOCACIONES, TABLAS_INVOCACION } from '../datos/invocaciones.js';
@@ -249,6 +249,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'potencialGohan': texto = `${e.valor} de Potencial (máx. 3): con 3 despierta como Gohan Bestia`; n = e.valor; break;
         case 'theOne': { const bc = p.pasiva?.bonoPorCarga; texto = `${e.valor} de The One (máx. 12)${bc ? `: +${Math.round(e.valor * bc.pct * 100)}% HP máx.` : ''}${e.valor >= 12 ? ' · ¡THE ONE!' : ''}`; n = e.valor; break; }
         case 'marcaDemonio': texto = `Acumula el daño que recibe: ${Math.round(e.valor || 0)} · se libera al volver a usar Contra Venganza`; n = Math.round(e.valor || 0); break;
+        case 'heroeCaido': texto = `${e.valor} de Héroe Caído: +${e.valor}% Daño, Velocidad, Prob. y Daño Crítico y Penetración${p.forma ? '' : e.valor < 30 ? ` · con 30 se convierte en Lord Vader` : ''}`; n = e.valor; break;
         case 'iraBroly': texto = `${e.valor} de Ira (máx. 5): con 5 despierta al Super Saiyajin Legendario`; n = e.valor; break;
         case 'almasShadowmourne': texto = `${e.valor} Alma(s) de Shadowmourne (máx. 20): +${e.valor * 15} de Daño · toda la batalla`; n = e.valor; break;
         case 'cuervos': texto = `${e.valor} clon(es) de cuervo: cada uno absorbe un ataque enemigo contra Itachi`; n = e.valor; break;
@@ -330,7 +331,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       if (fr.texto && S.ronda === fr.desde) emitir('jefeFuria', { id: j.uid, texto: fr.texto }, j);
     }
     S.actuaron = new Set(); S.orden = [];
-    for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; }
+    for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; p.turnosExtraRonda = {}; }
     for (const x of P) {                                    // pasiva "revivirRonda": muerto, cada inicio de ronda puede revivir (una vez por partida)
       const rr = x.pasiva?.revivirRonda;
       if (!rr || !x.muerto || x.revivioRonda || x.noRevivir || rng() >= rr.prob) continue;
@@ -699,7 +700,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     const bc = p.pasiva?.bonoPorCarga;         // pasiva "bonoPorCarga": cada carga ganada da un bono permanente (si es HP máx., el actual sube lo mismo)
     if (bc && bc.efecto === id && e.valor > antes) {
       const hpAntes = maxHp(p);
-      p.permanente[bc.stat] = (p.permanente[bc.stat] || 0) + (e.valor - antes) * bc.pct;
+      for (const [stat, pct] of Object.entries(bc.bonos || { [bc.stat]: bc.pct }))   // bonos: { stat: pct, ... } = varias estadísticas por carga (p. ej. Héroe Caído)
+        p.permanente[stat] = (p.permanente[stat] || 0) + (e.valor - antes) * pct;
       const sube = maxHp(p) - hpAntes;
       if (sube > 0) { p.hp += sube; p.hpGanadoCargas = (p.hpGanadoCargas || 0) + sube; }
     }
@@ -715,7 +717,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       reacciones.push(() => {
         p.transformando = false;
         if (p.muerto || p.forma) return;
-        quitar(p, get(p, id));
+        if (!tc.conserva) quitar(p, get(p, id));   // conserva: las cargas (y sus bonos) siguen después de transformarse (p. ej. Anakin → Vader)
         transformar(p, tc.turnos);
       });
     }
@@ -1409,6 +1411,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     for (const e of t.estados) delete e.tocado;
     emitir('efecto', { a: t.uid, id, texto }, t);
     if (t.lado !== a.lado) liderAlAplicar(a, t, id);
+    for (const p of enemigosDe(t)) pasivas(p, 'alEnemigoRecibeEfecto', { objetivo: t, efecto: id });   // p. ej. Vader: Aturdimiento o Miedo
     if (def.tipo === 'debuff' && a !== t) reacciones.push(() => pasivas(t, 'alRecibirDebuff', { atacante: a, efecto: id }));
     // líder "copiarDebuffAliado": un debuff que un enemigo le pone a un aliado se copia (misma intensidad y duración) en un enemigo al azar,
     // con Tirada de Puntería del líder. Las copias no se vuelven a copiar (evita cadenas entre dos líderes).
@@ -1597,6 +1600,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'turnoExtra':
+          if (acc.maxPorRonda) {          // tope de turnos extra por ronda de ESTA acción (p. ej. Orden 66: 2)
+            const k = acc.clave || 'turnoExtra'; t.turnosExtraRonda ||= {};
+            if ((t.turnosExtraRonda[k] || 0) >= acc.maxPorRonda) break;
+            t.turnosExtraRonda[k] = (t.turnosExtraRonda[k] || 0) + 1;
+          }
           if (t !== a) { if (!S.cola.includes(t)) S.cola.push(t); }   // a otro (p. ej. Espíritu de la Fuerza de Yoda): lo toma al terminar el turno en curso
           else t.turnosExtra = (t.turnosExtra || 0) + 1;
           emitir('turnoExtraGanado', { id: t.uid }, t);
@@ -1670,7 +1678,34 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           if (e.valor !== antes) emitir('efecto', { a: t.uid, id: 'aguja', texto: `📍 ${e.valor} aguja(s)` }, t);
           break;
         }
-        case 'ganarCargas': ganarCargas(t, acc.cantidad || 1, acc.max || 5, acc.efecto); break;   // p. ej. Espada del Poder
+        case 'ganarCargas': {          // p. ej. Espada del Poder. porBuffObjetivo: N cargas por cada buff del objetivo golpeado (Ira del Elegido)
+          const n = acc.porBuffObjetivo ? acc.porBuffObjetivo * (ctx.objetivo?.estados.filter(e => EFECTOS[e.id]?.tipo === 'buff' && e.id !== 'summon').length || 0) : acc.cantidad || 1;
+          if (n > 0) ganarCargas(t, n, acc.max || 5, acc.efecto);
+          break;
+        }
+        case 'consumirCargas': {       // gasta N cargas de ese contador; con bonoPorCarga, pierde también el bono de esas cargas (p. ej. Vader)
+          const e = get(t, acc.efecto), n = Math.min(acc.cantidad || 1, e?.valor || 0);
+          if (!n) break;
+          e.valor -= n;
+          const bc = t.pasiva?.bonoPorCarga;
+          if (bc && bc.efecto === acc.efecto) for (const [stat, pct] of Object.entries(bc.bonos || { [bc.stat]: bc.pct })) t.permanente[stat] = (t.permanente[stat] || 0) - n * pct;
+          if (t.hp > maxHp(t)) t.hp = maxHp(t);
+          emitir('bonoVisible', { a: t.uid, texto: acc.texto || `−${n} ${EFECTOS[acc.efecto]?.nombre || ''}` }, t);
+          emitir('actualizar', {}, t);
+          break;
+        }
+        case 'convertirEfecto': {      // quita el efecto `de` y aplica `en` sin tirada (respeta inmunidades); p. ej. Miedo → Aturdimiento
+          const e = get(t, acc.de);
+          if (!e) break;
+          quitar(t, e);
+          aplicarEfecto(a, t, { id: acc.en, irresistible: true, ...(acc.dur ? { dur: acc.dur } : {}) });
+          break;
+        }
+        case 'duplicarCargas': {       // duplica las cargas que tiene de ese contador (p. ej. Explosión de Fuerza)
+          const e = get(t, acc.efecto);
+          if (e?.valor > 0) { emitir('bonoVisible', { a: t.uid, texto: acc.texto || `×2 ${EFECTOS[acc.efecto]?.nombre || ''}` }, t); ganarCargas(t, e.valor, acc.max || 5, acc.efecto); }
+          break;
+        }
         case 'absorberEfecto': {        // quita ese efecto de todos (aliados y enemigos) y el destino gana 1 carga por cada uno; p. ej. Símbolo de Esperanza
           let n = 0;
           for (const x of P.filter(x => !x.muerto)) {
@@ -1840,6 +1875,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (cond.objetivoTeniaDebuff) return [...(ctx.teniaAntes || [])].some(id => EFECTOS[id]?.tipo === 'debuff');   // cualquier debuff antes del golpe
     if (cond.rompioMega) return !!ctx.rompioMega;
     if (cond.objetivoConBuff) return !!ctx.objetivo && tieneBuff(ctx.objetivo);
+    if (cond.objetivoConDebuff) return !!ctx.objetivo && ctx.objetivo.estados.some(e => EFECTOS[e.id]?.tipo === 'debuff');   // algún debuff activo
+    if (cond.criticosMin) return (ctx.criticos || 0) >= cond.criticosMin;   // (efectos 'final') golpes críticos del movimiento a enemigos
     if (cond.equipo) return !!ctx.ejecutor && tieneEquipo(ctx.ejecutor, cond.equipo);
     if (cond.enemigosCon) { const { efectos, min = 1 } = cond.enemigosCon; return !!ctx.ejecutor && enemigosDe(ctx.ejecutor).filter(x => [].concat(efectos).some(id => get(x, id))).length >= min; }      // algún golpe del movimiento rompió una capa de Mega Congelación
     if (cond.cargasConsumidasMin) return (ctx.cargas || 0) >= cond.cargasConsumidasMin;
@@ -1849,6 +1886,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (cond.propioInvocacion) return !!ctx.ejecutor && todos(ctx.ejecutor, 'summon').some(e => e.key === cond.propioInvocacion);   // quien ejecuta tiene esa invocación activa
     if (cond.propioSinInvocacion) return !!ctx.ejecutor && !todos(ctx.ejecutor, 'summon').some(e => e.key === cond.propioSinInvocacion);
     if (cond.objetivoEliminado) return !!ctx.objetivo?.muerto;
+    if (cond.objetivoVivo) return !!ctx.objetivo && !ctx.objetivo.muerto;        // el objetivo sobrevivió al movimiento
+    if (cond.propioHpMenor != null) return !!ctx.ejecutor && !ctx.ejecutor.muerto && ctx.ejecutor.hp < cond.propioHpMenor * maxHp(ctx.ejecutor);
     if (cond.objetivoMasHpQueYo) return !!ctx.objetivo && !!ctx.atacante && (ctx.hpObjetivoAntes ?? ctx.objetivo.hp) > ctx.atacante.hp;
     if (cond.objetivoOverListo) {      // el objetivo tiene su Over listo para usar (sin cooldown ni Silencio)
       const t = ctx.objetivo;
@@ -1859,11 +1898,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
 
   // Gatillos de pasivas (una sola función para todos los personajes)
   function pasivas(p, gatillo, ctx, pa = p.pasiva) {
+    if (pa && pa === p.pasiva && pa.tambien) for (const sub of pa.tambien) pasivas(p, gatillo, ctx, { nombre: pa.nombre, ...sub });   // tambien: gatillos extra de la misma pasiva (p. ej. Vader)
     if (p.muerto || !pa || pa.gatillo !== gatillo) return;
     if (pa.filtro?.tipo && pa.filtro.tipo !== ctx.tipo) return;
     if (pa.filtro?.en === 'enemigos' && (!ctx.objetivo || ctx.objetivo.lado === p.lado)) return;
     if (pa.filtro?.en === 'propio' && ctx.objetivo !== p) return;      // solo cuando le pasa a él mismo (p. ej. su propio Veneno lo daña)
     if (pa.filtro?.categorias && !pa.filtro.categorias.includes(ctx.categoria)) return;
+    if (pa.filtro?.efectos && !pa.filtro.efectos.includes(ctx.efecto)) return;            // gatillos con efecto (p. ej. alEnemigoRecibeEfecto)
+    if (pa.si && ![].concat(pa.si).every(c => cumple(c, { ...ctx, ejecutor: p, objetivo: ctx.objetivo || p }))) return;   // si: condiciones (todas) del dueño (p. ej. HP bajo y 10 marcas)
     if (pa.filtro?.objetivoTiene && !(ctx.objetivo && get(ctx.objetivo, pa.filtro.objetivoTiene))) return;
     if (pa.filtro?.teniaAlMorir && !ctx.teniaAlMorir?.has(pa.filtro.teniaAlMorir)) return;
     if (pa.maxPorRonda && p.usosPasiva >= pa.maxPorRonda) return;
@@ -1886,6 +1928,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (!f || p.muerto || (p.forma && !p.forma.permanente)) return;
     const ratio = p.hp / maxHp(p), pasivaAntes = p.pasiva;
     if (!p.formaBase) p.formaBase = { base: p.base, extra: p.extra, pasiva: p.pasiva, movimientos: p.movimientos, cds: p.cds, transformacion: p.transformacion };
+    const permViejos = (p.pasiva?.efectosPermanentes || []).filter(id => !(f.pasiva?.efectosPermanentes || []).includes(id));
+    if (permViejos.length) p.estados = p.estados.filter(e => !(e.permanente && permViejos.includes(e.id)));   // efectos permanentes de la pasiva anterior (p. ej. Contraataque de Anakin)
     p.base = f.base; p.extra = f.extra || {}; p.pasiva = f.pasiva || null; p.movimientos = clonar(f.movimientos);
     p.transformacion = f.transformacion || null;
     if (f.lider) p.lider = f.lider;                   // la forma trae su propio líder (p. ej. Ra Modo Fénix); esLider no cambia
@@ -2029,6 +2073,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   }
 
   // ================================================================ movimientos
+  // Respuesta con el básico fuera de turno (Contraataque, Asistir, respondeFueraDeTurno): no gasta su turno ni su cooldown
+  function responderConBasico(x, t, prof, texto) {
+    const basico = x.movimientos.find(m => m.categoria === 'basico');
+    if (!basico || !t || t.muerto || x.muerto || movBloqueado(x, 'basico')) return;
+    emitir('bonoVisible', { a: x.uid, texto }, x);
+    ejecutarMovimiento(x, basico, t, { reaccion: true, contraataque: true, prof });
+  }
+
   function resolverSobreObjetivo(a, t, mov, ctx = {}) {
     if (t.muerto) return;
     const hostil = t.lado !== a.lado || ctx.forzado;
@@ -2060,7 +2112,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     };
     // cada golpe intenta sus efectos: 2 golpes al mismo objetivo = 2 tiradas
     let huboCritico = false;
-    if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) { huboCritico = golpear(a, t, mov, ctxGolpe) || huboCritico; efectosDelGolpe(); }
+    if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) {
+      const cr = golpear(a, t, mov, ctxGolpe); huboCritico = cr || huboCritico;
+      if (cr && ctx.acum && t.lado !== a.lado) ctx.acum.criticos = (ctx.acum.criticos || 0) + 1;   // condición criticosMin
+      efectosDelGolpe();
+    }
     else efectosDelGolpe();
     // pasiva "potenciaBombas": las Bombas que el enemigo YA tenía antes de este ataque hacen ×factor de daño (una vez por Bomba y ataque)
     const pb = a.pasiva?.potenciaBombas;
@@ -2178,7 +2234,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       const sobrevivientes = [...new Set(objetivos)].filter(t => !t.muerto && t.lado !== a.lado);
       const eliminados = [...new Set(objetivos)].filter(t => t.muerto && t.lado !== a.lado && vivosAlEmpezar.has(t)).length;
       const final = {
-        ejecutor: a, sobrevivientes, eliminados, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, rompioMega: !!c.acum.rompioMega, invocaciones: invocacionesAntes, esMovimiento: true, categoriaMov: mov.categoria,
+        ejecutor: a, sobrevivientes, eliminados, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, rompioMega: !!c.acum.rompioMega, criticos: c.acum.criticos || 0, invocaciones: invocacionesAntes, esMovimiento: true, categoriaMov: mov.categoria,
         estadoDe: id => (principal && !principal.muerto && get(principal, id)) || previos.find(e => e.id === id),
         debuffsPrevios: previos.filter(e => EFECTOS[e.id]?.tipo === 'debuff'),
       };
@@ -2228,6 +2284,25 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         if (a.muerto || d.muerto || conControl(d)) return;        // con Control no contraataca
         pasivas(d, 'alGolpeAliado', { objetivo: a, atacante: a });
       });
+    // Buffs Contraataque / Asistir y pasiva respondeFueraDeTurno (2026-11-07, Anakin): responden con su BÁSICO.
+    // Cada respuesta sube un nivel de profundidad (ctx.prof); a partir de PROF_REACCION ya nada responde: no hay ciclos.
+    const prof = ctx.prof || 0;
+    if (!ctx.forzado && !a.muerto && prof < PROF_REACCION) {
+      if (mov.pct) for (const d of new Set(objetivos)) if (d.lado !== a.lado && get(d, 'counter')) reacciones.push(() => {
+        if (a.muerto || d.muerto || conControl(d) || !get(d, 'counter')) return;   // pudo perderlo antes de responder (p. ej. al transformarse)
+        responderConBasico(d, a, prof + 1, '⚔️ Contraataque');
+      });
+      if (mov.categoria === 'especial' && mov.pct && !ctx.reaccion && !ctx.contraataque && objetivos.some(t => t.lado !== a.lado))
+        for (const d of aliadosDe(a)) if (d !== a && get(d, 'assist')) reacciones.push(() => {
+          if (d.muerto || conControl(d) || !get(d, 'assist')) return;
+          const unObjetivo = mov.objetivo === 'enemigo' && (mov.golpes || 1) === 1 && objetivo && !objetivo.muerto && objetivo.lado !== d.lado;
+          responderConBasico(d, unObjetivo ? objetivo : rng.elegir(enemigosDe(d)), prof + 1, '🤝 Asistir');
+        });
+      if (ctx.reaccion || ctx.contraataque) for (const p of enemigosDe(a)) if (p.pasiva?.respondeFueraDeTurno) reacciones.push(() => {
+        if (a.muerto || p.muerto || conControl(p) || !p.pasiva?.respondeFueraDeTurno) return;
+        responderConBasico(p, a, prof + 1, p.pasiva.respondeFueraDeTurno.texto || '⚡ ¡Responde!');
+      });
+    }
     if (!ctx.forzado && !a.muerto) for (const p of enemigosDe(a)) pasivas(p, 'alUsarMovimientoEnemigo', { objetivo: a, categoria: mov.categoria });
     if (!ctx.forzado) for (const p of enemigosDe(a)) if (p.pasiva?.rival && esRival(p, a)) ganarOrgullo(p, 1);
   }

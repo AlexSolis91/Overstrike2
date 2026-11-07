@@ -86,6 +86,9 @@ const CONTROL = {
   pierdeTurno: ['stun', 'freeze', 'possess'],   // controles que quitan turnos (y dan inmunidad al terminar)
 };
 
+// Respuestas fuera de turno (Contraataque, Asistir, respondeFueraDeTurno): máximo de respuestas encadenadas
+const PROF_REACCION = 3;
+
 const DOT = {
   // Valores provisionales hasta tener la lista de reliquias (máximo real de Daño DoT)
   veneno: dot => .02 + .05 * dot,
@@ -108,6 +111,7 @@ __e["DEBUFFS"] = DEBUFFS;
 __e["DOT"] = DOT;
 __e["ESCALADO"] = ESCALADO;
 __e["LIMITE_RONDAS"] = LIMITE_RONDAS;
+__e["PROF_REACCION"] = PROF_REACCION;
 __e["PUNTERIA"] = PUNTERIA;
 __e["TOPES"] = TOPES;
 __e["bonoEstrellas"] = bonoEstrellas;
@@ -231,6 +235,12 @@ const EFECTOS = {
     desc: 'Absorbe el daño antes que el HP. Dura 1 o 2 rondas; desaparece al gastarse y se puede disipar o robar. Un Escudo nuevo se suma al que ya tiene, sin renovar su duración.' },
   anticipar: { nombre: 'Anticipar', icono: '🔮', color: 0xc4b5fd, tipo: 'buff', tags: ['Turno'],
     desc: 'Cuando un enemigo gana un turno adicional, el portador juega un turno adicional ANTES que él.' },
+  heroeCaido: { nombre: 'Héroe Caído', icono: '🌑', color: 0xdc2626, tipo: 'marca', tags: ['Carga'], noDisipable: true,
+    desc: 'Contador de Anakin (sin máximo): cada marca da +1% de Daño, +1 de Prob. Crítico, +1 de Daño Crítico, +1% de Velocidad y +1 de Penetración de escudo, para siempre. Con 30 se transforma en Lord Vader y las conserva.' },
+  counter: { nombre: 'Contraataque', icono: '⚔️', color: 0xf97316, tipo: 'buff', tags: ['Contraataque'],
+    desc: 'Cuando un enemigo lo ataca, responde con su movimiento básico contra el atacante (una vez por movimiento enemigo; no gasta su turno).' },
+  assist: { nombre: 'Asistir', icono: '🤝', color: 0x38bdf8, tipo: 'buff', tags: ['Asistir'],
+    desc: 'Cuando un aliado usa su ataque Especial, se une con su movimiento básico: contra el mismo objetivo si el Especial es a un enemigo de un golpe; si es de área o de varios golpes, contra un enemigo al azar.' },
   taunt:   { nombre: 'Provocación', icono: '🎯', color: 0xf97316, tipo: 'buff', tags: ['Provocación'],
     desc: `Los enemigos deben atacarlo con sus movimientos de un solo objetivo. No afecta ataques de área ni al azar.` },
   frostAura: { nombre: 'Aura Gélida', icono: '🧊', color: 0x7dd3fc, tipo: 'buff', tags: ['Hielo'],
@@ -567,7 +577,7 @@ __m["motor/combate.js"] = (() => { const __e: any = {};
 // - Ningún personaje tiene código propio: sus fichas solo combinan piezas (acciones, gatillos, condiciones, efectos).
 // - Todo el azar pasa por un generador con semilla (misma semilla + mismas decisiones = misma partida).
 
-const { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, LIMITE_RONDAS, CONTROL, DOT, BUFFS, DEBUFFS, PUNTERIA, probAplicar, bonoEstrellas } = __m["motor/reglas.js"];
+const { BASE_COMUN, TOPES, ESCALADO, CD_INICIAL, LIMITE_RONDAS, CONTROL, DOT, BUFFS, DEBUFFS, PUNTERIA, probAplicar, bonoEstrellas, PROF_REACCION } = __m["motor/reglas.js"];
 const { EFECTOS, esDe } = __m["motor/efectos.js"];
 const { crearRng } = __m["motor/rng.js"];
 const { INVOCACIONES, TABLAS_INVOCACION } = __m["datos/invocaciones.js"];
@@ -813,6 +823,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         case 'potencialGohan': texto = `${e.valor} de Potencial (máx. 3): con 3 despierta como Gohan Bestia`; n = e.valor; break;
         case 'theOne': { const bc = p.pasiva?.bonoPorCarga; texto = `${e.valor} de The One (máx. 12)${bc ? `: +${Math.round(e.valor * bc.pct * 100)}% HP máx.` : ''}${e.valor >= 12 ? ' · ¡THE ONE!' : ''}`; n = e.valor; break; }
         case 'marcaDemonio': texto = `Acumula el daño que recibe: ${Math.round(e.valor || 0)} · se libera al volver a usar Contra Venganza`; n = Math.round(e.valor || 0); break;
+        case 'heroeCaido': texto = `${e.valor} de Héroe Caído: +${e.valor}% Daño, Velocidad, Prob. y Daño Crítico y Penetración${p.forma ? '' : e.valor < 30 ? ` · con 30 se convierte en Lord Vader` : ''}`; n = e.valor; break;
         case 'iraBroly': texto = `${e.valor} de Ira (máx. 5): con 5 despierta al Super Saiyajin Legendario`; n = e.valor; break;
         case 'almasShadowmourne': texto = `${e.valor} Alma(s) de Shadowmourne (máx. 20): +${e.valor * 15} de Daño · toda la batalla`; n = e.valor; break;
         case 'cuervos': texto = `${e.valor} clon(es) de cuervo: cada uno absorbe un ataque enemigo contra Itachi`; n = e.valor; break;
@@ -894,7 +905,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       if (fr.texto && S.ronda === fr.desde) emitir('jefeFuria', { id: j.uid, texto: fr.texto }, j);
     }
     S.actuaron = new Set(); S.orden = [];
-    for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; }
+    for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; p.turnosExtraRonda = {}; }
     for (const x of P) {                                    // pasiva "revivirRonda": muerto, cada inicio de ronda puede revivir (una vez por partida)
       const rr = x.pasiva?.revivirRonda;
       if (!rr || !x.muerto || x.revivioRonda || x.noRevivir || rng() >= rr.prob) continue;
@@ -1263,7 +1274,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     const bc = p.pasiva?.bonoPorCarga;         // pasiva "bonoPorCarga": cada carga ganada da un bono permanente (si es HP máx., el actual sube lo mismo)
     if (bc && bc.efecto === id && e.valor > antes) {
       const hpAntes = maxHp(p);
-      p.permanente[bc.stat] = (p.permanente[bc.stat] || 0) + (e.valor - antes) * bc.pct;
+      for (const [stat, pct] of Object.entries(bc.bonos || { [bc.stat]: bc.pct }))   // bonos: { stat: pct, ... } = varias estadísticas por carga (p. ej. Héroe Caído)
+        p.permanente[stat] = (p.permanente[stat] || 0) + (e.valor - antes) * pct;
       const sube = maxHp(p) - hpAntes;
       if (sube > 0) { p.hp += sube; p.hpGanadoCargas = (p.hpGanadoCargas || 0) + sube; }
     }
@@ -1279,7 +1291,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       reacciones.push(() => {
         p.transformando = false;
         if (p.muerto || p.forma) return;
-        quitar(p, get(p, id));
+        if (!tc.conserva) quitar(p, get(p, id));   // conserva: las cargas (y sus bonos) siguen después de transformarse (p. ej. Anakin → Vader)
         transformar(p, tc.turnos);
       });
     }
@@ -1973,6 +1985,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     for (const e of t.estados) delete e.tocado;
     emitir('efecto', { a: t.uid, id, texto }, t);
     if (t.lado !== a.lado) liderAlAplicar(a, t, id);
+    for (const p of enemigosDe(t)) pasivas(p, 'alEnemigoRecibeEfecto', { objetivo: t, efecto: id });   // p. ej. Vader: Aturdimiento o Miedo
     if (def.tipo === 'debuff' && a !== t) reacciones.push(() => pasivas(t, 'alRecibirDebuff', { atacante: a, efecto: id }));
     // líder "copiarDebuffAliado": un debuff que un enemigo le pone a un aliado se copia (misma intensidad y duración) en un enemigo al azar,
     // con Tirada de Puntería del líder. Las copias no se vuelven a copiar (evita cadenas entre dos líderes).
@@ -2161,6 +2174,11 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           break;
         }
         case 'turnoExtra':
+          if (acc.maxPorRonda) {          // tope de turnos extra por ronda de ESTA acción (p. ej. Orden 66: 2)
+            const k = acc.clave || 'turnoExtra'; t.turnosExtraRonda ||= {};
+            if ((t.turnosExtraRonda[k] || 0) >= acc.maxPorRonda) break;
+            t.turnosExtraRonda[k] = (t.turnosExtraRonda[k] || 0) + 1;
+          }
           if (t !== a) { if (!S.cola.includes(t)) S.cola.push(t); }   // a otro (p. ej. Espíritu de la Fuerza de Yoda): lo toma al terminar el turno en curso
           else t.turnosExtra = (t.turnosExtra || 0) + 1;
           emitir('turnoExtraGanado', { id: t.uid }, t);
@@ -2234,7 +2252,34 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           if (e.valor !== antes) emitir('efecto', { a: t.uid, id: 'aguja', texto: `📍 ${e.valor} aguja(s)` }, t);
           break;
         }
-        case 'ganarCargas': ganarCargas(t, acc.cantidad || 1, acc.max || 5, acc.efecto); break;   // p. ej. Espada del Poder
+        case 'ganarCargas': {          // p. ej. Espada del Poder. porBuffObjetivo: N cargas por cada buff del objetivo golpeado (Ira del Elegido)
+          const n = acc.porBuffObjetivo ? acc.porBuffObjetivo * (ctx.objetivo?.estados.filter(e => EFECTOS[e.id]?.tipo === 'buff' && e.id !== 'summon').length || 0) : acc.cantidad || 1;
+          if (n > 0) ganarCargas(t, n, acc.max || 5, acc.efecto);
+          break;
+        }
+        case 'consumirCargas': {       // gasta N cargas de ese contador; con bonoPorCarga, pierde también el bono de esas cargas (p. ej. Vader)
+          const e = get(t, acc.efecto), n = Math.min(acc.cantidad || 1, e?.valor || 0);
+          if (!n) break;
+          e.valor -= n;
+          const bc = t.pasiva?.bonoPorCarga;
+          if (bc && bc.efecto === acc.efecto) for (const [stat, pct] of Object.entries(bc.bonos || { [bc.stat]: bc.pct })) t.permanente[stat] = (t.permanente[stat] || 0) - n * pct;
+          if (t.hp > maxHp(t)) t.hp = maxHp(t);
+          emitir('bonoVisible', { a: t.uid, texto: acc.texto || `−${n} ${EFECTOS[acc.efecto]?.nombre || ''}` }, t);
+          emitir('actualizar', {}, t);
+          break;
+        }
+        case 'convertirEfecto': {      // quita el efecto `de` y aplica `en` sin tirada (respeta inmunidades); p. ej. Miedo → Aturdimiento
+          const e = get(t, acc.de);
+          if (!e) break;
+          quitar(t, e);
+          aplicarEfecto(a, t, { id: acc.en, irresistible: true, ...(acc.dur ? { dur: acc.dur } : {}) });
+          break;
+        }
+        case 'duplicarCargas': {       // duplica las cargas que tiene de ese contador (p. ej. Explosión de Fuerza)
+          const e = get(t, acc.efecto);
+          if (e?.valor > 0) { emitir('bonoVisible', { a: t.uid, texto: acc.texto || `×2 ${EFECTOS[acc.efecto]?.nombre || ''}` }, t); ganarCargas(t, e.valor, acc.max || 5, acc.efecto); }
+          break;
+        }
         case 'absorberEfecto': {        // quita ese efecto de todos (aliados y enemigos) y el destino gana 1 carga por cada uno; p. ej. Símbolo de Esperanza
           let n = 0;
           for (const x of P.filter(x => !x.muerto)) {
@@ -2404,6 +2449,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (cond.objetivoTeniaDebuff) return [...(ctx.teniaAntes || [])].some(id => EFECTOS[id]?.tipo === 'debuff');   // cualquier debuff antes del golpe
     if (cond.rompioMega) return !!ctx.rompioMega;
     if (cond.objetivoConBuff) return !!ctx.objetivo && tieneBuff(ctx.objetivo);
+    if (cond.objetivoConDebuff) return !!ctx.objetivo && ctx.objetivo.estados.some(e => EFECTOS[e.id]?.tipo === 'debuff');   // algún debuff activo
+    if (cond.criticosMin) return (ctx.criticos || 0) >= cond.criticosMin;   // (efectos 'final') golpes críticos del movimiento a enemigos
     if (cond.equipo) return !!ctx.ejecutor && tieneEquipo(ctx.ejecutor, cond.equipo);
     if (cond.enemigosCon) { const { efectos, min = 1 } = cond.enemigosCon; return !!ctx.ejecutor && enemigosDe(ctx.ejecutor).filter(x => [].concat(efectos).some(id => get(x, id))).length >= min; }      // algún golpe del movimiento rompió una capa de Mega Congelación
     if (cond.cargasConsumidasMin) return (ctx.cargas || 0) >= cond.cargasConsumidasMin;
@@ -2413,6 +2460,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (cond.propioInvocacion) return !!ctx.ejecutor && todos(ctx.ejecutor, 'summon').some(e => e.key === cond.propioInvocacion);   // quien ejecuta tiene esa invocación activa
     if (cond.propioSinInvocacion) return !!ctx.ejecutor && !todos(ctx.ejecutor, 'summon').some(e => e.key === cond.propioSinInvocacion);
     if (cond.objetivoEliminado) return !!ctx.objetivo?.muerto;
+    if (cond.objetivoVivo) return !!ctx.objetivo && !ctx.objetivo.muerto;        // el objetivo sobrevivió al movimiento
+    if (cond.propioHpMenor != null) return !!ctx.ejecutor && !ctx.ejecutor.muerto && ctx.ejecutor.hp < cond.propioHpMenor * maxHp(ctx.ejecutor);
     if (cond.objetivoMasHpQueYo) return !!ctx.objetivo && !!ctx.atacante && (ctx.hpObjetivoAntes ?? ctx.objetivo.hp) > ctx.atacante.hp;
     if (cond.objetivoOverListo) {      // el objetivo tiene su Over listo para usar (sin cooldown ni Silencio)
       const t = ctx.objetivo;
@@ -2423,11 +2472,14 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
 
   // Gatillos de pasivas (una sola función para todos los personajes)
   function pasivas(p, gatillo, ctx, pa = p.pasiva) {
+    if (pa && pa === p.pasiva && pa.tambien) for (const sub of pa.tambien) pasivas(p, gatillo, ctx, { nombre: pa.nombre, ...sub });   // tambien: gatillos extra de la misma pasiva (p. ej. Vader)
     if (p.muerto || !pa || pa.gatillo !== gatillo) return;
     if (pa.filtro?.tipo && pa.filtro.tipo !== ctx.tipo) return;
     if (pa.filtro?.en === 'enemigos' && (!ctx.objetivo || ctx.objetivo.lado === p.lado)) return;
     if (pa.filtro?.en === 'propio' && ctx.objetivo !== p) return;      // solo cuando le pasa a él mismo (p. ej. su propio Veneno lo daña)
     if (pa.filtro?.categorias && !pa.filtro.categorias.includes(ctx.categoria)) return;
+    if (pa.filtro?.efectos && !pa.filtro.efectos.includes(ctx.efecto)) return;            // gatillos con efecto (p. ej. alEnemigoRecibeEfecto)
+    if (pa.si && ![].concat(pa.si).every(c => cumple(c, { ...ctx, ejecutor: p, objetivo: ctx.objetivo || p }))) return;   // si: condiciones (todas) del dueño (p. ej. HP bajo y 10 marcas)
     if (pa.filtro?.objetivoTiene && !(ctx.objetivo && get(ctx.objetivo, pa.filtro.objetivoTiene))) return;
     if (pa.filtro?.teniaAlMorir && !ctx.teniaAlMorir?.has(pa.filtro.teniaAlMorir)) return;
     if (pa.maxPorRonda && p.usosPasiva >= pa.maxPorRonda) return;
@@ -2450,6 +2502,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (!f || p.muerto || (p.forma && !p.forma.permanente)) return;
     const ratio = p.hp / maxHp(p), pasivaAntes = p.pasiva;
     if (!p.formaBase) p.formaBase = { base: p.base, extra: p.extra, pasiva: p.pasiva, movimientos: p.movimientos, cds: p.cds, transformacion: p.transformacion };
+    const permViejos = (p.pasiva?.efectosPermanentes || []).filter(id => !(f.pasiva?.efectosPermanentes || []).includes(id));
+    if (permViejos.length) p.estados = p.estados.filter(e => !(e.permanente && permViejos.includes(e.id)));   // efectos permanentes de la pasiva anterior (p. ej. Contraataque de Anakin)
     p.base = f.base; p.extra = f.extra || {}; p.pasiva = f.pasiva || null; p.movimientos = clonar(f.movimientos);
     p.transformacion = f.transformacion || null;
     if (f.lider) p.lider = f.lider;                   // la forma trae su propio líder (p. ej. Ra Modo Fénix); esLider no cambia
@@ -2593,6 +2647,14 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
   }
 
   // ================================================================ movimientos
+  // Respuesta con el básico fuera de turno (Contraataque, Asistir, respondeFueraDeTurno): no gasta su turno ni su cooldown
+  function responderConBasico(x, t, prof, texto) {
+    const basico = x.movimientos.find(m => m.categoria === 'basico');
+    if (!basico || !t || t.muerto || x.muerto || movBloqueado(x, 'basico')) return;
+    emitir('bonoVisible', { a: x.uid, texto }, x);
+    ejecutarMovimiento(x, basico, t, { reaccion: true, contraataque: true, prof });
+  }
+
   function resolverSobreObjetivo(a, t, mov, ctx = {}) {
     if (t.muerto) return;
     const hostil = t.lado !== a.lado || ctx.forzado;
@@ -2624,7 +2686,11 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     };
     // cada golpe intenta sus efectos: 2 golpes al mismo objetivo = 2 tiradas
     let huboCritico = false;
-    if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) { huboCritico = golpear(a, t, mov, ctxGolpe) || huboCritico; efectosDelGolpe(); }
+    if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) {
+      const cr = golpear(a, t, mov, ctxGolpe); huboCritico = cr || huboCritico;
+      if (cr && ctx.acum && t.lado !== a.lado) ctx.acum.criticos = (ctx.acum.criticos || 0) + 1;   // condición criticosMin
+      efectosDelGolpe();
+    }
     else efectosDelGolpe();
     // pasiva "potenciaBombas": las Bombas que el enemigo YA tenía antes de este ataque hacen ×factor de daño (una vez por Bomba y ataque)
     const pb = a.pasiva?.potenciaBombas;
@@ -2742,7 +2808,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       const sobrevivientes = [...new Set(objetivos)].filter(t => !t.muerto && t.lado !== a.lado);
       const eliminados = [...new Set(objetivos)].filter(t => t.muerto && t.lado !== a.lado && vivosAlEmpezar.has(t)).length;
       const final = {
-        ejecutor: a, sobrevivientes, eliminados, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, rompioMega: !!c.acum.rompioMega, invocaciones: invocacionesAntes, esMovimiento: true, categoriaMov: mov.categoria,
+        ejecutor: a, sobrevivientes, eliminados, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, rompioMega: !!c.acum.rompioMega, criticos: c.acum.criticos || 0, invocaciones: invocacionesAntes, esMovimiento: true, categoriaMov: mov.categoria,
         estadoDe: id => (principal && !principal.muerto && get(principal, id)) || previos.find(e => e.id === id),
         debuffsPrevios: previos.filter(e => EFECTOS[e.id]?.tipo === 'debuff'),
       };
@@ -2792,6 +2858,25 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         if (a.muerto || d.muerto || conControl(d)) return;        // con Control no contraataca
         pasivas(d, 'alGolpeAliado', { objetivo: a, atacante: a });
       });
+    // Buffs Contraataque / Asistir y pasiva respondeFueraDeTurno (2026-11-07, Anakin): responden con su BÁSICO.
+    // Cada respuesta sube un nivel de profundidad (ctx.prof); a partir de PROF_REACCION ya nada responde: no hay ciclos.
+    const prof = ctx.prof || 0;
+    if (!ctx.forzado && !a.muerto && prof < PROF_REACCION) {
+      if (mov.pct) for (const d of new Set(objetivos)) if (d.lado !== a.lado && get(d, 'counter')) reacciones.push(() => {
+        if (a.muerto || d.muerto || conControl(d) || !get(d, 'counter')) return;   // pudo perderlo antes de responder (p. ej. al transformarse)
+        responderConBasico(d, a, prof + 1, '⚔️ Contraataque');
+      });
+      if (mov.categoria === 'especial' && mov.pct && !ctx.reaccion && !ctx.contraataque && objetivos.some(t => t.lado !== a.lado))
+        for (const d of aliadosDe(a)) if (d !== a && get(d, 'assist')) reacciones.push(() => {
+          if (d.muerto || conControl(d) || !get(d, 'assist')) return;
+          const unObjetivo = mov.objetivo === 'enemigo' && (mov.golpes || 1) === 1 && objetivo && !objetivo.muerto && objetivo.lado !== d.lado;
+          responderConBasico(d, unObjetivo ? objetivo : rng.elegir(enemigosDe(d)), prof + 1, '🤝 Asistir');
+        });
+      if (ctx.reaccion || ctx.contraataque) for (const p of enemigosDe(a)) if (p.pasiva?.respondeFueraDeTurno) reacciones.push(() => {
+        if (a.muerto || p.muerto || conControl(p) || !p.pasiva?.respondeFueraDeTurno) return;
+        responderConBasico(p, a, prof + 1, p.pasiva.respondeFueraDeTurno.texto || '⚡ ¡Responde!');
+      });
+    }
     if (!ctx.forzado && !a.muerto) for (const p of enemigosDe(a)) pasivas(p, 'alUsarMovimientoEnemigo', { objetivo: a, categoria: mov.categoria });
     if (!ctx.forzado) for (const p of enemigosDe(a)) if (p.pasiva?.rival && esRival(p, a)) ganarOrgullo(p, 1);
   }
@@ -8198,6 +8283,112 @@ __e.default = {
 
 return __e; })();
 
+__m["datos/personajes/anakin-skywalker.js"] = (() => { const __e: any = {};
+const { espacios } = __m["datos/reliquias.js"];
+
+// Ficha oficial (2026-11-07, kit del usuario; sim: 59.0% contra equipos al azar). Anakin Skywalker, el Elegido (Star Wars). Daño: Asistir y Contraataque
+// permanentes y responde a todo lo que el enemigo hace fuera de su turno, siempre con Djem So. Junta marcas de Héroe Caído
+// (+1% a Daño, Prob. y Daño Crítico, Velocidad y Penetración cada una) y con 30 se transforma en Lord Vader, conservándolas.
+// Lord Vader (forma permanente): Daño · Control con Miedo, Aturdimiento y la Orden 66.
+// Lord Vader: forma permanente (al llegar a 30 marcas de Héroe Caído). Conserva las marcas y su bono; pierde Contraataque y Asistir.
+const BONO_HEROE = { efecto: 'heroeCaido', bonos: { dmgPct: .01, critRate: .01, critDmg: .01, spdPct: .01, pen: .01 } };
+const lordVader = {
+  nombre: 'Lord Vader',
+  rol: 'Daño', rolSecundario: 'Control',
+  emoji: '🌑', color: '#dc2626', imagen: 'assets/transformaciones/lord-vader.webp',
+  base: { hp: 720, dmg: 92, spd: 105 },
+  extra: { armor: .20 },
+  pasiva: {
+    nombre: 'El Elegido Corrompido',
+    desc: 'Conserva sus marcas de Héroe Caído y su bono. Cada vez que un enemigo recibe Aturdimiento o Miedo, baja 1 turno el cooldown de todos sus movimientos. Cada vez que recibe daño, si queda por debajo del 35% de su HP, consume 10 marcas de Héroe Caído (y su bono) y se cura 50% de su HP máx.',
+    gatillo: 'alEnemigoRecibeEfecto', filtro: { efectos: ['stun', 'fear'] },
+    accion: { tipo: 'reducirCooldown', cantidad: 1, a: 'propio' },
+    tambien: [{
+      gatillo: 'alRecibirDano', si: [{ propioHpMenor: .35 }, { propioCargasMin: { efecto: 'heroeCaido', min: 10 } }],
+      accion: { tipo: 'multiple', a: 'propio', acciones: [
+        { tipo: 'consumirCargas', efecto: 'heroeCaido', cantidad: 10, texto: '🌑 −10 Héroe Caído' },
+        { tipo: 'curar', pct: .50, escala: 'hpMax' },
+      ] },
+    }],
+    bonoPorCarga: BONO_HEROE,
+  },
+  movimientos: [
+    {
+      categoria: 'basico', nombre: 'Asalto Implacable', objetivo: 'enemigo', golpes: 2, estilo: 'melee', color: 0xef4444,
+      pct: .95, cd: 0,
+      desc: 'Ataca 2 veces a un enemigo (95% cada golpe). Cada golpe tiene 25% de probabilidad de aplicar Miedo (2 rondas). Si golpea a un objetivo con Miedo, lo convierte en Aturdimiento.',
+      efectos: [
+        { condicion: { objetivoTiene: 'fear' }, accion: { tipo: 'convertirEfecto', de: 'fear', en: 'stun' } },
+        { accion: { tipo: 'efecto', id: 'fear', dur: 2, prob: .25 } },
+      ],
+    },
+    {
+      categoria: 'especial', nombre: 'Terror de la Legión 501', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xb91c1c,
+      pct: 1.70, cd: 4,
+      desc: 'Causa 170% a todos los enemigos con 50% de probabilidad de aplicar Miedo (2 rondas). Por cada Miedo que entra, gana 1 marca de Héroe Caído.',
+      efectos: [{ accion: { tipo: 'efecto', id: 'fear', dur: 2, prob: .50,
+        alAcertar: { tipo: 'ganarCargas', efecto: 'heroeCaido', cantidad: 1, max: 9999, a: 'propio' } } }],
+    },
+    {
+      categoria: 'over', nombre: 'Ejecución de la Orden 66', objetivo: 'enemigo', estilo: 'melee', color: 0x7f1d1d,
+      pct: 3.00, cd: 6,
+      desc: 'Causa 300% a un enemigo. Si lo elimina, gana 1 turno extra (máx. 2 por ronda) y Furia (2 rondas). Si sobrevive, le aplica Mega Aturdimiento.',
+      efectos: [
+        { cuando: 'final', condicion: { objetivoEliminado: true }, accion: { tipo: 'multiple', a: 'propio', acciones: [
+          { tipo: 'turnoExtra', maxPorRonda: 2, clave: 'orden66' },
+          { tipo: 'efecto', id: 'dmgUp', dur: 2 },
+        ] } },
+        { cuando: 'final', condicion: { objetivoVivo: true }, accion: { tipo: 'efecto', id: 'stun', mega: true } },
+      ],
+    },
+  ],
+};
+
+__e.default = {
+  id: 'anakin-skywalker',
+  franquicia: 'Star Wars', grupos: ['jedi'],   // campaña: temas de las etapas
+  nombre: 'Anakin Skywalker',
+  rol: 'Daño',
+  sobres: ['unbreakable', 'phantom'],  // sobres de la tienda (ver js/datos/sobres.js)
+  emoji: '⚔️', color: '#3b82f6', imagen: 'assets/personajes/anakin-skywalker.webp',
+  base: { hp: 580, dmg: 84, spd: 122 },   // banda Asesino
+  extra: { critRate: .15 },
+  slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
+  transformacion: lordVader,
+
+  pasiva: {
+    nombre: 'El Elegido',
+    desc: 'Asistir y Contraataque permanentes. Cuando un enemigo usa una habilidad fuera de su turno (contraataques, asistencias, reacciones), Anakin le responde con Djem So. Cada marca de Héroe Caído le da +1% de Daño, +1 de Prob. Crítico, +1 de Daño Crítico, +1% de Velocidad y +1 de Penetración de escudo. Con 30 marcas se transforma en Lord Vader y las conserva.',
+    efectosPermanentes: ['counter', 'assist'],
+    respondeFueraDeTurno: { texto: '⚡ ¡El Elegido responde!' },
+    bonoPorCarga: BONO_HEROE,
+    transformarConCargas: { efecto: 'heroeCaido', cargas: 30, conserva: true },
+  },
+  movimientos: [
+    {
+      categoria: 'basico', nombre: 'Djem So', objetivo: 'enemigo', estilo: 'melee', color: 0x60a5fa,
+      pct: .55, cd: 0,
+      desc: 'Causa 55% a un enemigo. Si el objetivo tiene algún debuff, Anakin gana 1 marca de Héroe Caído.',
+      efectos: [{ condicion: { objetivoConDebuff: true }, accion: { tipo: 'ganarCargas', efecto: 'heroeCaido', cantidad: 1, max: 9999, a: 'propio' } }],
+    },
+    {
+      categoria: 'especial', nombre: 'Explosión de Fuerza', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x93c5fd,
+      pct: 1.80, cd: 3,
+      desc: 'Causa 180% a todos los enemigos. Si asesta 3 o más golpes críticos, duplica sus marcas de Héroe Caído.',
+      efectos: [{ cuando: 'final', condicion: { criticosMin: 3 }, accion: { tipo: 'duplicarCargas', efecto: 'heroeCaido', max: 9999, a: 'propio', texto: '🌑 ¡Héroe Caído ×2!' } }],
+    },
+    {
+      categoria: 'over', nombre: 'Ira del Elegido', objetivo: 'enemigo', golpes: 5, estilo: 'melee', color: 0x2563eb,
+      pct: 1.20, cd: 4,
+      desc: 'Ataca 5 veces al objetivo (120% cada golpe). En cada golpe, Anakin gana 2 marcas de Héroe Caído por cada buff activo del objetivo.',
+      efectos: [{ accion: { tipo: 'ganarCargas', efecto: 'heroeCaido', porBuffObjetivo: 2, max: 9999, a: 'propio' } }],
+    },
+  ],
+};
+
+
+return __e; })();
+
 __m["datos/personajes/index.js"] = (() => { const __e: any = {};
 // Registro de personajes. Cada ficha oficial nueva se agrega aquí y aparece sola en la construcción de equipos.
 const madara = __m["datos/personajes/madara-uchiha.js"].default;
@@ -8277,8 +8468,9 @@ const capitanAmerica = __m["datos/personajes/capitan-america.js"].default;
 const superman = __m["datos/personajes/superman.js"].default;
 const satoruGojo = __m["datos/personajes/satoru-gojo.js"].default;
 const sukuna = __m["datos/personajes/sukuna.js"].default;
+const anakin = __m["datos/personajes/anakin-skywalker.js"].default;
 
-const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna];
+const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin];
 const porId = id => OFICIALES.find(p => p.id === id);
 
 __e["OFICIALES"] = OFICIALES;
@@ -8360,7 +8552,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 11;
+const REGLAS_RAID = 12;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;
