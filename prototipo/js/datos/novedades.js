@@ -3,6 +3,13 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-08b', fecha: '8 de noviembre de 2026', titulo: 'Jefe de Raid: un ataque por campeón al día',
+    cambios: [
+      { tipo: 'cambio', texto: '👑 Jefe de Raid: cada campeón puede atacar al jefe una sola vez por día, en cualquier dificultad. Los que ya atacaron aparecen bloqueados 🔒 al armar tu equipo y vuelven a estar listos al cerrar el día. ¡Desarrolla varios equipos!' },
+      { tipo: 'mejora', texto: '🛒 Tienda más limpia: los sobres ya no muestran cuántos campeones tienen (salvo Unbreakable Force), y Relics of Power ya no muestra el conteo de sobres.' },
+    ],
+  },
+  {
     id: '2026-11-08', fecha: '8 de noviembre de 2026', titulo: 'Corrección del Jefe de Raid',
     cambios: [
       { tipo: 'mejora', texto: '🔎 Colección: cada campeón muestra en qué sobres sale (Obtención, con la imagen de cada sobre), y al revisar una reliquia para equipar ves qué campeón la tiene puesta.' },

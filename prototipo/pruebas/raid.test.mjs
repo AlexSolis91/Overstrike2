@@ -32,3 +32,13 @@ test('Cofres: 4 con nombre, en orden', () => {
   assert.deepEqual(COFRES_RAID.map(c => c.nombre), ['Cofre de Madera', 'Cofre de Plata', 'Cofre de Oro', 'Cofre Arcano']);
   assert.equal(nombreCofre(1), 'Cofre de Madera');
 });
+
+test('raid_entrar vigente (el SQL más nuevo que la define) rechaza campeones que ya atacaron hoy', async () => {
+  const { readdirSync, readFileSync } = await import('node:fs');
+  const dir = new URL('../../docs/sql/', import.meta.url);
+  const ultimo = readdirSync(dir).filter(f => /^\d+_.*\.sql$/.test(f)).sort()
+    .filter(f => readFileSync(new URL(f, dir), 'utf8').includes('function public.raid_entrar(')).pop();
+  const sql = readFileSync(new URL(ultimo, dir), 'utf8');
+  assert.match(sql, /a\.dia = public\._raid_hoy\(\) and c = any \(p_equipo\)/, ultimo);
+  assert.match(sql, /function public\.raid_usados_hoy\(\)/, ultimo);
+});

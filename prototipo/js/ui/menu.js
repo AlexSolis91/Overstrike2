@@ -149,10 +149,10 @@ function renderEquipo() {
   // galería
   const lista = OFICIALES.filter(p => (!E.filtro || rolesDe(p).includes(E.filtro)) && (!E.efecto || efectosDe(p).has(E.efecto)) && (!camp || camp.propios.has(p.id)));
   $('#eq-galeria').innerHTML = !lista.length ? '<p class="eq-sin">Ningún campeón coincide con estos filtros.</p>' : lista.map(p => {
-    const pos = equipoDe(E.editando).findIndex(x => x.id === p.id);
-    return `<div class="gc ${pos >= 0 ? 'elegido' : ''}" data-id="${p.id}" style="--c:${p.color}">
+    const pos = equipoDe(E.editando).findIndex(x => x.id === p.id), bloq = camp?.bloqueados?.has(p.id);
+    return `<div class="gc ${pos >= 0 ? 'elegido' : ''} ${bloq ? 'bloq' : ''}" data-id="${p.id}" style="--c:${p.color}" ${bloq ? `title="${camp.motivoBloqueo}"` : ''}>
       ${retrato(p, 'gc-img')}
-      ${pos >= 0 ? `<span class="gc-pos">${pos === 0 ? '👑' : pos + 1}</span>` : ''}
+      ${pos >= 0 ? `<span class="gc-pos">${pos === 0 ? '👑' : pos + 1}</span>` : ''}${bloq ? '<span class="gc-bloq">🔒</span>' : ''}
       <button class="gc-info" data-id="${p.id}" title="Ver ficha">i</button>
       <div class="gc-nombre">${p.nombre}</div>
       <div class="gc-rol">${rolesDe(p).join(' · ')}</div>
@@ -167,6 +167,7 @@ function renderEquipo() {
 function alternarPersonaje(id) {
   const p = OFICIALES.find(x => x.id === id), lado = E.campana ? 'jugador' : E.editando, eq = equipoDe(lado);
   const i = eq.findIndex(x => x.id === id);
+  if (i < 0 && E.campana?.bloqueados?.has(id)) { sonar('resistido'); return aviso(E.campana.motivoBloqueo); }
   if (i >= 0) { eq.splice(i, 1); sonar('quitar'); }
   else if (eq.length < TAM) { eq.push(p); sonar('elegir'); }
   else { sonar('resistido'); return aviso('El equipo ya tiene 5 personajes: quita uno primero'); }
@@ -251,7 +252,7 @@ export function iniciarMenu({ jugar, salirDePartida, abrirCampana, abrirHorda, a
     const f = t.closest('.filtro'); if (f) { E.filtro = f.dataset.rol || null; return renderEquipo(); }
     const m = t.closest('.eq-modo button'); if (m) { E.rivalModo = m.dataset.modo; E.editando = m.dataset.modo === 'construir' ? 'rival' : 'jugador'; E.sel = null; return renderEquipo(); }
     const az = t.closest('.eq-azar');
-    if (az && E.campana) { if (az.dataset.lado === 'jugador') { E.jugador = [...E.jugador, ...OFICIALES.filter(p => E.campana.propios.has(p.id) && !E.jugador.includes(p)).sort(() => Math.random() - .5)].slice(0, TAM); renderEquipo(); } return; }
+    if (az && E.campana) { if (az.dataset.lado === 'jugador') { E.jugador = [...E.jugador, ...OFICIALES.filter(p => E.campana.propios.has(p.id) && !E.campana.bloqueados?.has(p.id) && !E.jugador.includes(p)).sort(() => Math.random() - .5)].slice(0, TAM); renderEquipo(); } return; }
     if (az) { const l = az.dataset.lado; if (l === 'rival') E.rivalModo = 'construir';
       E[l] = E[l].length === TAM ? aleatorio() : aleatorio(E[l]); E.editando = l; E.sel = null; return renderEquipo(); }
     const fila = t.closest('.eq-fila'); if (fila && !E.campana && !(fila.dataset.lado === 'rival' && E.rivalModo === 'azar')) { E.editando = fila.dataset.lado; return renderEquipo(); }
@@ -270,9 +271,10 @@ export function cargarSeleccion(eqJ, eqR, rivalModo) { E.jugador = [...eqJ]; E.r
 export const seleccion = () => ({ rivalModo: E.rivalModo });
 export const equipoElegido = () => [...E.jugador];
 // Modo Campaña: abre la construcción de equipo con el rival fijo de la etapa y solo los campeones propios
-export function equipoCampana({ titulo, rivales, propios, alListo, alVolver, volverTxt, sinRival = false, inicial = null }) {
-  E.campana = { titulo, rivales, propios, alListo, alVolver, volverTxt, sinRival };
-  E.jugador = (inicial || E.jugador).filter(p => propios.has(p.id));   // conserva la última selección (si sigue siendo suya)
+// bloqueados: Set de ids propios que se ven pero no se pueden elegir (p. ej. ya atacaron hoy al Jefe de Raid); motivoBloqueo explica por qué
+export function equipoCampana({ titulo, rivales, propios, alListo, alVolver, volverTxt, sinRival = false, inicial = null, bloqueados = null, motivoBloqueo = '' }) {
+  E.campana = { titulo, rivales, propios, alListo, alVolver, volverTxt, sinRival, bloqueados, motivoBloqueo };
+  E.jugador = (inicial || E.jugador).filter(p => propios.has(p.id) && !bloqueados?.has(p.id));   // conserva la última selección (si sigue siendo suya)
   E.sel = null; E.filtro = null; E.efecto = null;
   irA('equipo');
 }

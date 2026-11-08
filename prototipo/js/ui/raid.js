@@ -9,7 +9,8 @@ import { RELIQUIAS, RAREZAS } from '../datos/reliquias.js';
 import { VERSION } from '../datos/cuenta.js';
 import { BASE_COMUN } from '../motor/reglas.js';
 import { ICONO_RUNA_PORTAL } from '../datos/recompensas.js';
-import { INVOCACIONES } from '../datos/invocaciones.js';
+import { INVOCACIONES } from '../datos/invocaciones.js';
+
 import { avisar } from './dialogo.js';
 
 const $ = s => document.querySelector(s);
@@ -93,6 +94,7 @@ function pintar() {
     <aside class="hd-info">
       <h4>Cómo funciona</h4>
       <p>Cada ataque gasta <b>1 llave</b> y dura hasta que caiga tu equipo: no hay límite de rondas. Tu daño se suma a la barra de todos y a tu cofre del día.</p>
+      <p><b>Cada campeón ataca una vez por día</b> (en cualquier dificultad): los que ya usaste hoy aparecen bloqueados 🔒 hasta que cierre el día. Desarrolla varios equipos.</p>
       <p><b>Resistencia del jefe:</b> ${Object.keys(DIFICULTADES_RAID).map(k => `${DIFICULTADES_RAID[k].nombre} ${pct(resJefe(jefe, k))}`).join(' · ')}. Si tu Puntería es menor, cada punto de diferencia le quita 1% de probabilidad a tus debuffs (mínimo 10%).</p>
       <p>Cada ronda, el jefe y sus invocaciones hacen más daño: ${[5, 10, 15, 20, 25, 30].map(r => `+${Math.round(furiaAcumulada(r) * 100)}% en la ronda ${r}`).join(', ')}, y después +100% más por ronda. Derrotarlo abre la siguiente dificultad para todos.</p>
       <h4>${jefe.nombre}</h4>
@@ -110,11 +112,17 @@ function pintar() {
 async function atacar(prueba = false) {
   const d = E.dificultades.find(x => x.id === sel), jefe = JEFES_RAID[E.jefe];
   let propios;
-  try { propios = new Set((await D.miColeccion()).map(c => c.campeon)); } catch (e) { return avisar(D.mensajeError(e)); }
+  let usados = new Set();   // cada campeón ataca al jefe una vez por día (docs/sql/034); la prueba del administrador no cuenta
+  try {
+    propios = new Set((await D.miColeccion()).map(c => c.campeon));
+    if (!prueba) usados = new Set(await D.raidUsadosHoy().catch(e => { if (/raid_usados_hoy|schema cache|does not exist/i.test(e?.message || '')) return []; throw e; }));
+  } catch (e) { return avisar(D.mensajeError(e)); }
   if (propios.size < 5) return avisar('Necesitas al menos 5 campeones en tu colección.');
+  if ([...propios].filter(id => !usados.has(id)).length < 5) return avisar('Ya usaste hoy a casi todos tus campeones: cada campeón ataca al jefe una vez por día. Necesitas 5 que no hayan atacado; mañana vuelven a estar listos.');
   const { porId } = await import('../datos/personajes/index.js');
   equipoCampana({
     titulo: `${prueba ? '🧪 Prueba · ' : '👑 '}${jefe.nombre} · ${d.nombre} · elige tu equipo`, rivales: [jefe], propios, volverTxt: '← Jefe de Raid',
+    bloqueados: usados, motivoBloqueo: '🔒 Ya atacó hoy al jefe: cada campeón ataca una vez por día.',
     alVolver: () => irA('raid'),
     alListo: async eqJ => {
       if (prueba) return jugar(eqJ.map(p => porId(p.id)), [jefe], {

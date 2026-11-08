@@ -111,19 +111,11 @@ function htmlSobres(lista) {
       return `<div class="tc-sobre ${esRel ? 'reliquias' : ''}" style="--c:${s.color}">
         ${s.imagen ? `<div class="tc-sobre-arte con-arte" style="--arte:url('${s.imagen}')"><img src="${s.imagen}" alt="${s.nombre}"></div>` : `<div class="tc-sobre-arte"><span>${s.icono}</span></div>`}
         <b>${s.nombre}</b>
-        ${esRel ? '' : `<small class="tc-sobre-pool">${c.id === 'unbreakable' ? `Campeones de todos los sobres (${campeonesDelSobre(c.id).length})` : `Solo sus ${campeonesDelSobre(c.id).length} campeones`}</small>`}
+        ${c.id === 'unbreakable' ? `<small class="tc-sobre-pool">Campeones de todos los sobres (${campeonesDelSobre(c.id).length})</small>` : ''}
         <button class="eq-listo tc-abrir" ${esRel ? 'data-reliquias' : `data-sobre="${c.id}"`} ${alcanza ? '' : 'disabled'}>${c.precio > 0 ? `🪙 ${num(c.precio)}` : 'Gratis'}</button>
         ${c.precio > 0 ? `<div class="tc-varios">${VARIOS.map(n => `<button class="eq-btn" ${esRel ? 'data-reliquias' : `data-sobre="${c.id}"`} data-n="${n}" title="Abrir ${n} sobres por ${num(c.precio * n)} de oro" ${inv.oro >= c.precio * n ? '' : 'disabled'}>×${n}</button>`).join('')}</div>` : ''}
-        ${esRel ? htmlGarantias() : inv.vales_sobre ? `<button class="eq-btn tc-vale" data-vale="${c.id}">🎟️ Usar vale</button>` : alcanza ? '' : '<em>Te falta oro</em>'}
+        ${esRel ? '' : inv.vales_sobre ? `<button class="eq-btn tc-vale" data-vale="${c.id}">🎟️ Usar vale</button>` : alcanza ? '' : '<em>Te falta oro</em>'}
       </div>`; }).join('')}</div>`;
-}
-
-// Garantías por calendario del sobre de reliquias (Rara cada 2, Especial cada 6, Épica cada 50; nunca se reinician)
-const GARANTIAS = [['Rara', 2, 'Raro'], ['Especial', 6, 'Especial'], ['Épica', 50, 'Épico']];
-function htmlGarantias() {
-  const n = inv.rel_sobres || 0;
-  return `<div class="tc-garantias">${GARANTIAS.map(([nombre, c, rz]) => { const k = c - (n % c);
-    return `<span style="--rc:${RAREZAS[rz].color}">${nombre}: <b>${k === 1 ? '¡el próximo!' : `en ${k} sobres`}</b></span>`; }).join('')}</div>`;
 }
 
 // ---------------------------------------------------------------- pestaña Forja de los Dioses (recetas ganadas al Jefe de Raid)
