@@ -292,6 +292,9 @@ function crearRng(semilla = Date.now()) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
   rng.elegir = arr => arr[Math.floor(rng() * arr.length)];
+  // Mezcla determinista (Fisher-Yates) que devuelve una copia. NUNCA usar sort(() => rng() - .5): el resultado de ese
+  // truco depende del motor de JavaScript (Chrome y el servidor ordenan distinto) y rompe la repetición de partidas.
+  rng.barajar = arr => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   return rng;
 }
 
@@ -2024,7 +2027,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
 
   function limpiar(a, t, acc) {
     let deb = t.estados.filter(e => EFECTOS[e.id].tipo === 'debuff' && !e.inextinguible && (!acc.etiqueta || esDe(e, acc.etiqueta)));   // inextinguible: no se limpia
-    if (acc.cantidad && deb.length > acc.cantidad) deb = [...deb].sort(() => rng() - .5).slice(0, acc.cantidad);
+    if (acc.cantidad && deb.length > acc.cantidad) deb = rng.barajar(deb).slice(0, acc.cantidad);
     t.estados = t.estados.filter(e => !deb.includes(e));
     emitir('limpieza', { de: a.uid, a: t.uid, n: deb.length }, t);
     return deb.length;
@@ -2032,7 +2035,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
   function disipar(a, t, acc) {
     const sa = stats(a), st = stats(t);
     let buf = t.estados.filter(e => EFECTOS[e.id].tipo === 'buff' && !EFECTOS[e.id].noDisipable && !e.permanente && (!acc.etiqueta || esDe(e, acc.etiqueta)));
-    if (acc.cantidad && buf.length > acc.cantidad) buf = [...buf].sort(() => rng() - .5).slice(0, acc.cantidad);
+    if (acc.cantidad && buf.length > acc.cantidad) buf = rng.barajar(buf).slice(0, acc.cantidad);
     let n = 0;
     for (const b of buf) if (acc.sinTirada || rng() < probAplicar(sa.acc, st.res)) { quitar(t, b); n++; }   // sinTirada: quita sin tirar Puntería
     emitir('disipar', { de: a.uid, a: t.uid, n }, t);
@@ -2046,13 +2049,13 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (spec === 'atacante') return ctx.atacante && !ctx.atacante.muerto ? [ctx.atacante] : [];
     if (spec === 'todosEnemigos') return ctx.esMovimiento ? sinEsquiva(enemigosDe(a)) : enemigosDe(a);
     if (spec === 'otrosAliados') return aliadosDe(a).filter(x => x !== a);
-    if (spec.otrosAliadosAzar) return [...aliadosDe(a).filter(x => x !== a)].sort(() => rng() - .5).slice(0, spec.otrosAliadosAzar);
+    if (spec.otrosAliadosAzar) return rng.barajar(aliadosDe(a).filter(x => x !== a)).slice(0, spec.otrosAliadosAzar);
     if (spec.aliadoAzarSin) { const l = aliadosDe(a).filter(x => !get(x, spec.aliadoAzarSin)); return l.length ? [rng.elegir(l)] : []; }
     if (spec === 'otrosEnemigos') return enemigosDe(a).filter(x => x !== ctx.objetivo);
     if (spec === 'otroEnemigoAzar') { const l = enemigosDe(a).filter(x => x !== ctx.objetivo); return l.length ? [rng.elegir(l)] : []; }
     if (spec === 'todosAliados') return aliadosDe(a);
     if (spec.enemigosCon) return enemigosDe(a).filter(x => x !== ctx.objetivo && [].concat(spec.enemigosCon).some(id => get(x, id)));
-    if (spec.aliadosDistintos) return [...aliadosDe(a)].sort(() => rng() - .5).slice(0, spec.aliadosDistintos);
+    if (spec.aliadosDistintos) return rng.barajar(aliadosDe(a)).slice(0, spec.aliadosDistintos);
     if (spec === 'sobrevivientes') return (ctx.sobrevivientes || []).filter(x => !x.muerto);
     if (spec.aliadosAzar) return Array.from({ length: spec.aliadosAzar }, () => aliadosDe(a)).filter(l => l.length).map(l => rng.elegir(l));
     if (spec === 'aliadoMasLento') { const l = aliadosDe(a); return l.length ? [l.reduce((x, y) => stats(x).spd <= stats(y).spd ? x : y)] : []; }
@@ -2064,7 +2067,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       return l.length ? [rng.elegir(l)] : [];
     }
     if (spec.azar) return Array.from({ length: spec.azar }, () => enemigosDe(a)).filter(l => l.length).map(l => rng.elegir(l));
-    if (spec.distintos) return [...enemigosDe(a)].sort(() => rng() - .5).slice(0, spec.distintos);
+    if (spec.distintos) return rng.barajar(enemigosDe(a)).slice(0, spec.distintos);
     return [];
   }
 
@@ -2142,7 +2145,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           break;
         }
         case 'reanimar': {              // revive hasta N aliados caídos con % de HP y les pone una marca (p. ej. Edo Tensei)
-          const caidos = P.filter(x => x.lado === a.lado && x.muerto && x !== a && !(x.reviveEn > 0) && !(x.revivePasivaRonda > 0)).sort(() => rng() - .5).slice(0, acc.cantidad || 1);
+          const caidos = rng.barajar(P.filter(x => x.lado === a.lado && x.muerto && x !== a && !(x.reviveEn > 0) && !(x.revivePasivaRonda > 0))).slice(0, acc.cantidad || 1);
           for (const x of caidos) {
             revivir(x, acc.hp ?? .5);
             if (x.muerto || !acc.marca) continue;            // sin marca: solo revive (p. ej. Gul'dan)
@@ -2341,7 +2344,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         }
         case 'robarBuffs': {                 // quita buffs al azar al objetivo y se los pasa al ejecutor (no invocaciones ni lo no disipable)
           const lista = t.estados.filter(e => EFECTOS[e.id]?.tipo === 'buff' && !EFECTOS[e.id].noDisipable && !e.permanente && e.id !== 'summon');
-          for (const e of [...lista].sort(() => rng() - .5).slice(0, acc.cantidad || 1)) {
+          for (const e of rng.barajar(lista).slice(0, acc.cantidad || 1)) {
             quitar(t, e);
             const mio = get(a, e.id);
             if (mio) { mio.dur = Math.max(mio.dur ?? 0, e.dur ?? 0); if (e.valor) mio.valor = Math.max(mio.valor || 0, e.valor); }
@@ -2796,7 +2799,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           for (const t of objetivos) { const cx = { objetivo: t, ejecutor: a }; if (!t.muerto && cumple(ef.condicion, cx)) ejecutarAccion(a, ef.accion, cx); }
         for (const t of objetivos) resolverSobreObjetivo(a, t, mov, c);
         if (mov.salta && !a.muerto) {        // "salta": después del objetivo, salta a N enemigos distintos con otro % (p. ej. Cadena de Relámpagos)
-          const otros = [...enemigosDe(a).filter(x => !objetivos.includes(x))].sort(() => rng() - .5).slice(0, mov.salta.veces);
+          const otros = rng.barajar(enemigosDe(a).filter(x => !objetivos.includes(x))).slice(0, mov.salta.veces);
           for (const d of otros) {
             if (a.muerto) break;
             emitir('bonoVisible', { a: d.uid, texto: mov.salta.texto || '¡Salta!' }, d);
@@ -8558,7 +8561,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 12;
+const REGLAS_RAID = 13;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;

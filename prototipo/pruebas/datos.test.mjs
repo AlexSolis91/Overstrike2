@@ -63,3 +63,11 @@ test('Interfaz: nunca confirm()/alert()/prompt() del navegador (usar js/ui/dialo
   recorrer(join(RAIZ, 'js'));
   assert.deepEqual(malos, []);
 });
+
+test('Motor: ninguna mezcla con sort(() => rng() - .5) (depende del motor de JavaScript y rompe la verificación del servidor)', () => {
+  const malos = [];
+  for (const f of readdirSync(join(RAIZ, 'js', 'motor'))) {
+    readFileSync(join(RAIZ, 'js', 'motor', f), 'utf8').split('\n').forEach((l, i) => { if (/\.sort\(\s*\(\)\s*=>/.test(l) && !/^\s*\/\//.test(l)) malos.push(`${f}:${i + 1}`); });
+  }
+  assert.deepEqual(malos, [], 'usar rng.barajar(lista)');
+});

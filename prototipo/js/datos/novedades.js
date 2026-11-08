@@ -3,6 +3,12 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-08', fecha: '8 de noviembre de 2026', titulo: 'Corrección del Jefe de Raid',
+    cambios: [
+      { tipo: 'mejora', texto: '🛠️ Corregimos un error por el que algunos ataques al Jefe de Raid se registraban con 0 de daño: el servidor repetía la batalla y, en ciertas jugadas al azar (como a quién revive Edo Tensei), le salía distinta que en tu pantalla. Si te pasó, avísale al administrador.' },
+    ],
+  },
+  {
     id: '2026-11-07d', fecha: '7 de noviembre de 2026', titulo: 'Legendary Warriors y sobres reacomodados',
     cambios: [
       { tipo: 'nuevo', texto: '⚔️ Legendary Warriors: el sobre de los héroes y guerreros legendarios (Goku, Vegeta, Naruto, He-Man, Superman, Gojō, Broly y más).' },

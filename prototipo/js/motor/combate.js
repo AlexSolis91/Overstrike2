@@ -1450,7 +1450,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
 
   function limpiar(a, t, acc) {
     let deb = t.estados.filter(e => EFECTOS[e.id].tipo === 'debuff' && !e.inextinguible && (!acc.etiqueta || esDe(e, acc.etiqueta)));   // inextinguible: no se limpia
-    if (acc.cantidad && deb.length > acc.cantidad) deb = [...deb].sort(() => rng() - .5).slice(0, acc.cantidad);
+    if (acc.cantidad && deb.length > acc.cantidad) deb = rng.barajar(deb).slice(0, acc.cantidad);
     t.estados = t.estados.filter(e => !deb.includes(e));
     emitir('limpieza', { de: a.uid, a: t.uid, n: deb.length }, t);
     return deb.length;
@@ -1458,7 +1458,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   function disipar(a, t, acc) {
     const sa = stats(a), st = stats(t);
     let buf = t.estados.filter(e => EFECTOS[e.id].tipo === 'buff' && !EFECTOS[e.id].noDisipable && !e.permanente && (!acc.etiqueta || esDe(e, acc.etiqueta)));
-    if (acc.cantidad && buf.length > acc.cantidad) buf = [...buf].sort(() => rng() - .5).slice(0, acc.cantidad);
+    if (acc.cantidad && buf.length > acc.cantidad) buf = rng.barajar(buf).slice(0, acc.cantidad);
     let n = 0;
     for (const b of buf) if (acc.sinTirada || rng() < probAplicar(sa.acc, st.res)) { quitar(t, b); n++; }   // sinTirada: quita sin tirar Puntería
     emitir('disipar', { de: a.uid, a: t.uid, n }, t);
@@ -1472,13 +1472,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (spec === 'atacante') return ctx.atacante && !ctx.atacante.muerto ? [ctx.atacante] : [];
     if (spec === 'todosEnemigos') return ctx.esMovimiento ? sinEsquiva(enemigosDe(a)) : enemigosDe(a);
     if (spec === 'otrosAliados') return aliadosDe(a).filter(x => x !== a);
-    if (spec.otrosAliadosAzar) return [...aliadosDe(a).filter(x => x !== a)].sort(() => rng() - .5).slice(0, spec.otrosAliadosAzar);
+    if (spec.otrosAliadosAzar) return rng.barajar(aliadosDe(a).filter(x => x !== a)).slice(0, spec.otrosAliadosAzar);
     if (spec.aliadoAzarSin) { const l = aliadosDe(a).filter(x => !get(x, spec.aliadoAzarSin)); return l.length ? [rng.elegir(l)] : []; }
     if (spec === 'otrosEnemigos') return enemigosDe(a).filter(x => x !== ctx.objetivo);
     if (spec === 'otroEnemigoAzar') { const l = enemigosDe(a).filter(x => x !== ctx.objetivo); return l.length ? [rng.elegir(l)] : []; }
     if (spec === 'todosAliados') return aliadosDe(a);
     if (spec.enemigosCon) return enemigosDe(a).filter(x => x !== ctx.objetivo && [].concat(spec.enemigosCon).some(id => get(x, id)));
-    if (spec.aliadosDistintos) return [...aliadosDe(a)].sort(() => rng() - .5).slice(0, spec.aliadosDistintos);
+    if (spec.aliadosDistintos) return rng.barajar(aliadosDe(a)).slice(0, spec.aliadosDistintos);
     if (spec === 'sobrevivientes') return (ctx.sobrevivientes || []).filter(x => !x.muerto);
     if (spec.aliadosAzar) return Array.from({ length: spec.aliadosAzar }, () => aliadosDe(a)).filter(l => l.length).map(l => rng.elegir(l));
     if (spec === 'aliadoMasLento') { const l = aliadosDe(a); return l.length ? [l.reduce((x, y) => stats(x).spd <= stats(y).spd ? x : y)] : []; }
@@ -1490,7 +1490,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       return l.length ? [rng.elegir(l)] : [];
     }
     if (spec.azar) return Array.from({ length: spec.azar }, () => enemigosDe(a)).filter(l => l.length).map(l => rng.elegir(l));
-    if (spec.distintos) return [...enemigosDe(a)].sort(() => rng() - .5).slice(0, spec.distintos);
+    if (spec.distintos) return rng.barajar(enemigosDe(a)).slice(0, spec.distintos);
     return [];
   }
 
@@ -1568,7 +1568,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'reanimar': {              // revive hasta N aliados caídos con % de HP y les pone una marca (p. ej. Edo Tensei)
-          const caidos = P.filter(x => x.lado === a.lado && x.muerto && x !== a && !(x.reviveEn > 0) && !(x.revivePasivaRonda > 0)).sort(() => rng() - .5).slice(0, acc.cantidad || 1);
+          const caidos = rng.barajar(P.filter(x => x.lado === a.lado && x.muerto && x !== a && !(x.reviveEn > 0) && !(x.revivePasivaRonda > 0))).slice(0, acc.cantidad || 1);
           for (const x of caidos) {
             revivir(x, acc.hp ?? .5);
             if (x.muerto || !acc.marca) continue;            // sin marca: solo revive (p. ej. Gul'dan)
@@ -1767,7 +1767,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         }
         case 'robarBuffs': {                 // quita buffs al azar al objetivo y se los pasa al ejecutor (no invocaciones ni lo no disipable)
           const lista = t.estados.filter(e => EFECTOS[e.id]?.tipo === 'buff' && !EFECTOS[e.id].noDisipable && !e.permanente && e.id !== 'summon');
-          for (const e of [...lista].sort(() => rng() - .5).slice(0, acc.cantidad || 1)) {
+          for (const e of rng.barajar(lista).slice(0, acc.cantidad || 1)) {
             quitar(t, e);
             const mio = get(a, e.id);
             if (mio) { mio.dur = Math.max(mio.dur ?? 0, e.dur ?? 0); if (e.valor) mio.valor = Math.max(mio.valor || 0, e.valor); }
@@ -2222,7 +2222,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           for (const t of objetivos) { const cx = { objetivo: t, ejecutor: a }; if (!t.muerto && cumple(ef.condicion, cx)) ejecutarAccion(a, ef.accion, cx); }
         for (const t of objetivos) resolverSobreObjetivo(a, t, mov, c);
         if (mov.salta && !a.muerto) {        // "salta": después del objetivo, salta a N enemigos distintos con otro % (p. ej. Cadena de Relámpagos)
-          const otros = [...enemigosDe(a).filter(x => !objetivos.includes(x))].sort(() => rng() - .5).slice(0, mov.salta.veces);
+          const otros = rng.barajar(enemigosDe(a).filter(x => !objetivos.includes(x))).slice(0, mov.salta.veces);
           for (const d of otros) {
             if (a.muerto) break;
             emitir('bonoVisible', { a: d.uid, texto: mov.salta.texto || '¡Salta!' }, d);
