@@ -244,7 +244,10 @@ function htmlMejorar(r) {
 function fichaEquipar(uid) {
   const x = rels.find(r => r.uid === uid); if (!x || !detalle || !slotSel) return '';
   const actual = equipoDe(detalle)[slotSel], motivo = motivoNoEquipar(x, slotSel, { equipo: equipoDe(detalle), abiertos: abiertosDe(col.get(detalle) || {}), estrellas: col.get(detalle)?.estrellas || 0 });
-  return `<div class="tip-doble">${cartaReliquia(x)}${comparacion(x, actual)}${motivo ? `<div class="tip-nota" style="color:#f87171">🔒 ${motivo}</div>` : ''}</div>`;
+  // dentro de la ventana de comparación: quién la tiene equipada ahora (si aplica)
+  const equipadaEn = x.campeon ? `<div class="tip-sub tip-equipada">🧷 ${x.campeon === detalle ? 'Ya la tiene este campeón' : `Equipada en ${dondeEsta(x)}`}</div>` : '';
+  const cmp = comparacion(x, actual).replace(/<\/div>$/, `${equipadaEn}</div>`);
+  return `<div class="tip-doble">${cartaReliquia(x)}${cmp}${motivo ? `<div class="tip-nota" style="color:#f87171">🔒 ${motivo}</div>` : ''}</div>`;
 }
 
 // Espacios de reliquias de un campeón en su ficha: equipar, cambiar y quitar
@@ -333,6 +336,12 @@ function celdaDesfrag(p, r) {
   </div>`;
 }
 
+// Dónde se consigue un campeón: sus sobres temáticos, Unbreakable Force (todos), su Starter Pack y el Portal
+function obtencion(p) {
+  const tematicos = (p.sobres || []).filter(id => SOBRES[id] && id !== 'unbreakable').map(id => SOBRES[id].nombre);
+  return [...tematicos, SOBRES.unbreakable.nombre, ...(p.starter && STARTERS[p.starter] ? [`${STARTERS[p.starter].nombre} (Starter Pack)`] : []), 'Portal'].join(' · ');
+}
+
 function htmlDetalle(p) {
   const r = col.get(p.id);
   if (!r) { detalle = null; return htmlColeccion(); }
@@ -348,6 +357,7 @@ function htmlDetalle(p) {
         <h3>${p.nombre}</h3><small>${roles(p)}</small>
         <div class="tc-det-est">${estrellas(r.estrellas)} <span class="tc-bono">+${Math.round(bonoEstrellas(r.estrellas) * 100)}% a Vida, Daño y Velocidad</span></div>
         <p>Copias disponibles: <b>${r.copias}</b></p>
+        <p class="tc-obtencion">Obtención: <b>${obtencion(p)}</b></p>
       </div>
     </div>
     <div class="tc-acciones">

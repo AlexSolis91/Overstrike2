@@ -5,6 +5,7 @@ export const NOVEDADES = [
   {
     id: '2026-11-08', fecha: '8 de noviembre de 2026', titulo: 'Corrección del Jefe de Raid',
     cambios: [
+      { tipo: 'mejora', texto: '🔎 Colección: cada campeón muestra en qué sobres sale (Obtención), y al revisar una reliquia para equipar ves qué campeón la tiene puesta.' },
       { tipo: 'mejora', texto: '🛠️ Corregimos un error por el que algunos ataques al Jefe de Raid se registraban con 0 de daño: el servidor repetía la batalla y, en ciertas jugadas al azar (como a quién revive Edo Tensei), le salía distinta que en tu pantalla. Si te pasó, avísale al administrador.' },
     ],
   },
