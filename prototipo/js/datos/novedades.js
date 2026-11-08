@@ -3,6 +3,16 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-08c', fecha: '8 de noviembre de 2026', titulo: 'Horda por temporadas y Ticket Dorado',
+    cambios: [
+      { tipo: 'nuevo', texto: '🏆 Horda: ahora hay récord de temporada (dura lo mismo que la temporada de la Arena) y récord histórico. Todos los récords empezaron de cero y las partidas abiertas se cerraron (te devolvimos su Runa de Portal). Los premios de "Primera vez" se conservan.' },
+      { tipo: 'nuevo', texto: '🎫 Ticket Dorado: abre gratis un sobre Relics of Power. Al cerrar cada temporada, los jugadores con récord en la Horda ganan Tickets según su puesto: 1º 10, 2º 8, 3º 6, 4º–10º 4, 11º–25º 3, 26º–50º 2 y el resto 1.' },
+      { tipo: 'cambio', texto: '🎯 La misión "Supera la ronda 30 contra el Jefe de Raid" ahora da 1 Ticket Dorado (antes no daba el sobre que prometía).' },
+      { tipo: 'cambio', texto: '⚡ Horda: cada 3 oleadas, cada enemigo sube +1 o +2 (al azar) su Velocidad base.' },
+      { tipo: 'cambio', texto: '⚔️ Iori y Scorpion: su contraataque ahora es el buff Contraataque (como Anakin): responden con su Básico a cada ataque enemigo, sin límite por ronda. Scorpion ya no necesita que el atacante tenga Quemadura.' },
+    ],
+  },
+  {
     id: '2026-11-08b', fecha: '8 de noviembre de 2026', titulo: 'Jefe de Raid: un ataque por campeón al día',
     cambios: [
       { tipo: 'cambio', texto: '👑 Jefe de Raid: cada campeón puede atacar al jefe una sola vez por día, en cualquier dificultad. Los que ya atacaron aparecen bloqueados 🔒 al armar tu equipo y vuelven a estar listos al cerrar el día. ¡Desarrolla varios equipos!' },

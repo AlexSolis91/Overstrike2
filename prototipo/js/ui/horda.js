@@ -9,12 +9,13 @@ import { ICONO_RUNA_PORTAL } from '../datos/recompensas.js';
 import { repetirHorda, oleadaGuardada, defsGuardadas, totalDecisiones } from '../motor/hordaReanudar.js';
 import { porId } from '../datos/personajes/index.js';
 import { guardarLocal, leerLocal, borrarLocal } from '../servicios/hordaGuardada.js';
-import { activarTip, cartaPosible, hojaTactil, conCursor, ocultarTip, cerrarHoja } from './tipReliquia.js';
+import { activarTip, cartaPosible, hojaTactil, conCursor, ocultarTip, cerrarHoja } from './tipReliquia.js';
+
 import { confirmar, avisar } from './dialogo.js';
 
 const $ = s => document.querySelector(s);
 const ICONO_PORTAL = 'assets/items/runaPortal.png';
-let jugar = null, inv = null, record = 0, error = '', hitos = new Set(), filtro = 'Raro', comprando = false;
+let jugar = null, inv = null, record = 0, recordHist = 0, tipoRanking = 'temporada', error = '', hitos = new Set(), filtro = 'Raro', comprando = false;
 let abierta = null;   // partida sin terminar que se puede continuar: { id, g }
 let ranking;   // undefined = cargando · null = falta el SQL 020 · { lista, yo }
 // Tienda de la Horda (docs/sql/011 y 015): precio en Trofeos de Orco por rareza (Épicas: 1 por semana); premios de primera vez
@@ -33,13 +34,27 @@ const tienda = () => Object.entries(RELIQUIAS).filter(([, r]) => (r.lote || 'orc
 const pct = v => `${Math.round(v * 1000) / 10}%`.replace('.0%', '%');
 
 async function cargarRanking() {
-  ranking = await D.hordaRanking('orcos').catch(() => null);
+  ranking = await D.hordaRanking('orcos', tipoRanking).catch(() => null);
+}
+
+// Tickets Dorados por puesto al cerrar la temporada (igual que _horda_tickets en docs/sql/035)
+const PREMIOS_TEMPORADA = [['🥇 1º', 10], ['🥈 2º', 8], ['🥉 3º', 6], ['4º–10º', 4], ['11º–25º', 3], ['26º–50º', 2], ['Resto con récord', 1]];
+// Último día de la temporada: fin_temporada es el lunes en que empieza la siguiente
+const ultimoDia = f => new Date(new Date(`${f}T12:00:00`).getTime() - 864e5).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' });
+
+// Premios de temporadas cerradas: se cobran solos al entrar al juego o a la Horda (una ventana por premio nuevo)
+export async function revisarPremiosHorda() {
+  if (!perfilActual()) return;
+  const lista = await D.hordaPremiosTemporada().catch(() => []);
+  for (const p of lista || []) await avisar(`Terminaste la temporada ${p.temporada} de la ${HORDAS[p.horda]?.nombre || 'Horda'} en el puesto ${p.puesto}º (oleada ${p.oleada}).
+
+🎫 Ganaste ${p.tickets} Ticket${p.tickets > 1 ? 's' : ''} Dorado${p.tickets > 1 ? 's' : ''}: úsalos en la Tienda para abrir sobres Relics of Power gratis.`, { titulo: '🏆 Premio de temporada de la Horda' });
 }
 
 // Récords de la Horda: top 50 (🥇🥈🥉) y, si estoy fuera, mi puesto al final
 function htmlRanking() {
   if (ranking === undefined) return '<p>Cargando…</p>';
-  if (!ranking) return '<p>⚠️ Falta ejecutar docs/sql/020_horda_ranking.sql en el servidor.</p>';
+  if (!ranking) return '<p>⚠️ Falta ejecutar docs/sql/035_horda_temporadas_ticket_dorado.sql en el servidor.</p>';
   if (!ranking.lista.length) return '<p>Todavía nadie tiene récord. ¡Sé el primero!</p>';
   const fecha = f => new Date(f).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
   const fila = r => `<tr class="${r.yo ? 'yo' : ''}"><td>${['🥇', '🥈', '🥉'][r.puesto - 1] || r.puesto}</td><td class="hd-rk-n">${r.nombre}</td><td><b>${r.oleada}</b></td><td>${fecha(r.fecha)}</td></tr>`;
@@ -60,9 +75,9 @@ async function cargar() {
   error = '';
   if (!perfilActual()) { inv = null; abierta = null; return; }
   try {
-    const [i, r, h, p] = await Promise.all([D.miInventario(), D.miRecordHorda('orcos').catch(() => []), D.misHitosHorda('orcos').catch(() => []), D.miPartidaHorda('orcos').catch(() => null)]);
+    const [i, r, h, p] = await Promise.all([D.miInventario(), D.hordaMisRecords('orcos').catch(() => null), D.misHitosHorda('orcos').catch(() => []), D.miPartidaHorda('orcos').catch(() => null)]);
     abierta = partidaAbierta(p);
-    inv = i; record = r?.[0]?.oleada || 0; hitos = new Set((h || []).map(x => x.oleada));
+    inv = i; record = r?.temporada || 0; recordHist = r?.historico || 0; hitos = new Set((h || []).map(x => x.oleada));
     if (inv && inv.runas_portal == null) error = 'Falta ejecutar docs/sql/006_horda.sql en el servidor.';
   } catch (e) { error = D.mensajeError(e); }
 }
@@ -79,7 +94,7 @@ function pintar() {
     <section>
       <div class="hd-tarjeta" style="background-image:url('assets/horda/kargalgan.webp')">
         <h3>${h.nombre}</h3>
-        ${record ? `<div class="hd-record">🏆 Tu récord: oleada ${record}</div>` : ''}
+        ${record || recordHist ? `<div class="hd-record">🏆 Récord de temporada: oleada ${record || '—'} · Histórico: oleada ${recordHist || '—'}</div>` : ''}
         <p>Oleadas infinitas de 5 orcos, cada una más fuerte. Tu equipo conserva su vida entre oleadas. Retírate cuando quieras: te llevas todo tu botín.</p>
         <div class="hd-acciones">
           ${abierta ? `<button id="hd-continuar" class="hd-btn">▶️ Continuar partida (oleada ${abierta.g.olas.length})</button>` : ''}
@@ -105,6 +120,7 @@ function pintar() {
     <aside class="hd-info">
       <h4>Cómo funciona</h4>
       <p>Abrir un portal consume <b>1 Runa de Portal</b>. Elige 5 campeones de tu colección: pelean con sus estrellas y reliquias.
+      Cada oleada los enemigos tienen más Vida y Daño, y cada 3 oleadas cada uno sube +1 o +2 (al azar) su Velocidad base.
       Cada 5 oleadas aparece un <b>mini-jefe</b> (General Galek o General Torl-khan) y cada 10 un <b>jefe</b> (Gul'dan o Kargalgan).</p>
       <h4>Recompensas por oleada</h4>
       <p><b>Oro:</b> ${oroOleada(1).toLocaleString('es-MX')} en la oleada 1, +${ORO_PASO} por oleada (×3 mini-jefe, ×5 jefe).<br>
@@ -116,8 +132,14 @@ function pintar() {
       <h4>Consigue Runas de Portal</h4>
       <p>3 de regalo al empezar · 1 en la misión diaria "Gana 5 combates de Arena" · 3.3% de 1 runa en cada combate de Arena (ganes o pierdas) · la recompensa semanal de tu liga de Arena (1–4).</p>
       <h4>🏆 Récords de la Horda de Orcos</h4>
-      <p class="hd-nota">La oleada más alta de cada jugador. En empate, va primero quien la alcanzó antes.</p>
+      <div class="hd-rk-tabs"><button class="hd-fil ${tipoRanking === 'temporada' ? 'on' : ''}" data-ranking="temporada">Temporada${ranking?.temporada ? ` ${ranking.temporada}` : ''}</button><button class="hd-fil ${tipoRanking === 'historico' ? 'on' : ''}" data-ranking="historico">Histórico</button></div>
+      <p class="hd-nota">${tipoRanking === 'temporada'
+        ? `La oleada más alta de cada jugador en esta temporada (dura lo mismo que la de la Arena${ranking?.fin_temporada ? `: termina el ${ultimoDia(ranking.fin_temporada)} a medianoche, hora de México` : ''}). Cuenta la partida en la temporada en que abriste el portal; al cambiar de temporada se cierra con su botín.`
+        : 'La oleada más alta que cada jugador ha alcanzado en cualquier temporada.'} En empate, va primero quien la alcanzó antes.</p>
       ${htmlRanking()}
+      ${tipoRanking === 'temporada' ? `<h4>🎫 Premios de temporada</h4>
+      <p class="hd-nota">Al terminar la temporada, cada jugador con récord gana <b>Tickets Dorados</b> (abren gratis un sobre Relics of Power):</p>
+      <table>${PREMIOS_TEMPORADA.map(([p, n]) => `<tr><td>${p}</td><td><b>🎫 ${n}</b></td></tr>`).join('')}</table>` : ''}
     </aside>`;
 }
 
@@ -126,6 +148,7 @@ export async function abrirHorda() {
   pintar();
   await Promise.all([cargar(), cargarRanking()]);
   pintar();
+  revisarPremiosHorda();
 }
 
 async function entrar() {
@@ -144,7 +167,7 @@ async function entrar() {
       abierta = null;
       const equipo = eqJ.map(p => p.id), botin = { oro: 0, reliquias: [], fragmentos: 0 };
       // Todo lo necesario para reconstruir la partida; las estrellas y reliquias quedan congeladas mientras dure
-      const g = { partida, horda: 'orcos', semilla: Math.floor(Math.random() * 2 ** 31), equipo, olas: [o.enemigos], dec: [[]], marcas: {}, botin, botinHasta: 0,
+      const g = { partida, horda: 'orcos', semilla: Math.floor(Math.random() * 2 ** 31), equipo, olas: [o.enemigos], spd: [o.spd], dec: [[]], marcas: {}, botin, botinHasta: 0,
         cuenta: { col: (filasCol || []).filter(r => equipo.includes(r.campeon)), reliquias: (filasRel || []).filter(r => equipo.includes(r.campeon)) } };
       guardarLocal(g); D.hordaGuardar(partida, g).catch(() => null);
       jugar(eqJ, defsOleada(o), { rival: o.opciones, semilla: g.semilla, horda: { partida, horda: 'orcos', n: 1, rango: o.rango, botin, botinHasta: 0, g } });
@@ -183,10 +206,12 @@ async function comprar(id, confirmado = false) {
 export function iniciarHorda(opc) {
   jugar = opc.jugar;
   $('#hd-volver').addEventListener('click', () => irA('menu'));
+  addEventListener('cuenta:cambio', () => revisarPremiosHorda());
   activarTip($('#pantalla-horda'), '.hd-rel', el => cartaPosible(el.dataset.id));
   $('#pantalla-horda').addEventListener('click', e => {
     if (e.target.closest('#hd-entrar')) return entrar();
     if (e.target.closest('#hd-continuar')) return continuar();
+    const rk = e.target.closest('[data-ranking]'); if (rk) { tipoRanking = rk.dataset.ranking; ranking = undefined; pintar(); return cargarRanking().then(pintar); }
     const f = e.target.closest('.hd-fil'); if (f) { filtro = f.dataset.rz; return pintar(); }
     const card = e.target.closest('.hd-rel');
     if (card && !conCursor()) {   // táctil: primer toque = ficha con lo que puede salir y su botón Comprar

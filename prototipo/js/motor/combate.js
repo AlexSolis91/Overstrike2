@@ -13,7 +13,7 @@ const NOMBRE_CAT = { basico: 'Básico', especial: 'Especial', over: 'Over' };
 const NOMBRE_STAT = { hpPct: 'HP máx.', dmgPct: 'Daño', critDmg: 'Daño Crítico', critRate: 'Prob. Crítico', armor: 'Armadura', res: 'Resistencia', acc: 'Puntería', pen: 'Penetración de escudo' };
 const clonar = o => JSON.parse(JSON.stringify(o));
 
-// rival (opcional, p. ej. Campaña): { poder: ×HP y ×Daño, spdPct, sinReliquias, sinLider, jefe: { hpExtra, umbral, dmgPct, spdPct } }
+// rival (opcional, p. ej. Campaña): { poder: ×HP y ×Daño, spdPct, spdPlano: [+Velocidad base por posición], sinReliquias, sinLider, jefe: { hpExtra, umbral, dmgPct, spdPct } }
 // invertido (Arena en vivo): crea primero el equipo rival. El segundo jugador ve su equipo como "jugador" pero el motor queda en
 // el mismo orden que en la pantalla del primero (misma semilla + mismas decisiones = misma partida en las dos pantallas).
 export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival: opcionesRival = {}, invertido = false }) {
@@ -164,7 +164,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     const bpe = p.pasiva?.bonoPorEfecto;                 // pasiva "bonoPorEfecto": como el líder, pero solo para él (p. ej. Mundo Transparente de Yorichi)
     if (capas.buffs && bpe) sec[bpe.stat] = (sec[bpe.stat] || 0) + bpe.valor * enemigosDe(p).filter(x => get(x, bpe.efecto)).length;
     if (capas.permanente) for (const [k, v] of Object.entries(p.campana || {})) {     // poder del rival en modos como Campaña (y la furia del Jefe)
-      if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
+      if (k in flat) flat[k] += v; else if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
     }
     if (capas.permanente) for (const [k, v] of Object.entries(p.permanente || {})) {
       if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
@@ -2323,6 +2323,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (r.dmgPct) p.campana.dmgPct = r.dmgPct;
     if (r.poder && r.poder !== 1) { p.campana.hpPct = r.poder - 1; p.campana.dmgPct = r.poder - 1; }
     if (r.spdPct) p.campana.spdPct = r.spdPct;
+    if (r.spdPlano?.[p.pos]) p.campana.spd = r.spdPlano[p.pos];   // +Velocidad base fija por enemigo (Horda: +1 o +2 cada 3 oleadas)
     if (r.res) p.campana.res = r.res;                          // +Resistencia (puntos), p. ej. dificultad del Jefe de Raid
     if (r.jefe && p.pos === 0) {                             // el Jefe: más HP y una fase de furia al bajar de cierto % de HP
       p.jefe = { furia: false, umbral: r.jefe.umbral ?? .5, dmgPct: r.jefe.dmgPct ?? .25, spdPct: r.jefe.spdPct ?? .15 };

@@ -17,9 +17,9 @@ const PREMIO = {
   frag_runa:    n => `🧩 ${n}`,
   trofeos:      n => `🏅 ${n}`,
   vales:        n => `🎟️ ${n} Vale de sobre`,
-  rel_sobres:   n => `🎫 ${n} Sobre Relics of Power`,
+  tickets_dorados: n => `🎫 ${n} Ticket Dorado`,
 };
-const NOMBRE = { oro: 'oro', polvo: 'Polvo Arcano', runas_portal: 'Runa de Portal', frag_runa: 'Fragmentos', trofeos: 'Trofeos de Orco', vales: 'Vale de sobre', rel_sobres: 'Sobre Relics of Power, listo para abrir' };
+const NOMBRE = { oro: 'oro', polvo: 'Polvo Arcano', runas_portal: 'Runa de Portal', frag_runa: 'Fragmentos', trofeos: 'Trofeos de Orco', vales: 'Vale de sobre', tickets_dorados: 'Ticket Dorado: abre gratis un sobre Relics of Power' };
 const premioHtml = p => Object.entries(p).map(([k, n]) => `<span title="${NOMBRE[k]}">${PREMIO[k](n)}</span>`).join(' ');
 
 const cobrada = m => (est?.cobradas || []).includes(m.id);

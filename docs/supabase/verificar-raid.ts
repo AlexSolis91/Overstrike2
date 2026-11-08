@@ -590,7 +590,7 @@ const NOMBRE_CAT = { basico: 'Básico', especial: 'Especial', over: 'Over' };
 const NOMBRE_STAT = { hpPct: 'HP máx.', dmgPct: 'Daño', critDmg: 'Daño Crítico', critRate: 'Prob. Crítico', armor: 'Armadura', res: 'Resistencia', acc: 'Puntería', pen: 'Penetración de escudo' };
 const clonar = o => JSON.parse(JSON.stringify(o));
 
-// rival (opcional, p. ej. Campaña): { poder: ×HP y ×Daño, spdPct, sinReliquias, sinLider, jefe: { hpExtra, umbral, dmgPct, spdPct } }
+// rival (opcional, p. ej. Campaña): { poder: ×HP y ×Daño, spdPct, spdPlano: [+Velocidad base por posición], sinReliquias, sinLider, jefe: { hpExtra, umbral, dmgPct, spdPct } }
 // invertido (Arena en vivo): crea primero el equipo rival. El segundo jugador ve su equipo como "jugador" pero el motor queda en
 // el mismo orden que en la pantalla del primero (misma semilla + mismas decisiones = misma partida en las dos pantallas).
 function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival: opcionesRival = {}, invertido = false }) {
@@ -741,7 +741,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     const bpe = p.pasiva?.bonoPorEfecto;                 // pasiva "bonoPorEfecto": como el líder, pero solo para él (p. ej. Mundo Transparente de Yorichi)
     if (capas.buffs && bpe) sec[bpe.stat] = (sec[bpe.stat] || 0) + bpe.valor * enemigosDe(p).filter(x => get(x, bpe.efecto)).length;
     if (capas.permanente) for (const [k, v] of Object.entries(p.campana || {})) {     // poder del rival en modos como Campaña (y la furia del Jefe)
-      if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
+      if (k in flat) flat[k] += v; else if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
     }
     if (capas.permanente) for (const [k, v] of Object.entries(p.permanente || {})) {
       if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
@@ -2900,6 +2900,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (r.dmgPct) p.campana.dmgPct = r.dmgPct;
     if (r.poder && r.poder !== 1) { p.campana.hpPct = r.poder - 1; p.campana.dmgPct = r.poder - 1; }
     if (r.spdPct) p.campana.spdPct = r.spdPct;
+    if (r.spdPlano?.[p.pos]) p.campana.spd = r.spdPlano[p.pos];   // +Velocidad base fija por enemigo (Horda: +1 o +2 cada 3 oleadas)
     if (r.res) p.campana.res = r.res;                          // +Resistencia (puntos), p. ej. dificultad del Jefe de Raid
     if (r.jefe && p.pos === 0) {                             // el Jefe: más HP y una fase de furia al bajar de cierto % de HP
       p.jefe = { furia: false, umbral: r.jefe.umbral ?? .5, dmgPct: r.jefe.dmgPct ?? .25, spdPct: r.jefe.spdPct ?? .15 };
@@ -4156,9 +4157,8 @@ __e.default = {
   },
   pasiva: {
     nombre: 'Llamas Devoradoras',
-    desc: 'Hasta 3 veces por ronda: cuando un enemigo con Quemadura lo ataca, Scorpion contraataca con su Básico (un contraataque no provoca otro). Cada vez que ataca a un enemigo con Quemadura, le roba 5% de su HP máx.',
-    gatillo: 'alSerAtacado', filtro: { atacanteTiene: 'burn' }, maxPorRonda: 3,
-    accion: { tipo: 'usarMovimiento', categoria: 'basico', contraataque: true, a: 'atacante' },
+    desc: 'Contraataque permanente: cuando un enemigo lo ataca, Scorpion responde con su Básico. Cada vez que ataca a un enemigo con Quemadura, le roba 5% de su HP máx.',
+    efectosPermanentes: ['counter'],   // 2026-11-08: el buff Contraataque (como Anakin), antes "hasta 3 veces por ronda, solo contra quemados"
     roboSiObjetivoTiene: { efecto: 'burn', pct: .05 },
   },
   movimientos: [
@@ -6845,9 +6845,8 @@ __e.default = {
 
   pasiva: {
     nombre: 'Sangre de Orochi',
-    desc: 'Hasta 2 veces por ronda: cuando un enemigo lo ataca, Iori contraataca con su Básico (un contraataque no provoca otro). Todo su equipo hace +20% de daño a enemigos con Sangrado. Rival eterno de Kyo Kusanagi: le hace +20% de daño.',
-    gatillo: 'alSerAtacado', maxPorRonda: 2,
-    accion: { tipo: 'usarMovimiento', categoria: 'basico', contraataque: true, a: 'atacante' },
+    desc: 'Contraataque permanente: cuando un enemigo lo ataca, Iori responde con su Básico. Todo su equipo hace +20% de daño a enemigos con Sangrado. Rival eterno de Kyo Kusanagi: le hace +20% de daño.',
+    efectosPermanentes: ['counter'],   // 2026-11-08: el buff Contraataque (como Anakin), antes "hasta 2 veces por ronda"
     auraContra: { efecto: 'bleed', pct: .20 },
     enemigoJurado: { id: 'kyo-kusanagi', bono: .20 },
   },
@@ -8561,7 +8560,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 13;
+const REGLAS_RAID = 14;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;

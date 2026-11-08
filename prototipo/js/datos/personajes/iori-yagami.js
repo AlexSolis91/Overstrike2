@@ -17,9 +17,8 @@ export default {
 
   pasiva: {
     nombre: 'Sangre de Orochi',
-    desc: 'Hasta 2 veces por ronda: cuando un enemigo lo ataca, Iori contraataca con su Básico (un contraataque no provoca otro). Todo su equipo hace +20% de daño a enemigos con Sangrado. Rival eterno de Kyo Kusanagi: le hace +20% de daño.',
-    gatillo: 'alSerAtacado', maxPorRonda: 2,
-    accion: { tipo: 'usarMovimiento', categoria: 'basico', contraataque: true, a: 'atacante' },
+    desc: 'Contraataque permanente: cuando un enemigo lo ataca, Iori responde con su Básico. Todo su equipo hace +20% de daño a enemigos con Sangrado. Rival eterno de Kyo Kusanagi: le hace +20% de daño.',
+    efectosPermanentes: ['counter'],   // 2026-11-08: el buff Contraataque (como Anakin), antes "hasta 2 veces por ronda"
     auraContra: { efecto: 'bleed', pct: .20 },
     enemigoJurado: { id: 'kyo-kusanagi', bono: .20 },
   },

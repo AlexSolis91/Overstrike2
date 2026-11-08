@@ -16,9 +16,12 @@ async function conRespaldo(fn, completo, basico) {
 }
 export const miColeccion = () => conRespaldo(c => q(sb => sb.from('coleccion').select(c)), 'campeon, copias, estrellas, espacios, espacios_abiertos', 'campeon, copias, estrellas, espacios');
 const INV = 'oro, frag_runa, frag_otros, runas, vales_sobre, rel_sobres, runas_portal, polvo_arcano, portal_dia, portal_compras';
-export const miInventario = () => conRespaldo(c => q(sb => sb.from('inventario').select(c).maybeSingle()), INV + ', trofeos_orco, horda_epica_semana', INV + ', trofeos_orco')   // SQL 011 y 015
+const inventarioViejo = () => conRespaldo(c => q(sb => sb.from('inventario').select(c).maybeSingle()), INV + ', trofeos_orco, horda_epica_semana', INV + ', trofeos_orco')   // SQL 011 y 015
   .catch(e => { if (!/column|does not exist|schema cache/i.test(e?.message || '')) throw e; return q(sb => sb.from('inventario').select(INV).maybeSingle()); })
   .catch(e => { if (!/column|does not exist|schema cache/i.test(e?.message || '')) throw e; return q(sb => sb.from('inventario').select('oro, frag_runa, frag_otros, runas').maybeSingle()); });
+const colFaltante = e => /column|does not exist|schema cache/i.test(e?.message || '');
+export const miInventario = () => q(sb => sb.from('inventario').select(INV + ', trofeos_orco, horda_epica_semana, tickets_dorados').maybeSingle())   // SQL 035
+  .catch(e => { if (!colFaltante(e)) throw e; return inventarioViejo(); });
 export const configSobres = () => q(sb => sb.from('sobres_config').select('id, activo, precio, desde, hasta').order('id'));
 
 export const abrirStarter = id => rpc('abrir_starter', { p_starter: id });
@@ -35,6 +38,7 @@ export const abrirSobreVale = id => rpc('abrir_sobre_vale', { p_sobre: id });
 export const misReliquias = () => conRespaldo(c => q(sb => sb.from('reliquias').select(c).order('obtenida', { ascending: false })),
   'id, reliquia, plana_stat, plana_valor, tiradas, campeon, espacio, obtenida, bloqueada', 'id, reliquia, plana_stat, plana_valor, tiradas, campeon, espacio, obtenida');
 export const abrirSobreReliquias = () => rpc('abrir_sobre_reliquias');
+export const abrirSobreReliquiasTicket = () => rpc('abrir_sobre_reliquias_ticket');   // Ticket Dorado · docs/sql/035
 export const equiparReliquia = (id, campeon, espacio) => rpc('equipar_reliquia', { p_reliquia: id, p_campeon: campeon, p_espacio: espacio });
 export const desequiparReliquia = id => rpc('desequipar_reliquia', { p_reliquia: id });
 // Polvo Arcano y fusión (docs/sql/006_horda.sql)
@@ -58,7 +62,10 @@ export const miPartidaHorda = horda => q(sb => sb.from('horda_partidas').select(
 export const miRecordHorda = horda => q(sb => sb.from('horda_partidas').select('oleada').eq('horda', horda).order('oleada', { ascending: false }).limit(1));
 export const tiendaHordaComprar = id => rpc('tienda_horda_comprar', { p_reliquia: id });   // docs/sql/011_horda_extras.sql
 export const misHitosHorda = horda => q(sb => sb.from('horda_hitos').select('oleada').eq('horda', horda));
-export const hordaRanking = horda => rpc('horda_ranking', { p_horda: horda });   // docs/sql/020_horda_ranking.sql
+// Récords de temporada e histórico, y premios de fin de temporada (docs/sql/035_horda_temporadas_ticket_dorado.sql)
+export const hordaRanking = (horda, tipo = 'temporada') => rpc('horda_ranking', { p_horda: horda, p_tipo: tipo });
+export const hordaMisRecords = horda => rpc('horda_mis_records', { p_horda: horda });
+export const hordaPremiosTemporada = () => rpc('horda_premios_temporada');
 
 // Jefe de Raid (docs/sql/026_jefe_raid.sql)
 export const raidEstado = () => rpc('raid_estado');

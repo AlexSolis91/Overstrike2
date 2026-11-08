@@ -36,7 +36,8 @@ import { crearRng } from './motor/rng.js';
 import { semillaIA } from './motor/verificar.js';
 import { supabase } from './servicios/supabase.js';
 import { RELIQUIAS, RAREZAS } from './datos/reliquias.js';
-import { liga } from './datos/arena.js';
+import { liga } from './datos/arena.js';
+
 import { confirmar } from './ui/dialogo.js';
 import { iniciarNovedades, revisarNovedades } from './ui/novedades.js';
 
@@ -703,7 +704,7 @@ async function siguienteOleada() {
     const c = cartas[uid]; matarTweens(c.c); c.c.parent?.removeChild(c.c); if (!c.c.destroyed) c.c.destroy({ children: true });
     delete cartas[uid]; delete vistas[uid];
   }
-  if (h.g) { h.g.olas.push(o.enemigos); h.g.dec.push([]); guardarLocal(h.g); }
+  if (h.g) { h.g.olas.push(o.enemigos); (h.g.spd ||= []).push(o.spd); h.g.dec.push([]); guardarLocal(h.g); }
   const res = combate.siguienteOleada(defsOleada(o), o.opciones);
   P = combate.personajes;
   const nuevos = P.filter(p => p.uid.startsWith('rival-'));

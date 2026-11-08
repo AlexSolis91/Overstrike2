@@ -14,7 +14,7 @@ export const MISIONES = [
   { id: 12, texto: 'Reclama 1 cofre del Jefe de Raid',      clave: 'raid_cofres',        meta: 1,  dificultad: 'Fácil',   premio: { polvo: 10 } },
   { id: 13, texto: 'Causa 25,000 de daño o más al Jefe de Raid con una sola llave', clave: 'raid_dano_1', meta: 25000, dificultad: 'Media', premio: { vales: 1 } },
   { id: 14, texto: 'Causa 250,000 de daño o más al Jefe de Raid con dos llaves', clave: 'raid_dano_2', meta: 250000, dificultad: 'Difícil', premio: { runas_portal: 1, oro: 35000 } },
-  { id: 15, texto: 'Supera la ronda 30 contra el Jefe de Raid', clave: 'raid_ronda',      meta: 31, dificultad: 'Difícil', premio: { rel_sobres: 1, oro: 25000 } },
+  { id: 15, texto: 'Supera la ronda 30 contra el Jefe de Raid', clave: 'raid_ronda',      meta: 31, dificultad: 'Difícil', premio: { tickets_dorados: 1, oro: 25000 } },
   { id: 10, texto: 'Completa 10 misiones diarias',          clave: 'todas',              meta: 10, dificultad: 'Final',   premio: { vales: 1 } },
 ];
 

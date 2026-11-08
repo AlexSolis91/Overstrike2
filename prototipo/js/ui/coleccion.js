@@ -83,6 +83,7 @@ function pintarInventario() {
   $('#tc-inv').innerHTML = `
     <span title="Oro">🪙 <b>${num(inv.oro)}</b></span>
     ${inv.vales_sobre ? `<span title="Vales de sobre (ábrelos gratis en la Tienda)">🎟️ <b>${num(inv.vales_sobre)}</b></span>` : ''}
+    ${inv.tickets_dorados ? `<span title="Tickets Dorados (abren gratis un sobre Relics of Power)">🎫 <b>${num(inv.tickets_dorados)}</b></span>` : ''}
     <span title="Runas de Invocación">🔮 <b>${num(inv.runas)}</b></span>
     <span class="tc-frag" title="Fragmentos de Runa de Invocación (${FRAG_POR_RUNA} = 1 Runa)">🧩 <b>${inv.frag_runa}/${FRAG_POR_RUNA}</b><i style="--p:${pct}%"></i></span>
     <span title="Polvo Estelar (estrellas moradas)">${ICONO_ESTELAR} <b>${num(inv.frag_otros)}</b></span>
@@ -114,7 +115,7 @@ function htmlSobres(lista) {
         ${c.id === 'unbreakable' ? `<small class="tc-sobre-pool">Campeones de todos los sobres (${campeonesDelSobre(c.id).length})</small>` : ''}
         <button class="eq-listo tc-abrir" ${esRel ? 'data-reliquias' : `data-sobre="${c.id}"`} ${alcanza ? '' : 'disabled'}>${c.precio > 0 ? `🪙 ${num(c.precio)}` : 'Gratis'}</button>
         ${c.precio > 0 ? `<div class="tc-varios">${VARIOS.map(n => `<button class="eq-btn" ${esRel ? 'data-reliquias' : `data-sobre="${c.id}"`} data-n="${n}" title="Abrir ${n} sobres por ${num(c.precio * n)} de oro" ${inv.oro >= c.precio * n ? '' : 'disabled'}>×${n}</button>`).join('')}</div>` : ''}
-        ${esRel ? '' : inv.vales_sobre ? `<button class="eq-btn tc-vale" data-vale="${c.id}">🎟️ Usar vale</button>` : alcanza ? '' : '<em>Te falta oro</em>'}
+        ${esRel ? (inv.tickets_dorados ? `<button class="eq-btn tc-vale" data-ticket>🎫 Usar Ticket Dorado (${num(inv.tickets_dorados)})</button>` : '') : inv.vales_sobre ? `<button class="eq-btn tc-vale" data-vale="${c.id}">🎟️ Usar vale</button>` : alcanza ? '' : '<em>Te falta oro</em>'}
       </div>`; }).join('')}</div>`;
 }
 
@@ -462,6 +463,16 @@ async function abrirReliquias(n = 1) {
   });
 }
 
+async function abrirConTicket() {
+  const s = SOBRES.reliquias;
+  if (!await confirmar(`¿Usar 1 Ticket Dorado para abrir ${s.nombre}? (Te quedan ${inv.tickets_dorados})`)) return;
+  await accion(async () => {
+    const r = await D.abrirSobreReliquiasTicket();
+    await revelarCartas({ sobre: s, reliquias: (r.reliquias || []).map(instancia).filter(Boolean) });
+    await recargar(); pintar();
+  });
+}
+
 async function abrirConVale(id) {
   const s = SOBRES[id];
   if (!await confirmar(`¿Usar 1 vale para abrir ${s.nombre}? (Te quedan ${inv.vales_sobre})`)) return;
@@ -536,6 +547,7 @@ async function ejecutar(e) {
   if (b.dataset.equipar) return accion(async () => { await D.equiparReliquia(b.dataset.equipar, detalle, slotSel); await recargar(); slotSel = null; pintar(); aviso('Reliquia equipada.'); });
   if (b.dataset.quitar) return accion(async () => { await D.desequiparReliquia(b.dataset.quitar); await recargar(); pintar(); aviso('La reliquia volvió a tu inventario.'); });
   if (b.dataset.vale) return abrirConVale(b.dataset.vale);
+  if ('ticket' in b.dataset) return abrirConTicket();
   if (b.dataset.ver && !col.has(b.dataset.ver)) return conCursor() ? undefined : hojaTactil(fichaBloqueado(porId(b.dataset.ver)));
   if (b.dataset.ver) { detalle = b.dataset.ver; slotSel = null; return pintar(); }
   if ('volver' in b.dataset) { detalle = null; slotSel = null; return pintar(); }

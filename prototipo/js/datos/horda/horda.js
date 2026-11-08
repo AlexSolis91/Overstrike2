@@ -18,6 +18,13 @@ export const HORDAS = {
 // a la 20 ~12% (Kargalgan es el gran muro) y a la 30 ~3%. Las fichas se multiplican por BASE en la oleada 1.
 export const BASE = .40, CRECIMIENTO = .05;     // +5% de HP y Daño por oleada, compuesto (sin tope)
 export const poderOleada = n => BASE * Math.pow(1 + CRECIMIENTO, n - 1);
+// Velocidad (2026-11-08, todas las Hordas): cada 3 oleadas, cada enemigo suma +1 o +2 (al azar) a su Velocidad base, acumulado.
+// Oleada 3: +1–2 · oleada 30: +10–20 (≈ +15).
+export const CADA_VELOCIDAD = 3;
+export function velocidadExtra(n, rng = Math.random) {
+  let s = 0; for (let i = 0; i < Math.floor(n / CADA_VELOCIDAD); i++) s += 1 + Math.floor(rng() * 2);
+  return s;
+}
 
 // Qué sale en la oleada n: { enemigos: [ids], jefe: 'miniJefe'|'jefe'|null, opciones del rival para el motor }
 export function oleada(n, horda = HORDAS.orcos, rng = Math.random) {
@@ -33,8 +40,8 @@ export function oleada(n, horda = HORDAS.orcos, rng = Math.random) {
     if (horda.limitados.includes(id) && enemigos.filter(x => x === id).length >= 2) continue;
     enemigos.push(id);
   }
-  const p = poderOleada(n);
-  return { n, enemigos, rango, opciones: { poder: p, sinReliquias: true, sinLider: !rango, jefe: furia || undefined } };
+  const p = poderOleada(n), spd = enemigos.map(() => velocidadExtra(n, rng));
+  return { n, enemigos, rango, spd, opciones: { poder: p, sinReliquias: true, sinLider: !rango, jefe: furia || undefined, spdPlano: spd } };
 }
 export const defsOleada = (o, horda = HORDAS.orcos) => o.enemigos.map(id => horda.enemigos[id]);
 

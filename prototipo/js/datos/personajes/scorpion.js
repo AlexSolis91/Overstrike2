@@ -22,9 +22,8 @@ export default {
   },
   pasiva: {
     nombre: 'Llamas Devoradoras',
-    desc: 'Hasta 3 veces por ronda: cuando un enemigo con Quemadura lo ataca, Scorpion contraataca con su Básico (un contraataque no provoca otro). Cada vez que ataca a un enemigo con Quemadura, le roba 5% de su HP máx.',
-    gatillo: 'alSerAtacado', filtro: { atacanteTiene: 'burn' }, maxPorRonda: 3,
-    accion: { tipo: 'usarMovimiento', categoria: 'basico', contraataque: true, a: 'atacante' },
+    desc: 'Contraataque permanente: cuando un enemigo lo ataca, Scorpion responde con su Básico. Cada vez que ataca a un enemigo con Quemadura, le roba 5% de su HP máx.',
+    efectosPermanentes: ['counter'],   // 2026-11-08: el buff Contraataque (como Anakin), antes "hasta 3 veces por ronda, solo contra quemados"
     roboSiObjetivoTiene: { efecto: 'burn', pct: .05 },
   },
   movimientos: [

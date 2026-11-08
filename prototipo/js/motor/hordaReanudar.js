@@ -13,9 +13,10 @@ export function huellaCombate(c) {
   return h >>> 0;
 }
 
-// La oleada n tal como salió en esta partida (el azar solo decide los enemigos, que están guardados)
+// La oleada n tal como salió en esta partida (el azar decide los enemigos y su Velocidad extra, que están guardados)
 export function oleadaGuardada(g, n) {
-  return { ...oleada(n, HORDAS[g.horda]), enemigos: g.olas[n - 1] };
+  const o = oleada(n, HORDAS[g.horda]), spd = g.spd?.[n - 1] || g.olas[n - 1].map(() => 0);
+  return { ...o, enemigos: g.olas[n - 1], spd, opciones: { ...o.opciones, spdPlano: spd } };
 }
 export const defsGuardadas = (g, n) => defsOleada(oleadaGuardada(g, n), HORDAS[g.horda]);
 
