@@ -336,11 +336,15 @@ function celdaDesfrag(p, r) {
   </div>`;
 }
 
-// Dónde se consigue un campeón: sus sobres temáticos, Unbreakable Force (todos), su Starter Pack y el Portal
+// Dónde se consigue un campeón: miniaturas de sus sobres temáticos, Unbreakable Force (todos), su Starter Pack y el Portal
 function obtencion(p) {
-  const tematicos = (p.sobres || []).filter(id => SOBRES[id] && id !== 'unbreakable').map(id => SOBRES[id].nombre);
-  return [...tematicos, SOBRES.unbreakable.nombre, ...(p.starter && STARTERS[p.starter] ? [`${STARTERS[p.starter].nombre} (Starter Pack)`] : []), 'Portal'].join(' · ');
+  const mini = (img, nombre, extra = '') => `<span class="tc-obt-item" title="${nombre}${extra}"><img src="${img}" alt="${nombre}">${extra ? '<i>Starter</i>' : ''}</span>`;
+  const tematicos = (p.sobres || []).filter(id => SOBRES[id] && id !== 'unbreakable').map(id => mini(SOBRES[id].imagen, SOBRES[id].nombre));
+  const starter = p.starter && STARTERS[p.starter] ? [mini(STARTERS[p.starter].imagen, STARTERS[p.starter].nombre, ' (Starter Pack)')] : [];
+  return `<span class="tc-obt">${[...tematicos, mini(SOBRES.unbreakable.imagen, SOBRES.unbreakable.nombre), ...starter].join('')}<span class="tc-obt-item tc-obt-portal" title="Portal de Invocación"><span>🔮</span><i>Portal</i></span></span>`;
 }
+// Ficha de un campeón que aún no tienes (cursor encima o toque en celular): dónde conseguirlo
+const fichaBloqueado = p => `<div class="tc-tip-bloq" style="--c:${p.color}"><b>${p.nombre}</b><small>${roles(p)} · Aún no lo tienes</small><div class="tip-sub">Obtención</div>${obtencion(p)}</div>`;
 
 function htmlDetalle(p) {
   const r = col.get(p.id);
@@ -357,7 +361,7 @@ function htmlDetalle(p) {
         <h3>${p.nombre}</h3><small>${roles(p)}</small>
         <div class="tc-det-est">${estrellas(r.estrellas)} <span class="tc-bono">+${Math.round(bonoEstrellas(r.estrellas) * 100)}% a Vida, Daño y Velocidad</span></div>
         <p>Copias disponibles: <b>${r.copias}</b></p>
-        <p class="tc-obtencion">Obtención: <b>${obtencion(p)}</b></p>
+        <div class="tc-obtencion">Obtención:${obtencion(p)}</div>
       </div>
     </div>
     <div class="tc-acciones">
@@ -540,6 +544,7 @@ async function ejecutar(e) {
   if (b.dataset.equipar) return accion(async () => { await D.equiparReliquia(b.dataset.equipar, detalle, slotSel); await recargar(); slotSel = null; pintar(); aviso('Reliquia equipada.'); });
   if (b.dataset.quitar) return accion(async () => { await D.desequiparReliquia(b.dataset.quitar); await recargar(); pintar(); aviso('La reliquia volvió a tu inventario.'); });
   if (b.dataset.vale) return abrirConVale(b.dataset.vale);
+  if (b.dataset.ver && !col.has(b.dataset.ver)) return conCursor() ? undefined : hojaTactil(fichaBloqueado(porId(b.dataset.ver)));
   if (b.dataset.ver) { detalle = b.dataset.ver; slotSel = null; return pintar(); }
   if ('volver' in b.dataset) { detalle = null; slotSel = null; return pintar(); }
   if ('ascender' in b.dataset) return accion(async () => { const n = await D.ascender(detalle); await recargar(); pintar();
@@ -627,6 +632,7 @@ export function iniciarColeccion() {
     if (e.target.id === 'tc-efecto') { colEfecto = e.target.value || null; pintar(); }
   });
   activarTip($('#tc'), '.tc-slot-panel [data-tip]', el => fichaEquipar(el.dataset.uid));
+  activarTip($('#tc'), '.tc-carta.falta[data-ver]', el => fichaBloqueado(porId(el.dataset.ver)));
   $('#starter').addEventListener('click', e => {
     if (e.target.closest('#starter-x')) return $('#starter').classList.add('hidden');
     const p = e.target.closest('[data-st]'); if (p) { starterSel = p.dataset.st; return pintarStarter(); }
