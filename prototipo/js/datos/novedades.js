@@ -3,6 +3,12 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-10', fecha: '10 de noviembre de 2026', titulo: 'Espacios de reliquias solo con oro',
+    cambios: [
+      { tipo: 'cambio', texto: '💎 Los espacios extra de reliquias (Arma 2, Equipación 2 y Accesorio 2) ahora solo se abren con oro: 100,000 / 500,000 / 1,000,000. Ya no se pagan con copias del campeón; úsalas para ascender o desfragmentar.' },
+    ],
+  },
+  {
     id: '2026-11-08c', fecha: '8 de noviembre de 2026', titulo: 'Horda por temporadas y Ticket Dorado',
     cambios: [
       { tipo: 'nuevo', texto: '🏆 Horda: ahora hay récord de temporada (dura lo mismo que la temporada de la Arena) y récord histórico. Todos los récords empezaron de cero y las partidas abiertas se cerraron (te devolvimos su Runa de Portal). Los premios de "Primera vez" se conservan.' },

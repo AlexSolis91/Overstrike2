@@ -22,7 +22,7 @@ const COSTO_MORADA = { copias: [10, 15, 20, 25, 30], polvo: [300, 500, 750, 1000
 const ICONO_ESTELAR = '<img class="tc-ico" src="assets/items/polvoEstelar.webp" alt="Polvo Estelar">';
 const $ = s => document.querySelector(s);
 const ROL = { Support: 'Soporte', Invoker: 'Invocador' };
-const COSTO_ESPACIO = { copias: [1, 3, 5], oro: [100000, 500000, 1000000] };   // igual que en el servidor
+const COSTO_ESPACIO = { oro: [100000, 500000, 1000000] };   // igual que en el servidor (solo oro desde 2026-11-10)
 const FRAG_POR_RUNA = 50;
 const num = n => Number(n || 0).toLocaleString('es-MX');
 const roles = p => [p.rol, p.rolSecundario].filter(Boolean).map(r => ROL[r] || r).join(' · ');
@@ -345,7 +345,7 @@ function htmlDetalle(p) {
   const sigEstrella = r.estrellas + 1, morada = r.estrellas >= 5, im = r.estrellas - 5;
   const costoCopias = morada ? COSTO_MORADA.copias[im] : sigEstrella, costoPolvo = morada ? COSTO_MORADA.polvo[im] : 0;
   const puedeAscender = r.estrellas < MAX_ESTRELLAS && r.copias >= costoCopias && (inv.frag_otros || 0) >= costoPolvo;
-  const sigEsp = r.espacios, espCopias = COSTO_ESPACIO.copias[sigEsp], espOro = COSTO_ESPACIO.oro[sigEsp];
+  const sigEsp = r.espacios, espOro = COSTO_ESPACIO.oro[sigEsp];
   const cerrados = ESPACIOS.filter(e => e.extra && !abiertosDe(r).includes(e.id));
   return `<button class="eq-btn tc-volver" data-volver>← Colección</button>
     <div class="tc-det" style="--c:${p.color}">
@@ -366,9 +366,8 @@ function htmlDetalle(p) {
         <button class="eq-listo" data-ascender ${puedeAscender ? '' : 'disabled'}>Ascender a ${sigEstrella}★</button>`}
       </section>
       <section><h4>💎 Espacios de reliquias <small>${r.espacios}/3</small></h4>
-        ${sigEsp >= 3 ? '<p>Todos sus espacios están abiertos.</p>' : `<p>Elige qué espacio abrir. El siguiente cuesta <b>${espCopias} copia${espCopias > 1 ? 's' : ''}</b> o <b>🪙 ${num(espOro)}</b>.</p>
+        ${sigEsp >= 3 ? '<p>Todos sus espacios están abiertos.</p>' : `<p>Elige qué espacio abrir. El siguiente cuesta <b>🪙 ${num(espOro)}</b> de oro.</p>
         ${cerrados.map(e => `<div class="tc-fila"><span class="tc-esp-nom">${e.label}</span>
-          <button class="eq-btn" data-espacio="copias" data-esp="${e.id}" ${r.copias >= espCopias ? '' : 'disabled'}>${espCopias} copia${espCopias > 1 ? 's' : ''}</button>
           <button class="eq-btn" data-espacio="oro" data-esp="${e.id}" ${inv.oro >= espOro ? '' : 'disabled'}>🪙 ${num(espOro)}</button></div>`).join('')}`}
       </section>
       <section><h4>🧩 Desfragmentar</h4>
@@ -555,7 +554,8 @@ async function ejecutar(e) {
     aviso(n > 5 ? `¡${porId(detalle).nombre} ganó su ${n - 5}ª estrella morada!` : `¡${porId(detalle).nombre} ascendió a ${n}★!`); });
   if (b.dataset.espacio) {
     const con = b.dataset.espacio, sig = col.get(detalle).espacios, esp = b.dataset.esp, nombre = ESPACIOS.find(e => e.id === esp)?.label || `el espacio ${sig + 1}`;
-    if (con === 'oro' && !await confirmar(`¿Abrir ${nombre} por ${num(COSTO_ESPACIO.oro[sig])} de oro?`)) return;
+    if (con !== 'oro') return;
+    if (!await confirmar(`¿Abrir ${nombre} por ${num(COSTO_ESPACIO.oro[sig])} de oro?`)) return;
     return accion(async () => { await D.desbloquearEspacio(detalle, con, esp); await recargar(); pintar(); aviso(`${nombre} desbloqueado.`); });
   }
   if ('selDesfrag' in b.dataset) { selDesfrag = selDesfrag ? null : new Map(); return pintar(); }
