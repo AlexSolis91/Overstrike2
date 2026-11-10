@@ -704,6 +704,13 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - Pasiva `alDanoDoT` + `curar` con `base: 'dano'`: cura (o, con Quemadura Solar, daña) por el daño que activó la pasiva. Ra Modo Fénix: cada Quemadura sobre un enemigo con Quemadura Solar le hace el doble.
 - `reducirHpMax` con `porDebuffs: true`: el % se multiplica por los tipos de debuff que el objetivo tenía antes del movimiento (Cañón de las Llamas del Sol: 3% cada uno, máx. −30%).
 
+## Piezas de Obi-Wan Kenobi (2026-11-10)
+- **Líder `alBloquear { acción }`**: cada vez que el líder **bloquea** un movimiento enemigo, ejecuta la acción (p. ej. General Kenobi: `reducirCooldown` 2, `azar`, a `todosAliados` = baja 2 el cooldown de un movimiento al azar de cada aliado, incluido él).
+- **`bonoPermanente` con `por: 'cargasPropias'` y `efecto`**: multiplica el bono por las cargas de ese contador de quien lo usa, sin gastarlas (p. ej. Defensa Inquebrantable: +2% HP máx. a cada aliado por carga de Soresu).
+- **Destino `{ enemigoAzarSinMega: id }`**: un enemigo al azar que no tenga la versión Mega de ese efecto (p. ej. Over de Obi-Wan: Mega Aturdimiento por cada 5 cargas consumidas).
+- **`consumeCargas` + `bonoPorCarga`**: si el contador consumido por el movimiento da bono por carga, también se pierde el bono de las cargas gastadas.
+- **Marca `soresu`** (contador, máx. 10): +2% Armadura y +1 de Bloqueo por carga.
+
 ## Piezas del Capitán América (2026-11-02)
 - **Pasiva `porHpPerdido { cada, bono }`:** por cada tramo completo de HP que le falta, suma esas estadísticas (Capitán América: cada 10%, +5% Armadura, +5% Resistencia y +2% Bloqueo). Sube y baja con su HP y respeta los topes de cada estadística.
 - **Buffs y Escudo con `prob`:** una acción `efecto` de buff o `escudo` puede indicar `prob`. Sin ella siguen aplicándose siempre; nunca tiran Puntería.

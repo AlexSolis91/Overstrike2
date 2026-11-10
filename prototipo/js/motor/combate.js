@@ -249,6 +249,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'potencialGohan': texto = `${e.valor} de Potencial (máx. 3): con 3 despierta como Gohan Bestia`; n = e.valor; break;
         case 'theOne': { const bc = p.pasiva?.bonoPorCarga; texto = `${e.valor} de The One (máx. 12)${bc ? `: +${Math.round(e.valor * bc.pct * 100)}% HP máx.` : ''}${e.valor >= 12 ? ' · ¡THE ONE!' : ''}`; n = e.valor; break; }
         case 'marcaDemonio': texto = `Acumula el daño que recibe: ${Math.round(e.valor || 0)} · se libera al volver a usar Contra Venganza`; n = Math.round(e.valor || 0); break;
+        case 'soresu': texto = `${e.valor} de Soresu (máx. 10): +${e.valor * 2}% Armadura y +${e.valor} Bloqueo`; n = e.valor; break;
         case 'heroeCaido': texto = `${e.valor} de Héroe Caído: +${e.valor}% Daño, Velocidad, Prob. y Daño Crítico y Penetración${p.forma ? '' : e.valor < 30 ? ` · con 30 se convierte en Lord Vader` : ''}`; n = e.valor; break;
         case 'iraBroly': texto = `${e.valor} de Ira (máx. 5): con 5 despierta al Super Saiyajin Legendario`; n = e.valor; break;
         case 'almasShadowmourne': texto = `${e.valor} Alma(s) de Shadowmourne (máx. 20): +${e.valor * 15} de Daño · toda la batalla`; n = e.valor; break;
@@ -1473,6 +1474,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (spec === 'todosEnemigos') return ctx.esMovimiento ? sinEsquiva(enemigosDe(a)) : enemigosDe(a);
     if (spec === 'otrosAliados') return aliadosDe(a).filter(x => x !== a);
     if (spec.otrosAliadosAzar) return rng.barajar(aliadosDe(a).filter(x => x !== a)).slice(0, spec.otrosAliadosAzar);
+    if (spec.enemigoAzarSinMega) { const l = enemigosDe(a).filter(x => !get(x, spec.enemigoAzarSinMega)?.mega); return l.length ? [rng.elegir(l)] : []; }   // p. ej. Over de Obi-Wan
     if (spec.aliadoAzarSin) { const l = aliadosDe(a).filter(x => !get(x, spec.aliadoAzarSin)); return l.length ? [rng.elegir(l)] : []; }
     if (spec === 'otrosEnemigos') return enemigosDe(a).filter(x => x !== ctx.objetivo);
     if (spec === 'otroEnemigoAzar') { const l = enemigosDe(a).filter(x => x !== ctx.objetivo); return l.length ? [rng.elegir(l)] : []; }
@@ -1521,8 +1523,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'bonoPermanente': {       // p. ej. +5% HP máx. por cada Quemadura activa en enemigos (permanente, sube también el HP actual)
-          const n = acc.por === 'quemadurasEnemigas' ? enemigosDe(a).filter(x => get(x, 'burn')).length : 1;
-          if (!n) { emitir('sinEfecto', { a: t.uid, texto: 'Sin quemaduras enemigas' }); break; }
+          const n = acc.por === 'quemadurasEnemigas' ? enemigosDe(a).filter(x => get(x, 'burn')).length
+            : acc.por === 'cargasPropias' ? get(a, acc.efecto)?.valor || 0 : 1;   // cargasPropias: por cada carga de quien lo usa (p. ej. Soresu de Obi-Wan)
+          if (!n) { emitir('sinEfecto', { a: t.uid, texto: acc.por === 'cargasPropias' ? `Sin ${EFECTOS[acc.efecto]?.nombre || 'cargas'}` : 'Sin quemaduras enemigas' }); break; }
           const antes = maxHp(t), actual = t.permanente[acc.stat] || 0;
           const suma = acc.tope != null ? Math.min(acc.pct * n, acc.tope - actual) : acc.pct * n;   // tope: máximo acumulado
           if (suma <= 1e-9) { emitir('sinEfecto', { a: t.uid, texto: `Máximo de ${NOMBRE_STAT[acc.stat] || acc.stat} alcanzado` }); break; }
@@ -2084,7 +2087,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   function resolverSobreObjetivo(a, t, mov, ctx = {}) {
     if (t.muerto) return;
     const hostil = t.lado !== a.lado || ctx.forzado;
-    if (hostil && rng() < Math.min(stats(t).block, TOPES.block)) { emitir('bloqueo', { de: a.uid, a: t.uid }); return; }
+    if (hostil && rng() < Math.min(stats(t).block, TOPES.block)) {
+      emitir('bloqueo', { de: a.uid, a: t.uid });
+      if (t.lado !== a.lado && t.esLider && !t.muerto && t.lider?.alBloquear) ejecutarAccion(t, t.lider.alBloquear, { objetivo: t });   // líder: al bloquear (p. ej. General Kenobi)
+      return;
+    }
     const cln = hostil && t.lado !== a.lado && t.pasiva?.clones, clon = cln && get(t, cln.efecto);
     if (clon?.valor > 0) {             // pasiva "clones": un clon absorbe por completo este ataque contra él (daño y efectos)
       clon.valor--; if (!clon.valor) quitar(t, clon);
@@ -2190,7 +2197,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (mov.consumeCargas) {                          // consume todas sus cargas (de ese tipo): cada una suma daño a este movimiento
       const idc = mov.consumeCargas.efecto || 'cargas', e = get(a, idc);
       ctx = { ...ctx, cargas: e?.valor || 0 };
-      if (e) { quitar(a, e); emitir('bono', { id: a.uid, texto: `${EFECTOS[idc].icono} ×${ctx.cargas} cargas` }, a); }
+      if (e) {
+        quitar(a, e); emitir('bono', { id: a.uid, texto: `${EFECTOS[idc].icono} ×${ctx.cargas} cargas` }, a);
+        const bc = a.pasiva?.bonoPorCarga;            // con bonoPorCarga, pierde también el bono de las cargas gastadas (p. ej. Soresu)
+        if (bc && bc.efecto === idc) for (const [stat, pct] of Object.entries(bc.bonos || { [bc.stat]: bc.pct })) a.permanente[stat] = (a.permanente[stat] || 0) - ctx.cargas * pct;
+        if (a.hp > maxHp(a)) a.hp = maxHp(a);
+      }
     }
     const hm = get(a, 'hemo');                       // Hemorragia: pierde HP al ejecutar un movimiento
     if (hm) danoDoT(a, hm.valor, 'hemo', fuentesDe([hm]));

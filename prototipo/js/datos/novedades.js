@@ -3,6 +3,12 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-10b', fecha: '10 de noviembre de 2026', titulo: 'Nuevo campeón: Obi-Wan Kenobi',
+    cambios: [
+      { tipo: 'nuevo', texto: '🛡️ Obi-Wan Kenobi, Maestro del Soresu (Tanque · Control), en el sobre Legendary Warriors. Contraataque y Provocación permanentes; cada golpe que recibe le da Soresu (+Armadura y +Bloqueo). Su Especial escuda a todo el equipo y le sube el HP máx., y su Over consume el Soresu para aturdir. Como líder (General Kenobi), su equipo recibe −15% de daño y, cada vez que bloquea, todos bajan el cooldown de un movimiento.' },
+    ],
+  },
+  {
     id: '2026-11-10', fecha: '10 de noviembre de 2026', titulo: 'Espacios de reliquias solo con oro',
     cambios: [
       { tipo: 'cambio', texto: '💎 Los espacios extra de reliquias (Arma 2, Equipación 2 y Accesorio 2) ahora solo se abren con oro: 100,000 / 500,000 / 1,000,000. Ya no se pagan con copias del campeón; úsalas para ascender o desfragmentar.' },

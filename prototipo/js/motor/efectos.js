@@ -116,6 +116,8 @@ export const EFECTOS = {
     desc: 'Cuando un enemigo gana un turno adicional, el portador juega un turno adicional ANTES que él.' },
   heroeCaido: { nombre: 'Héroe Caído', icono: '🌑', color: 0xdc2626, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Contador de Anakin (sin máximo): cada marca da +1% de Daño, +1 de Prob. Crítico, +1 de Daño Crítico, +1% de Velocidad y +1 de Penetración de escudo, para siempre. Con 30 se transforma en Lord Vader y las conserva.' },
+  soresu: { nombre: 'Soresu', icono: '🛡️', color: 0x60a5fa, tipo: 'marca', tags: ['Carga'], noDisipable: true,
+    desc: 'Contador de Obi-Wan (máx. 10): gana 1 con cada golpe enemigo que recibe. Cada carga da +2% de Armadura y +1 de Bloqueo. Su Especial sube el HP máx. del equipo según sus cargas y su Over las consume todas.' },
   counter: { nombre: 'Contraataque', icono: '⚔️', color: 0xf97316, tipo: 'buff', tags: ['Contraataque'],
     desc: 'Cuando un enemigo lo ataca, responde con su movimiento básico contra el atacante (una vez por movimiento enemigo; no gasta su turno).' },
   assist: { nombre: 'Asistir', icono: '🤝', color: 0x38bdf8, tipo: 'buff', tags: ['Asistir'],
