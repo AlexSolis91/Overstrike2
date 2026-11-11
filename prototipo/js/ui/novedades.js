@@ -6,7 +6,7 @@ const ETIQUETA = { nuevo: 'NUEVO', cambio: 'CAMBIO', mejora: 'MEJORA' };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const ultima = () => NOVEDADES[0]?.id || '';
 const vista = () => { try { return localStorage.getItem(CLAVE) || ''; } catch { return ''; } };
-const marcarVista = () => { try { localStorage.setItem(CLAVE, ultima()); } catch { /* sin almacenamiento */ } pintarBoton(); };
+export const marcarVista = () => { try { localStorage.setItem(CLAVE, ultima()); } catch { /* sin almacenamiento */ } pintarBoton(); };
 
 function pintarBoton() {
   const b = document.querySelector('#btn-novedades');
@@ -36,7 +36,7 @@ export function revisarNovedades() {
   pintarBoton();
   if (vista() === ultima() || document.body.dataset.pantalla !== 'menu') return;
   const starter = document.querySelector('#starter');
-  if (document.querySelector('.dlg-fondo') || (starter && !starter.classList.contains('hidden'))) return;
+  if (document.querySelector('.dlg-fondo') || document.body.classList.contains('tuto-activo') || (starter && !starter.classList.contains('hidden'))) return;
   abrirNovedades();
 }
 

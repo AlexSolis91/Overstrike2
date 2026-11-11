@@ -3,6 +3,13 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-11c', fecha: '11 de noviembre de 2026', titulo: 'Tutorial con Thestalos',
+    cambios: [
+      { tipo: 'nuevo', texto: '🛡️ Thestalos, Guardián del Portal, ahora guía a los jugadores nuevos: Starter Pack, una primera batalla explicada paso a paso y un recorrido por todo el menú. Al terminarlo regala 50,000 de oro y 3 Runas de Portal (una vez por cuenta).' },
+      { tipo: 'nuevo', texto: '🎓 La primera vez que entras a la Campaña, la Horda, el Jefe de Raid, la Arena, la Tienda, la Colección o las Misiones, Thestalos te explica cómo funciona. Puedes repetir el tutorial desde tu perfil (👤).' },
+    ],
+  },
+  {
     id: '2026-11-11b', fecha: '11 de noviembre de 2026', titulo: 'Formas de Luke y tienda de la Horda',
     cambios: [
       { tipo: 'mejora', texto: '🟢 Luke: la forma que eliges (Djem So, Soresu o Ataru) ahora dura una ronda completa, hasta su siguiente turno, aunque Luke actúe último en la ronda. Al elegir una nueva, reemplaza a la anterior.' },

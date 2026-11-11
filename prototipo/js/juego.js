@@ -40,6 +40,7 @@ import { liga } from './datos/arena.js';
 
 import { confirmar, elegirOpcion } from './ui/dialogo.js';
 import { iniciarNovedades, revisarNovedades } from './ui/novedades.js';
+import { iniciarTutorial, tutorialEnBatalla, finBatallaTutorial } from './ui/tutorial.js';
 
 const { gsap } = window;
 const $ = s => document.querySelector(s);
@@ -88,7 +89,8 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   P = combate.personajes;
   const serie = opciones?.serie || 0;                         // en una serie de repeticiones siempre va en Auto y ×2
   ui = { actual: null, inspeccionado: P[0].uid, miTurno: false, movSel: null, objetivosValidos: null, tipoObjetivo: null, ocupado: true, opciones: null,
-    camp: opciones?.campana || null, horda: opciones?.horda || null, arena: opciones?.arena || null, raid: opciones?.raid || null, vivo: null, serie, auto: !!serie || autoActivo };
+    camp: opciones?.campana || null, horda: opciones?.horda || null, arena: opciones?.arena || null, raid: opciones?.raid || null, vivo: null, serie,
+    tuto: !!opciones?.tutorial, auto: !opciones?.tutorial && (!!serie || autoActivo) };   // tuto: batalla guiada del tutorial (sin Auto al empezar)
   setVelocidad(serie ? 2 : velocidad); marcarControles();
   ui.pruebas = !opciones && esAdmin();                         // herramienta de pruebas: solo el administrador y solo en Partida rápida
   $('#btn-test').classList.toggle('hidden', !ui.pruebas);
@@ -113,6 +115,7 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   await anunciar();
   if (vivo) { banner(`⚔️ EN VIVO vs ${opciones.arena.rival?.nombre || 'rival'}`, { size: 40, color: '#fde68a', hold: 1.2 }); await wait(1500); }
   else if (ui.arena?.rival?.nombre) { banner(`⚔️ vs ${ui.arena.rival.nombre}`, { size: 40, color: '#fde68a', hold: 1.2 }); await wait(1500); }
+  if (ui.tuto) await tutorialEnBatalla('inicio');
   await procesar(rep ? { ...rep.r, eventos: [] } : combate.iniciar());
 }
 // Continuar una partida de Horda: las cartas toman el estado del combate reconstruido, sin animaciones
@@ -180,7 +183,7 @@ function limpiarPartida() {
   $('#log').innerHTML = ''; logLeido();
   $('#overlay').classList.add('hidden');
 }
-function salirDePartida() { if (ui.raid && !ui.fin) enviarRaid().catch(() => null); terminarAmbiente(); document.body.classList.remove('en-raid'); if (ui.vivo && !ui.fin) { if (ui.arena.amistoso) { ui.vivo.rendirse(); D.desafioTerminar(ui.arena.partida).catch(() => null); } else D.arenaVivoResultado(ui.arena.partida, ui.arena.soy === 'a' ? 'b' : 'a').catch(() => null); } ui.vivo?.cerrar(); ui.vivo = null; $('#horda-ov').classList.add('hidden'); partida++; ui.miTurno = false; ui.ocupado = true; ui.serie = 0; serieT?.(); serieT = null; $('#overlay').classList.add('hidden'); setVelocidad(1); $('#jefe-barra').classList.add('hidden'); }
+function salirDePartida() { if (ui.tuto && !ui.fin) finBatallaTutorial(false); if (ui.raid && !ui.fin) enviarRaid().catch(() => null); terminarAmbiente(); document.body.classList.remove('en-raid'); if (ui.vivo && !ui.fin) { if (ui.arena.amistoso) { ui.vivo.rendirse(); D.desafioTerminar(ui.arena.partida).catch(() => null); } else D.arenaVivoResultado(ui.arena.partida, ui.arena.soy === 'a' ? 'b' : 'a').catch(() => null); } ui.vivo?.cerrar(); ui.vivo = null; $('#horda-ov').classList.add('hidden'); partida++; ui.miTurno = false; ui.ocupado = true; ui.serie = 0; serieT?.(); serieT = null; $('#overlay').classList.add('hidden'); setVelocidad(1); $('#jefe-barra').classList.add('hidden'); }
 
 // ---------------------------------------------------------------- Auto-batalla y velocidad (se recuerdan en este dispositivo)
 let autoActivo = false, velocidad = 1, serieT = null;
@@ -535,6 +538,12 @@ async function procesar(res) {
     inspeccionar(actor.uid);
     setHint(ui.auto ? `🤖 Auto: ${actor.nombre}` : `Turno de ${actor.nombre}: elige un movimiento${ui.vivo ? ' (25 s)' : ''}`);
     barra();
+    if (ui.tuto && !ui.tutoTurno && !ui.auto) {              // tutorial: Thestalos explica los movimientos en el primer turno
+      ui.tutoTurno = true; ui.ocupado = true;
+      await tutorialEnBatalla('turno');
+      if (esta !== partida) return;
+      ui.ocupado = false;
+    }
     if (ui.vivo) relojTurno(esta, ui.vivo.turno);            // en vivo: 25 s para elegir; si no, juega la IA por ti
     if (ui.auto) await jugarAuto(esta);
   } else {
@@ -591,6 +600,7 @@ function terminar(fin) {
   if (ui.horda && fin.ganador === 'jugador') return oleadaGanada();          // Horda: la batalla sigue con otra oleada
   // la ventana de resultados aparece a los 0.7 s; la música del menú entra 2 s después de la ventana
   finDePartida(fin.ganador === 'empate' ? null : fin.ganador === 'jugador', 700 + 2000);
+  if (ui.tuto) { const p0 = partida, g = fin.ganador === 'jugador'; return void temporizar(() => p0 === partida && finBatallaTutorial(g), 1500); }   // tutorial: Thestalos sigue (sin ventana de resultados)
   const personajes = combate.estadisticas().map(e => {
     const p = por(e.uid), f = vistas[e.uid]?.forma;            // si terminó transformado, se muestra su forma
     return { ...e, nombre: f?.nombre || p.nombre, imagen: f?.imagen || p.imagen, emoji: f?.emoji || p.emoji, color: f?.color || p.color };
@@ -1045,6 +1055,7 @@ iniciarHorda({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 iniciarArena({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 iniciarSocial({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 iniciarActualizacion();
+iniciarTutorial({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 let pendiente = null;
 try { pendiente = JSON.parse(sessionStorage.getItem('os2-partida') || 'null'); sessionStorage.removeItem('os2-partida'); } catch (e) { /* sin almacenamiento */ }
 const eqs = pendiente && [pendiente.jugador.map(porId), pendiente.rival.map(porId)];

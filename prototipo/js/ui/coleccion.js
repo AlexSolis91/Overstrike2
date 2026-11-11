@@ -401,6 +401,7 @@ function pintar() {
   pintarInventario();
   for (const b of document.querySelectorAll('.tc-tabs button')) b.classList.toggle('on', b.dataset.tab === pestana);
   $('#tc-cont').innerHTML = pestana === 'tienda' ? htmlTienda() : pestana === 'portal' ? htmlPortal() : pestana === 'reliquias' ? htmlReliquias() : pestana === 'recetas' ? htmlForja() : htmlColeccion();
+  dispatchEvent(new CustomEvent('tc:pestana', { detail: pestana }));   // mini tutorial de cada pestaña
 }
 
 export async function abrirTC(tab = 'tienda') {
@@ -617,6 +618,7 @@ async function elegirStarter() {
     $('#starter').classList.add('hidden');
     pintarPie();
     await revelarCartas({ sobre: s, campeones: fichas(ids), nuevos: new Set(ids) });
+    if (perfilActual().tutorial) return void dispatchEvent(new CustomEvent('starter:elegido', { detail: ids }));   // el tutorial sigue (ver js/ui/tutorial.js)
     aviso('¡Bienvenido! Tus campeones están en tu Colección.');
   });
 }
@@ -645,7 +647,7 @@ export function iniciarColeccion() {
   addEventListener('cuenta:cambio', () => {
     pintarPie();
     if (!perfilActual()) { cerrarTC(); $('#starter').classList.add('hidden'); return; }
-    if (!perfilActual().starter_elegido && document.body.dataset.pantalla === 'menu') mostrarStarter();
+    if (!perfilActual().starter_elegido && !perfilActual().tutorial && document.body.dataset.pantalla === 'menu') mostrarStarter();   // con tutorial (docs/sql/038), lo abre Thestalos
   });
   addEventListener('inventario:cambio', async () => { if (!$('#tc').classList.contains('hidden')) { await recargar().catch(() => {}); pintar(); } });
   addEventListener('keydown', e => {

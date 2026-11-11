@@ -34,6 +34,7 @@ PERSONAJE_SIZE = (800, 680)   # misma proporción que la ilustración de la cart
 INVOCACION_SIZE = 512
 RELIQUIA_SIZE = 256
 COFRE_SIZE = 256
+GUIA_SIZE = 900
 
 
 def slug(path: Path) -> str:
@@ -223,6 +224,7 @@ def main():
         ('horda', personaje),                 # enemigos de la Horda (mismo recorte que los campeones)
         ('invocaciones', lambda a, b: recorte_transparente(a, b, INVOCACION_SIZE)),
         ('cofres', lambda a, b: recorte_transparente(a, b, COFRE_SIZE, solo_borde=True)),   # cofres del Jefe de Raid (fondo quitado)
+        ('guia', lambda a, b: recorte_transparente(a, b, GUIA_SIZE, solo_borde=True)),     # guía del tutorial (Thestalos), fondo quitado
         # reliquias: las monta herramientas/marcos_reliquias.py dentro del marco de su rareza
     ]
     hechas = 0

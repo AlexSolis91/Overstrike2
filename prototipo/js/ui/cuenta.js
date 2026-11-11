@@ -39,7 +39,7 @@ function pintar(mensaje = '', tipo = '') {
     caja.innerHTML = `
       <p class="cu-hola">Hola, <b>${perfil.nombre}</b>${perfil.rol === 'admin' ? ' <span class="cu-admin">Administrador</span>' : ''}</p>
       <p class="cu-nota">Tu colección, tu oro y tus sobres se guardan en tu cuenta.</p>
-      <button id="cu-salir" class="eq-btn">Cerrar sesión</button>
+      <div class="cu-botones"><button id="cu-tuto" class="eq-btn">🎓 Repetir tutorial</button><button id="cu-salir" class="eq-btn">Cerrar sesión</button></div>
       ${perfil.rol === 'admin' ? '<section id="cu-adm" class="cu-adm"><h3>🛠️ Administrador</h3><p class="cu-nota">Cargando…</p></section>' : ''}`;
     if (perfil.rol === 'admin') pintarAdmin();
   } else {
@@ -61,7 +61,8 @@ async function cargarPerfil(sesion) {
   if (!sesion) { perfil = null; pintarBoton(); return; }
   try {
     const sb = await supabase();
-    const { data, error } = await sb.from('jugadores').select('nombre, rol, starter_elegido').eq('id', sesion.user.id).single();
+    let { data, error } = await sb.from('jugadores').select('nombre, rol, starter_elegido, tutorial').eq('id', sesion.user.id).single();
+    if (error) ({ data, error } = await sb.from('jugadores').select('nombre, rol, starter_elegido').eq('id', sesion.user.id).single());   // sin docs/sql/038: sin tutorial guardado
     perfil = { id: sesion.user.id, ...(error ? { nombre: sesion.user.email, rol: 'jugador', starter_elegido: null } : data) };
   } catch { perfil = { id: sesion.user.id, nombre: sesion.user.email, rol: 'jugador', starter_elegido: null }; }
   pintarBoton();
@@ -170,6 +171,7 @@ export function iniciarCuenta() {
     if (e.target.id === 'cuenta' || e.target.closest('#cuenta-x')) return $('#cuenta').classList.add('hidden');
     const tab = e.target.closest('.cu-tabs button'); if (tab) { modo = tab.dataset.modo; return pintar(); }
     if (e.target.closest('#cu-salir')) { (await supabase()).auth.signOut(); return; }
+    if (e.target.closest('#cu-tuto')) { $('#cuenta').classList.add('hidden'); dispatchEvent(new Event('tutorial:repetir')); return; }
     if (e.target.closest('#adm-guardar')) return guardarSobres();
     if (e.target.closest('#adm-probs')) return guardarProbabilidades();
     if (e.target.closest('#cu-olvide')) {
