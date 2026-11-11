@@ -523,12 +523,13 @@ async function procesar(res) {
   const actor = por(esp.id);
   ui.actual = esp.id; ui.opciones = esp.opciones;
   if (actor.lado === 'jugador') {
-    ui.forma = null;
+    if (esp.formas) ui.forma = null;
     if (esp.formas && !ui.auto) {                             // pasiva "formas" (p. ej. Luke): primero elige la forma de este turno
       inspeccionar(actor.uid);
       if (ui.vivo) temporizar(() => ui.cerrarForma?.(), 25000);   // en vivo: sin elegir en 25 s, se elige sola
-      ui.forma = await elegirForma(actor, esp.formas);
+      const f = await elegirForma(actor, esp.formas);
       if (esta !== partida) return;
+      if (f) { ui.forma = f; return procesar(combate.elegirForma(f)); }   // se aplica ya (se ven sus buffs); luego elige movimiento
     }
     ui.miTurno = true; ui.ocupado = false;
     inspeccionar(actor.uid);

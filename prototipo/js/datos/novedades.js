@@ -6,6 +6,7 @@ export const NOVEDADES = [
     id: '2026-11-10c', fecha: '10 de noviembre de 2026', titulo: 'Nuevo campeón: Luke Skywalker',
     cambios: [
       { tipo: 'nuevo', texto: '🟢 Luke Skywalker, el Último Jedi (Tanque · Soporte), en el sobre Legendary Warriors. Duplica su Bloqueo y, al inicio de cada turno, eliges su forma: Djem So (Letalidad y Frenesí), Soresu (Fortaleza y Escudo) o Ataru (Celeridad y Esquivar). Cura, limpia debuffs y castiga por cada uno, y su Proyección Astral lo vuelve inmune mientras da formas a todo el equipo. Como líder, cada debuff que reciben tus aliados les sube +5% de HP máx.' },
+      { tipo: 'mejora', texto: '🟢 Luke: los buffs de la forma que eliges (Djem So, Soresu o Ataru) se aplican en cuanto la eliges, antes de escoger su movimiento.' },
       { tipo: 'nuevo', texto: '✨ Buffs nuevos: 🪨 Fortaleza (+20% Armadura), 🌀 Esquivar (50% de esquivar cada golpe) y 🎯 Mega Provocación (los ataques de área enemigos solo lo alcanzan a él).' },
     ],
   },

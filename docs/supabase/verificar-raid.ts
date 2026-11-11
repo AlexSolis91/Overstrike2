@@ -3005,6 +3005,18 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       return ejecutar(avanzar);
     },
 
+    // Forma (p. ej. Luke): el jugador la elige al inicio de su turno y se aplica YA (ve sus buffs antes de elegir movimiento).
+    // Sigue esperando su movimiento. Las repeticiones mandan la forma con la decisión (actuar) y da lo mismo: no usa azar.
+    elegirForma(forma) {
+      return ejecutar(() => {
+        const a = S.actual;
+        if (!a || !S.esperando || !a.formaPendiente || !a.pasiva.formas[forma]) throw new Error('No es momento de elegir forma');
+        a.formaPendiente = false;
+        aplicarForma(a, a, forma);
+        S.esperando = esperaDe(a);
+      });
+    },
+
     // El jugador (o la IA) decide: categoría del movimiento + uid del objetivo (si aplica)
     actuar({ categoria, objetivo, forma }) {
       return ejecutar(() => {

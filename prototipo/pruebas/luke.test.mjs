@@ -65,3 +65,28 @@ test('Mega Provocación: los ataques de área enemigos solo alcanzan a Luke', ()
   }
   assert.ok(probados > 0, 'algún ataque de área contra Mega Provocación');
 });
+
+test('Elegir forma la aplica en el acto (sigue esperando su movimiento) y repetir con la forma en la decisión da lo mismo', () => {
+  const ESPERADO = { djemSo: ['bloodlust', 'frenzy'], soresu: ['fortaleza', 'shield'], ataru: ['haste', 'esquivar'] };
+  for (const [forma, ids] of Object.entries(ESPERADO)) {
+    const partida = (alElegir) => {
+      const c = combate(LUKE, RIVAL, { semilla: 9 });
+      const rnd = azar(4);
+      let r = { esperando: c.esperando }, q = 0, decisiones = 0;
+      while (!r.fin && q++ < 3000) {
+        const l = luke(c);
+        if (c.esperando.formas) {
+          if (alElegir) {
+            r = c.elegirForma(forma);
+            for (const id of ids) assert.ok(l.estados.some(e => e.id === id), `${forma}: falta ${id}`);
+            assert.equal(c.esperando.id, l.uid); assert.ok(!c.esperando.formas);
+            r = c.actuar(elegirIA(c, rnd));
+          } else r = c.actuar({ ...elegirIA(c, rnd), forma });
+        } else r = c.actuar(elegirIA(c, rnd));
+        if (++decisiones > 60) break;
+      }
+      return c.personajes.map(p => `${p.uid}:${Math.round(p.hp)}:${p.estados.map(e => e.id).sort()}`).join('|');
+    };
+    assert.equal(partida(true), partida(false), forma);
+  }
+});
