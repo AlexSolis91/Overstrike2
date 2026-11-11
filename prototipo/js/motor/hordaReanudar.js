@@ -35,9 +35,9 @@ export function repetirHorda(g) {
       if (r.fin?.ganador !== 'jugador') throw new Error(`La oleada ${i} no terminó igual`);
       r = combate.siguienteOleada(defsGuardadas(g, i + 1), oleadaGuardada(g, i + 1).opciones); leer();
     }
-    for (const [categoria, objetivo] of g.dec[i] || []) {
+    for (const [categoria, objetivo, forma] of g.dec[i] || []) {
       if (r.fin || !r.esperando) throw new Error(`La oleada ${i + 1} no terminó igual`);
-      r = combate.actuar({ categoria, objetivo }); leer();
+      r = combate.actuar({ categoria, objetivo, forma }); leer();
     }
     const marca = g.marcas?.[i + 1];
     if (marca != null && huellaCombate(combate) !== marca) throw new Error(`La oleada ${i + 1} no terminó igual`);

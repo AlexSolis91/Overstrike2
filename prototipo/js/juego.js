@@ -38,7 +38,7 @@ import { supabase } from './servicios/supabase.js';
 import { RELIQUIAS, RAREZAS } from './datos/reliquias.js';
 import { liga } from './datos/arena.js';
 
-import { confirmar } from './ui/dialogo.js';
+import { confirmar, elegirOpcion } from './ui/dialogo.js';
 import { iniciarNovedades, revisarNovedades } from './ui/novedades.js';
 
 const { gsap } = window;
@@ -523,6 +523,13 @@ async function procesar(res) {
   const actor = por(esp.id);
   ui.actual = esp.id; ui.opciones = esp.opciones;
   if (actor.lado === 'jugador') {
+    ui.forma = null;
+    if (esp.formas && !ui.auto) {                             // pasiva "formas" (p. ej. Luke): primero elige la forma de este turno
+      inspeccionar(actor.uid);
+      if (ui.vivo) temporizar(() => ui.cerrarForma?.(), 25000);   // en vivo: sin elegir en 25 s, se elige sola
+      ui.forma = await elegirForma(actor, esp.formas);
+      if (esta !== partida) return;
+    }
     ui.miTurno = true; ui.ocupado = false;
     inspeccionar(actor.uid);
     setHint(ui.auto ? `🤖 Auto: ${actor.nombre}` : `Turno de ${actor.nombre}: elige un movimiento${ui.vivo ? ' (25 s)' : ''}`);
@@ -537,7 +544,7 @@ async function procesar(res) {
       const d = await ui.vivo.esperar(ui.vivo.turno);
       if (esta !== partida || !d) return;
       ui.vivo.turno++;
-      return procesar(combate.actuar({ categoria: d.categoria, objetivo: swapUid(d.objetivo) }));
+      return procesar(combate.actuar({ categoria: d.categoria, objetivo: swapUid(d.objetivo), forma: d.forma || null }));
     }
     await wait(700);
     if (esta !== partida) return;
@@ -554,7 +561,7 @@ async function procesar(res) {
 function relojTurno(esta, n) {
   temporizar(() => {
     if (esta !== partida || !ui.vivo || !ui.miTurno || ui.ocupado || ui.vivo.turno !== n) return;
-    cancelarObjetivo(); const d = elegirIA(combate); ejecutar(d.categoria, d.objetivo);
+    ui.cerrarForma?.(); cancelarObjetivo(); const d = elegirIA(combate); ejecutar(d.categoria, d.objetivo);
   }, 25000);
 }
 // En vivo: el rival dejó de responder 60 s → ganas por abandono
@@ -609,7 +616,7 @@ const miles = n => Math.round(n).toLocaleString('es-MX');
 // Cada decisión queda guardada en este dispositivo antes de ejecutarse: si se cierra el juego, la partida se reconstruye igual
 function actuarGuardando(d) {
   const g = ui.horda?.g;
-  if (g) { g.dec[g.dec.length - 1].push([d.categoria, d.objetivo || null]); guardarLocal(g); }
+  if (g) { g.dec[g.dec.length - 1].push(d.forma ? [d.categoria, d.objetivo || null, d.forma] : [d.categoria, d.objetivo || null]); guardarLocal(g); }
   return combate.actuar(d);
 }
 const conTiempo = (promesa, ms) => Promise.race([promesa, new Promise((_, no) => setTimeout(() => no(new Error('Failed to fetch')), ms))]);
@@ -871,13 +878,26 @@ function cancelarObjetivo() {
   if (ui.miTurno) setHint(`Turno de ${nombre(ui.actual)}: elige un movimiento`);
   refrescarPanel();
 }
+// Ventana de forma (p. ej. Djem So, Soresu o Ataru de Luke). En vivo, si se acaba el tiempo, se cierra y juega la IA.
+async function elegirForma(actor, ids) {
+  const formas = actor.pasiva.formas;
+  setHint(`Turno de ${actor.nombre}: elige su forma`);
+  const v = elegirOpcion(`${actor.nombre} adopta una forma hasta el final de la ronda.`,
+    ids.map(id => ({ id, titulo: `${formas[id].icono} ${formas[id].nombre}`, desc: formas[id].desc })), { titulo: actor.pasiva.nombre });
+  ui.cerrarForma = v.cerrar;
+  const r = await v.promesa;
+  ui.cerrarForma = null;
+  return r;
+}
 async function ejecutar(categoria, objetivo) {
+  const forma = ui.forma || null; ui.forma = null;
   ui.miTurno = false; ui.movSel = null; ui.objetivosValidos = null; ui.tipoObjetivo = null; ui.hayBloqueados = false;
   setHint(''); refrescarPanel();
-  if (ui.vivo) { ui.vivo.enviar(ui.vivo.turno, categoria, objetivo); ui.vivo.turno++; }   // en vivo: la decisión viaja al otro jugador
-  if (ui.arena?.decisiones) ui.arena.decisiones.push({ c: categoria, o: objetivo || null });
-  if (ui.raid) ui.raid.decisiones.push({ c: categoria, o: objetivo || null });
-  await procesar(actuarGuardando({ categoria, objetivo }));
+  if (ui.vivo) { ui.vivo.enviar(ui.vivo.turno, categoria, objetivo, forma); ui.vivo.turno++; }   // en vivo: la decisión viaja al otro jugador
+  const dec = { c: categoria, o: objetivo || null, ...(forma ? { f: forma } : {}) };   // f: forma elegida (p. ej. Luke)
+  if (ui.arena?.decisiones) ui.arena.decisiones.push(dec);
+  if (ui.raid) ui.raid.decisiones.push(dec);
+  await procesar(actuarGuardando({ categoria, objetivo, forma }));
 }
 function elegirMovimiento(cat) {
   if (!ui.miTurno || ui.ocupado) return;

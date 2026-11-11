@@ -704,6 +704,15 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - Pasiva `alDanoDoT` + `curar` con `base: 'dano'`: cura (o, con Quemadura Solar, daña) por el daño que activó la pasiva. Ra Modo Fénix: cada Quemadura sobre un enemigo con Quemadura Solar le hace el doble.
 - `reducirHpMax` con `porDebuffs: true`: el % se multiplica por los tipos de debuff que el objetivo tenía antes del movimiento (Cañón de las Llamas del Sol: 3% cada uno, máx. −30%).
 
+## Piezas de Luke Skywalker (2026-11-10)
+- **Buffs nuevos (genéricos):** 🪨 **Fortaleza** (+20% Armadura, `BUFFS.fortaleza`), 🌀 **Esquivar** (50% de esquivar **cada golpe** enemigo: ni daño ni efectos de ese golpe, `BUFFS.esquivar`) y 🎯 **Mega Provocación** (`megaTaunt`: los movimientos de área enemigos solo alcanzan a quien la tiene; sus aliados no reciben esos golpes ni efectos).
+- **Pasiva `multiplicaBloqueo: N`**: multiplica su Bloqueo total (base, reliquias, buffs), nunca por encima del tope (50%).
+- **Pasiva gatillo `alBloquear`** (con `prob`): cada vez que bloquea un movimiento enemigo.
+- **Pasiva `formas { id: { nombre, icono, desc, acciones } }` + `formaAuto { herido, ataque, normal }`**: al inicio de su turno normal (no en turnos extra) el juego espera también una forma (`esperando.formas`); el jugador la elige en una ventana y viaja con la decisión (`actuar({ categoria, objetivo, forma })`; en Raid/Arena se guarda como `f`, en la Horda como 3er elemento). Sin forma (IA, auto, repeticiones viejas) se elige sola sin azar: HP < 60% → `herido`; Especial u Over → `ataque`; si no → `normal`. Acción `formaAzar`: una forma al azar del ejecutor a cada destino.
+- **Pasiva `inmuneCon: [efectos]`**: mientras tenga todos esos efectos no recibe daño de ningún tipo ni debuffs nuevos (p. ej. Proyección Astral: Provocación + Mega Provocación).
+- **Líder `alAliadoRecibeDebuff { acción }`**: cada vez que a un aliado le entra un debuff de un enemigo, la acción se ejecuta sobre ese aliado (p. ej. Una Nueva Esperanza: `bonoPermanente hpPct .05`, sin tope).
+- **`golpesPorConteo` con `min`**: golpea al menos `min` veces aunque el conteo sea 0.
+
 ## Piezas de Obi-Wan Kenobi (2026-11-10)
 - **Líder `alBloquear { acción }`**: cada vez que el líder **bloquea** un movimiento enemigo, ejecuta la acción (p. ej. General Kenobi: `reducirCooldown` 2, `azar`, a `todosAliados` = baja 2 el cooldown de un movimiento al azar de cada aliado, incluido él).
 - **`bonoPermanente` con `por: 'cargasPropias'` y `efecto`**: multiplica el bono por las cargas de ese contador de quien lo usa, sin gastarlas (p. ej. Defensa Inquebrantable: +2% HP máx. a cada aliado por carga de Soresu).

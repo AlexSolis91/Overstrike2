@@ -13,7 +13,7 @@ export function conectarVivo(arena, { alAbandonar }) {
   let visto = Date.now(), canal = null, latido = null, vigia = null, cerrado = false, rendido = false;
   const v = {
     turno: 0,
-    enviar(n, categoria, objetivo) { const payload = { n, categoria, objetivo }; enviadas.set(n, payload); canal?.send({ type: 'broadcast', event: 'mov', payload }); },
+    enviar(n, categoria, objetivo, forma = null) { const payload = { n, categoria, objetivo, forma }; enviadas.set(n, payload); canal?.send({ type: 'broadcast', event: 'mov', payload }); },
     rendirse() { rendido = true; canal?.send({ type: 'broadcast', event: 'rendir', payload: {} }); },   // amistoso: el rival gana sin esperar los 60 s
     esperar(n) {
       if (recibidas.has(n)) return Promise.resolve(recibidas.get(n));

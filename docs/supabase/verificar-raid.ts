@@ -60,6 +60,8 @@ const BUFFS = {
   auraGelida: .20,     // Aura Gélida: −20% de daño de los golpes enemigos
   perforacion: .50,    // Perforación: +50% Penetración de escudo (puntos; tope 100%)
   auraLuz: 2,          // Aura de Luz: multiplica las curaciones que recibe
+  fortaleza: .20,      // Fortaleza: +20% Armadura (puntos)
+  esquivar: .50,       // Esquivar: 50% de esquivar cada golpe enemigo
 };
 
 // Valores fijos de debuffs universales
@@ -253,6 +255,12 @@ const EFECTOS = {
     desc: `Quien lo golpee recibe Veneno sin tirada (siempre entra, salvo inmunidad).` },
   aoeDodge: { nombre: 'Esquiva Área', icono: '💨', color: 0x93c5fd, tipo: 'buff', tags: ['Esquiva'],
     desc: `No lo alcanzan los movimientos de área de los enemigos: ni su daño ni sus efectos.` },
+  fortaleza: { nombre: 'Fortaleza', icono: '🪨', color: 0xa8a29e, tipo: 'buff', tags: ['Estadística'],
+    desc: `+${p(BUFFS.fortaleza)} de Armadura.` },
+  esquivar: { nombre: 'Esquivar', icono: '🌀', color: 0x7dd3fc, tipo: 'buff', tags: ['Esquiva'],
+    desc: `${p(BUFFS.esquivar)} de probabilidad de esquivar cada golpe enemigo (no recibe su daño ni sus efectos).` },
+  megaTaunt: { nombre: 'Mega Provocación', icono: '🎯', color: 0xef4444, tipo: 'buff', tags: ['Provocación'],
+    desc: 'Los movimientos de área de los enemigos solo lo alcanzan a él: sus aliados no reciben esos golpes ni sus efectos.' },
   stealth: { nombre: 'Sigilo',      icono: '👤', color: 0x94a3b8, tipo: 'buff', tags: ['Sigilo'],
     desc: `Los enemigos no pueden elegirlo con ataques de un solo objetivo. Se rompe al recibir cualquier daño.` },
   pierce:  { nombre: 'Perforación', icono: '🗡️', color: 0x22d3ee, tipo: 'buff', tags: ['Estadística'],
@@ -704,6 +712,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       if (!capas[EFECTOS[e.id]?.tipo === 'debuff' ? 'debuffs' : 'buffs']) continue;
       if (e.id === 'dmgUp') pct.dmg += e.valor;
       if (e.id === 'protect') sec.res += BUFFS.proteccion;
+      if (e.id === 'fortaleza') sec.armor = (sec.armor || 0) + BUFFS.fortaleza;
       if (e.id === 'frenzy') sec.critRate += BUFFS.frenesi;
       if (e.id === 'haste') pct.spd += BUFFS.celeridad;
       if (e.id === 'bloodlust') sec.critDmg += BUFFS.letalidad;
@@ -754,6 +763,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       for (const [k, v] of Object.entries(php.bono)) sec[k] = (sec[k] || 0) + v * tramos;
     }
     if (todo !== 1) for (const k of Object.keys(sec)) sec[k] *= todo;
+    const mb = p.pasiva?.multiplicaBloqueo;             // pasiva: multiplica su Bloqueo total (nunca pasa del tope; p. ej. Luke ×2)
+    if (mb && capas.buffs) sec.block = Math.min((sec.block || 0) * mb, TOPES.block);
     return {
       hp: (b.hp + flat.hp) * (1 + pct.hp) * todo,
       dmg: (b.dmg + flat.dmg) * (1 + pct.dmg) * todo,
@@ -847,6 +858,9 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         case 'incite': texto = `Solo puede usar su Básico contra ${porUid(e.fuente)?.nombre || 'quien lo incitó'} · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'shield': texto = `Absorbe ${Math.round(e.valor)} de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'pierce': texto = `+${Math.round(BUFFS.perforacion * 100)}% Penetración de escudo · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'fortaleza': texto = `+${Math.round(BUFFS.fortaleza * 100)}% Armadura · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'esquivar': texto = `${Math.round(BUFFS.esquivar * 100)}% de esquivar cada golpe · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'megaTaunt': texto = `Los ataques de área enemigos solo lo alcanzan a él · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'solarBurn': texto = `Las curaciones le hacen daño (ignora Armadura y Escudo) · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'aoeDodge': texto = `Esquiva los movimientos de área de los enemigos (daño y efectos) · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'stealth': texto = `Los enemigos no pueden elegirlo con ataques de un objetivo · se rompe al recibir daño · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -1140,9 +1154,26 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       if (comprobarFin()) return;
       pasivas(n, 'alIniciarTurno', { objetivo: n });
       if (comprobarFin()) return;
-      S.esperando = { id: n.uid, opciones: opciones(n) };
+      if (n.pasiva?.formas) n.formaPendiente = true;   // pasiva "formas": al inicio de su turno elige una forma (p. ej. Luke)
+      S.esperando = esperaDe(n);
       return;
     }
+  }
+
+  // Lo que espera el juego del personaje: sus opciones y, si tiene una forma por elegir, cuáles puede elegir
+  const esperaDe = p => ({ id: p.uid, opciones: opciones(p), ...(p.formaPendiente ? { formas: Object.keys(p.pasiva.formas) } : {}) });
+  // Formas (p. ej. Djem So, Soresu y Ataru de Luke): cada una aplica sus acciones al portador (buffs hasta el final de la ronda)
+  function aplicarForma(dueno, t, id) {
+    const f = dueno.pasiva?.formas?.[id];
+    if (!f || t.muerto) return;
+    emitir('bonoVisible', { a: t.uid, texto: `${f.icono} ${f.nombre}` }, t);
+    for (const acc of f.acciones) ejecutarAccion(t, { ...acc, a: 'propio' }, { objetivo: t, ejecutor: t });
+  }
+  // Si nadie eligió (IA, auto-batalla o repetición sin forma): elige la que más le conviene, sin azar
+  function formaAuto(p, categoria) {
+    const l = Object.keys(p.pasiva.formas), fa = p.pasiva.formaAuto || {};   // formaAuto { herido, ataque, normal }
+    const pref = p.hp / maxHp(p) < .6 ? fa.herido : categoria === 'especial' || categoria === 'over' ? fa.ataque : fa.normal;
+    return l.includes(pref) ? pref : l[0];
   }
 
   // Incitar: quien lo aplicó (si sigue vivo); mientras dure, solo puede usar el Básico y solo contra él
@@ -1223,6 +1254,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
   }
   // Esquiva Área: los movimientos de "todos los enemigos" (daño y efectos) no lo alcanzan
   function sinEsquiva(lista) {
+    const mega = lista.filter(x => get(x, 'megaTaunt'));   // Mega Provocación: el área enemiga solo lo alcanza a él (p. ej. Luke)
+    if (mega.length) lista = mega;
     const fuera = lista.filter(x => get(x, 'aoeDodge'));
     for (const x of fuera) emitir('esquiva', { a: x.uid });
     return lista.filter(x => !fuera.includes(x));
@@ -1376,7 +1409,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     return Math.min(r, .9);
   }
   // pasiva "intocable" (p. ej. Yoda): no recibe daño de ningún tipo mientras viva algún aliado suyo
-  const intocable = t => !!t.pasiva?.intocable && !t.muerto && aliadosDe(t).some(x => x !== t);
+  const inmuneCon = t => !!t.pasiva?.inmuneCon && !t.muerto && t.pasiva.inmuneCon.every(id => get(t, id));   // pasiva: inmune a daño y debuffs mientras tenga esos efectos (p. ej. Luke)
+  const intocable = t => (!!t.pasiva?.intocable && !t.muerto && aliadosDe(t).some(x => x !== t)) || inmuneCon(t);
   function repartir(t, d, pen) {
     if (intocable(t)) { emitir('inmune', { a: t.uid, texto: 'Intocable' }); return { aHp: 0, aEsc: 0 }; }
     let aHp = d * Math.min(pen, 1), aEsc = d - aHp;
@@ -1865,6 +1899,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     }
     const sa = stats(a);
     const def = EFECTOS[acc.id];
+    if (def.tipo === 'debuff' && inmuneCon(t)) { emitir('inmune', { a: t.uid, texto: 'Inmune' }); return; }
     if (def.tipo === 'buff' && get(t, 'blockBuffs')) { emitir('sinEfecto', { a: t.uid, texto: '🚫 Buffs bloqueados' }); return; }
     let texto = def.nombre, id = acc.id;
     const antes = new Set(t.estados);
@@ -1966,7 +2001,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         break;
       }
       case 'confuse': case 'fear': case 'dmgUp': case 'taunt': case 'fireAura': case 'frostAura': case 'infect': case 'blockBuffs': case 'protect': case 'regen':
-      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'agotar': case 'expuesto': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': case 'incite': case 'mirror': case 'anticipar': case 'auraLuz': {
+      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'agotar': case 'expuesto': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': case 'incite': case 'mirror': case 'anticipar': case 'auraLuz': case 'fortaleza': case 'esquivar': case 'megaTaunt': {
         if (acc.id === 'stealth' && get(t, 'taunt')) { emitir('sinEfecto', { a: t.uid, texto: 'Con Provocación no puede tener Sigilo' }); return; }
         if (acc.id === 'taunt' && get(t, 'stealth')) { quitar(t, get(t, 'stealth')); emitir('sigiloRoto', { a: t.uid }, t); }
         if (acc.id === 'dmgUp') acc = { ...acc, valor: BUFFS.furia };      // Furia siempre +50%
@@ -1993,6 +2028,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (t.lado !== a.lado) liderAlAplicar(a, t, id);
     for (const p of enemigosDe(t)) pasivas(p, 'alEnemigoRecibeEfecto', { objetivo: t, efecto: id });   // p. ej. Vader: Aturdimiento o Miedo
     if (def.tipo === 'debuff' && a !== t) reacciones.push(() => pasivas(t, 'alRecibirDebuff', { atacante: a, efecto: id }));
+    if (def.tipo === 'debuff' && a.lado !== t.lado) for (const l of lideresDe(t)) if (l.lider?.alAliadoRecibeDebuff)   // líder: cuando a un aliado le entra un debuff (p. ej. Luke)
+      reacciones.push(() => { if (!t.muerto && !l.muerto) ejecutarAccion(l, l.lider.alAliadoRecibeDebuff, { objetivo: t }); });
     // líder "copiarDebuffAliado": un debuff que un enemigo le pone a un aliado se copia (misma intensidad y duración) en un enemigo al azar,
     // con Tirada de Puntería del líder. Las copias no se vuelven a copiar (evita cadenas entre dos líderes).
     if (def.tipo === 'debuff' && a.lado !== t.lado && !acc.copiaLider) for (const l of lideresDe(t)) if (l.lider?.copiarDebuffAliado) {
@@ -2232,8 +2269,13 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           if (n) emitir('extension', { a: t.uid, texto: '⏳ Cooldowns reiniciados' }, t);
           break;
         }
+        case 'formaAzar': {                // una forma al azar del ejecutor (p. ej. Proyección Astral de Luke a cada aliado)
+          const l = Object.keys(a.pasiva?.formas || {});
+          if (l.length) aplicarForma(a, t, rng.elegir(l));
+          break;
+        }
         case 'golpesPorConteo': {            // un golpe a un enemigo al azar por cada unidad contada (p. ej. debuffs limpiados)
-          const n = ctx[acc.conteo] || 0;
+          const n = Math.max(ctx[acc.conteo] || 0, acc.min || 0);   // min: golpea al menos esas veces (p. ej. Rayos de Luz: 1)
           for (let i = 0; i < n && !a.muerto; i++) {
             const e = rng.elegir(enemigosDe(a));
             if (!e) break;
@@ -2669,6 +2711,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (hostil && rng() < Math.min(stats(t).block, TOPES.block)) {
       emitir('bloqueo', { de: a.uid, a: t.uid });
       if (t.lado !== a.lado && t.esLider && !t.muerto && t.lider?.alBloquear) ejecutarAccion(t, t.lider.alBloquear, { objetivo: t });   // líder: al bloquear (p. ej. General Kenobi)
+      if (t.lado !== a.lado) pasivas(t, 'alBloquear', { atacante: a, objetivo: t });   // pasiva: al bloquear (p. ej. Luke)
       return;
     }
     const cln = hostil && t.lado !== a.lado && t.pasiva?.clones, clon = cln && get(t, cln.efecto);
@@ -2699,6 +2742,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     // cada golpe intenta sus efectos: 2 golpes al mismo objetivo = 2 tiradas
     let huboCritico = false;
     if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) {
+      if (hostil && t.lado !== a.lado && get(t, 'esquivar') && rng() < BUFFS.esquivar) { emitir('esquiva', { a: t.uid, golpe: true }); continue; }   // Esquivar: ni daño ni efectos de ese golpe
       const cr = golpear(a, t, mov, ctxGolpe); huboCritico = cr || huboCritico;
       if (cr && ctx.acum && t.lado !== a.lado) ctx.acum.criticos = (ctx.acum.criticos || 0) + 1;   // condición criticosMin
       efectosDelGolpe();
@@ -2962,7 +3006,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     },
 
     // El jugador (o la IA) decide: categoría del movimiento + uid del objetivo (si aplica)
-    actuar({ categoria, objetivo }) {
+    actuar({ categoria, objetivo, forma }) {
       return ejecutar(() => {
         const a = S.actual;
         if (!a || !S.esperando) throw new Error('No es momento de actuar');
@@ -2972,6 +3016,10 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         if ((mov.objetivo === 'enemigo' || mov.objetivo === 'aliado') && !objetivosValidos(a, mov).includes(t)) throw new Error('Objetivo no válido');
         S.esperando = null;
         if (a.ciclo) a.cicloI = (a.cicloI || 0) + 1;   // ciclo fijo de ataques (Jefe de Raid)
+        if (a.formaPendiente) {                          // forma de este turno: la elegida o, sin elegir, la automática
+          a.formaPendiente = false;
+          aplicarForma(a, a, forma && a.pasiva.formas[forma] ? forma : formaAuto(a, categoria));
+        }
         ejecutarMovimiento(a, mov, t);
         // pasiva "turnoExtraSiMasRapido": si es el más rápido de TODO el campo, gana un turno extra (una vez por ronda)
         if (a.pasiva?.turnoExtraSiMasRapido && !a.muerto && a.turnoRapidoRonda !== S.ronda
@@ -3022,7 +3070,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         if (comprobarFin()) { S.esperando = null; return; }
         if (S.actual?.muerto) { S.esperando = null; terminarTurno(S.actual); avanzar(); return; }
         if (S.fin) S.esperando = null;
-        else if (S.esperando) S.esperando = { id: S.esperando.id, opciones: opciones(P.find(p => p.uid === S.esperando.id)) };
+        else if (S.esperando) S.esperando = esperaDe(P.find(p => p.uid === S.esperando.id));
       });
     },
   };
@@ -8418,6 +8466,7 @@ const { espacios } = __m["datos/reliquias.js"];
 // Contraataque y Provocación permanentes; cada golpe que recibe le da Soresu (+Armadura y +Bloqueo). Su Especial escuda
 // al equipo y le sube el HP máx. según sus cargas; su Over las consume (Mega Aturdimiento por cada 5).
 // General de la Legión 212: tiene habilidad de líder. Todos sus ataques escalan por HP. Enemigo jurado: Anakin.
+// Sim 2026-11-10: 70.6% vs azar; 76.0% como líder. El usuario aprobó publicarlo así (no ajustar sin preguntar).
 const BONO_SORESU = { efecto: 'soresu', bonos: { armor: .02, block: .01 } };
 const MEGA_AL_AZAR = { tipo: 'efecto', id: 'stun', mega: true, a: { enemigoAzarSinMega: 'stun' } };
 
@@ -8470,6 +8519,78 @@ __e.default = {
       efectos: [
         { cuando: 'final', condicion: { cargasConsumidasMin: 5 }, accion: MEGA_AL_AZAR },
         { cuando: 'final', condicion: { cargasConsumidasMin: 10 }, accion: MEGA_AL_AZAR },
+      ],
+    },
+  ],
+};
+
+
+return __e; })();
+
+__m["datos/personajes/luke-skywalker.js"] = (() => { const __e: any = {};
+const { espacios } = __m["datos/reliquias.js"];
+
+// Ficha oficial (2026-11-10, kit del usuario). Luke Skywalker, el Último Jedi (Star Wars). Tanque · Soporte: duplica su
+// Bloqueo (tope 50%) y al inicio de su turno elige una forma de combate (Djem So, Soresu o Ataru) hasta el final de la ronda.
+// Cura, limpia y castiga por cada debuff limpiado. Su Over (Proyección Astral) lo vuelve inmune mientras tenga Provocación
+// y Mega Provocación, y da una forma al azar a cada aliado. Líder: Una Nueva Esperanza (+5% HP máx. por debuff recibido, sin tope).
+const HASTA_FIN_DE_RONDA = { dur: 1, finDeRonda: true };
+const FORMAS = {
+  djemSo: { nombre: 'Djem So', icono: '⚔️', desc: 'Letalidad y Frenesí',
+    acciones: [{ tipo: 'efecto', id: 'bloodlust', ...HASTA_FIN_DE_RONDA }, { tipo: 'efecto', id: 'frenzy', ...HASTA_FIN_DE_RONDA }] },
+  soresu: { nombre: 'Soresu', icono: '🛡️', desc: 'Fortaleza y Escudo (20% del HP máx.)',
+    acciones: [{ tipo: 'efecto', id: 'fortaleza', ...HASTA_FIN_DE_RONDA }, { tipo: 'escudo', pct: .20, escala: 'hpMax', dur: 1 }] },
+  ataru: { nombre: 'Ataru', icono: '🌀', desc: 'Celeridad y Esquivar',
+    acciones: [{ tipo: 'efecto', id: 'haste', ...HASTA_FIN_DE_RONDA }, { tipo: 'efecto', id: 'esquivar', ...HASTA_FIN_DE_RONDA }] },
+};
+
+__e.default = {
+  id: 'luke-skywalker',
+  franquicia: 'Star Wars', grupos: ['jedi'],   // campaña: temas de las etapas
+  nombre: 'Luke Skywalker',
+  rol: 'Tanque', rolSecundario: 'Support',
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
+  emoji: '🟢', color: '#22c55e', imagen: 'assets/personajes/luke-skywalker.webp',
+  base: { hp: 780, dmg: 48, spd: 92 },
+  extra: { block: .15 },
+  slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
+
+  lider: {
+    nombre: 'Una Nueva Esperanza',
+    desc: 'Cada vez que a un aliado le entra un debuff de un enemigo, ese aliado gana +5% de HP máx. para toda la partida (sin tope).',
+    alAliadoRecibeDebuff: { tipo: 'bonoPermanente', stat: 'hpPct', pct: .05 },
+  },
+  pasiva: {
+    nombre: 'El Último Jedi',
+    desc: 'Duplica su Bloqueo (nunca pasa del 50%). Cada vez que bloquea un ataque, 75% de probabilidad de bajar 1 turno el cooldown de Proyección Astral. Al inicio de su turno elige una forma hasta el final de la ronda: Djem So (Letalidad y Frenesí), Soresu (Fortaleza y Escudo del 20% de su HP máx.) o Ataru (Celeridad y Esquivar).',
+    multiplicaBloqueo: 2,
+    gatillo: 'alBloquear', prob: .75,
+    accion: { tipo: 'reducirCooldown', cantidad: 1, categorias: ['over'], a: 'propio' },
+    formas: FORMAS,
+    formaAuto: { herido: 'soresu', ataque: 'djemSo', normal: 'ataru' },
+    inmuneCon: ['taunt', 'megaTaunt'],
+  },
+  movimientos: [
+    {
+      categoria: 'basico', nombre: 'Descendencia Skywalker', objetivo: 'aliado', estilo: 'support', color: 0x4ade80, cd: 0,
+      desc: 'Cura a un aliado el 20% del HP máx. de Luke.',
+      efectos: [{ accion: { tipo: 'curar', pct: .20, escala: 'hpMax' } }],
+    },
+    {
+      categoria: 'especial', nombre: 'Rayos de Luz', objetivo: 'todosAliados', estilo: 'support', color: 0x86efac, cd: 3,
+      desc: 'Limpia 2 debuffs de cada aliado. Por cada debuff limpiado golpea 25% (escala por HP) a un enemigo al azar; si no limpió ninguno, golpea 1 vez.',
+      efectos: [
+        { cuando: 'final', accion: { tipo: 'limpiar', cantidad: 2, a: 'todosAliados' } },
+        { cuando: 'final', accion: { tipo: 'golpesPorConteo', conteo: 'limpiados', min: 1, nombre: 'Rayos de Luz', categoria: 'especial', pct: .25, escala: 'hp', color: 0x86efac, a: 'propio' } },
+      ],
+    },
+    {
+      categoria: 'over', nombre: 'Proyección Astral', objetivo: 'propio', estilo: 'support', color: 0x22c55e, cd: 10,
+      desc: 'Gana Provocación y Mega Provocación (1 ronda). Mientras tenga ambas es inmune a todo daño y a los debuffs. Da a cada aliado una forma al azar: Djem So, Soresu o Ataru.',
+      efectos: [
+        { cuando: 'final', accion: { tipo: 'efecto', id: 'taunt', dur: 1, a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'efecto', id: 'megaTaunt', dur: 1, a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'formaAzar', a: 'todosAliados' } },
       ],
     },
   ],
@@ -8559,8 +8680,9 @@ const satoruGojo = __m["datos/personajes/satoru-gojo.js"].default;
 const sukuna = __m["datos/personajes/sukuna.js"].default;
 const anakin = __m["datos/personajes/anakin-skywalker.js"].default;
 const obiWan = __m["datos/personajes/obi-wan-kenobi.js"].default;
+const luke = __m["datos/personajes/luke-skywalker.js"].default;
 
-const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan];
+const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke];
 const porId = id => OFICIALES.find(p => p.id === id);
 
 __e["OFICIALES"] = OFICIALES;
@@ -8642,7 +8764,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 15;
+const REGLAS_RAID = 16;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;
@@ -8746,7 +8868,7 @@ function repetirCombate(c) {
         const ia = elegirIA(combate, rnd);
         if (ia.categoria !== d.c || (ia.objetivo || null) !== (d.o || null)) return { ok: false, motivo: `Decisión de la Defensa alterada (turno ${i})` };
       }
-      r = combate.actuar({ categoria: d.c, objetivo: d.o || null });
+      r = combate.actuar({ categoria: d.c, objetivo: d.o || null, forma: d.f || null });
     }
     const gano = r.fin?.ganador === 'jugador' && !r.fin?.limite;
     return { ok: gano === !!c.gano, ganador: r.fin?.ganador, limite: !!r.fin?.limite, motivo: gano === !!c.gano ? '' : 'El resultado no coincide' };
@@ -8776,7 +8898,7 @@ function repetirRaid(a, jefe = 'lich-king') {
         const ia = elegirIA(combate, rnd);
         if (ia.categoria !== d.c || (ia.objetivo || null) !== (d.o || null)) return { ok: false, motivo: `Decisión del jefe alterada (turno ${i})` };
       }
-      r = combate.actuar({ categoria: d.c, objetivo: d.o || null });
+      r = combate.actuar({ categoria: d.c, objetivo: d.o || null, forma: d.f || null });
       leerRonda();
     }
     return { ok: true, ronda, dano: Math.max(0, Math.round(Number(a.hp_inicio) - Math.max(0, b.hp))) };

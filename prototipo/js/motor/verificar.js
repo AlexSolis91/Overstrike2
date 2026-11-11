@@ -29,7 +29,7 @@ export function repetirCombate(c) {
         const ia = elegirIA(combate, rnd);
         if (ia.categoria !== d.c || (ia.objetivo || null) !== (d.o || null)) return { ok: false, motivo: `Decisión de la Defensa alterada (turno ${i})` };
       }
-      r = combate.actuar({ categoria: d.c, objetivo: d.o || null });
+      r = combate.actuar({ categoria: d.c, objetivo: d.o || null, forma: d.f || null });
     }
     const gano = r.fin?.ganador === 'jugador' && !r.fin?.limite;
     return { ok: gano === !!c.gano, ganador: r.fin?.ganador, limite: !!r.fin?.limite, motivo: gano === !!c.gano ? '' : 'El resultado no coincide' };
@@ -59,7 +59,7 @@ export function repetirRaid(a, jefe = 'lich-king') {
         const ia = elegirIA(combate, rnd);
         if (ia.categoria !== d.c || (ia.objetivo || null) !== (d.o || null)) return { ok: false, motivo: `Decisión del jefe alterada (turno ${i})` };
       }
-      r = combate.actuar({ categoria: d.c, objetivo: d.o || null });
+      r = combate.actuar({ categoria: d.c, objetivo: d.o || null, forma: d.f || null });
       leerRonda();
     }
     return { ok: true, ronda, dano: Math.max(0, Math.round(Number(a.hp_inicio) - Math.max(0, b.hp))) };

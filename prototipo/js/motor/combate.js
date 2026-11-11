@@ -125,6 +125,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       if (!capas[EFECTOS[e.id]?.tipo === 'debuff' ? 'debuffs' : 'buffs']) continue;
       if (e.id === 'dmgUp') pct.dmg += e.valor;
       if (e.id === 'protect') sec.res += BUFFS.proteccion;
+      if (e.id === 'fortaleza') sec.armor = (sec.armor || 0) + BUFFS.fortaleza;
       if (e.id === 'frenzy') sec.critRate += BUFFS.frenesi;
       if (e.id === 'haste') pct.spd += BUFFS.celeridad;
       if (e.id === 'bloodlust') sec.critDmg += BUFFS.letalidad;
@@ -175,6 +176,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       for (const [k, v] of Object.entries(php.bono)) sec[k] = (sec[k] || 0) + v * tramos;
     }
     if (todo !== 1) for (const k of Object.keys(sec)) sec[k] *= todo;
+    const mb = p.pasiva?.multiplicaBloqueo;             // pasiva: multiplica su Bloqueo total (nunca pasa del tope; p. ej. Luke ×2)
+    if (mb && capas.buffs) sec.block = Math.min((sec.block || 0) * mb, TOPES.block);
     return {
       hp: (b.hp + flat.hp) * (1 + pct.hp) * todo,
       dmg: (b.dmg + flat.dmg) * (1 + pct.dmg) * todo,
@@ -268,6 +271,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'incite': texto = `Solo puede usar su Básico contra ${porUid(e.fuente)?.nombre || 'quien lo incitó'} · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'shield': texto = `Absorbe ${Math.round(e.valor)} de daño · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'pierce': texto = `+${Math.round(BUFFS.perforacion * 100)}% Penetración de escudo · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'fortaleza': texto = `+${Math.round(BUFFS.fortaleza * 100)}% Armadura · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'esquivar': texto = `${Math.round(BUFFS.esquivar * 100)}% de esquivar cada golpe · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'megaTaunt': texto = `Los ataques de área enemigos solo lo alcanzan a él · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'solarBurn': texto = `Las curaciones le hacen daño (ignora Armadura y Escudo) · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'aoeDodge': texto = `Esquiva los movimientos de área de los enemigos (daño y efectos) · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'stealth': texto = `Los enemigos no pueden elegirlo con ataques de un objetivo · se rompe al recibir daño · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -561,9 +567,26 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       if (comprobarFin()) return;
       pasivas(n, 'alIniciarTurno', { objetivo: n });
       if (comprobarFin()) return;
-      S.esperando = { id: n.uid, opciones: opciones(n) };
+      if (n.pasiva?.formas) n.formaPendiente = true;   // pasiva "formas": al inicio de su turno elige una forma (p. ej. Luke)
+      S.esperando = esperaDe(n);
       return;
     }
+  }
+
+  // Lo que espera el juego del personaje: sus opciones y, si tiene una forma por elegir, cuáles puede elegir
+  const esperaDe = p => ({ id: p.uid, opciones: opciones(p), ...(p.formaPendiente ? { formas: Object.keys(p.pasiva.formas) } : {}) });
+  // Formas (p. ej. Djem So, Soresu y Ataru de Luke): cada una aplica sus acciones al portador (buffs hasta el final de la ronda)
+  function aplicarForma(dueno, t, id) {
+    const f = dueno.pasiva?.formas?.[id];
+    if (!f || t.muerto) return;
+    emitir('bonoVisible', { a: t.uid, texto: `${f.icono} ${f.nombre}` }, t);
+    for (const acc of f.acciones) ejecutarAccion(t, { ...acc, a: 'propio' }, { objetivo: t, ejecutor: t });
+  }
+  // Si nadie eligió (IA, auto-batalla o repetición sin forma): elige la que más le conviene, sin azar
+  function formaAuto(p, categoria) {
+    const l = Object.keys(p.pasiva.formas), fa = p.pasiva.formaAuto || {};   // formaAuto { herido, ataque, normal }
+    const pref = p.hp / maxHp(p) < .6 ? fa.herido : categoria === 'especial' || categoria === 'over' ? fa.ataque : fa.normal;
+    return l.includes(pref) ? pref : l[0];
   }
 
   // Incitar: quien lo aplicó (si sigue vivo); mientras dure, solo puede usar el Básico y solo contra él
@@ -644,6 +667,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   }
   // Esquiva Área: los movimientos de "todos los enemigos" (daño y efectos) no lo alcanzan
   function sinEsquiva(lista) {
+    const mega = lista.filter(x => get(x, 'megaTaunt'));   // Mega Provocación: el área enemiga solo lo alcanza a él (p. ej. Luke)
+    if (mega.length) lista = mega;
     const fuera = lista.filter(x => get(x, 'aoeDodge'));
     for (const x of fuera) emitir('esquiva', { a: x.uid });
     return lista.filter(x => !fuera.includes(x));
@@ -797,7 +822,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     return Math.min(r, .9);
   }
   // pasiva "intocable" (p. ej. Yoda): no recibe daño de ningún tipo mientras viva algún aliado suyo
-  const intocable = t => !!t.pasiva?.intocable && !t.muerto && aliadosDe(t).some(x => x !== t);
+  const inmuneCon = t => !!t.pasiva?.inmuneCon && !t.muerto && t.pasiva.inmuneCon.every(id => get(t, id));   // pasiva: inmune a daño y debuffs mientras tenga esos efectos (p. ej. Luke)
+  const intocable = t => (!!t.pasiva?.intocable && !t.muerto && aliadosDe(t).some(x => x !== t)) || inmuneCon(t);
   function repartir(t, d, pen) {
     if (intocable(t)) { emitir('inmune', { a: t.uid, texto: 'Intocable' }); return { aHp: 0, aEsc: 0 }; }
     let aHp = d * Math.min(pen, 1), aEsc = d - aHp;
@@ -1286,6 +1312,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     }
     const sa = stats(a);
     const def = EFECTOS[acc.id];
+    if (def.tipo === 'debuff' && inmuneCon(t)) { emitir('inmune', { a: t.uid, texto: 'Inmune' }); return; }
     if (def.tipo === 'buff' && get(t, 'blockBuffs')) { emitir('sinEfecto', { a: t.uid, texto: '🚫 Buffs bloqueados' }); return; }
     let texto = def.nombre, id = acc.id;
     const antes = new Set(t.estados);
@@ -1387,7 +1414,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         break;
       }
       case 'confuse': case 'fear': case 'dmgUp': case 'taunt': case 'fireAura': case 'frostAura': case 'infect': case 'blockBuffs': case 'protect': case 'regen':
-      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'agotar': case 'expuesto': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': case 'incite': case 'mirror': case 'anticipar': case 'auraLuz': {
+      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'agotar': case 'expuesto': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': case 'incite': case 'mirror': case 'anticipar': case 'auraLuz': case 'fortaleza': case 'esquivar': case 'megaTaunt': {
         if (acc.id === 'stealth' && get(t, 'taunt')) { emitir('sinEfecto', { a: t.uid, texto: 'Con Provocación no puede tener Sigilo' }); return; }
         if (acc.id === 'taunt' && get(t, 'stealth')) { quitar(t, get(t, 'stealth')); emitir('sigiloRoto', { a: t.uid }, t); }
         if (acc.id === 'dmgUp') acc = { ...acc, valor: BUFFS.furia };      // Furia siempre +50%
@@ -1414,6 +1441,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (t.lado !== a.lado) liderAlAplicar(a, t, id);
     for (const p of enemigosDe(t)) pasivas(p, 'alEnemigoRecibeEfecto', { objetivo: t, efecto: id });   // p. ej. Vader: Aturdimiento o Miedo
     if (def.tipo === 'debuff' && a !== t) reacciones.push(() => pasivas(t, 'alRecibirDebuff', { atacante: a, efecto: id }));
+    if (def.tipo === 'debuff' && a.lado !== t.lado) for (const l of lideresDe(t)) if (l.lider?.alAliadoRecibeDebuff)   // líder: cuando a un aliado le entra un debuff (p. ej. Luke)
+      reacciones.push(() => { if (!t.muerto && !l.muerto) ejecutarAccion(l, l.lider.alAliadoRecibeDebuff, { objetivo: t }); });
     // líder "copiarDebuffAliado": un debuff que un enemigo le pone a un aliado se copia (misma intensidad y duración) en un enemigo al azar,
     // con Tirada de Puntería del líder. Las copias no se vuelven a copiar (evita cadenas entre dos líderes).
     if (def.tipo === 'debuff' && a.lado !== t.lado && !acc.copiaLider) for (const l of lideresDe(t)) if (l.lider?.copiarDebuffAliado) {
@@ -1653,8 +1682,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           if (n) emitir('extension', { a: t.uid, texto: '⏳ Cooldowns reiniciados' }, t);
           break;
         }
+        case 'formaAzar': {                // una forma al azar del ejecutor (p. ej. Proyección Astral de Luke a cada aliado)
+          const l = Object.keys(a.pasiva?.formas || {});
+          if (l.length) aplicarForma(a, t, rng.elegir(l));
+          break;
+        }
         case 'golpesPorConteo': {            // un golpe a un enemigo al azar por cada unidad contada (p. ej. debuffs limpiados)
-          const n = ctx[acc.conteo] || 0;
+          const n = Math.max(ctx[acc.conteo] || 0, acc.min || 0);   // min: golpea al menos esas veces (p. ej. Rayos de Luz: 1)
           for (let i = 0; i < n && !a.muerto; i++) {
             const e = rng.elegir(enemigosDe(a));
             if (!e) break;
@@ -2090,6 +2124,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (hostil && rng() < Math.min(stats(t).block, TOPES.block)) {
       emitir('bloqueo', { de: a.uid, a: t.uid });
       if (t.lado !== a.lado && t.esLider && !t.muerto && t.lider?.alBloquear) ejecutarAccion(t, t.lider.alBloquear, { objetivo: t });   // líder: al bloquear (p. ej. General Kenobi)
+      if (t.lado !== a.lado) pasivas(t, 'alBloquear', { atacante: a, objetivo: t });   // pasiva: al bloquear (p. ej. Luke)
       return;
     }
     const cln = hostil && t.lado !== a.lado && t.pasiva?.clones, clon = cln && get(t, cln.efecto);
@@ -2120,6 +2155,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     // cada golpe intenta sus efectos: 2 golpes al mismo objetivo = 2 tiradas
     let huboCritico = false;
     if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) {
+      if (hostil && t.lado !== a.lado && get(t, 'esquivar') && rng() < BUFFS.esquivar) { emitir('esquiva', { a: t.uid, golpe: true }); continue; }   // Esquivar: ni daño ni efectos de ese golpe
       const cr = golpear(a, t, mov, ctxGolpe); huboCritico = cr || huboCritico;
       if (cr && ctx.acum && t.lado !== a.lado) ctx.acum.criticos = (ctx.acum.criticos || 0) + 1;   // condición criticosMin
       efectosDelGolpe();
@@ -2383,7 +2419,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     },
 
     // El jugador (o la IA) decide: categoría del movimiento + uid del objetivo (si aplica)
-    actuar({ categoria, objetivo }) {
+    actuar({ categoria, objetivo, forma }) {
       return ejecutar(() => {
         const a = S.actual;
         if (!a || !S.esperando) throw new Error('No es momento de actuar');
@@ -2393,6 +2429,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         if ((mov.objetivo === 'enemigo' || mov.objetivo === 'aliado') && !objetivosValidos(a, mov).includes(t)) throw new Error('Objetivo no válido');
         S.esperando = null;
         if (a.ciclo) a.cicloI = (a.cicloI || 0) + 1;   // ciclo fijo de ataques (Jefe de Raid)
+        if (a.formaPendiente) {                          // forma de este turno: la elegida o, sin elegir, la automática
+          a.formaPendiente = false;
+          aplicarForma(a, a, forma && a.pasiva.formas[forma] ? forma : formaAuto(a, categoria));
+        }
         ejecutarMovimiento(a, mov, t);
         // pasiva "turnoExtraSiMasRapido": si es el más rápido de TODO el campo, gana un turno extra (una vez por ronda)
         if (a.pasiva?.turnoExtraSiMasRapido && !a.muerto && a.turnoRapidoRonda !== S.ronda
@@ -2443,7 +2483,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         if (comprobarFin()) { S.esperando = null; return; }
         if (S.actual?.muerto) { S.esperando = null; terminarTurno(S.actual); avanzar(); return; }
         if (S.fin) S.esperando = null;
-        else if (S.esperando) S.esperando = { id: S.esperando.id, opciones: opciones(P.find(p => p.uid === S.esperando.id)) };
+        else if (S.esperando) S.esperando = esperaDe(P.find(p => p.uid === S.esperando.id));
       });
     },
   };

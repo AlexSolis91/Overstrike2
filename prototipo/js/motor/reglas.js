@@ -47,6 +47,8 @@ export const BUFFS = {
   auraGelida: .20,     // Aura Gélida: −20% de daño de los golpes enemigos
   perforacion: .50,    // Perforación: +50% Penetración de escudo (puntos; tope 100%)
   auraLuz: 2,          // Aura de Luz: multiplica las curaciones que recibe
+  fortaleza: .20,      // Fortaleza: +20% Armadura (puntos)
+  esquivar: .50,       // Esquivar: 50% de esquivar cada golpe enemigo
 };
 
 // Valores fijos de debuffs universales

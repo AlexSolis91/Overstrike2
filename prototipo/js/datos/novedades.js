@@ -3,6 +3,13 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-10c', fecha: '10 de noviembre de 2026', titulo: 'Nuevo campeón: Luke Skywalker',
+    cambios: [
+      { tipo: 'nuevo', texto: '🟢 Luke Skywalker, el Último Jedi (Tanque · Soporte), en el sobre Legendary Warriors. Duplica su Bloqueo y, al inicio de cada turno, eliges su forma: Djem So (Letalidad y Frenesí), Soresu (Fortaleza y Escudo) o Ataru (Celeridad y Esquivar). Cura, limpia debuffs y castiga por cada uno, y su Proyección Astral lo vuelve inmune mientras da formas a todo el equipo. Como líder, cada debuff que reciben tus aliados les sube +5% de HP máx.' },
+      { tipo: 'nuevo', texto: '✨ Buffs nuevos: 🪨 Fortaleza (+20% Armadura), 🌀 Esquivar (50% de esquivar cada golpe) y 🎯 Mega Provocación (los ataques de área enemigos solo lo alcanzan a él).' },
+    ],
+  },
+  {
     id: '2026-11-10b', fecha: '10 de noviembre de 2026', titulo: 'Nuevo campeón: Obi-Wan Kenobi',
     cambios: [
       { tipo: 'nuevo', texto: '🛡️ Obi-Wan Kenobi, Maestro del Soresu (Tanque · Control), en el sobre Legendary Warriors. Contraataque y Provocación permanentes; cada golpe que recibe le da Soresu (+Armadura y +Bloqueo). Su Especial escuda a todo el equipo y le sube el HP máx., y su Over consume el Soresu para aturdir. Como líder (General Kenobi), su equipo recibe −15% de daño y, cada vez que bloquea, todos bajan el cooldown de un movimiento.' },

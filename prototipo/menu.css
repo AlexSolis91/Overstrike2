@@ -1121,6 +1121,9 @@ body.social-min #soc-abrir { display: block; }
 /* Ventanas de confirmación/aviso del juego (js/ui/dialogo.js) */
 .dlg-fondo { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 16px; background: rgba(3, 6, 12, .72); backdrop-filter: blur(3px); animation: dlg-entra .15s ease-out; }
 .dlg-caja h2 { font-size: 22px; color: var(--gold, #f3d58a); }
+.dlg-opciones { display: grid; gap: 10px; }
+.dlg-opcion { display: grid; gap: 2px; text-align: center; padding: 10px 14px; }
+.dlg-opcion small { font-weight: 400; font-size: 12px; opacity: .85; }
 .dlg-texto { margin: 8px 0 18px; font-size: 14px; line-height: 1.5; color: var(--text, #e5e7eb); white-space: pre-line; text-align: center; max-height: 55vh; overflow-y: auto; }
 @keyframes dlg-entra { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
 
