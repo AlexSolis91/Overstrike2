@@ -8534,6 +8534,7 @@ const { espacios } = __m["datos/reliquias.js"];
 // Bloqueo (tope 50%) y al inicio de su turno elige una forma de combate (Djem So, Soresu o Ataru) hasta el final de la ronda.
 // Cura, limpia y castiga por cada debuff limpiado. Su Over (Proyección Astral) lo vuelve inmune mientras tenga Provocación
 // y Mega Provocación, y da una forma al azar a cada aliado. Líder: Una Nueva Esperanza (+5% HP máx. por debuff recibido, sin tope).
+// Sim 2026-11-10 (IA con forma automática): 62.8% vs azar; 72.3% como líder. El usuario pidió no bajarlo sin preguntar.
 const HASTA_FIN_DE_RONDA = { dur: 1, finDeRonda: true };
 const FORMAS = {
   djemSo: { nombre: 'Djem So', icono: '⚔️', desc: 'Letalidad y Frenesí',
