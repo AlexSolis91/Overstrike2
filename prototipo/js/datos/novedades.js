@@ -3,6 +3,12 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-11', fecha: '11 de noviembre de 2026', titulo: 'Nueva transformación: Dark Wukong',
+    cambios: [
+      { tipo: 'nuevo', texto: '🔥 Wukong: cada vez que revive tiene 30% de probabilidad de volver como Dark Wukong (Transformación Sombría). Al transformarse da Mega Aturdimiento a hasta 3 enemigos al azar (siempre entra) y causa daño triple con todos sus movimientos. Si Dark Wukong cae, vuelve a ser Wukong y al revivir se tira de nuevo.' },
+    ],
+  },
+  {
     id: '2026-11-10c', fecha: '10 de noviembre de 2026', titulo: 'Nuevo campeón: Luke Skywalker',
     cambios: [
       { tipo: 'nuevo', texto: '🟢 Luke Skywalker, el Último Jedi (Tanque · Soporte), en el sobre Legendary Warriors. Duplica su Bloqueo y, al inicio de cada turno, eliges su forma: Djem So (Letalidad y Frenesí), Soresu (Fortaleza y Escudo) o Ataru (Celeridad y Esquivar). Cura, limpia debuffs y castiga por cada uno, y su Proyección Astral lo vuelve inmune mientras da formas a todo el equipo. Como líder, cada debuff que reciben tus aliados les sube +5% de HP máx.' },

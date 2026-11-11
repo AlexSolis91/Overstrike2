@@ -24,7 +24,7 @@ export const COFRES_RAID = [
 export const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 export const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-export const REGLAS_RAID = 16;
+export const REGLAS_RAID = 17;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 export const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;

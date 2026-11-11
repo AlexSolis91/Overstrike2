@@ -88,7 +88,7 @@ export function renderPanel(p, v, ui) {
     <div class="p-head ${p.lado === 'jugador' ? 'ally' : 'enemy'}">
       <div class="p-portrait" style="--c:${p.color}">${imgHtml(p.imagen, p.nombre) || p.emoji}</div>
       <div><div class="p-name">${p.nombre}</div><div class="p-role">${p.rol || ''}${p.prueba ? ' · de prueba' : ''}</div>
-        ${v.forma ? `<span class="p-side forma" style="--fc:${v.forma.color}">🔥 ${v.forma.nombre} · ${v.forma.permanente ? 'permanente' : `${v.forma.turnos} turno(s)`}</span><br>` : ''}
+        ${v.forma ? `<span class="p-side forma" style="--fc:${v.forma.color}">🔥 ${v.forma.nombre} · ${v.forma.permanente ? 'permanente' : v.forma.hastaMorir ? 'hasta caer' : `${v.forma.turnos} turno(s)`}</span><br>` : ''}
         <span class="p-side ${p.lado === 'jugador' ? 'ally' : 'enemy'}">${p.lado === 'jugador' ? 'Tu equipo' : 'Rival'}</span>
         ${p.esLider ? '<span class="p-side lider">👑 Líder</span>' : ''}</div>
       ${v.muerto ? '<div class="p-dead">Derrotado</div>' : ''}

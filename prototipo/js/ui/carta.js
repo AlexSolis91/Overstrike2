@@ -345,7 +345,7 @@ export class Carta {
     this.formaCol = col;
     this.formaG.tint = col;
     const g = new PIXI.Graphics().circle(0, 0, 14).fill({ color: 0x0b0f18, alpha: .95 }).stroke({ width: 2, color: col });
-    if (f.permanente) {                               // forma permanente: anillo completo con ∞
+    if (f.permanente || f.hastaMorir) {               // forma permanente (o hasta morir): anillo completo con ∞
       g.circle(0, 0, 18).stroke({ width: 3, color: 0xffd36b });
       this.formaBadge.addChild(g, txt('∞', { size: 16, weight: '900', stroke: 3 }));
       return;

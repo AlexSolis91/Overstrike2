@@ -894,7 +894,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       hp: Math.max(0, p.hp), maxHp: p.barra?.total || maxHp(p), escudo: p.escudo, muerto: p.muerto, esLider: p.esLider,
       stats: stats(p), desglose: desglose(p), estados: vistaEstados(p), cds: { ...p.cds }, silenciado: get(p, 'silence')?.categoria || null, bonos: { ...p.bonos }, inmune: p.inmune,
       invocaciones: todos(p, 'summon').map(e => ({ key: e.key, dur: e.dur, fresca: !!e.fresca, max: INVOCACIONES[e.key].dur })),
-      forma: p.forma ? { nombre: p.forma.nombre, imagen: p.forma.imagen, emoji: p.forma.emoji, color: p.forma.color, turnos: p.forma.turnos, total: p.forma.total, permanente: !!p.forma.permanente } : null,
+      forma: p.forma ? { nombre: p.forma.nombre, imagen: p.forma.imagen, emoji: p.forma.emoji, color: p.forma.color, turnos: p.forma.turnos, total: p.forma.total, permanente: !!p.forma.permanente, hastaMorir: !!p.forma.hastaMorir } : null,
       transformacion: p.transformacion ? { nombre: p.transformacion.nombre, pasiva: p.transformacion.pasiva?.nombre, movimientos: p.transformacion.movimientos.map(m => m.nombre) } : null,
       movs: p.movimientos, pasiva: p.pasiva, jefe: p.jefe ? { furia: p.jefe.furia } : null,
     };
@@ -1064,7 +1064,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (p.inmune && !p.recienLiberado) p.inmune = false;
     p.recienLiberado = false;
     for (const e of todos(p, 'summon')) e.fresca = false;
-    if (p.forma && !p.forma.permanente && !p.muerto) {   // la forma dura N turnos propios (el turno en que se transforma no cuenta)
+    if (p.forma && !p.forma.permanente && !p.forma.hastaMorir && !p.muerto) {   // la forma dura N turnos propios (el turno en que se transforma no cuenta)
       if (p.forma.recien) p.forma.recien = false;
       else if (--p.forma.turnos <= 0) revertir(p);
       else emitir('actualizar', {}, p);
@@ -1386,6 +1386,11 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     x.hp = maxHp(x) * (hpPct ?? x.pasiva?.revivir?.hp ?? 1);
     if (x.pasiva?.rival) elegirRival(x);
     emitir('revivir', { a: x.uid, nombre: x.pasiva?.revivir && hpPct == null ? x.pasiva.nombre : '' }, x);
+    const ar = x.pasiva?.alRevivir;                  // pasiva "alRevivir { prob, accion }": al revivir (por cualquier medio) tira la probabilidad (p. ej. Dark Wukong)
+    if (ar && !x.muerto && rng() < (ar.prob ?? 1)) {
+      emitir('pasiva', { id: x.uid, nombre: x.pasiva.nombre });
+      for (const acc of [].concat(ar.accion)) ejecutarAccion(x, acc, {});
+    }
   }
   // reparto del daño de un DoT entre quienes lo aplicaron (cada acumulación recuerda su "fuente")
   const fuentesDe = estados => { const tot = estados.reduce((s, e) => s + (e.valor || 0), 0) || 1; return estados.map(e => [porUid(e.fuente), (e.valor || 0) / tot]); };
@@ -1456,6 +1461,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (dc) d *= 1 + (get(a, dc.efecto)?.valor || 0) * dc.pct;
     const ej = a.pasiva?.enemigoJurado;       // pasiva: +X% de daño a un personaje concreto (p. ej. Antares ↔ Sun Jin Woo)
     if (ej && t.lado !== a.lado && t.id === ej.id) d *= 1 + ej.bono;
+    if (a.pasiva?.multiplicaDano) d *= a.pasiva.multiplicaDano;   // pasiva: multiplica el daño de todos sus golpes (no DoT; p. ej. Dark Wukong ×3)
     const bc = a.pasiva?.bonoContra;          // pasiva: +X% de daño a enemigos con un efecto (p. ej. Reptile contra envenenados)
     if (bc && [].concat(bc.efecto).some(id => get(t, id))) d *= 1 + bc.pct;
     const fz = ctx.fase !== undefined ? ctx.fase : (S.actual === a && mov.categoria !== 'invocacion' ? a.faseActiva : null);   // ciclo: bono de la fase (p. ej. Camino Asura)
@@ -1778,6 +1784,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     const teniaAlMorir = new Set(t.estados.map(e => e.id));
     const rivalDe = P.filter(v => v.lado !== t.lado && !v.muerto && v.pasiva?.rival && esRival(v, t));
     if (t.convertido) t.noRevivir = true;            // esclavo de Frostmourne: si cae, queda muerto para siempre
+    if (t.forma?.hastaMorir) revertir(t);            // forma "hastaMorir": al caer vuelve a su forma base (p. ej. Dark Wukong → Wukong)
     t.muerto = true; t.hp = 0; t.escudo = 0; t.estados = [];
     emitir('muerte', { a: t.uid, invocaciones, lider: t.esLider && !!t.lider }, t);
     // pasiva "sucesorDe": si cae el líder indicado de su equipo, ese aliado surge como nuevo líder (p. ej. Obito tras Pain)
@@ -2090,7 +2097,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (spec === 'todosEnemigos') return ctx.esMovimiento ? sinEsquiva(enemigosDe(a)) : enemigosDe(a);
     if (spec === 'otrosAliados') return aliadosDe(a).filter(x => x !== a);
     if (spec.otrosAliadosAzar) return rng.barajar(aliadosDe(a).filter(x => x !== a)).slice(0, spec.otrosAliadosAzar);
-    if (spec.enemigoAzarSinMega) { const l = enemigosDe(a).filter(x => !get(x, spec.enemigoAzarSinMega)?.mega); return l.length ? [rng.elegir(l)] : []; }   // p. ej. Over de Obi-Wan
+    if (spec.enemigoAzarSinMega) { const l = enemigosDe(a).filter(x => !get(x, spec.enemigoAzarSinMega)?.mega); return spec.cantidad ? rng.barajar(l).slice(0, spec.cantidad) : l.length ? [rng.elegir(l)] : []; }   // p. ej. Over de Obi-Wan; cantidad: hasta N distintos (Dark Wukong)
     if (spec.aliadoAzarSin) { const l = aliadosDe(a).filter(x => !get(x, spec.aliadoAzarSin)); return l.length ? [rng.elegir(l)] : []; }
     if (spec === 'otrosEnemigos') return enemigosDe(a).filter(x => x !== ctx.objetivo);
     if (spec === 'otroEnemigoAzar') { const l = enemigosDe(a).filter(x => x !== ctx.objetivo); return l.length ? [rng.elegir(l)] : []; }
@@ -2558,8 +2565,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     p.transformacion = f.transformacion || null;
     if (f.lider) p.lider = f.lider;                   // la forma trae su propio líder (p. ej. Ra Modo Fénix); esLider no cambia
     if (!f.compartirCooldowns) p.cds = { basico: 0, especial: 0, over: p.movimientos.find(m => m.categoria === 'over')?.cd || 0 };   // el Over empieza con su cooldown completo (salvo formas que comparten cooldowns)
-    const permanente = !turnos;
-    p.forma = { nombre: f.nombre, imagen: f.imagen, emoji: f.emoji, color: f.color, turnos: turnos || 0, total: turnos || 0, permanente, recien: true };
+    const hastaMorir = !turnos && !!f.hastaMorir, permanente = !turnos && !hastaMorir;   // hastaMorir: dura hasta que caiga (p. ej. Dark Wukong)
+    p.forma = { nombre: f.nombre, imagen: f.imagen, emoji: f.emoji, color: f.color, turnos: turnos || 0, total: turnos || 0, permanente, hastaMorir, recien: true };
     if (permanente) p.formaBase = null;              // ya no hay vuelta atrás
     p.hp = ratio * maxHp(p);                          // se conserva el % de vida
     emitir('transformacion', { id: p.uid, nombre: f.nombre, color: f.color }, p);
@@ -4813,6 +4820,61 @@ const { espacios } = __m["datos/reliquias.js"];
 // Ficha oficial #22 (2026-10-08). Inspirado en el Sun Wukong de Raid: Shadow Legends, adaptado: Aturdir (más si el
 // enemigo tiene buffs), golpe que ignora Armadura y pasa el daño sobrante, robo de todos los buffs enemigos con
 // Bloquear Buffs, y revive al final de la ronda siguiente (sin límite). Líder: Gran Sabio Igual al Cielo (el aura de Velocidad de Raid).
+// 2026-11-11 (kit del usuario): cada vez que revive (por cualquier medio) tiene 30% de transformarse en Dark Wukong: mismo kit,
+// pasiva y líder, pero causa daño triple con sus golpes (no con DoT) y al transformarse da Mega Aturdimiento (siempre entra)
+// a hasta 3 enemigos al azar sin Mega Aturdimiento. Si Dark Wukong cae, vuelve a ser Wukong y al revivir se tira de nuevo.
+// Sim 2026-11-11: 54.4% → 56.3% vs azar (líder 60.3% → 61.8%). El usuario aceptó el resultado de antemano.
+const MOVIMIENTOS = [
+  {
+    categoria: 'basico', nombre: '¡Te tengo!', objetivo: 'enemigo', estilo: 'melee', color: 0xfbbf24,
+    pct: .7, escala: 'dano', cd: 0,
+    desc: 'Causa 70% con 25% de probabilidad de Aturdir (50% si el enemigo tiene algún buff).',
+    efectos: [{ accion: { tipo: 'efecto', id: 'stun', prob: .25, probSiConBuff: .50 } }],
+  },
+  {
+    categoria: 'especial', nombre: 'Bastón Prodigioso', objetivo: 'enemigo', estilo: 'melee', color: 0xf59e0b,
+    pct: 1.05, escala: 'dano', cd: 3, ignoraArmadura: .50, sinCritico: true, sobrante: true,
+    desc: 'Causa 105%, ignora 50 puntos de Armadura y no puede ser crítico. Si el objetivo muere, el daño sobrante pasa a otro enemigo. Si sobrevive y tiene algún buff, recibe Mega Aturdimiento (siempre entra).',
+    efectos: [{ condicion: { objetivoConBuff: true }, accion: { tipo: 'efecto', id: 'stun', mega: true, irresistible: true } }],
+  },
+  {
+    categoria: 'over', nombre: 'Ahora Nos Ves', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfde68a,
+    pct: .85, escala: 'dano', cd: 4,
+    desc: 'Antes de atacar, le roba todos los buffs a todos los enemigos. Causa 85% a todos y les aplica Bloquear Buffs (2 rondas).',
+    efectos: [
+      { cuando: 'antes', accion: { tipo: 'robarBuffs', cantidad: 99 } },
+      { accion: { tipo: 'efecto', id: 'blockBuffs', dur: 2 } },
+    ],
+  },
+];
+
+const PASIVA = {
+  nombre: 'Wukong Invencible',
+  desc: 'Cuando muere, revive al final de la ronda siguiente con el 100% de su HP. Sin límite de veces por partida. Cada vez que revive (por cualquier medio) tiene 30% de probabilidad de transformarse en Dark Wukong y dar Mega Aturdimiento a hasta 3 enemigos al azar que no lo tengan.',
+  revivir: { rondaSiguiente: true, ilimitado: true, hp: 1 },
+  alRevivir: { prob: .30, accion: [
+    { tipo: 'transformar', a: 'propio' },
+    { tipo: 'efecto', id: 'stun', mega: true, irresistible: true, a: { enemigoAzarSinMega: 'stun', cantidad: 3 } },
+  ] },
+};
+
+// Dark Wukong (Transformación Sombría): mismo kit, pasiva y líder; daño triple. Dura hasta que caiga: al caer vuelve a ser Wukong.
+const darkWukong = {
+  nombre: 'Dark Wukong',
+  rol: 'Daño', rolSecundario: 'Control',
+  emoji: '🔥', color: '#dc2626', imagen: 'assets/transformaciones/dark-wukong.webp',
+  hastaMorir: true,
+  base: { hp: 580, dmg: 85, spd: 125 },
+  extra: {},
+  pasiva: {
+    ...PASIVA,
+    nombre: 'Transformación Sombría',
+    desc: 'Causa daño triple con todos sus movimientos (no con DoT). Cuando muere vuelve a ser Wukong y revive al final de la ronda siguiente con el 100% de su HP; al revivir vuelve a tirar el 30% de transformarse en Dark Wukong.',
+    multiplicaDano: 3,
+  },
+  movimientos: MOVIMIENTOS,
+};
+
 __e.default = {
   id: 'wukong',
   franquicia: 'Black Myth: Wukong', grupos: ['dioses', 'guerreros'],   // campaña: temas de las etapas
@@ -4829,34 +4891,9 @@ __e.default = {
     desc: 'Todos los aliados tienen +15% de Velocidad.',
     bonoStat: { spdPct: .15 },
   },
-  pasiva: {
-    nombre: 'Wukong Invencible',
-    desc: 'Cuando muere, revive al final de la ronda siguiente con el 100% de su HP. Sin límite de veces por partida.',
-    revivir: { rondaSiguiente: true, ilimitado: true, hp: 1 },
-  },
-  movimientos: [
-    {
-      categoria: 'basico', nombre: '¡Te tengo!', objetivo: 'enemigo', estilo: 'melee', color: 0xfbbf24,
-      pct: .7, escala: 'dano', cd: 0,
-      desc: 'Causa 70% con 25% de probabilidad de Aturdir (50% si el enemigo tiene algún buff).',
-      efectos: [{ accion: { tipo: 'efecto', id: 'stun', prob: .25, probSiConBuff: .50 } }],
-    },
-    {
-      categoria: 'especial', nombre: 'Bastón Prodigioso', objetivo: 'enemigo', estilo: 'melee', color: 0xf59e0b,
-      pct: 1.05, escala: 'dano', cd: 3, ignoraArmadura: .50, sinCritico: true, sobrante: true,
-      desc: 'Causa 105%, ignora 50 puntos de Armadura y no puede ser crítico. Si el objetivo muere, el daño sobrante pasa a otro enemigo. Si sobrevive y tiene algún buff, recibe Mega Aturdimiento (siempre entra).',
-      efectos: [{ condicion: { objetivoConBuff: true }, accion: { tipo: 'efecto', id: 'stun', mega: true, irresistible: true } }],
-    },
-    {
-      categoria: 'over', nombre: 'Ahora Nos Ves', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfde68a,
-      pct: .85, escala: 'dano', cd: 4,
-      desc: 'Antes de atacar, le roba todos los buffs a todos los enemigos. Causa 85% a todos y les aplica Bloquear Buffs (2 rondas).',
-      efectos: [
-        { cuando: 'antes', accion: { tipo: 'robarBuffs', cantidad: 99 } },
-        { accion: { tipo: 'efecto', id: 'blockBuffs', dur: 2 } },
-      ],
-    },
-  ],
+  pasiva: PASIVA,
+  movimientos: MOVIMIENTOS,
+  transformacion: darkWukong,
 };
 
 
@@ -8777,7 +8814,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 16;
+const REGLAS_RAID = 17;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;

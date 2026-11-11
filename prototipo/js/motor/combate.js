@@ -307,7 +307,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       hp: Math.max(0, p.hp), maxHp: p.barra?.total || maxHp(p), escudo: p.escudo, muerto: p.muerto, esLider: p.esLider,
       stats: stats(p), desglose: desglose(p), estados: vistaEstados(p), cds: { ...p.cds }, silenciado: get(p, 'silence')?.categoria || null, bonos: { ...p.bonos }, inmune: p.inmune,
       invocaciones: todos(p, 'summon').map(e => ({ key: e.key, dur: e.dur, fresca: !!e.fresca, max: INVOCACIONES[e.key].dur })),
-      forma: p.forma ? { nombre: p.forma.nombre, imagen: p.forma.imagen, emoji: p.forma.emoji, color: p.forma.color, turnos: p.forma.turnos, total: p.forma.total, permanente: !!p.forma.permanente } : null,
+      forma: p.forma ? { nombre: p.forma.nombre, imagen: p.forma.imagen, emoji: p.forma.emoji, color: p.forma.color, turnos: p.forma.turnos, total: p.forma.total, permanente: !!p.forma.permanente, hastaMorir: !!p.forma.hastaMorir } : null,
       transformacion: p.transformacion ? { nombre: p.transformacion.nombre, pasiva: p.transformacion.pasiva?.nombre, movimientos: p.transformacion.movimientos.map(m => m.nombre) } : null,
       movs: p.movimientos, pasiva: p.pasiva, jefe: p.jefe ? { furia: p.jefe.furia } : null,
     };
@@ -477,7 +477,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (p.inmune && !p.recienLiberado) p.inmune = false;
     p.recienLiberado = false;
     for (const e of todos(p, 'summon')) e.fresca = false;
-    if (p.forma && !p.forma.permanente && !p.muerto) {   // la forma dura N turnos propios (el turno en que se transforma no cuenta)
+    if (p.forma && !p.forma.permanente && !p.forma.hastaMorir && !p.muerto) {   // la forma dura N turnos propios (el turno en que se transforma no cuenta)
       if (p.forma.recien) p.forma.recien = false;
       else if (--p.forma.turnos <= 0) revertir(p);
       else emitir('actualizar', {}, p);
@@ -799,6 +799,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     x.hp = maxHp(x) * (hpPct ?? x.pasiva?.revivir?.hp ?? 1);
     if (x.pasiva?.rival) elegirRival(x);
     emitir('revivir', { a: x.uid, nombre: x.pasiva?.revivir && hpPct == null ? x.pasiva.nombre : '' }, x);
+    const ar = x.pasiva?.alRevivir;                  // pasiva "alRevivir { prob, accion }": al revivir (por cualquier medio) tira la probabilidad (p. ej. Dark Wukong)
+    if (ar && !x.muerto && rng() < (ar.prob ?? 1)) {
+      emitir('pasiva', { id: x.uid, nombre: x.pasiva.nombre });
+      for (const acc of [].concat(ar.accion)) ejecutarAccion(x, acc, {});
+    }
   }
   // reparto del daño de un DoT entre quienes lo aplicaron (cada acumulación recuerda su "fuente")
   const fuentesDe = estados => { const tot = estados.reduce((s, e) => s + (e.valor || 0), 0) || 1; return estados.map(e => [porUid(e.fuente), (e.valor || 0) / tot]); };
@@ -869,6 +874,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (dc) d *= 1 + (get(a, dc.efecto)?.valor || 0) * dc.pct;
     const ej = a.pasiva?.enemigoJurado;       // pasiva: +X% de daño a un personaje concreto (p. ej. Antares ↔ Sun Jin Woo)
     if (ej && t.lado !== a.lado && t.id === ej.id) d *= 1 + ej.bono;
+    if (a.pasiva?.multiplicaDano) d *= a.pasiva.multiplicaDano;   // pasiva: multiplica el daño de todos sus golpes (no DoT; p. ej. Dark Wukong ×3)
     const bc = a.pasiva?.bonoContra;          // pasiva: +X% de daño a enemigos con un efecto (p. ej. Reptile contra envenenados)
     if (bc && [].concat(bc.efecto).some(id => get(t, id))) d *= 1 + bc.pct;
     const fz = ctx.fase !== undefined ? ctx.fase : (S.actual === a && mov.categoria !== 'invocacion' ? a.faseActiva : null);   // ciclo: bono de la fase (p. ej. Camino Asura)
@@ -1191,6 +1197,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     const teniaAlMorir = new Set(t.estados.map(e => e.id));
     const rivalDe = P.filter(v => v.lado !== t.lado && !v.muerto && v.pasiva?.rival && esRival(v, t));
     if (t.convertido) t.noRevivir = true;            // esclavo de Frostmourne: si cae, queda muerto para siempre
+    if (t.forma?.hastaMorir) revertir(t);            // forma "hastaMorir": al caer vuelve a su forma base (p. ej. Dark Wukong → Wukong)
     t.muerto = true; t.hp = 0; t.escudo = 0; t.estados = [];
     emitir('muerte', { a: t.uid, invocaciones, lider: t.esLider && !!t.lider }, t);
     // pasiva "sucesorDe": si cae el líder indicado de su equipo, ese aliado surge como nuevo líder (p. ej. Obito tras Pain)
@@ -1503,7 +1510,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (spec === 'todosEnemigos') return ctx.esMovimiento ? sinEsquiva(enemigosDe(a)) : enemigosDe(a);
     if (spec === 'otrosAliados') return aliadosDe(a).filter(x => x !== a);
     if (spec.otrosAliadosAzar) return rng.barajar(aliadosDe(a).filter(x => x !== a)).slice(0, spec.otrosAliadosAzar);
-    if (spec.enemigoAzarSinMega) { const l = enemigosDe(a).filter(x => !get(x, spec.enemigoAzarSinMega)?.mega); return l.length ? [rng.elegir(l)] : []; }   // p. ej. Over de Obi-Wan
+    if (spec.enemigoAzarSinMega) { const l = enemigosDe(a).filter(x => !get(x, spec.enemigoAzarSinMega)?.mega); return spec.cantidad ? rng.barajar(l).slice(0, spec.cantidad) : l.length ? [rng.elegir(l)] : []; }   // p. ej. Over de Obi-Wan; cantidad: hasta N distintos (Dark Wukong)
     if (spec.aliadoAzarSin) { const l = aliadosDe(a).filter(x => !get(x, spec.aliadoAzarSin)); return l.length ? [rng.elegir(l)] : []; }
     if (spec === 'otrosEnemigos') return enemigosDe(a).filter(x => x !== ctx.objetivo);
     if (spec === 'otroEnemigoAzar') { const l = enemigosDe(a).filter(x => x !== ctx.objetivo); return l.length ? [rng.elegir(l)] : []; }
@@ -1971,8 +1978,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     p.transformacion = f.transformacion || null;
     if (f.lider) p.lider = f.lider;                   // la forma trae su propio líder (p. ej. Ra Modo Fénix); esLider no cambia
     if (!f.compartirCooldowns) p.cds = { basico: 0, especial: 0, over: p.movimientos.find(m => m.categoria === 'over')?.cd || 0 };   // el Over empieza con su cooldown completo (salvo formas que comparten cooldowns)
-    const permanente = !turnos;
-    p.forma = { nombre: f.nombre, imagen: f.imagen, emoji: f.emoji, color: f.color, turnos: turnos || 0, total: turnos || 0, permanente, recien: true };
+    const hastaMorir = !turnos && !!f.hastaMorir, permanente = !turnos && !hastaMorir;   // hastaMorir: dura hasta que caiga (p. ej. Dark Wukong)
+    p.forma = { nombre: f.nombre, imagen: f.imagen, emoji: f.emoji, color: f.color, turnos: turnos || 0, total: turnos || 0, permanente, hastaMorir, recien: true };
     if (permanente) p.formaBase = null;              // ya no hay vuelta atrás
     p.hp = ratio * maxHp(p);                          // se conserva el % de vida
     emitir('transformacion', { id: p.uid, nombre: f.nombre, color: f.color }, p);

@@ -716,7 +716,10 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 ## Piezas de Obi-Wan Kenobi (2026-11-10)
 - **Líder `alBloquear { acción }`**: cada vez que el líder **bloquea** un movimiento enemigo, ejecuta la acción (p. ej. General Kenobi: `reducirCooldown` 2, `azar`, a `todosAliados` = baja 2 el cooldown de un movimiento al azar de cada aliado, incluido él).
 - **`bonoPermanente` con `por: 'cargasPropias'` y `efecto`**: multiplica el bono por las cargas de ese contador de quien lo usa, sin gastarlas (p. ej. Defensa Inquebrantable: +2% HP máx. a cada aliado por carga de Soresu).
-- **Destino `{ enemigoAzarSinMega: id }`**: un enemigo al azar que no tenga la versión Mega de ese efecto (p. ej. Over de Obi-Wan: Mega Aturdimiento por cada 5 cargas consumidas).
+- **Destino `{ enemigoAzarSinMega: id, cantidad? }`**: un enemigo al azar que no tenga la versión Mega de ese efecto (p. ej. Over de Obi-Wan: Mega Aturdimiento por cada 5 cargas consumidas). Con `cantidad: N`, hasta N enemigos distintos (p. ej. Dark Wukong: 3).
+- **Pasiva `alRevivir { prob, accion }`**: cada vez que revive, por cualquier medio (su pasiva, reliquia, un aliado), tira `prob` y ejecuta la acción o lista de acciones (p. ej. Wukong: 30% de transformarse en Dark Wukong y dar Mega Aturdimiento a hasta 3 enemigos).
+- **Pasiva `multiplicaDano: N`**: multiplica el daño de todos sus golpes (no el de DoT). P. ej. Dark Wukong ×3.
+- **Transformación `hastaMorir: true`**: la forma no tiene turnos ni es permanente; dura hasta que caiga, y al caer vuelve a su forma base (antes de revisar si revive). Al transformarse, cooldowns como cualquier transformación (Over con su cooldown completo).
 - **`consumeCargas` + `bonoPorCarga`**: si el contador consumido por el movimiento da bono por carga, también se pierde el bono de las cargas gastadas.
 - **Marca `soresu`** (contador, máx. 10): +2% Armadura y +1 de Bloqueo por carga.
 
