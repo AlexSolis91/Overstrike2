@@ -579,8 +579,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   function aplicarForma(dueno, t, id) {
     const f = dueno.pasiva?.formas?.[id];
     if (!f || t.muerto) return;
+    const propia = t === dueno;                      // la elige al inicio de su turno: reemplaza la forma anterior y dura una ronda completa
+    if (propia) t.estados = t.estados.filter(e => !e.deForma);
+    const antes = new Set(t.estados);
     emitir('bonoVisible', { a: t.uid, texto: `${f.icono} ${f.nombre}` }, t);
     for (const acc of f.acciones) ejecutarAccion(t, { ...acc, a: 'propio' }, { objetivo: t, ejecutor: t });
+    if (propia) for (const e of t.estados) if (!antes.has(e)) { e.deForma = true; e.nuevo = true; }   // nuevo: no pierde duración al final de esta ronda
+    if (propia) emitir('actualizar', {}, t);
   }
   // Si nadie eligió (IA, auto-batalla o repetición sin forma): elige la que más le conviene, sin azar
   function formaAuto(p, categoria) {

@@ -1,18 +1,19 @@
 import { espacios } from '../reliquias.js';
 
 // Ficha oficial (2026-11-10, kit del usuario). Luke Skywalker, el Último Jedi (Star Wars). Tanque · Soporte: duplica su
-// Bloqueo (tope 50%) y al inicio de su turno elige una forma de combate (Djem So, Soresu o Ataru) hasta el final de la ronda.
+// Bloqueo (tope 50%) y al inicio de su turno elige una forma de combate (Djem So, Soresu o Ataru) que dura una ronda completa.
 // Cura, limpia y castiga por cada debuff limpiado. Su Over (Proyección Astral) lo vuelve inmune mientras tenga Provocación
 // y Mega Provocación, y da una forma al azar a cada aliado. Líder: Una Nueva Esperanza (+5% HP máx. por debuff recibido, sin tope).
 // Sim 2026-11-10 (IA con forma automática): 62.8% vs azar; 72.3% como líder. El usuario pidió no bajarlo sin preguntar.
-const HASTA_FIN_DE_RONDA = { dur: 1, finDeRonda: true };
+// 2026-11-11: las formas duran una ronda completa (antes se perdían si actuaba último): 68.4% vs azar; 74.9% como líder.
+const UNA_RONDA = { dur: 1 };   // elegida en su turno: dura una ronda completa (hasta que elija otra forma o termine la ronda siguiente)
 const FORMAS = {
   djemSo: { nombre: 'Djem So', icono: '⚔️', desc: 'Letalidad y Frenesí',
-    acciones: [{ tipo: 'efecto', id: 'bloodlust', ...HASTA_FIN_DE_RONDA }, { tipo: 'efecto', id: 'frenzy', ...HASTA_FIN_DE_RONDA }] },
+    acciones: [{ tipo: 'efecto', id: 'bloodlust', ...UNA_RONDA }, { tipo: 'efecto', id: 'frenzy', ...UNA_RONDA }] },
   soresu: { nombre: 'Soresu', icono: '🛡️', desc: 'Fortaleza y Escudo (20% del HP máx.)',
-    acciones: [{ tipo: 'efecto', id: 'fortaleza', ...HASTA_FIN_DE_RONDA }, { tipo: 'escudo', pct: .20, escala: 'hpMax', dur: 1 }] },
+    acciones: [{ tipo: 'efecto', id: 'fortaleza', ...UNA_RONDA }, { tipo: 'escudo', pct: .20, escala: 'hpMax', dur: 1 }] },
   ataru: { nombre: 'Ataru', icono: '🌀', desc: 'Celeridad y Esquivar',
-    acciones: [{ tipo: 'efecto', id: 'haste', ...HASTA_FIN_DE_RONDA }, { tipo: 'efecto', id: 'esquivar', ...HASTA_FIN_DE_RONDA }] },
+    acciones: [{ tipo: 'efecto', id: 'haste', ...UNA_RONDA }, { tipo: 'efecto', id: 'esquivar', ...UNA_RONDA }] },
 };
 
 export default {
@@ -33,7 +34,7 @@ export default {
   },
   pasiva: {
     nombre: 'El Último Jedi',
-    desc: 'Duplica su Bloqueo (nunca pasa del 50%). Cada vez que bloquea un ataque, 75% de probabilidad de bajar 1 turno el cooldown de Proyección Astral. Al inicio de su turno elige una forma hasta el final de la ronda: Djem So (Letalidad y Frenesí), Soresu (Fortaleza y Escudo del 20% de su HP máx.) o Ataru (Celeridad y Esquivar).',
+    desc: 'Duplica su Bloqueo (nunca pasa del 50%). Cada vez que bloquea un ataque, 75% de probabilidad de bajar 1 turno el cooldown de Proyección Astral. Al inicio de su turno elige una forma que dura una ronda completa (hasta su siguiente turno): Djem So (Letalidad y Frenesí), Soresu (Fortaleza y Escudo del 20% de su HP máx.) o Ataru (Celeridad y Esquivar).',
     multiplicaBloqueo: 2,
     gatillo: 'alBloquear', prob: .75,
     accion: { tipo: 'reducirCooldown', cantidad: 1, categorias: ['over'], a: 'propio' },

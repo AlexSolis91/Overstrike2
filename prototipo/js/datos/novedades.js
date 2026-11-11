@@ -3,6 +3,13 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-11b', fecha: '11 de noviembre de 2026', titulo: 'Formas de Luke y tienda de la Horda',
+    cambios: [
+      { tipo: 'mejora', texto: '🟢 Luke: la forma que eliges (Djem So, Soresu o Ataru) ahora dura una ronda completa, hasta su siguiente turno, aunque Luke actúe último en la ronda. Al elegir una nueva, reemplaza a la anterior.' },
+      { tipo: 'cambio', texto: '🏅 Tienda de la Horda: las reliquias Raras ahora cuestan 80 Trofeos (antes 60) y las Especiales 400 (antes 300). Las Comunes ya no se venden.' },
+    ],
+  },
+  {
     id: '2026-11-11', fecha: '11 de noviembre de 2026', titulo: 'Nueva transformación: Dark Wukong',
     cambios: [
       { tipo: 'nuevo', texto: '🔥 Wukong: cada vez que revive tiene 30% de probabilidad de volver como Dark Wukong (Transformación Sombría). Al transformarse da Mega Aturdimiento a hasta 3 enemigos al azar (siempre entra) y causa daño triple con todos sus movimientos. Si Dark Wukong cae, vuelve a ser Wukong y al revivir se tira de nuevo.' },

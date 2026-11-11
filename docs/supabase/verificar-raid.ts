@@ -1166,8 +1166,13 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
   function aplicarForma(dueno, t, id) {
     const f = dueno.pasiva?.formas?.[id];
     if (!f || t.muerto) return;
+    const propia = t === dueno;                      // la elige al inicio de su turno: reemplaza la forma anterior y dura una ronda completa
+    if (propia) t.estados = t.estados.filter(e => !e.deForma);
+    const antes = new Set(t.estados);
     emitir('bonoVisible', { a: t.uid, texto: `${f.icono} ${f.nombre}` }, t);
     for (const acc of f.acciones) ejecutarAccion(t, { ...acc, a: 'propio' }, { objetivo: t, ejecutor: t });
+    if (propia) for (const e of t.estados) if (!antes.has(e)) { e.deForma = true; e.nuevo = true; }   // nuevo: no pierde duración al final de esta ronda
+    if (propia) emitir('actualizar', {}, t);
   }
   // Si nadie eligió (IA, auto-batalla o repetición sin forma): elige la que más le conviene, sin azar
   function formaAuto(p, categoria) {
@@ -8580,18 +8585,19 @@ __m["datos/personajes/luke-skywalker.js"] = (() => { const __e: any = {};
 const { espacios } = __m["datos/reliquias.js"];
 
 // Ficha oficial (2026-11-10, kit del usuario). Luke Skywalker, el Último Jedi (Star Wars). Tanque · Soporte: duplica su
-// Bloqueo (tope 50%) y al inicio de su turno elige una forma de combate (Djem So, Soresu o Ataru) hasta el final de la ronda.
+// Bloqueo (tope 50%) y al inicio de su turno elige una forma de combate (Djem So, Soresu o Ataru) que dura una ronda completa.
 // Cura, limpia y castiga por cada debuff limpiado. Su Over (Proyección Astral) lo vuelve inmune mientras tenga Provocación
 // y Mega Provocación, y da una forma al azar a cada aliado. Líder: Una Nueva Esperanza (+5% HP máx. por debuff recibido, sin tope).
 // Sim 2026-11-10 (IA con forma automática): 62.8% vs azar; 72.3% como líder. El usuario pidió no bajarlo sin preguntar.
-const HASTA_FIN_DE_RONDA = { dur: 1, finDeRonda: true };
+// 2026-11-11: las formas duran una ronda completa (antes se perdían si actuaba último): 68.4% vs azar; 74.9% como líder.
+const UNA_RONDA = { dur: 1 };   // elegida en su turno: dura una ronda completa (hasta que elija otra forma o termine la ronda siguiente)
 const FORMAS = {
   djemSo: { nombre: 'Djem So', icono: '⚔️', desc: 'Letalidad y Frenesí',
-    acciones: [{ tipo: 'efecto', id: 'bloodlust', ...HASTA_FIN_DE_RONDA }, { tipo: 'efecto', id: 'frenzy', ...HASTA_FIN_DE_RONDA }] },
+    acciones: [{ tipo: 'efecto', id: 'bloodlust', ...UNA_RONDA }, { tipo: 'efecto', id: 'frenzy', ...UNA_RONDA }] },
   soresu: { nombre: 'Soresu', icono: '🛡️', desc: 'Fortaleza y Escudo (20% del HP máx.)',
-    acciones: [{ tipo: 'efecto', id: 'fortaleza', ...HASTA_FIN_DE_RONDA }, { tipo: 'escudo', pct: .20, escala: 'hpMax', dur: 1 }] },
+    acciones: [{ tipo: 'efecto', id: 'fortaleza', ...UNA_RONDA }, { tipo: 'escudo', pct: .20, escala: 'hpMax', dur: 1 }] },
   ataru: { nombre: 'Ataru', icono: '🌀', desc: 'Celeridad y Esquivar',
-    acciones: [{ tipo: 'efecto', id: 'haste', ...HASTA_FIN_DE_RONDA }, { tipo: 'efecto', id: 'esquivar', ...HASTA_FIN_DE_RONDA }] },
+    acciones: [{ tipo: 'efecto', id: 'haste', ...UNA_RONDA }, { tipo: 'efecto', id: 'esquivar', ...UNA_RONDA }] },
 };
 
 __e.default = {
@@ -8612,7 +8618,7 @@ __e.default = {
   },
   pasiva: {
     nombre: 'El Último Jedi',
-    desc: 'Duplica su Bloqueo (nunca pasa del 50%). Cada vez que bloquea un ataque, 75% de probabilidad de bajar 1 turno el cooldown de Proyección Astral. Al inicio de su turno elige una forma hasta el final de la ronda: Djem So (Letalidad y Frenesí), Soresu (Fortaleza y Escudo del 20% de su HP máx.) o Ataru (Celeridad y Esquivar).',
+    desc: 'Duplica su Bloqueo (nunca pasa del 50%). Cada vez que bloquea un ataque, 75% de probabilidad de bajar 1 turno el cooldown de Proyección Astral. Al inicio de su turno elige una forma que dura una ronda completa (hasta su siguiente turno): Djem So (Letalidad y Frenesí), Soresu (Fortaleza y Escudo del 20% de su HP máx.) o Ataru (Celeridad y Esquivar).',
     multiplicaBloqueo: 2,
     gatillo: 'alBloquear', prob: .75,
     accion: { tipo: 'reducirCooldown', cantidad: 1, categorias: ['over'], a: 'propio' },
@@ -8814,7 +8820,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 17;
+const REGLAS_RAID = 18;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;

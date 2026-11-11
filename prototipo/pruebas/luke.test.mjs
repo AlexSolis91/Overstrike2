@@ -90,3 +90,26 @@ test('Elegir forma la aplica en el acto (sigue esperando su movimiento) y repeti
     assert.equal(partida(true), partida(false), forma);
   }
 });
+
+test('La forma elegida dura una ronda completa (aunque Luke actúe último) y la siguiente la reemplaza', () => {
+  for (let semilla = 1; semilla <= 12; semilla++) {
+    const c = combate(LUKE, RIVAL, { semilla });
+    jugar(c, cc => cc.esperando?.id === luke(cc).uid);
+    const l = luke(c);
+    c.elegirForma('ataru');
+    let r = c.actuar({ categoria: 'basico', objetivo: l.uid });
+    const rnd = azar(semilla);
+    let rondas = 0, q = 0;
+    while (!r.fin && q++ < 200 && !l.muerto) {
+      if (c.esperando?.id === l.uid) break;        // su siguiente turno: aún debe tener Ataru
+      r = c.actuar(elegirIA(c, rnd));
+      if ((r.eventos || []).some(e => e.t === 'ronda')) rondas++;
+      if (c.esperando?.id !== l.uid && !l.muerto && rondas <= 1 && !l.estados.some(e => e.id === 'stun' || e.id === 'freeze'))
+        assert.ok(estado(l, 'esquivar') || l.estados.some(e => e.id === 'haste'), `semilla ${semilla}: perdió Ataru antes de su siguiente turno`);
+    }
+    if (r.fin || l.muerto || c.esperando?.id !== l.uid) continue;
+    c.elegirForma('soresu');
+    assert.ok(!estado(l, 'esquivar'), 'la forma nueva reemplaza a la anterior');
+    assert.ok(estado(l, 'fortaleza'));
+  }
+});
