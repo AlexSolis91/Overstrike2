@@ -216,10 +216,11 @@ function htmlAccionMasiva() {
       <button class="eq-listo" data-descomponer ${marcadas.length ? '' : 'disabled'}>🧪 Descomponer ${marcadas.length} (+${num(polvo)})</button></div></div>`;
   }
   if (relModo === 'fusionar') {
-    const rz = marcadas[0]?.rarity;
+    const rz = marcadas[0]?.rarity, rzF = SIG_RAREZA[relFiltro.rareza] ? relFiltro.rareza : null;   // auto: la rareza del filtro
     return `<div class="tc-masiva"><span>Elige 10 reliquias de la misma rareza: se convierten en 1 reliquia al azar de la rareza siguiente.
-      ${rz ? `Costo: 🪙 ${num(ORO_FUSION[rz])} → 1 ${SIG_RAREZA[rz]}.` : ''}</span>
-      <div><button class="eq-btn" data-desmarcar>Ninguna</button>
+      ${rz ? `Costo: 🪙 ${num(ORO_FUSION[rz])} → 1 ${SIG_RAREZA[rz]}.` : ''}${rzF ? '' : ' <b>Filtra Comunes, Raras o Especiales</b> para elegir 10 automáticamente.'}</span>
+      <div><button class="eq-btn" data-autofusion ${rzF ? '' : 'disabled'} title="Elige las 10 de menor calidad de la rareza filtrada (sin equipadas ni con candado)">⚡ ${rzF ? `10 ${RAREZAS[rzF].plural}` : 'Auto'} de menor calidad</button>
+      <button class="eq-btn" data-desmarcar>Ninguna</button>
       <button class="eq-listo" data-fusionar ${marcadas.length === 10 ? '' : 'disabled'}>⚗️ Fusionar (${marcadas.length}/10)</button></div></div>`;
   }
   return '';
@@ -521,6 +522,15 @@ async function ejecutar(e) {
   if (b.dataset.marcar) { const id = b.dataset.marcar; if (relMarcadas.has(id)) relMarcadas.delete(id); else if (relModo !== 'fusionar' || relMarcadas.size < 10) relMarcadas.add(id); return pintar(); }
   if (b.dataset.marcartodas) { for (const r of rels) if (r.rarity === b.dataset.marcartodas && !bloqueoMasivo(r)) relMarcadas.add(r.uid); return pintar(); }
   if ('desmarcar' in b.dataset) { relMarcadas.clear(); return pintar(); }
+  if ('autofusion' in b.dataset) {             // fusión rápida: las 10 de menor calidad de la rareza (y categoría) filtrada
+    const rz = relFiltro.rareza;
+    if (!SIG_RAREZA[rz]) return;
+    relMarcadas.clear();
+    const lista = rels.filter(r => r.rarity === rz && (!relFiltro.cat || r.category === relFiltro.cat) && !bloqueoMasivo(r)).sort((a, c) => calidad(a) - calidad(c));
+    for (const r of lista.slice(0, 10)) relMarcadas.add(r.uid);
+    if (lista.length < 10) aviso(`Solo tienes ${lista.length} ${RAREZAS[rz].plural} disponibles (sin equipar y sin candado): faltan ${10 - lista.length} para fusionar.`, 'error');
+    return pintar();
+  }
   if ('descomponer' in b.dataset) {
     const ids = [...relMarcadas];
     if (!await confirmar(`¿Descomponer ${ids.length} reliquia(s)? Esto no se puede deshacer.`)) return;

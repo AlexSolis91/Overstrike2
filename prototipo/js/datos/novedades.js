@@ -3,6 +3,12 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-12', fecha: '12 de noviembre de 2026', titulo: 'Fusión rápida de reliquias',
+    cambios: [
+      { tipo: 'mejora', texto: '⚡ Reliquias → Fusionar: filtra Comunes, Raras o Especiales y toca "10 de menor calidad" para elegir de golpe las 10 peores (sin equipadas ni con candado). Puedes seguir eligiéndolas una por una si prefieres.' },
+    ],
+  },
+  {
     id: '2026-11-11c', fecha: '11 de noviembre de 2026', titulo: 'Tutorial con Thestalos',
     cambios: [
       { tipo: 'nuevo', texto: '🛡️ Thestalos, Guardián del Portal, ahora guía a los jugadores nuevos: Starter Pack, una primera batalla explicada paso a paso y un recorrido por todo el menú. Al terminarlo regala 50,000 de oro y 3 Runas de Portal (una vez por cuenta).' },
