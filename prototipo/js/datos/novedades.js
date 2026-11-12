@@ -3,8 +3,11 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
-    id: '2026-11-12', fecha: '12 de noviembre de 2026', titulo: 'Fusión rápida de reliquias',
+    id: '2026-11-12', fecha: '12 de noviembre de 2026', titulo: 'Primeros pasos, ayuda de Thestalos y fusión rápida',
     cambios: [
+      { tipo: 'nuevo', texto: '🧭 Primeros pasos: objetivos para empezar (Campaña, reliquias, ascender, Horda, Raid y Arena), cada uno con premio. Búscalo en el menú.' },
+      { tipo: 'nuevo', texto: '❓ Botón de ayuda: en cada pantalla, Thestalos te vuelve a explicar cómo funciona. Ahora también explica la ficha de campeón (ascender, estrellas moradas y Polvo Estelar, espacios y desfragmentar) y las reliquias (descomponer, fusionar y mejorar).' },
+      { tipo: 'nuevo', texto: '🎟️ El tutorial ahora te enseña la Guía de efectos en la primera batalla y te regala un Vale de sobre para abrir tu primer Unbreakable Force.' },
       { tipo: 'mejora', texto: '⚡ Reliquias → Fusionar: filtra Comunes, Raras o Especiales y toca "10 de menor calidad" para elegir de golpe las 10 peores (sin equipadas ni con candado). Puedes seguir eligiéndolas una por una si prefieres.' },
     ],
   },

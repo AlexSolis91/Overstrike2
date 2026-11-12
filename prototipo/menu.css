@@ -1265,3 +1265,16 @@ body.tuto-starter #starter-x { display: none; }
   .tuto-premio-item { min-width: 90px; padding: 8px 10px; }
 }
 .cu-botones { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+/* Primeros pasos (js/ui/primerosPasos.js): misma ventana que Misiones */
+#pasos { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 14px; background: rgba(3, 6, 12, .8); }
+#pasos.hidden { display: none; }
+#pasos #pasos-cont { overflow-y: auto; padding: 14px; }
+#pasos-x { margin-left: auto; width: 32px; height: 32px; flex: none; border-radius: 10px; cursor: pointer; background: rgba(8, 11, 18, .9); color: var(--gold); border: 1px solid rgba(243, 213, 138, .4); }
+.pp-botones { display: flex; gap: 6px; flex: none; }
+.pp-botones button { min-width: 72px; }
+.mi-fila.pp-final { border-color: rgba(247, 201, 72, .5); background: radial-gradient(circle at 20% 50%, rgba(247, 201, 72, .12), transparent 70%); }
+/* Botón "?" de ayuda: repite el mini tutorial de la pantalla actual (js/ui/tutorial.js) */
+#tuto-ayuda { position: fixed; right: max(12px, env(safe-area-inset-right)); bottom: max(54px, calc(env(safe-area-inset-bottom) + 46px)); z-index: 50; width: 38px; height: 38px;
+  border-radius: 50%; cursor: pointer; font: 900 19px Cinzel, serif; color: #1a1205; border: 2px solid #fde68a;
+  background: radial-gradient(circle at 35% 30%, #fde68a, #c08a2c); box-shadow: 0 0 14px rgba(247, 201, 72, .55), 0 4px 10px rgba(0, 0, 0, .5); }
+#tuto-ayuda:hover { transform: scale(1.08); }

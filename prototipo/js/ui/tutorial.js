@@ -1,11 +1,14 @@
 // Tutorial con Thestalos, Guardián del Portal: un retrato que habla en un cuadro de diálogo, con el resto de la pantalla
 // oscurecida y un foco que ilumina el botón del que se habla. Textos y pasos: js/datos/tutorial.js.
-//   · Cuenta nueva: bienvenida → Starter Pack → batalla guiada (victoria segura) → recorrido del menú → regalo.
-//   · Cuenta anterior al tutorial: se le ofrece una vez el recorrido del menú (y el regalo).
-//   · Mini tutoriales: la primera vez que entra a cada pantalla o pestaña (después del recorrido inicial).
+//   · Cuenta nueva: bienvenida → Starter Pack → batalla guiada (victoria segura) → recorrido del menú → primera compra
+//     guiada con un Vale de sobre → regalo.
+//   · Cuenta anterior al tutorial: se le ofrece una vez el recorrido del menú, la compra guiada y el regalo.
+//   · Mini tutoriales: la primera vez que entra a cada pantalla, pestaña o modo (después del recorrido inicial).
+//   · Botón "?": repite el mini tutorial de la pantalla en la que está.
 // Lo visto se guarda en la cuenta (jugadores.tutorial, docs/sql/038) y, de respaldo, en este dispositivo.
 import { GUIA, BIENVENIDA, ANTES_BATALLA, BATALLA_INICIO, BATALLA_TURNO, BATALLA_VICTORIA, BATALLA_DERROTA, MENU, DESPEDIDA,
-  OFERTA_VETERANO, RIVALES_TUTORIAL, SEMILLA_TUTORIAL, MINI, PREMIO_TUTORIAL } from '../datos/tutorial.js';
+  OFERTA_VETERANO, RIVALES_TUTORIAL, SEMILLA_TUTORIAL, MINI, PREMIO_TUTORIAL,
+  COMPRA_REGALO, COMPRA_TIENDA, COMPRA_SOBRE, COMPRA_SOBRE_OTRO, COMPRA_FIN } from '../datos/tutorial.js';
 import { ICONO_RUNA_PORTAL } from '../datos/recompensas.js';
 import { porId } from '../datos/personajes/index.js';
 import { perfilActual } from './cuenta.js';
@@ -89,6 +92,8 @@ function paso(p, i, n, { saltable }) {
       Object.assign(foco.style, { left: `${rect.left - m}px`, top: `${rect.top - m}px`, width: `${rect.width + m * 2}px`, height: `${rect.height + m * 2}px` });
       r.classList.toggle('foco-abajo', rect.top + rect.height / 2 > innerHeight * .5);   // el diálogo se va arriba
     };
+    const objetivo = p.foco && $(p.foco), ro = objetivo && visible(objetivo);   // fuera de la vista (p. ej. un sobre abajo en la Tienda): se desplaza hasta él
+    if (ro && (ro.top < 0 || ro.bottom > innerHeight)) objetivo.scrollIntoView({ block: 'center' });
     colocar();
     const reloj = setInterval(colocar, 250);
     // texto letra por letra
@@ -124,6 +129,7 @@ function paso(p, i, n, { saltable }) {
     r.addEventListener('click', clic);
     addEventListener('keydown', tecla, true);
     if (p.premio) darPremio(extra);
+    if (p.vale) darVale(extra);
   });
 }
 // Una conversación: resuelve true si la terminó, false si saltó el tutorial (o el id de la opción, si el último paso tiene opciones)
@@ -133,10 +139,20 @@ async function hablar(pasos, { saltable = true, cerrar = true } = {}) {
   for (let i = 0; i < pasos.length; i++) {
     res = await paso(pasos[i], i, pasos.length, { saltable });
     if (res === 'saltar') { if (cerrar) cerrarVentana(); return false; }
+    if (pasos[i].esperar) await hastaQue(() => $(pasos[i].esperar), 15000);   // p. ej. que se abra la ventana que tocó
   }
   if (cerrar) cerrarVentana();
   return res === 'sig' ? true : res;
 }
+
+async function hastaQue(cond, maxMs) {
+  for (let t = 0; t < maxMs && !cond(); t += 150) await espera(150);
+  await espera(250);                                      // que termine de dibujarse
+}
+const esperarEvento = nombres => new Promise(ok => {
+  const f = e => { for (const n of nombres) removeEventListener(n, f); ok(e.type); };
+  for (const n of nombres) addEventListener(n, f);
+});
 
 // ---------------------------------------------------------------- regalo final (lo entrega el servidor, una vez por cuenta)
 async function darPremio(caja) {
@@ -151,6 +167,37 @@ async function darPremio(caja) {
     const ya = /Ya recibiste/i.test(D.mensajeError(e));
     caja.insertAdjacentHTML('beforeend', `<p class="tuto-nota">${ya ? 'Ya habías recibido este regalo.' : 'No se pudo entregar el regalo: ' + esc(D.mensajeError(e))}</p>`);
   }
+}
+
+// ---------------------------------------------------------------- primera compra guiada (Vale de sobre del tutorial)
+async function darVale(caja) {
+  caja.innerHTML = '<div class="tuto-premio"><div class="tuto-premio-item"><span class="tuto-premio-ico">🎟️</span><b>1</b><small>Vale de sobre</small></div></div>';
+  try {
+    await D.tutorialVale();
+    sonar('listo');
+    caja.querySelector('.tuto-premio')?.classList.add('cobrado');
+    dispatchEvent(new Event('inventario:cambio'));
+  } catch (e) {
+    const ya = /Ya recibiste/i.test(D.mensajeError(e));
+    caja.insertAdjacentHTML('beforeend', `<p class="tuto-nota">${ya ? 'Ya habías recibido este vale.' : 'No se pudo entregar el vale: ' + esc(D.mensajeError(e))}</p>`);
+  }
+}
+async function compraGuiada() {
+  if (!await hablar(COMPRA_REGALO)) return false;
+  let vales = 0;
+  try { vales = (await D.miInventario())?.vales_sobre || 0; } catch { /* sin conexión: se salta la compra */ }
+  if (!vales) return true;
+  if (!await hablar(COMPRA_TIENDA)) return false;
+  for (let intento = 0; intento < 3; intento++) {         // si cancela la confirmación, se lo vuelve a pedir (máx. 3 veces)
+    const paso = $(COMPRA_SOBRE.foco) ? COMPRA_SOBRE : $(COMPRA_SOBRE_OTRO.foco) ? COMPRA_SOBRE_OTRO : null;
+    if (!paso) break;
+    const resultado = esperarEvento(['sobre:abierto', 'sobre:cancelado']);
+    if (!await hablar([paso])) return false;
+    if (await resultado === 'sobre:abierto') { await hablar(COMPRA_FIN); break; }
+  }
+  $('#tc-x')?.click();                                    // de vuelta al menú para la despedida
+  await espera(400);
+  return true;
 }
 
 // ---------------------------------------------------------------- recorrido inicial
@@ -199,9 +246,12 @@ async function recorrido({ conBatalla = true } = {}) {
     if (document.body.dataset.pantalla !== 'menu') irA('menu');
     await espera(700);
     if (!await hablar(MENU)) return saltado();
+    if (!await compraGuiada()) return saltado();
+    forzarAyuda = true; pintarAyuda();
     await hablar(visto('premio') ? DESPEDIDA.filter(x => !x.premio) : DESPEDIDA, { saltable: false });
+    forzarAyuda = false;
     marcar('intro');
-  } finally { corriendo = false; cerrarVentana(); }
+  } finally { corriendo = false; forzarAyuda = false; cerrarVentana(); }
 }
 function saltado() {
   marcar('intro');
@@ -226,6 +276,39 @@ async function mini(clave) {
   } finally { corriendo = false; }
 }
 const PANTALLA_MINI = { equipo: 'equipo', campana: 'campana', horda: 'horda', raid: 'raid', arena: 'arena' };
+// Tienda / Colección: qué mini tutorial toca según lo que está viendo
+let vistaTC = null;
+function claveTC(v) {
+  if (!v) return null;
+  if (v.pestana === 'coleccion' && v.detalle) return v.estrellas >= 5 && visto('campeon') ? 'moradas' : 'campeon';
+  if (v.pestana === 'reliquias') return v.relSel ? 'reliquia' : v.relModo === 'descomponer' ? 'descomponer' : v.relModo === 'fusionar' ? 'fusionar' : 'reliquias';
+  return v.pestana;
+}
+
+// ---------------------------------------------------------------- botón "?": repite el mini tutorial de la pantalla actual
+function contexto() {
+  if (!$('#misiones')?.classList.contains('hidden')) return 'misiones';
+  if (!$('#tc')?.classList.contains('hidden')) return vistaTC?.pestana === 'coleccion' && vistaTC.detalle ? 'campeon' : claveTC(vistaTC);
+  const p = document.body.dataset.pantalla;
+  return p === 'menu' ? 'menu' : PANTALLA_MINI[p] || null;
+}
+const pasosDe = k => k === 'menu' ? MENU : MINI[k] || null;
+let ayuda = null, forzarAyuda = false;   // forzarAyuda: Thestalos lo señala en la despedida
+function pintarAyuda() {
+  if (!ayuda) return;
+  if (forzarAyuda) return void ayuda.classList.remove('hidden');
+  const k = contexto();
+  ayuda.classList.toggle('hidden', !perfilActual() || !disponible() || !visto('intro') || corriendo || !k || !pasosDe(k)
+    || !!document.querySelector('.dlg-fondo') || !$('#guia').classList.contains('hidden') || !$('#starter').classList.contains('hidden')
+    || !$('#pasos')?.classList.contains('hidden'));
+}
+async function repetirAyuda() {
+  const k = contexto(), pasos = k && pasosDe(k);
+  if (!pasos || corriendo) return;
+  corriendo = true; pintarAyuda();
+  try { await hablar(k === 'campeon' && vistaTC?.estrellas >= 5 ? [...MINI.campeon, ...MINI.moradas] : pasos, { saltable: false }); }
+  finally { corriendo = false; pintarAyuda(); }
+}
 
 // ---------------------------------------------------------------- arranque
 async function revisar() {
@@ -252,7 +335,12 @@ export function iniciarTutorial({ jugar: fn }) {
     olvidarMinis();
     recorrido({ conBatalla: true });
   });
-  addEventListener('tc:pestana', e => mini(e.detail));
+  addEventListener('tc:vista', e => { vistaTC = e.detail; mini(claveTC(e.detail)); });
+  ayuda = document.createElement('button');
+  ayuda.id = 'tuto-ayuda'; ayuda.className = 'hidden'; ayuda.textContent = '?'; ayuda.title = 'Ayuda de Thestalos: ¿cómo funciona esta pantalla?';
+  ayuda.addEventListener('click', repetirAyuda);
+  document.body.appendChild(ayuda);
+  setInterval(pintarAyuda, 600);
   new MutationObserver(() => { const k = PANTALLA_MINI[document.body.dataset.pantalla]; if (k) mini(k); })
     .observe(document.body, { attributes: true, attributeFilter: ['data-pantalla'] });
   const mis = $('#misiones');

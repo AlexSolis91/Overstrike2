@@ -27,6 +27,9 @@ export const configSobres = () => q(sb => sb.from('sobres_config').select('id, a
 export const abrirStarter = id => rpc('abrir_starter', { p_starter: id });
 export const tutorialMarcar = clave => rpc('tutorial_marcar', { p_clave: clave });   // docs/sql/038_tutorial.sql
 export const tutorialPremio = () => rpc('tutorial_premio');
+export const tutorialVale = () => rpc('tutorial_vale');                     // docs/sql/040
+export const primerosPasosEstado = () => rpc('primeros_pasos_estado');
+export const primerosPasosCobrar = clave => rpc('primeros_pasos_cobrar', { p_clave: clave });
 export const abrirSobre = id => rpc('abrir_sobre', { p_sobre: id });
 export const ascender = c => rpc('ascender', { p_campeon: c });
 export const desbloquearEspacio = (c, con, espacio) => rpc('desbloquear_espacio', { p_campeon: c, p_con: con, p_espacio: espacio });

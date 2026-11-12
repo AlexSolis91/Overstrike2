@@ -41,6 +41,7 @@ import { liga } from './datos/arena.js';
 import { confirmar, elegirOpcion } from './ui/dialogo.js';
 import { iniciarNovedades, revisarNovedades } from './ui/novedades.js';
 import { iniciarTutorial, tutorialEnBatalla, finBatallaTutorial } from './ui/tutorial.js';
+import { iniciarPrimerosPasos } from './ui/primerosPasos.js';
 
 const { gsap } = window;
 const $ = s => document.querySelector(s);
@@ -1056,6 +1057,7 @@ iniciarArena({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 iniciarSocial({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 iniciarActualizacion();
 iniciarTutorial({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
+iniciarPrimerosPasos();
 let pendiente = null;
 try { pendiente = JSON.parse(sessionStorage.getItem('os2-partida') || 'null'); sessionStorage.removeItem('os2-partida'); } catch (e) { /* sin almacenamiento */ }
 const eqs = pendiente && [pendiente.jugador.map(porId), pendiente.rival.map(porId)];

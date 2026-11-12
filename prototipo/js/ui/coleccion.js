@@ -402,7 +402,8 @@ function pintar() {
   pintarInventario();
   for (const b of document.querySelectorAll('.tc-tabs button')) b.classList.toggle('on', b.dataset.tab === pestana);
   $('#tc-cont').innerHTML = pestana === 'tienda' ? htmlTienda() : pestana === 'portal' ? htmlPortal() : pestana === 'reliquias' ? htmlReliquias() : pestana === 'recetas' ? htmlForja() : htmlColeccion();
-  dispatchEvent(new CustomEvent('tc:pestana', { detail: pestana }));   // mini tutorial de cada pestaña
+  const vista = { pestana, detalle: pestana === 'coleccion' && !!detalle, estrellas: detalle ? col.get(detalle)?.estrellas ?? 0 : 0, relModo, relSel: pestana === 'reliquias' && !!relSel };
+  dispatchEvent(new CustomEvent('tc:vista', { detail: vista }));   // mini tutoriales (js/ui/tutorial.js)
 }
 
 export async function abrirTC(tab = 'tienda') {
@@ -476,12 +477,14 @@ async function abrirConTicket() {
 
 async function abrirConVale(id) {
   const s = SOBRES[id];
-  if (!await confirmar(`¿Usar 1 vale para abrir ${s.nombre}? (Te quedan ${inv.vales_sobre})`)) return;
-  await accion(async () => {
+  let abierto = false;
+  if (await confirmar(`¿Usar 1 vale para abrir ${s.nombre}? (Te quedan ${inv.vales_sobre})`)) await accion(async () => {
     const ids = await D.abrirSobreVale(id);
     await revelarCartas({ sobre: s, campeones: fichas(ids), nuevos: nuevosDe(ids) });
+    abierto = true;
     await recargar(); pintar();
   });
+  dispatchEvent(new Event(abierto ? 'sobre:abierto' : 'sobre:cancelado'));   // compra guiada del tutorial
 }
 
 async function ejecutar(e) {

@@ -28,7 +28,11 @@ export const BATALLA_TURNO = [
   { texto: 'El *Básico* se usa siempre. El *Especial* y el *Over* son más poderosos, pero después de usarlos tienen que recargarse unas rondas (su *cooldown*).', foco: '#actionbar' },
   { texto: 'Toca un movimiento y luego toca la carta del enemigo al que quieres atacar. Si el movimiento es para aliados o para todos, se usa directo.' },
   { texto: 'Toca cualquier carta para ver su ficha: vida, estadísticas, movimientos y los *buffs* (mejoras) o *debuffs* (castigos) que tenga encima.' },
-  { texto: '¿No sabes qué hace un efecto? Aquí está la *Guía* con todos los buffs y debuffs del juego.', foco: '#btn-guia' },
+  { texto: '¿No sabes qué hace un efecto? Para eso está la *Guía*. ¡Tócala!', foco: '#btn-guia', clic: true, esperar: '#guia:not(.hidden)' },
+  { texto: 'A la izquierda están los *buffs*: mejoras que reciben tus campeones, como más daño, escudos o curación. Los buffs a tus aliados siempre entran.', foco: '#gu-buffs' },
+  { texto: 'A la derecha, los *debuffs*: castigos como Veneno, Quemadura o Aturdimiento. Para entrar tiran *Puntería contra Resistencia*, así que a veces fallan.', foco: '#gu-debuffs' },
+  { texto: 'Si ves un ícono que no conoces, búscalo aquí por su nombre.', foco: '#gu-buscar' },
+  { texto: 'Ciérrala con la ✕ y volvamos a la pelea.', foco: '#gu-x', clic: true, esperar: '#guia.hidden' },
   { texto: 'Y si quieres que la batalla se juegue sola, activa el modo *Auto*. ¡Ahora sí: a pelear!', foco: '#btn-auto' },
 ];
 export const BATALLA_VICTORIA = [
@@ -51,9 +55,23 @@ export const MENU = [
   { texto: 'Aquí se anuncian las *Novedades*: nuevos campeones, cambios y mejoras.', foco: '#btn-novedades' },
   { texto: 'Y aquí puedes chatear con otros guardianes y desafiarlos.', foco: '#soc-abrir' },
 ];
+// Primera compra guiada: 1 Vale de sobre (lo da el servidor, una vez por cuenta) para abrir Unbreakable Force sin gastar oro
+export const COMPRA_REGALO = [
+  { texto: 'Antes de terminar, te regalo un *Vale de sobre* para que abras tu primer sobre sin gastar oro.', vale: true },
+];
+export const COMPRA_TIENDA = [
+  { texto: 'Entra a la *Tienda*.', foco: '#btn-tienda', clic: true, esperar: '#tc:not(.hidden) [data-vale]' },
+];
+export const COMPRA_SOBRE = { texto: 'Este es *Unbreakable Force*: ¡puede traer a cualquier campeón del juego! Toca *Usar vale* para abrirlo.', foco: '[data-vale="unbreakable"]', clic: true };
+export const COMPRA_SOBRE_OTRO = { texto: 'Toca *Usar vale* para abrir este sobre sin gastar oro.', foco: '[data-vale]', clic: true };
+export const COMPRA_FIN = [
+  { texto: '¡Excelente! Los campeones nuevos van a tu *Colección*. Si te sale uno que ya tienes, recibes una *copia* para subirle estrellas.' },
+];
 export const DESPEDIDA = [
   { texto: 'Por cumplir tu primera misión, acepta este regalo del Portal.', premio: true },
-  { texto: 'Cada vez que entres a un lugar nuevo, apareceré para explicarte cómo funciona. ¡Las dimensiones cuentan contigo, guardián!' },
+  { texto: 'Te dejé unos *Primeros pasos*: objetivos sencillos para conocer el juego, cada uno con su premio.', foco: '#btn-pasos' },
+  { texto: 'Cada vez que entres a un lugar nuevo apareceré para explicarte cómo funciona. Y si olvidas algo, toca este botón *?* en cualquier pantalla.', foco: '#tuto-ayuda' },
+  { texto: '¡Las dimensiones cuentan contigo, guardián!' },
 ];
 // Jugadores que ya tenían cuenta antes del tutorial: se les ofrece el recorrido del menú (sin batalla), una sola vez
 export const OFERTA_VETERANO = '¡Hola, guardián! Soy Thestalos, Guardián del Portal. ¿Quieres un recorrido rápido por el juego? Al terminarlo te daré un regalo.';
@@ -107,14 +125,42 @@ export const MINI = {
   coleccion: [
     { texto: 'Tu *Colección*: todos tus campeones y los que te faltan.' },
     { texto: 'Toca a un campeón para ver su ficha, subirle *estrellas* con copias y equiparle *reliquias*.' },
-    { texto: 'Las copias que sobran de un campeón al máximo se pueden *desfragmentar* para conseguir otros recursos.' },
+    { texto: 'Las copias que no vas a usar se pueden *desfragmentar*: se convierten en fragmentos de *Runa de Invocación* para el Portal.' },
   ],
   portal: [
     { texto: 'El *Portal de Invocación*: con una *Runa de Invocación* eliges exactamente al campeón que quieres traer.' },
   ],
   reliquias: [
     { texto: 'Las *Reliquias* son equipo para tus campeones: armas, armaduras y accesorios que suben sus estadísticas.' },
-    { texto: 'Su rareza va de *Común* a *Legendaria*. Puedes mejorarlas, fusionarlas o descomponerlas.' },
+    { texto: 'Su rareza va de *Común* a *Legendaria*. Toca una para ver su detalle y *mejorarla*.' },
+    { texto: 'Con estos botones cambias de modo: *Descomponer* las rompe para obtener Polvo Arcano y *Fusionar* junta 10 para conseguir una mejor.', foco: '.tc-herr' },
+  ],
+  // ---- detalle de un campeón (Colección)
+  campeon: [
+    { texto: 'Esta es la ficha de tu campeón. Aquí ves de qué *sobres* puede salir y que también se consigue en el *Portal de Invocación*.', foco: '.tc-obtencion' },
+    { texto: '*Ascender*: con copias repetidas del campeón subes sus estrellas. Cada estrella da +3% de Vida, Daño y Velocidad (la 1★ cuesta 1 copia, la 2★ 2 copias, y así).', foco: '.tc-acciones section:nth-child(1)' },
+    { texto: '*Espacios de reliquias*: todos empiezan con Arma, Equipación y Accesorio. Con oro abres 3 espacios extra para equiparle más reliquias.', foco: '.tc-acciones section:nth-child(2)' },
+    { texto: '*Desfragmentar*: las copias que no vas a usar se convierten en fragmentos de *Runa de Invocación*. Con 50 formas 1 Runa para traer al campeón que quieras desde el Portal.', foco: '.tc-acciones section:nth-child(3)' },
+    { texto: 'Más abajo están sus estadísticas, sus espacios para equiparle reliquias y todas sus habilidades.' },
+  ],
+  moradas: [
+    { texto: '¡Este campeón ya tiene 5 estrellas! Ahora siguen las *estrellas moradas*: cada una da +5% de Vida, Daño y Velocidad.', foco: '.tc-acciones section:nth-child(1)' },
+    { texto: 'Cada estrella morada cuesta copias y *Polvo Estelar*. Lo consigues en los cofres del *Jefe de Raid*, en las oleadas de jefe de la *Horda* y en los premios de temporada de la *Arena*.', foco: '#tc-inv' },
+  ],
+  // ---- modos de la pestaña Reliquias
+  descomponer: [
+    { texto: '*Descomponer* rompe las reliquias que no usas y te da *Polvo Arcano*: Común 1, Rara 5, Especial 20 y Épica 100.' },
+    { texto: 'Toca las que quieres romper, o usa estos botones para elegir todas las Comunes o todas las Raras de golpe.', foco: '[data-marcartodas]' },
+    { texto: 'Las reliquias *equipadas* o con *candado* 🔒 nunca se rompen. El Polvo Arcano sirve para *mejorar* los valores de tus reliquias.' },
+  ],
+  fusionar: [
+    { texto: '*Fusionar*: 10 reliquias de la misma rareza se convierten en 1 reliquia al azar de la rareza siguiente (Común → Rara → Especial → Épica). Cuesta un poco de oro.' },
+    { texto: 'Filtra una rareza y toca este botón para elegir de golpe las *10 de menor calidad*. También puedes elegirlas una por una.', foco: '[data-autofusion]' },
+  ],
+  reliquia: [
+    { texto: 'Este es el detalle de tu reliquia: sus valores y el campeón que la tiene equipada.' },
+    { texto: '*Mejorar*: gasta *Polvo Arcano* para volver a sortear un valor y buscar uno mejor.', foco: '.tc-mejorar' },
+    { texto: 'Ponle *candado* 🔒 a tus mejores reliquias para que nunca se descompongan ni se fusionen por accidente.', foco: '[data-candado]' },
   ],
   recetas: [
     { texto: 'La *Forja de los Dioses*: junta las Épicas de una receta para forjar una reliquia *Legendaria*.' },

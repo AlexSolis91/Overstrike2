@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { crearCombate, elegirIA, azar } from './util.mjs';
 import { OFICIALES } from '../js/datos/personajes/index.js';
-import { RIVALES_TUTORIAL, SEMILLA_TUTORIAL, PREMIO_TUTORIAL, MINI, BIENVENIDA, MENU } from '../js/datos/tutorial.js';
+import { RIVALES_TUTORIAL, SEMILLA_TUTORIAL, PREMIO_TUTORIAL, MINI, BIENVENIDA, MENU, BATALLA_TURNO, DESPEDIDA, COMPRA_TIENDA } from '../js/datos/tutorial.js';
+import { PRIMEROS_PASOS } from '../js/datos/primerosPasos.js';
 
 test('La batalla del tutorial se gana con cualquier equipo de 5 (IA, semilla fija)', () => {
   const lista = OFICIALES.filter(p => !p.id.startsWith('de-prueba'));
@@ -26,4 +27,21 @@ test('El regalo del tutorial del cliente es el mismo que entrega el SQL', () => 
 
 test('Todos los pasos tienen texto', () => {
   for (const p of [...BIENVENIDA, ...MENU, ...Object.values(MINI).flat()]) assert.ok(typeof p.texto === 'string' && p.texto.length > 10);
+});
+
+test('Primeros pasos: los premios y las claves del cliente son los mismos que en el SQL', () => {
+  const sql = readFileSync(new URL('../../docs/sql/040_tutorial_vale_primeros_pasos.sql', import.meta.url), 'utf8');
+  for (const p of PRIMEROS_PASOS) {
+    assert.ok(sql.includes(`when '${p.clave}' then '${JSON.stringify(p.premio)}'::jsonb`), `premio de ${p.clave}`);
+    assert.ok(sql.includes(`when '${p.clave}' then exists`) || p.clave === 'todos', `revisión de ${p.clave}`);
+  }
+  const orden = sql.match(/unnest\(array\[([^\]]+)\]\)/)[1].match(/'([a-z0-9]+)'/g).map(x => x.slice(1, -1));
+  assert.deepEqual(orden, PRIMEROS_PASOS.map(p => p.clave));
+});
+
+test('Los pasos que piden tocar un botón tienen foco (y los que abren algo, qué esperar)', () => {
+  for (const p of [...BATALLA_TURNO, ...COMPRA_TIENDA, ...DESPEDIDA, ...Object.values(MINI).flat()]) {
+    if (p.clic) assert.ok(p.foco, p.texto);
+    if (p.esperar) assert.ok(p.clic, p.texto);
+  }
 });
