@@ -13,7 +13,7 @@ export const NOVEDADES = [
     id: '2026-11-11b', fecha: '11 de noviembre de 2026', titulo: 'Formas de Luke y tienda de la Horda',
     cambios: [
       { tipo: 'mejora', texto: '🟢 Luke: la forma que eliges (Djem So, Soresu o Ataru) ahora dura una ronda completa, hasta su siguiente turno, aunque Luke actúe último en la ronda. Al elegir una nueva, reemplaza a la anterior.' },
-      { tipo: 'cambio', texto: '🏅 Tienda de la Horda: las reliquias Raras ahora cuestan 80 Trofeos (antes 60) y las Especiales 400 (antes 300). Las Comunes ya no se venden.' },
+      { tipo: 'cambio', texto: '🏅 Tienda de la Horda: las reliquias Raras ahora cuestan 100 Trofeos (antes 60) y las Especiales 400 (antes 300). Las Comunes ya no se venden.' },
     ],
   },
   {

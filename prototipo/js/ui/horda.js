@@ -19,7 +19,7 @@ let jugar = null, inv = null, record = 0, recordHist = 0, tipoRanking = 'tempora
 let abierta = null;   // partida sin terminar que se puede continuar: { id, g }
 let ranking;   // undefined = cargando · null = falta el SQL 020 · { lista, yo }
 // Tienda de la Horda (docs/sql/011 y 015): precio en Trofeos de Orco por rareza (Épicas: 1 por semana); premios de primera vez
-export const PRECIO_TROFEOS = { 'Raro': 80, 'Especial': 400, 'Épico': 1500 };   // sin Comunes desde 2026-11-11 (docs/sql/037)
+export const PRECIO_TROFEOS = { 'Raro': 100, 'Especial': 400, 'Épico': 1500 };   // sin Comunes desde 2026-11-11 (docs/sql/037)
 // Lunes de esta semana en hora de México (igual que el servidor), como 'AAAA-MM-DD'
 const lunesMx = () => { const h = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' })); h.setDate(h.getDate() - (h.getDay() + 6) % 7);
   return `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-${String(h.getDate()).padStart(2, '0')}`; };
