@@ -1610,6 +1610,14 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       t.cdLiderMov = k;
       if (rng() < cl.prob) ejecutarAccion(l, { tipo: 'sumarCooldown', cantidad: cl.cantidad || 1, categorias: cl.categorias, a: 'objetivo' }, { objetivo: t });
     }
+    // líder "efectoAlGolpear { id, prob }": cada movimiento de un aliado (de campeón, también de área) tiene prob de aplicar ese debuff a
+    // cada enemigo que golpea (una tirada por movimiento y objetivo; luego tira Puntería). P. ej. Padmé: 10% de Confusión
+    if (t.lado !== a.lado && !t.muerto && CATEGORIAS.includes(mov.categoria)) for (const l of lideresDe(a)) {
+      const ea = l.lider?.efectoAlGolpear, k = `${movId}:${l.uid}`;
+      if (!ea || t.efLiderMov === k) continue;
+      t.efLiderMov = k;
+      if (rng() < ea.prob) intentarEfecto(a, t, { id: ea.id, ...(ea.dur ? { dur: ea.dur } : {}) });
+    }
     if (t.lado !== a.lado && aHp + aEsc > 0) pasivas(t, 'alRecibirGolpe', { atacante: a, recibido: aHp + aEsc });   // p. ej. Doom
     if (aEsc > 0) perdioEscudo(t);
     if (t.hp <= 0) {
@@ -2087,6 +2095,14 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (acc.cantidad && deb.length > acc.cantidad) deb = rng.barajar(deb).slice(0, acc.cantidad);
     t.estados = t.estados.filter(e => !deb.includes(e));
     emitir('limpieza', { de: a.uid, a: t.uid, n: deb.length }, t);
+    // pasiva "devolverLimpiados": cada debuff que limpia de un aliado se lo pone (misma intensidad y duración) a un enemigo al azar,
+    // con su Tirada de Puntería. Las copias no se vuelven a copiar. P. ej. Padmé (Negociaciones Hostiles)
+    if (a.pasiva?.devolverLimpiados && t.lado === a.lado) for (const e of deb) reacciones.push(() => {
+      const d = !a.muerto && rng.elegir(enemigosDe(a));
+      if (!d) return;
+      emitir('bonoVisible', { a: a.uid, texto: a.pasiva.textoDevolver || '↩️ ¡Devuelto!' }, a);
+      intentarEfecto(a, d, { ...copiaDe(e), copiaLider: true });
+    });
     return deb.length;
   }
   function disipar(a, t, acc) {
@@ -2096,6 +2112,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     let n = 0;
     for (const b of buf) if (acc.sinTirada || rng() < probAplicar(sa.acc, st.res)) { quitar(t, b); n++; }   // sinTirada: quita sin tirar Puntería
     emitir('disipar', { de: a.uid, a: t.uid, n }, t);
+    return n;
   }
 
   // ================================================================ acciones universales
@@ -2300,7 +2317,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           }
           break;
         }
-        case 'disipar': disipar(a, t, acc); break;
+        case 'disipar': { const n = disipar(a, t, acc); ctx.disipados = (ctx.disipados || 0) + n; if (ctx.acumMov) ctx.acumMov.disipados = (ctx.acumMov.disipados || 0) + n; break; }   // efectos 'final': curar porCada 'disipados' (todo el movimiento)
         case 'robarHP': robarHP(a, t, acc.pct); break;
         case 'robarVelocidad': {       // roba % de Velocidad al objetivo (permanente) y se la suma, hasta un tope total
           const queda = (acc.tope ?? 1) - (a.velRobada || 0);
@@ -2439,6 +2456,11 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         case 'danoEfecto': danoEfecto(a, t, (ctx.dano || 0) * acc.fraccion, 0xc084fc); break;
         case 'sumarCooldown': {        // +N turnos de cooldown a uno al azar de esos movimientos del objetivo (p. ej. El Reino de las Sombras)
           const cats = (acc.categorias || CATEGORIAS).filter(c => t.movimientos.some(m => m.categoria === c));
+          if (acc.todas) {                   // todas: a cada uno de esos movimientos (p. ej. Voz de la República de Padmé)
+            for (const c of cats) t.cds[c] = (t.cds[c] || 0) + (acc.cantidad || 1);
+            if (cats.length) emitir('bonoVisible', { a: t.uid, texto: `⏳ +${acc.cantidad || 1} cooldown` }, t);
+            break;
+          }
           const c = rng.elegir(cats); if (!c) break;
           t.cds[c] = (t.cds[c] || 0) + (acc.cantidad || 1);
           emitir('bonoVisible', { a: t.uid, texto: `⏳ ${NOMBRE_CAT[c]} +${acc.cantidad || 1} cooldown` }, t);
@@ -2545,7 +2567,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (pa.filtro?.en === 'enemigos' && (!ctx.objetivo || ctx.objetivo.lado === p.lado)) return;
     if (pa.filtro?.en === 'propio' && ctx.objetivo !== p) return;      // solo cuando le pasa a él mismo (p. ej. su propio Veneno lo daña)
     if (pa.filtro?.categorias && !pa.filtro.categorias.includes(ctx.categoria)) return;
-    if (pa.filtro?.efectos && !pa.filtro.efectos.includes(ctx.efecto)) return;            // gatillos con efecto (p. ej. alEnemigoRecibeEfecto)
+    if (pa.filtro?.efectos && !pa.filtro.efectos.includes(ctx.efecto)) return;
+    if (pa.filtro?.tipoEfecto && EFECTOS[ctx.efecto]?.tipo !== pa.filtro.tipoEfecto) return;   // p. ej. cualquier buff (Padmé)            // gatillos con efecto (p. ej. alEnemigoRecibeEfecto)
     if (pa.si && ![].concat(pa.si).every(c => cumple(c, { ...ctx, ejecutor: p, objetivo: ctx.objetivo || p }))) return;   // si: condiciones (todas) del dueño (p. ej. HP bajo y 10 marcas)
     if (pa.filtro?.objetivoTiene && !(ctx.objetivo && get(ctx.objetivo, pa.filtro.objetivoTiene))) return;
     if (pa.filtro?.teniaAlMorir && !ctx.teniaAlMorir?.has(pa.filtro.teniaAlMorir)) return;
@@ -2752,7 +2775,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       if (t.muerto) return;
       for (const ef of mov.efectos || []) {
         if (ef.cuando && ef.cuando !== 'objetivo') continue;
-        const c = { objetivo: t, atacante: a, ejecutor: a, hpObjetivoAntes, cargas: ctx.cargas, teniaAntes: ctxGolpe.teniaAntes };
+        const c = { objetivo: t, atacante: a, ejecutor: a, hpObjetivoAntes, cargas: ctx.cargas, teniaAntes: ctxGolpe.teniaAntes, acumMov: ctx.acum };
         if (cumple(ef.condicion, c)) ejecutarAccion(a, ef.accion, c);
       }
     };
@@ -2886,7 +2909,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       const sobrevivientes = [...new Set(objetivos)].filter(t => !t.muerto && t.lado !== a.lado);
       const eliminados = [...new Set(objetivos)].filter(t => t.muerto && t.lado !== a.lado && vivosAlEmpezar.has(t)).length;
       const final = {
-        ejecutor: a, sobrevivientes, eliminados, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, rompioMega: !!c.acum.rompioMega, criticos: c.acum.criticos || 0, invocaciones: invocacionesAntes, esMovimiento: true, categoriaMov: mov.categoria,
+        ejecutor: a, sobrevivientes, eliminados, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, rompioMega: !!c.acum.rompioMega, criticos: c.acum.criticos || 0, disipados: c.acum.disipados || 0, invocaciones: invocacionesAntes, esMovimiento: true, categoriaMov: mov.categoria,
         estadoDe: id => (principal && !principal.muerto && get(principal, id)) || previos.find(e => e.id === id),
         debuffsPrevios: previos.filter(e => EFECTOS[e.id]?.tipo === 'debuff'),
       };
@@ -8661,6 +8684,69 @@ __e.default = {
 
 return __e; })();
 
+__m["datos/personajes/padme-amidala.js"] = (() => { const __e: any = {};
+const { espacios } = __m["datos/reliquias.js"];
+
+// Ficha oficial (2026-11-13, kit del usuario; estadísticas a criterio). Padmé Amidala, Reina de Naboo y senadora (Star Wars).
+// Soporte · Control: no ataca. Cura y limpia a sus aliados, y lo que limpia se lo devuelve a un enemigo; castiga los buffs
+// enemigos con Confusión y los disipa para curar a su equipo. Su Over adelanta los turnos de su equipo y atrasa los del rival.
+// Líder (Reina de Naboo): los ataques de su equipo pueden confundir.
+__e.default = {
+  id: 'padme-amidala',
+  franquicia: 'Star Wars', grupos: ['jedi'],   // campaña: temas de las etapas
+  nombre: 'Padmé Amidala',
+  rol: 'Support', rolSecundario: 'Control',
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
+  emoji: '👑', color: '#f59e0b', imagen: 'assets/personajes/padme-amidala.webp',
+  base: { hp: 600, dmg: 45, spd: 98 },
+  extra: {},
+  slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
+
+  lider: {
+    nombre: 'Reina de Naboo',
+    desc: 'Cada ataque de un aliado tiene 10% de probabilidad de aplicar Confusión a cada enemigo que golpea.',
+    efectoAlGolpear: { id: 'confuse', prob: .10 },
+  },
+  pasiva: {
+    nombre: 'Negociaciones Hostiles',
+    desc: 'Cada debuff que Padmé limpia de un aliado se lo aplica a un enemigo al azar (misma intensidad y duración). Cada vez que un enemigo recibe un buff, 50% de probabilidad de aplicarle Confusión.',
+    devolverLimpiados: true, textoDevolver: '↩️ ¡Negociaciones Hostiles!',
+    gatillo: 'alEnemigoRecibeEfecto', filtro: { tipoEfecto: 'buff' }, prob: .50,
+    accion: { tipo: 'efecto', id: 'confuse', a: 'objetivo' },
+  },
+  movimientos: [
+    {
+      categoria: 'basico', nombre: 'Solución Diplomática', objetivo: 'aliado', estilo: 'support', color: 0xfde68a, cd: 0,
+      desc: 'Cura a un aliado el 10% del HP máx. de Padmé y le limpia 1 debuff.',
+      efectos: [
+        { accion: { tipo: 'curar', pct: .10, escala: 'hpMax' } },
+        { accion: { tipo: 'limpiar', cantidad: 1 } },
+      ],
+    },
+    {
+      categoria: 'especial', nombre: 'Orden de Fuego', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xf59e0b, cd: 2,
+      desc: 'Disipa 1 buff de cada enemigo. Por cada buff disipado, todos los aliados se curan el 5% del HP máx. de Padmé.',
+      efectos: [
+        { accion: { tipo: 'disipar', cantidad: 1 } },
+        { cuando: 'final', accion: { tipo: 'curar', pct: .05, escala: 'hpMax', porCada: 'disipados', a: 'todosAliados' } },
+      ],
+    },
+    {
+      categoria: 'over', nombre: 'Voz de la República', objetivo: 'propio', estilo: 'support', color: 0xfef3c7, cd: 4,
+      desc: 'Baja 2 turnos el cooldown de todos los movimientos de sus aliados (no el de su propio Over), sube 2 turnos el del Especial y el Over de todos los enemigos y da a su equipo un Escudo del 20% del HP máx. de Padmé (2 rondas).',
+      efectos: [
+        { accion: { tipo: 'reducirCooldown', cantidad: 2, a: 'otrosAliados' } },
+        { accion: { tipo: 'reducirCooldown', cantidad: 2, categorias: ['basico', 'especial'], a: 'propio' } },
+        { accion: { tipo: 'sumarCooldown', cantidad: 2, todas: true, categorias: ['especial', 'over'], a: 'todosEnemigos' } },
+        { accion: { tipo: 'escudo', pct: .20, dur: 2, a: 'todosAliados' } },
+      ],
+    },
+  ],
+};
+
+
+return __e; })();
+
 __m["datos/personajes/index.js"] = (() => { const __e: any = {};
 // Registro de personajes. Cada ficha oficial nueva se agrega aquí y aparece sola en la construcción de equipos.
 const madara = __m["datos/personajes/madara-uchiha.js"].default;
@@ -8743,8 +8829,9 @@ const sukuna = __m["datos/personajes/sukuna.js"].default;
 const anakin = __m["datos/personajes/anakin-skywalker.js"].default;
 const obiWan = __m["datos/personajes/obi-wan-kenobi.js"].default;
 const luke = __m["datos/personajes/luke-skywalker.js"].default;
+const padme = __m["datos/personajes/padme-amidala.js"].default;
 
-const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke];
+const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke, padme];
 const porId = id => OFICIALES.find(p => p.id === id);
 
 __e["OFICIALES"] = OFICIALES;
@@ -8826,7 +8913,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 19;
+const REGLAS_RAID = 20;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;

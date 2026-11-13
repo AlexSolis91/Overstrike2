@@ -3,6 +3,12 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-13e', fecha: '13 de noviembre de 2026', titulo: 'Nueva campeona: Padmé Amidala',
+    cambios: [
+      { tipo: 'nuevo', texto: '👑 Padmé Amidala (Soporte · Control), en Legendary Warriors: cura y limpia a sus aliados, devuelve los debuffs que limpia a los enemigos, confunde a quien recibe buffs y su Over adelanta los turnos de su equipo y atrasa los del rival. Líder: los ataques de su equipo pueden confundir.' },
+    ],
+  },
+  {
     id: '2026-11-13d', fecha: '13 de noviembre de 2026', titulo: 'Muzan: Forma Final con toda su vida',
     cambios: [
       { tipo: 'cambio', texto: 'Muzan Kibutsuji: la primera vez que va a caer despierta su Forma Final con el 100% de su HP (antes 15%).' },

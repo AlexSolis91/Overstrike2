@@ -1021,6 +1021,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       t.cdLiderMov = k;
       if (rng() < cl.prob) ejecutarAccion(l, { tipo: 'sumarCooldown', cantidad: cl.cantidad || 1, categorias: cl.categorias, a: 'objetivo' }, { objetivo: t });
     }
+    // líder "efectoAlGolpear { id, prob }": cada movimiento de un aliado (de campeón, también de área) tiene prob de aplicar ese debuff a
+    // cada enemigo que golpea (una tirada por movimiento y objetivo; luego tira Puntería). P. ej. Padmé: 10% de Confusión
+    if (t.lado !== a.lado && !t.muerto && CATEGORIAS.includes(mov.categoria)) for (const l of lideresDe(a)) {
+      const ea = l.lider?.efectoAlGolpear, k = `${movId}:${l.uid}`;
+      if (!ea || t.efLiderMov === k) continue;
+      t.efLiderMov = k;
+      if (rng() < ea.prob) intentarEfecto(a, t, { id: ea.id, ...(ea.dur ? { dur: ea.dur } : {}) });
+    }
     if (t.lado !== a.lado && aHp + aEsc > 0) pasivas(t, 'alRecibirGolpe', { atacante: a, recibido: aHp + aEsc });   // p. ej. Doom
     if (aEsc > 0) perdioEscudo(t);
     if (t.hp <= 0) {
@@ -1498,6 +1506,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (acc.cantidad && deb.length > acc.cantidad) deb = rng.barajar(deb).slice(0, acc.cantidad);
     t.estados = t.estados.filter(e => !deb.includes(e));
     emitir('limpieza', { de: a.uid, a: t.uid, n: deb.length }, t);
+    // pasiva "devolverLimpiados": cada debuff que limpia de un aliado se lo pone (misma intensidad y duración) a un enemigo al azar,
+    // con su Tirada de Puntería. Las copias no se vuelven a copiar. P. ej. Padmé (Negociaciones Hostiles)
+    if (a.pasiva?.devolverLimpiados && t.lado === a.lado) for (const e of deb) reacciones.push(() => {
+      const d = !a.muerto && rng.elegir(enemigosDe(a));
+      if (!d) return;
+      emitir('bonoVisible', { a: a.uid, texto: a.pasiva.textoDevolver || '↩️ ¡Devuelto!' }, a);
+      intentarEfecto(a, d, { ...copiaDe(e), copiaLider: true });
+    });
     return deb.length;
   }
   function disipar(a, t, acc) {
@@ -1507,6 +1523,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     let n = 0;
     for (const b of buf) if (acc.sinTirada || rng() < probAplicar(sa.acc, st.res)) { quitar(t, b); n++; }   // sinTirada: quita sin tirar Puntería
     emitir('disipar', { de: a.uid, a: t.uid, n }, t);
+    return n;
   }
 
   // ================================================================ acciones universales
@@ -1711,7 +1728,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           }
           break;
         }
-        case 'disipar': disipar(a, t, acc); break;
+        case 'disipar': { const n = disipar(a, t, acc); ctx.disipados = (ctx.disipados || 0) + n; if (ctx.acumMov) ctx.acumMov.disipados = (ctx.acumMov.disipados || 0) + n; break; }   // efectos 'final': curar porCada 'disipados' (todo el movimiento)
         case 'robarHP': robarHP(a, t, acc.pct); break;
         case 'robarVelocidad': {       // roba % de Velocidad al objetivo (permanente) y se la suma, hasta un tope total
           const queda = (acc.tope ?? 1) - (a.velRobada || 0);
@@ -1850,6 +1867,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'danoEfecto': danoEfecto(a, t, (ctx.dano || 0) * acc.fraccion, 0xc084fc); break;
         case 'sumarCooldown': {        // +N turnos de cooldown a uno al azar de esos movimientos del objetivo (p. ej. El Reino de las Sombras)
           const cats = (acc.categorias || CATEGORIAS).filter(c => t.movimientos.some(m => m.categoria === c));
+          if (acc.todas) {                   // todas: a cada uno de esos movimientos (p. ej. Voz de la República de Padmé)
+            for (const c of cats) t.cds[c] = (t.cds[c] || 0) + (acc.cantidad || 1);
+            if (cats.length) emitir('bonoVisible', { a: t.uid, texto: `⏳ +${acc.cantidad || 1} cooldown` }, t);
+            break;
+          }
           const c = rng.elegir(cats); if (!c) break;
           t.cds[c] = (t.cds[c] || 0) + (acc.cantidad || 1);
           emitir('bonoVisible', { a: t.uid, texto: `⏳ ${NOMBRE_CAT[c]} +${acc.cantidad || 1} cooldown` }, t);
@@ -1956,7 +1978,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (pa.filtro?.en === 'enemigos' && (!ctx.objetivo || ctx.objetivo.lado === p.lado)) return;
     if (pa.filtro?.en === 'propio' && ctx.objetivo !== p) return;      // solo cuando le pasa a él mismo (p. ej. su propio Veneno lo daña)
     if (pa.filtro?.categorias && !pa.filtro.categorias.includes(ctx.categoria)) return;
-    if (pa.filtro?.efectos && !pa.filtro.efectos.includes(ctx.efecto)) return;            // gatillos con efecto (p. ej. alEnemigoRecibeEfecto)
+    if (pa.filtro?.efectos && !pa.filtro.efectos.includes(ctx.efecto)) return;
+    if (pa.filtro?.tipoEfecto && EFECTOS[ctx.efecto]?.tipo !== pa.filtro.tipoEfecto) return;   // p. ej. cualquier buff (Padmé)            // gatillos con efecto (p. ej. alEnemigoRecibeEfecto)
     if (pa.si && ![].concat(pa.si).every(c => cumple(c, { ...ctx, ejecutor: p, objetivo: ctx.objetivo || p }))) return;   // si: condiciones (todas) del dueño (p. ej. HP bajo y 10 marcas)
     if (pa.filtro?.objetivoTiene && !(ctx.objetivo && get(ctx.objetivo, pa.filtro.objetivoTiene))) return;
     if (pa.filtro?.teniaAlMorir && !ctx.teniaAlMorir?.has(pa.filtro.teniaAlMorir)) return;
@@ -2163,7 +2186,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       if (t.muerto) return;
       for (const ef of mov.efectos || []) {
         if (ef.cuando && ef.cuando !== 'objetivo') continue;
-        const c = { objetivo: t, atacante: a, ejecutor: a, hpObjetivoAntes, cargas: ctx.cargas, teniaAntes: ctxGolpe.teniaAntes };
+        const c = { objetivo: t, atacante: a, ejecutor: a, hpObjetivoAntes, cargas: ctx.cargas, teniaAntes: ctxGolpe.teniaAntes, acumMov: ctx.acum };
         if (cumple(ef.condicion, c)) ejecutarAccion(a, ef.accion, c);
       }
     };
@@ -2297,7 +2320,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       const sobrevivientes = [...new Set(objetivos)].filter(t => !t.muerto && t.lado !== a.lado);
       const eliminados = [...new Set(objetivos)].filter(t => t.muerto && t.lado !== a.lado && vivosAlEmpezar.has(t)).length;
       const final = {
-        ejecutor: a, sobrevivientes, eliminados, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, rompioMega: !!c.acum.rompioMega, criticos: c.acum.criticos || 0, invocaciones: invocacionesAntes, esMovimiento: true, categoriaMov: mov.categoria,
+        ejecutor: a, sobrevivientes, eliminados, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, rompioMega: !!c.acum.rompioMega, criticos: c.acum.criticos || 0, disipados: c.acum.disipados || 0, invocaciones: invocacionesAntes, esMovimiento: true, categoriaMov: mov.categoria,
         estadoDe: id => (principal && !principal.muerto && get(principal, id)) || previos.find(e => e.id === id),
         debuffsPrevios: previos.filter(e => EFECTOS[e.id]?.tipo === 'debuff'),
       };
