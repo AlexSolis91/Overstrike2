@@ -13,7 +13,7 @@ const NOMBRE_CAT = { basico: 'Básico', especial: 'Especial', over: 'Over' };
 const NOMBRE_STAT = { hpPct: 'HP máx.', dmgPct: 'Daño', critDmg: 'Daño Crítico', critRate: 'Prob. Crítico', armor: 'Armadura', res: 'Resistencia', acc: 'Puntería', pen: 'Penetración de escudo' };
 const clonar = o => JSON.parse(JSON.stringify(o));
 
-// rival (opcional, p. ej. Campaña): { poder: ×HP y ×Daño, spdPct, spdPlano: [+Velocidad base por posición], sinReliquias, sinLider, jefe: { hpExtra, umbral, dmgPct, spdPct } }
+// rival (opcional, p. ej. Campaña): { poder: ×HP y ×Daño, spdPct, spdPlano: [+Velocidad base por posición], sinReliquias, sinLider, jefe: { hpExtra, umbral, dmgPct, spdPct }, hpRefJefe }
 // invertido (Arena en vivo): crea primero el equipo rival. El segundo jugador ve su equipo como "jugador" pero el motor queda en
 // el mismo orden que en la pantalla del primero (misma semilla + mismas decisiones = misma partida en las dos pantallas).
 export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival: opcionesRival = {}, invertido = false }) {
@@ -186,6 +186,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     };
   }
   const maxHp = p => stats(p).hp;
+  // HP sobre el que se calcula el daño por % de HP máx. (Bombas, DoT, Robar HP, "X% del HP máx."). Normalmente es el HP máx.;
+  // los jefes de la Horda tienen un HP de referencia más bajo (opción rival hpRefJefe) para que ese daño no los borre.
+  const hpPorcentual = p => p.hpRef ? Math.min(p.hpRef, maxHp(p)) : maxHp(p);
   // Desglose para el panel: cuánto suma o resta cada origen (se agregan por capas, en este orden)
   function desglose(p) {
     const orden = ['estrellas', 'reliquias', 'buffs', 'debuffs', 'lider', 'permanente'], capas = {}, out = {};
@@ -1095,7 +1098,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     const debil = db && [].concat(db.efecto).includes(tipo) ? 1 + db.pct : 1;
     const aura = P.reduce((m, x) => m * (x.lado !== t.lado && !x.muerto && x.pasiva?.auraDoT ? 1 + x.pasiva.auraDoT : 1), 1);   // pasiva "auraDoT": los DoT de su equipo hacen +X% (p. ej. Trunks)
     if (intocable(t)) return;
-    const d = valor * maxHp(t) * (1 - reduccion(t, 'dot')) * (ag ? 1 + ag.valor * DEBUFFS.aguja : 1) * debil * aura;
+    const d = valor * hpPorcentual(t) * (1 - reduccion(t, 'dot')) * (ag ? 1 + ag.valor * DEBUFFS.aguja : 1) * debil * aura;
     t.hp -= d;
     emitir('dot', { a: t.uid, tipo, dano: d }, t);
     recibioDano(t, d, fuente);
@@ -1109,7 +1112,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   // Robar HP: ignora Armadura y Escudo, no le afectan reducciones; cura al ladrón (lo que exceda su HP máx. se pierde).
   function robarHP(a, t, pct) {
     if (t.muerto || a.muerto || intocable(t)) return;
-    const d = pct * maxHp(t);
+    const d = pct * hpPorcentual(t);
     t.hp -= d;
     emitir('robo', { de: a.uid, a: t.uid, cantidad: d }, t);
     recibioDano(t, d, a);
@@ -1245,7 +1248,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   }
 
   function explotarBomba(t, b, soloSalpicadura) {
-    const d = b.valor * maxHp(t) * (S.factorBombas || 1);     // movimiento "potenciaBombas": las que estallan durante él hacen ×factor
+    const d = b.valor * hpPorcentual(t) * (S.factorBombas || 1);     // movimiento "potenciaBombas": las que estallan durante él hacen ×factor
     let total = 0;
     emitir('explosion', { a: t.uid, soloSalpicadura });
     if (!soloSalpicadura && !t.muerto && !intocable(t)) {
@@ -1676,7 +1679,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         case 'danoRepartido': {     // un total de daño por efecto repartido al azar (desigual) entre los enemigos
           const total = (acc.base === 'escudosEquipo' ? aliadosDe(a).reduce((s, x) => s + x.escudo, 0)
-            : acc.base === 'hpMaxEnemigos' ? enemigosDe(a).reduce((s, x) => s + maxHp(x), 0) : 0) * acc.pct;   // hpMaxEnemigos: p. ej. Lava Golem
+            : acc.base === 'hpMaxEnemigos' ? enemigosDe(a).reduce((s, x) => s + hpPorcentual(x), 0) : 0) * acc.pct;   // hpMaxEnemigos: p. ej. Lava Golem
           if (total < 1) { emitir('sinEfecto', { a: a.uid, texto: 'Sin escudos en el equipo' }); break; }
           repartirDano(a, total, acc.paquetes || 10, 0xfde68a);
           break;
@@ -1789,7 +1792,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         case 'danoPorDebuffs': {       // p. ej. Apocalipsis: 10% del HP máx. por Congelación (o Mega) y por Posesión; ignora Armadura
           const n = acc.efectos.filter(id => ctx.teniaAntes?.has(id)).length;
-          if (n) danoEfecto(a, t, n * acc.pct * maxHp(t), acc.color, { sinArmadura: true });
+          if (n) danoEfecto(a, t, n * acc.pct * hpPorcentual(t), acc.color, { sinArmadura: true });
           break;
         }
         case 'transferirBuffs': {            // quita TODOS los buffs disipables del objetivo y se los da al aliado del ejecutor en su misma posición
@@ -1826,7 +1829,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'danoSegunEnemigos': {          // daño por efecto = suma de pct × HP máx. de cada enemigo con ese efecto (p. ej. Spear)
-          const total = enemigosDe(a).filter(x => get(x, acc.efecto)).reduce((s, x) => s + maxHp(x) * acc.pct, 0);
+          const total = enemigosDe(a).filter(x => get(x, acc.efecto)).reduce((s, x) => s + hpPorcentual(x) * acc.pct, 0);
           danoEfecto(a, t, total, 0xf59e0b);
           break;
         }
@@ -1882,7 +1885,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         }
         case 'replicarDoT': {
           const e = ctx.objetivo && get(ctx.objetivo, acc.efecto);
-          if (e) danoEfecto(a, t, e.valor * acc.factor * maxHp(t), EFECTOS[acc.efecto].color);
+          if (e) danoEfecto(a, t, e.valor * acc.factor * hpPorcentual(t), EFECTOS[acc.efecto].color);
           break;
         }
         case 'propagar': {     // copia un debuff del objetivo principal en su estado actual; cada copia tira Puntería
@@ -2388,6 +2391,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (r.jefe && p.pos === 0) {                             // el Jefe: más HP y una fase de furia al bajar de cierto % de HP
       p.jefe = { furia: false, umbral: r.jefe.umbral ?? .5, dmgPct: r.jefe.dmgPct ?? .25, spdPct: r.jefe.spdPct ?? .15 };
       p.campana.hpPct = (p.campana.hpPct || 0) + (r.jefe.hpExtra ?? .5);
+      if (r.hpRefJefe) p.hpRef = p.base.hp * r.hpRefJefe;   // Horda: HP de referencia para el daño por % de HP (ver hpPorcentual)
     }
   }
   for (const p of P.filter(x => x.lado === 'rival')) prepararRival(p, opcionesRival);

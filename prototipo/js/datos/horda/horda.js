@@ -18,6 +18,11 @@ export const HORDAS = {
 // a la 20 ~12% (Kargalgan es el gran muro) y a la 30 ~3%. Las fichas se multiplican por BASE en la oleada 1.
 export const BASE = .40, CRECIMIENTO = .05;     // +5% de HP y Daño por oleada, compuesto (sin tope)
 export const poderOleada = n => BASE * Math.pow(1 + CRECIMIENTO, n - 1);
+// Jefes y mini jefes (2026-11-13): el daño por % de HP (Bombas, Veneno, Sangrado, Quemadura, "X% del HP máx."...) se calcula
+// sobre un HP de referencia = HP de su ficha × (oleada ÷ 20), mínimo su HP de ficha y nunca más que su vida real.
+// Su vida real sigue creciendo +5% por oleada + la Furia. Los orcos normales no tienen referencia (ahí destacan los DoTers).
+export const OLEADAS_REF_JEFE = 20;
+export const refJefe = n => Math.max(1, n / OLEADAS_REF_JEFE);
 // Velocidad (2026-11-08, todas las Hordas): cada 3 oleadas, cada enemigo suma +1 o +2 (al azar) a su Velocidad base, acumulado.
 // Oleada 3: +1–2 · oleada 30: +10–20 (≈ +15).
 export const CADA_VELOCIDAD = 3;
@@ -41,7 +46,7 @@ export function oleada(n, horda = HORDAS.orcos, rng = Math.random) {
     enemigos.push(id);
   }
   const p = poderOleada(n), spd = enemigos.map(() => velocidadExtra(n, rng));
-  return { n, enemigos, rango, spd, opciones: { poder: p, sinReliquias: true, sinLider: !rango, jefe: furia || undefined, spdPlano: spd } };
+  return { n, enemigos, rango, spd, opciones: { poder: p, sinReliquias: true, sinLider: !rango, jefe: furia || undefined, hpRefJefe: rango ? refJefe(n) : undefined, spdPlano: spd } };
 }
 export const defsOleada = (o, horda = HORDAS.orcos) => o.enemigos.map(id => horda.enemigos[id]);
 
