@@ -3,6 +3,12 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-13d', fecha: '13 de noviembre de 2026', titulo: 'Muzan: Forma Final con toda su vida',
+    cambios: [
+      { tipo: 'cambio', texto: 'Muzan Kibutsuji: la primera vez que va a caer despierta su Forma Final con el 100% de su HP (antes 15%).' },
+    ],
+  },
+  {
     id: '2026-11-13c', fecha: '13 de noviembre de 2026', titulo: 'Horda: jefes más resistentes al daño por %',
     cambios: [
       { tipo: 'cambio', texto: 'En la Horda, el daño por % de HP (Bombas, Veneno, Sangrado, Quemadura y similares) contra jefes y mini jefes se calcula sobre un HP de referencia: el HP base del jefe × (oleada ÷ 20). Ejemplo: Kargalgan, 2,000 en la oleada 20 y 4,000 en la 40.' },

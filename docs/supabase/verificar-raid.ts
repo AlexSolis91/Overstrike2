@@ -7189,9 +7189,9 @@ __e.default = {
   },
   pasiva: {
     nombre: 'Sangre de Muzan',
-    desc: 'Tiene Infectar permanente: quien lo golpee recibe Veneno sin tirada. La primera vez que va a caer queda con 15% de HP y despierta para siempre su Forma Final.',
+    desc: 'Tiene Infectar permanente: quien lo golpee recibe Veneno sin tirada. La primera vez que va a caer no muere: despierta para siempre su Forma Final con el 100% de su HP.',
     efectosPermanentes: ['infect'],
-    ultimoAliento: { hp: .15, transformar: true },
+    ultimoAliento: { hp: 1, transformar: true },
   },
   transformacion: muzanFormaFinal,
   movimientos: [
