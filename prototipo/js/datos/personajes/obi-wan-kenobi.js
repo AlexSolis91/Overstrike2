@@ -38,7 +38,7 @@ export default {
     {
       categoria: 'basico', nombre: 'Desvío Soresu', objetivo: 'enemigo', estilo: 'melee', color: 0x38bdf8,
       pct: .90, escala: 'hp', cd: 0,
-      desc: 'Causa 90% (escala por HP) a un enemigo con 40% de probabilidad de aplicar Agotar (2 rondas).',
+      desc: 'Causa 90% (escala por HP) a un enemigo con 40% de probabilidad de aplicar Reducción de Daño (2 rondas).',
       efectos: [{ accion: { tipo: 'efecto', id: 'agotar', dur: 2, prob: .40 } }],
     },
     {

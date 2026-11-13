@@ -193,7 +193,7 @@ export const INVOCACIONES = {
   // ---------------------------------------------------------------- Monstruos de Marik Ishtar (tabla `monstruosMarik`; Ra solo con su Over)
   revivalJam: {
     nombre: 'Revival Jam', rareza: 'Común', emoji: '👻', color: 0x60a5fa, imagen: 'assets/invocaciones/revival-jam.webp', dur: 3,
-    desc: 'Golpea 60% a un enemigo al azar y le aplica Agotar (2 rondas).',
+    desc: 'Golpea 60% a un enemigo al azar y le aplica Reducción de Daño (2 rondas).',
     acciones: [{ tipo: 'golpe', pct: .60, elegir: 'azar', efectos: [{ accion: { tipo: 'efecto', id: 'agotar', dur: 2 } }] }],
   },
   slimeEgipcio: {

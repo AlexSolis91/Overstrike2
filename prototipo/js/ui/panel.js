@@ -2,7 +2,7 @@
 import { RAREZAS, STAT_META, COSTOS_ESPACIO, calidad } from '../datos/reliquias.js';
 import { INVOCACIONES } from '../datos/invocaciones.js';
 import { ESCALADO } from '../motor/reglas.js';
-import { imgHtml } from './imagenes.js';
+import { imgHtml, icoEfecto } from './imagenes.js';
 import { hpVisible } from './graficos.js';
 
 const $ = s => document.querySelector(s);
@@ -58,7 +58,7 @@ export function renderPanel(p, v, ui) {
   }).join('');
 
   const efectos = [
-    ...v.estados.map(e => `<div class="eff ${e.tipo}"><span class="ei">${e.icono}</span><div><b>${e.nombre}</b><small>${e.texto}</small></div>
+    ...v.estados.map(e => `<div class="eff ${e.tipo}"><span class="ei">${icoEfecto(e)}</span><div><b>${e.nombre}</b><small>${e.texto}</small></div>
       <div class="tags">${e.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div></div>`),
     ...v.invocaciones.map(i => { const d = INVOCACIONES[i.key];
       return `<div class="eff buff"><span class="ei">${imgHtml(d.imagen, d.nombre) || d.emoji}</span><div><b>${d.nombre}</b> <span class="tag" style="color:${RAREZAS[d.rareza]?.color || '#94a3b8'}">${d.rareza || ''}</span><small>${d.desc || ''} · ${i.dur} ronda(s)${i.fresca ? ' · actúa desde su próximo turno' : ''}</small></div><div class="tags"><span class="tag">Invocación</span></div></div>`; }),

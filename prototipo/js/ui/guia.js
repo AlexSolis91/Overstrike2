@@ -2,6 +2,7 @@
 // Se arma sola desde EFECTOS, así que cada efecto nuevo aparece aquí sin tocar este archivo.
 import { EFECTOS } from '../motor/efectos.js';
 import { sonar } from './audio.js';
+import { icoEfecto } from './imagenes.js';
 
 const $ = s => document.querySelector(s);
 const MEGA = { stun: 'Mega Aturdimiento', freeze: 'Mega Congelación', possess: 'Mega Posesión' };
@@ -10,7 +11,7 @@ const sinAcentos = t => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 function fila([id, e]) {
   const extra = MEGA[id] ? ` <small>· ${MEGA[id]}</small>` : '';
   return `<div class="gu-item ${e.tipo}" data-buscar="${sinAcentos(`${e.nombre} ${MEGA[id] || ''} ${e.tags.join(' ')} ${e.desc}`)}">
-    <span class="gu-ico">${e.icono}</span>
+    <span class="gu-ico">${icoEfecto(e)}</span>
     <div><div class="gu-nom"><b>${e.nombre}</b>${extra}${e.tags.map(t => `<span class="gu-tag">${t}</span>`).join('')}</div><p>${e.desc}</p></div>
   </div>`;
 }

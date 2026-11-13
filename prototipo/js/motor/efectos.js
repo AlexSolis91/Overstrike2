@@ -6,6 +6,8 @@ import { BUFFS, DEBUFFS, CONTROL, DOT, PUNTERIA } from './reglas.js';
 const p = v => `${Math.round(v * 1000) / 10}%`;
 
 // desc: explicación para el jugador (Guía de efectos). Los números salen de reglas.js.
+// imagen (opcional): ícono con imagen (assets/efectos, 128×128 con fondo transparente). El emoji de icono se sigue usando
+// en los textos flotantes y si la imagen no carga.
 export const EFECTOS = {
   // ---- DoT
   burn:    { nombre: 'Quemadura',   icono: '🔥', color: 0xff7a2a, tipo: 'debuff', tags: ['DoT', 'Fuego'],
@@ -27,7 +29,7 @@ export const EFECTOS = {
     desc: `En su turno ataca a un aliado suyo al azar con su Básico. Mega Posesión: 2 turnos.` },
   confuse: { nombre: 'Confusión',    icono: '🌀', color: 0xf0abfc, tipo: 'debuff', tags: ['Control'],
     desc: `${p(CONTROL.confusionProb)} de que sus movimientos de un objetivo vayan a un personaje al azar (aliado o enemigo).` },
-  agotar:  { nombre: 'Agotar', icono: '🥱', color: 0x94a3b8, tipo: 'debuff', tags: ['Estadística'],
+  agotar:  { nombre: 'Reducción de Daño', icono: '📉', imagen: 'assets/efectos/reduccion-dano.webp', color: 0xa855f7, tipo: 'debuff', tags: ['Estadística'],
     desc: `−${p(DEBUFFS.agotar)} de Daño.` },
   weaken:  { nombre: 'Debilitar',   icono: '💔', color: 0xf87171, tipo: 'debuff', tags: ['Estadística'],
     desc: `Recibe +${p(DEBUFFS.debilitar)} de daño de golpes y daño por efecto (después de la Armadura).` },
@@ -132,7 +134,7 @@ export const EFECTOS = {
     desc: `Quien lo golpee recibe Veneno sin tirada (siempre entra, salvo inmunidad).` },
   aoeDodge: { nombre: 'Esquiva Área', icono: '💨', color: 0x93c5fd, tipo: 'buff', tags: ['Esquiva'],
     desc: `No lo alcanzan los movimientos de área de los enemigos: ni su daño ni sus efectos.` },
-  fortaleza: { nombre: 'Fortaleza', icono: '🪨', color: 0xa8a29e, tipo: 'buff', tags: ['Estadística'],
+  fortaleza: { nombre: 'Fortaleza', icono: '🪨', imagen: 'assets/efectos/fortaleza.webp', color: 0xa8a29e, tipo: 'buff', tags: ['Estadística'],
     desc: `+${p(BUFFS.fortaleza)} de Armadura.` },
   esquivar: { nombre: 'Esquivar', icono: '🌀', color: 0x7dd3fc, tipo: 'buff', tags: ['Esquiva'],
     desc: `${p(BUFFS.esquivar)} de probabilidad de esquivar cada golpe enemigo (no recibe su daño ni sus efectos).` },

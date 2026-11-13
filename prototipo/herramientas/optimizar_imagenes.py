@@ -35,6 +35,7 @@ INVOCACION_SIZE = 512
 RELIQUIA_SIZE = 256
 COFRE_SIZE = 256
 GUIA_SIZE = 900
+EFECTO_SIZE = 128              # íconos de buffs/debuffs con imagen (assets/efectos)
 
 
 def slug(path: Path) -> str:
@@ -225,6 +226,7 @@ def main():
         ('invocaciones', lambda a, b: recorte_transparente(a, b, INVOCACION_SIZE)),
         ('cofres', lambda a, b: recorte_transparente(a, b, COFRE_SIZE, solo_borde=True)),   # cofres del Jefe de Raid (fondo quitado)
         ('guia', lambda a, b: recorte_transparente(a, b, GUIA_SIZE, solo_borde=True)),     # guía del tutorial (Thestalos), fondo quitado
+        ('efectos', lambda a, b: recorte_transparente(a, b, EFECTO_SIZE, solo_borde=True)),   # íconos de buffs/debuffs, fondo quitado
         # reliquias: las monta herramientas/marcos_reliquias.py dentro del marco de su rareza
     ]
     hechas = 0

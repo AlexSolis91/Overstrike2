@@ -61,9 +61,10 @@ addEventListener('resize', modoMovil);
 await iniciarEscena($('#field'));
 await precargar(
   OFICIALES.flatMap(p => { const l = [p.imagen]; for (let f = p.transformacion; f; f = f.transformacion) l.push(f.imagen); return l; })
-    .concat(Object.values(INVOCACIONES).map(i => i.imagen), Object.values(HORDAS).flatMap(h => Object.values(h.enemigos).map(e => e.imagen)), Object.values(JEFES_RAID).flatMap(j => [j.imagen, j.arteCarta])),   // + enemigos de la Horda
+    .concat(Object.values(INVOCACIONES).map(i => i.imagen), Object.values(HORDAS).flatMap(h => Object.values(h.enemigos).map(e => e.imagen)), Object.values(JEFES_RAID).flatMap(j => [j.imagen, j.arteCarta]), Object.values(EFECTOS).map(e => e.imagen)),   // + enemigos de la Horda
   INVOCACIONES,
   (n, total) => { $('#loading-bar').style.width = `${n / total * 100}%`; $('#loading-text').textContent = `Cargando imágenes ${n}/${total}`; },
+  EFECTOS,
 );
 const ld = $('#loading'); ld.classList.add('fade'); setTimeout(() => ld.remove(), 500);
 iniciarNovedades(); setTimeout(revisarNovedades, 1200);   // "Qué cambió": se abre sola si hay una novedad sin ver

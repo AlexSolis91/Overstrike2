@@ -3,6 +3,7 @@ import { canvasTex } from './graficos.js';
 
 export const IMG = {};           // ruta -> HTMLImageElement | null
 export const TEX_INVOCACION = {}; // clave -> PIXI.Texture
+export const TEX_EFECTO = {};     // ruta de la imagen de un buff/debuff -> PIXI.Texture
 
 function cargar(src, intentos = 3) {
   return new Promise(resolve => {
@@ -34,7 +35,7 @@ function usable(img) {
   } catch (e) { return false; }
 }
 
-export async function precargar(rutas, invocaciones, alAvanzar) {
+export async function precargar(rutas, invocaciones, alAvanzar, efectos = {}) {
   const lista = [...new Set(rutas.filter(Boolean))];
   let hechas = 0;
   await Promise.all(lista.map(async src => {
@@ -48,6 +49,10 @@ export async function precargar(rutas, invocaciones, alAvanzar) {
     const im = IMG[def.imagen];
     if (im) TEX_INVOCACION[key] = canvasTex(im.naturalWidth, im.naturalHeight, g => g.drawImage(im, 0, 0), 1);
   }
+  for (const def of Object.values(efectos)) {
+    const im = def.imagen && IMG[def.imagen];
+    if (im) TEX_EFECTO[def.imagen] = canvasTex(im.naturalWidth, im.naturalHeight, g => g.drawImage(im, 0, 0), 1);
+  }
 }
 
 export function drawCover(g, img, x, y, w, h, cx = .5, cy = .3) {
@@ -56,3 +61,5 @@ export function drawCover(g, img, x, y, w, h, cx = .5, cy = .3) {
   g.drawImage(img, (img.naturalWidth - sw) * cx, (img.naturalHeight - sh) * cy, sw, sh, x, y, w, h);
 }
 export const imgHtml = (src, alt = '') => IMG[src] ? `<img src="${src}" alt="${alt}">` : '';
+// Ícono de un buff/debuff para HTML: su imagen si tiene (y no falló al cargar), si no su emoji
+export const icoEfecto = e => e.imagen && IMG[e.imagen] !== null ? `<img class="ico-efecto" src="${e.imagen}" alt="${e.nombre || ''}">` : e.icono;

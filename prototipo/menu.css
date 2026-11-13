@@ -321,6 +321,7 @@ body.app-instalada #menu-full { visibility: hidden; }
 .gu-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px; border-radius: 10px; margin-bottom: 6px; background: rgba(255, 255, 255, .025); }
 .gu-item.oculto { display: none; }
 .gu-ico { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; background: #0b0f18; border: 2.5px solid; }
+.gu-ico img.ico-efecto { width: 82%; height: 82%; object-fit: contain; }
 .gu-item.buff .gu-ico { border-color: #22c55e; } .gu-item.debuff .gu-ico { border-color: #ef4444; }
 .gu-nom { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; font-size: 13.5px; }
 .gu-nom small { color: var(--muted); font-size: 11px; }

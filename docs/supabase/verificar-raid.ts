@@ -70,7 +70,7 @@ const DEBUFFS = {
   agujaTurno: .005,     // ...y cada aguja quita 0.5% del HP máx. al inicio de su turno (14 agujas = 7%)
   agujaMax: 14,        // ...hasta 14 (las 14 estrellas de Escorpio; la 15.ª es Antares)
   debilitar: .50,
-  agotar: .15,         // Agotar: −15% de Daño
+  agotar: .15,         // Reducción de Daño (id 'agotar'): −15% de Daño
   expuesto: .25,       // Expuesto (p. ej. tras Shinra Tensei): +25% de daño recibido      // Debilitar: +50% de daño recibido (después de la Armadura)
   ceguera: .50,        // Ceguera: −50 puntos de Puntería
   desgaste: .05,       // Desgaste: −5 puntos de Armadura al aplicarse y por cada golpe recibido...
@@ -129,6 +129,8 @@ const { BUFFS, DEBUFFS, CONTROL, DOT, PUNTERIA } = __m["motor/reglas.js"];
 const p = v => `${Math.round(v * 1000) / 10}%`;
 
 // desc: explicación para el jugador (Guía de efectos). Los números salen de reglas.js.
+// imagen (opcional): ícono con imagen (assets/efectos, 128×128 con fondo transparente). El emoji de icono se sigue usando
+// en los textos flotantes y si la imagen no carga.
 const EFECTOS = {
   // ---- DoT
   burn:    { nombre: 'Quemadura',   icono: '🔥', color: 0xff7a2a, tipo: 'debuff', tags: ['DoT', 'Fuego'],
@@ -150,7 +152,7 @@ const EFECTOS = {
     desc: `En su turno ataca a un aliado suyo al azar con su Básico. Mega Posesión: 2 turnos.` },
   confuse: { nombre: 'Confusión',    icono: '🌀', color: 0xf0abfc, tipo: 'debuff', tags: ['Control'],
     desc: `${p(CONTROL.confusionProb)} de que sus movimientos de un objetivo vayan a un personaje al azar (aliado o enemigo).` },
-  agotar:  { nombre: 'Agotar', icono: '🥱', color: 0x94a3b8, tipo: 'debuff', tags: ['Estadística'],
+  agotar:  { nombre: 'Reducción de Daño', icono: '📉', imagen: 'assets/efectos/reduccion-dano.webp', color: 0xa855f7, tipo: 'debuff', tags: ['Estadística'],
     desc: `−${p(DEBUFFS.agotar)} de Daño.` },
   weaken:  { nombre: 'Debilitar',   icono: '💔', color: 0xf87171, tipo: 'debuff', tags: ['Estadística'],
     desc: `Recibe +${p(DEBUFFS.debilitar)} de daño de golpes y daño por efecto (después de la Armadura).` },
@@ -255,7 +257,7 @@ const EFECTOS = {
     desc: `Quien lo golpee recibe Veneno sin tirada (siempre entra, salvo inmunidad).` },
   aoeDodge: { nombre: 'Esquiva Área', icono: '💨', color: 0x93c5fd, tipo: 'buff', tags: ['Esquiva'],
     desc: `No lo alcanzan los movimientos de área de los enemigos: ni su daño ni sus efectos.` },
-  fortaleza: { nombre: 'Fortaleza', icono: '🪨', color: 0xa8a29e, tipo: 'buff', tags: ['Estadística'],
+  fortaleza: { nombre: 'Fortaleza', icono: '🪨', imagen: 'assets/efectos/fortaleza.webp', color: 0xa8a29e, tipo: 'buff', tags: ['Estadística'],
     desc: `+${p(BUFFS.fortaleza)} de Armadura.` },
   esquivar: { nombre: 'Esquivar', icono: '🌀', color: 0x7dd3fc, tipo: 'buff', tags: ['Esquiva'],
     desc: `${p(BUFFS.esquivar)} de probabilidad de esquivar cada golpe enemigo (no recibe su daño ni sus efectos).` },
@@ -507,7 +509,7 @@ const INVOCACIONES = {
   // ---------------------------------------------------------------- Monstruos de Marik Ishtar (tabla `monstruosMarik`; Ra solo con su Over)
   revivalJam: {
     nombre: 'Revival Jam', rareza: 'Común', emoji: '👻', color: 0x60a5fa, imagen: 'assets/invocaciones/revival-jam.webp', dur: 3,
-    desc: 'Golpea 60% a un enemigo al azar y le aplica Agotar (2 rondas).',
+    desc: 'Golpea 60% a un enemigo al azar y le aplica Reducción de Daño (2 rondas).',
     acciones: [{ tipo: 'golpe', pct: .60, elegir: 'azar', efectos: [{ accion: { tipo: 'efecto', id: 'agotar', dur: 2 } }] }],
   },
   slimeEgipcio: {
@@ -797,7 +799,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
   // ================================================================ vista (lo que la interfaz necesita)
   function vistaEstados(p) {
     const out = [];
-    const grupo = (id, extra) => ({ id, icono: EFECTOS[id].icono, color: EFECTOS[id].color, tipo: EFECTOS[id].tipo, tags: EFECTOS[id].tags, ...extra });
+    const grupo = (id, extra) => ({ id, icono: EFECTOS[id].icono, imagen: EFECTOS[id].imagen, color: EFECTOS[id].color, tipo: EFECTOS[id].tipo, tags: EFECTOS[id].tags, ...extra });
     const pctTxt = v => `${Math.round(v * 1000) / 10}%`;
     for (const e of p.estados) {
       if (e.id === 'poison' || e.id === 'bomb' || e.id === 'summon') continue;
@@ -8554,7 +8556,7 @@ __e.default = {
     {
       categoria: 'basico', nombre: 'Desvío Soresu', objetivo: 'enemigo', estilo: 'melee', color: 0x38bdf8,
       pct: .90, escala: 'hp', cd: 0,
-      desc: 'Causa 90% (escala por HP) a un enemigo con 40% de probabilidad de aplicar Agotar (2 rondas).',
+      desc: 'Causa 90% (escala por HP) a un enemigo con 40% de probabilidad de aplicar Reducción de Daño (2 rondas).',
       efectos: [{ accion: { tipo: 'efecto', id: 'agotar', dur: 2, prob: .40 } }],
     },
     {

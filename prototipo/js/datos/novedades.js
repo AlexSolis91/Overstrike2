@@ -3,11 +3,17 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-13b', fecha: '13 de noviembre de 2026', titulo: 'Reducción de Daño e íconos nuevos',
+    cambios: [
+      { tipo: 'cambio', texto: 'El debuff Agotar ahora se llama Reducción de Daño y tiene ícono nuevo. Funciona igual: −15% de Daño.' },
+      { tipo: 'mejora', texto: 'Íconos nuevos: el buff Fortaleza ahora es un escudo dorado y el debuff Miedo una calabaza 🎃.' },
+    ],
+  },
+  {
     id: '2026-11-13', fecha: '13 de noviembre de 2026', titulo: 'Estrellas para equipar reliquias',
     cambios: [
       { tipo: 'cambio', texto: 'Ahora cada rareza de reliquia pide una estrella más: Común 1★, Rara 2★, Especial 3★, Épica 4★ y Legendaria 5★.' },
       { tipo: 'cambio', texto: 'Las reliquias que tus campeones ya no pueden usar volvieron a tu inventario. Las demás siguen equipadas.' },
-      { tipo: 'mejora', texto: '🎃 El debuff Miedo tiene un ícono nuevo: la calabaza.' },
       { tipo: 'mejora', texto: 'Primeros pasos: "Asciende un campeón a 1★" ahora va antes de "Equipa una reliquia".' },
     ],
   },

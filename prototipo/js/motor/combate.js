@@ -210,7 +210,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   // ================================================================ vista (lo que la interfaz necesita)
   function vistaEstados(p) {
     const out = [];
-    const grupo = (id, extra) => ({ id, icono: EFECTOS[id].icono, color: EFECTOS[id].color, tipo: EFECTOS[id].tipo, tags: EFECTOS[id].tags, ...extra });
+    const grupo = (id, extra) => ({ id, icono: EFECTOS[id].icono, imagen: EFECTOS[id].imagen, color: EFECTOS[id].color, tipo: EFECTOS[id].tipo, tags: EFECTOS[id].tags, ...extra });
     const pctTxt = v => `${Math.round(v * 1000) / 10}%`;
     for (const e of p.estados) {
       if (e.id === 'poison' || e.id === 'bomb' || e.id === 'summon') continue;

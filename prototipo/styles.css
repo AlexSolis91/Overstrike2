@@ -252,6 +252,7 @@ section h3::after { content: ''; flex: 1; height: 1px; background: linear-gradie
 .p-portrait img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; display: block; }
 .chip span { display: grid; place-items: center; width: 100%; height: 100%; overflow: hidden; border-radius: 6px; }
 .chip img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; }
+.eff .ei img.ico-efecto { width: 26px; height: 26px; border-radius: 0; object-fit: contain; background: none; }
 .eff .ei img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; object-position: 50% 30%; display: block; background: #000; }
 
 /* ---------- Pantalla de carga ---------- */
