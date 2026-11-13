@@ -5,8 +5,8 @@ export const NOVEDADES = [
   {
     id: '2026-11-13b', fecha: '13 de noviembre de 2026', titulo: 'Reducción de Daño e íconos nuevos',
     cambios: [
-      { tipo: 'cambio', texto: 'El debuff Agotar ahora se llama Reducción de Daño y tiene ícono nuevo. Funciona igual: −15% de Daño.' },
-      { tipo: 'mejora', texto: 'Íconos nuevos: el buff Fortaleza ahora es un escudo dorado y el debuff Miedo una calabaza 🎃.' },
+      { tipo: 'cambio', texto: 'El debuff Agotar ahora se llama Reducción de Daño y tiene ícono nuevo (una espada roja). Funciona igual: −15% de Daño.' },
+      { tipo: 'mejora', texto: 'Íconos nuevos: el buff Fortaleza ahora es un casco de caballero y el debuff Miedo una calabaza 🎃.' },
     ],
   },
   {
