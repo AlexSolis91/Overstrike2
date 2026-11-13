@@ -7,6 +7,7 @@ export const NOVEDADES = [
     cambios: [
       { tipo: 'cambio', texto: 'Ahora cada rareza de reliquia pide una estrella más: Común 1★, Rara 2★, Especial 3★, Épica 4★ y Legendaria 5★.' },
       { tipo: 'cambio', texto: 'Las reliquias que tus campeones ya no pueden usar volvieron a tu inventario. Las demás siguen equipadas.' },
+      { tipo: 'mejora', texto: '🎃 El debuff Miedo tiene un ícono nuevo: la calabaza.' },
       { tipo: 'mejora', texto: 'Primeros pasos: "Asciende un campeón a 1★" ahora va antes de "Equipa una reliquia".' },
     ],
   },

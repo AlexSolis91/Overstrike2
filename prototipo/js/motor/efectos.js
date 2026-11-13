@@ -45,7 +45,7 @@ export const EFECTOS = {
     desc: `Toda curación que recibe le hace daño por el monto completo, ignorando Armadura y Escudo.` },
   incite:  { nombre: 'Incitar',      icono: '🗣️', color: 0xfb923c, tipo: 'debuff', tags: ['Control'],
     desc: `Solo puede usar su Básico y solo contra quien lo incitó (si ese enemigo muere, vuelve a actuar normal).` },
-  fear:    { nombre: 'Miedo',        icono: '😱', color: 0x94a3b8, tipo: 'debuff', tags: ['Control'],
+  fear:    { nombre: 'Miedo',        icono: '🎃', color: 0x94a3b8, tipo: 'debuff', tags: ['Control'],
     desc: `No puede usar su Especial ni su Over y hace −${p(1 - CONTROL.miedoDano)} de daño.` },
   // ---- Buffs
   mirror:  { nombre: 'Espejismo', icono: '🪞', color: 0x67e8f9, tipo: 'buff', tags: ['Reflejo'],
