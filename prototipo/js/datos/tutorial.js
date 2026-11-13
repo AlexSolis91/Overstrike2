@@ -133,6 +133,7 @@ export const MINI = {
   reliquias: [
     { texto: 'Las *Reliquias* son equipo para tus campeones: armas, armaduras y accesorios que suben sus estadísticas.' },
     { texto: 'Su rareza va de *Común* a *Legendaria*. Toca una para ver su detalle y *mejorarla*.' },
+    { texto: 'Para equiparlas tu campeón necesita *estrellas*: Común 1★, Rara 2★, Especial 3★, Épica 4★ y Legendaria 5★.' },
     { texto: 'Con estos botones cambias de modo: *Descomponer* las rompe para obtener Polvo Arcano y *Fusionar* junta 10 para conseguir una mejor.', foco: '.tc-herr' },
   ],
   // ---- detalle de un campeón (Colección)

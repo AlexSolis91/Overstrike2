@@ -35,7 +35,8 @@ test('Primeros pasos: los premios y las claves del cliente son los mismos que en
     assert.ok(sql.includes(`when '${p.clave}' then '${JSON.stringify(p.premio)}'::jsonb`), `premio de ${p.clave}`);
     assert.ok(sql.includes(`when '${p.clave}' then exists`) || p.clave === 'todos', `revisión de ${p.clave}`);
   }
-  const orden = sql.match(/unnest\(array\[([^\]]+)\]\)/)[1].match(/'([a-z0-9]+)'/g).map(x => x.slice(1, -1));
+  const sql41 = readFileSync(new URL('../../docs/sql/041_reliquias_estrellas.sql', import.meta.url), 'utf8');
+  const orden = sql41.match(/unnest\(array\[([^\]]+)\]\)/)[1].match(/'([a-z0-9]+)'/g).map(x => x.slice(1, -1));
   assert.deepEqual(orden, PRIMEROS_PASOS.map(p => p.clave));
 });
 

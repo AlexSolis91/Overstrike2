@@ -3,6 +3,14 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-13', fecha: '13 de noviembre de 2026', titulo: 'Estrellas para equipar reliquias',
+    cambios: [
+      { tipo: 'cambio', texto: 'Ahora cada rareza de reliquia pide una estrella más: Común 1★, Rara 2★, Especial 3★, Épica 4★ y Legendaria 5★.' },
+      { tipo: 'cambio', texto: 'Las reliquias que tus campeones ya no pueden usar volvieron a tu inventario. Las demás siguen equipadas.' },
+      { tipo: 'mejora', texto: 'Primeros pasos: "Asciende un campeón a 1★" ahora va antes de "Equipa una reliquia".' },
+    ],
+  },
+  {
     id: '2026-11-12', fecha: '12 de noviembre de 2026', titulo: 'Primeros pasos, ayuda de Thestalos y fusión rápida',
     cambios: [
       { tipo: 'nuevo', texto: '🧭 Primeros pasos: objetivos para empezar (Campaña, reliquias, ascender, Horda, Raid y Arena), cada uno con premio. Búscalo en el menú.' },

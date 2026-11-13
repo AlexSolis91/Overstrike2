@@ -273,7 +273,7 @@ function htmlEspaciosReliquias(p, r) {
       ${opciones.length ? `<div class="tc-rels">${opciones.map(({ x, motivo }) => miniaturaRel(x, (motivo ? `data-motivo="${motivo}"` : `data-equipar="${x.uid}"`) + ' data-tip', atr ? txtAtributo(atr, valorAtributo(x, atr)) : '')).join('')}</div>`
         : '<p class="tc-tenue">No tienes reliquias que vayan en este espacio.</p>'}
       <p class="tc-tenue">${conCursor() ? 'Pasa el cursor por una reliquia para ver sus atributos y compararla con la equipada.' : 'Toca una reliquia para ver sus atributos y compararla con la equipada.'}</p>
-      <p class="tc-tenue">Con ${r.estrellas}★ puede usar reliquias ${Object.entries(RAREZAS).filter(([, v]) => v.estrellas <= r.estrellas).map(([, v]) => v.plural).join(', ')}. Las grises necesitan más estrellas.</p></div>`;
+      <p class="tc-tenue">${(u => u.length ? `Con ${r.estrellas}★ puede usar reliquias ${u.join(', ')}.` : 'Con 0★ todavía no puede usar reliquias: asciéndelo a 1★.')(Object.entries(RAREZAS).filter(([, v]) => v.estrellas <= r.estrellas).map(([, v]) => v.plural))} Las grises necesitan más estrellas.</p></div>`;
   }
   return `<section class="tc-equipo"><h4>🗡️ Reliquias equipadas</h4><div class="tc-slots">${casillas}</div>${panel}</section>`;
 }

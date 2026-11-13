@@ -8,11 +8,11 @@
 // legado: valores fijos del equipo de ejemplo de las fichas (partida rápida, simulaciones y rivales); no se usan al sortear.
 
 export const RAREZAS = {
-  'Común':      { color: '#a3acb9', orden: 0, estrellas: 0, tiradas: 0, plural: 'Comunes' },
-  'Raro':       { color: '#4ade80', orden: 1, estrellas: 1, tiradas: 1, plural: 'Raras' },
-  'Especial':   { color: '#60a5fa', orden: 2, estrellas: 2, tiradas: 2, plural: 'Especiales' },
-  'Épico':      { color: '#c084fc', orden: 3, estrellas: 3, tiradas: 3, plural: 'Épicas' },
-  'Legendario': { color: '#fbbf24', orden: 4, estrellas: 4, tiradas: 3, plural: 'Legendarias' },
+  'Común':      { color: '#a3acb9', orden: 0, estrellas: 1, tiradas: 0, plural: 'Comunes' },
+  'Raro':       { color: '#4ade80', orden: 1, estrellas: 2, tiradas: 1, plural: 'Raras' },
+  'Especial':   { color: '#60a5fa', orden: 2, estrellas: 3, tiradas: 2, plural: 'Especiales' },
+  'Épico':      { color: '#c084fc', orden: 3, estrellas: 4, tiradas: 3, plural: 'Épicas' },
+  'Legendario': { color: '#fbbf24', orden: 4, estrellas: 5, tiradas: 3, plural: 'Legendarias' },
 };
 export const MAX_REPETIDAS = 2;        // máximo de tiradas que pueden caer en la misma estadística
 
