@@ -3,7 +3,7 @@ import { espacios } from '../reliquias.js';
 // Ficha oficial #30, rediseñada el 2026-10-12: Itachi deja de ser un personaje de velocidad (eso es de Minato) y pasa a ser el
 // maestro del genjutsu. Clones de Cuervo (contador): cada uno absorbe un ataque enemigo contra él y los cuervos pueden asustar
 // al atacante; gana clones al aplicar Control. Tsukuyomi (Mega Aturdimiento + Debilitar), Susanoo: Espada de Totsuka (sella el
-// Over enemigo) y Espejo de Yata (Espejismo + Escudo). Sin Habilidad de Líder.
+// Over enemigo) y Espejo de Yata (Reflejar + Escudo). Sin Habilidad de Líder.
 export default {
   id: 'itachi-uchiha',
   franquicia: 'Naruto', grupos: ['uchiha', 'akatsuki', 'konoha'],   // campaña: temas de las etapas
@@ -43,7 +43,7 @@ export default {
     {
       categoria: 'over', nombre: 'Susanoo', objetivo: 'enemigo', estilo: 'melee', color: 0xef4444,
       pct: 1.65, escala: 'dano', cd: 5,
-      desc: 'La Espada de Totsuka causa 165% y sella el Over del objetivo (lo pone en su cooldown completo). El Espejo de Yata le da a Itachi Espejismo (2 rondas: devuelve el 30% del daño de cada golpe) y un Escudo del 200% de su HP máx. (2 rondas).',
+      desc: 'La Espada de Totsuka causa 165% y sella el Over del objetivo (lo pone en su cooldown completo). El Espejo de Yata le da a Itachi Reflejar (2 rondas: devuelve el 30% del daño de cada golpe) y un Escudo del 200% de su HP máx. (2 rondas).',
       efectos: [
         { accion: { tipo: 'activarCooldown', categoria: 'over' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'mirror', dur: 2, a: 'propio' } },

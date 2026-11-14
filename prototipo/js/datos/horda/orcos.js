@@ -94,7 +94,7 @@ export const ORCOS = {
     movimientos: [
       golpe('basico', 'Mazazo', 'enemigo', 1.00, 0, 'Causa 100% con 25% de probabilidad de Aturdir.', [ef('stun', { prob: .25 })]),
       { categoria: 'especial', nombre: 'Escudo de Pinchos', objetivo: 'propio', estilo: 'support', color: 0xb91c1c, cd: 3,
-        desc: 'Gana un Escudo del 100% de su HP máx. y Espejismo (2 rondas).',
+        desc: 'Gana un Escudo del 100% de su HP máx. y Reflejar (2 rondas).',
         efectos: [fin({ tipo: 'escudo', pct: 1.00, escala: 'hpMax', dur: 2, a: 'propio' }), fin({ tipo: 'efecto', id: 'mirror', dur: 2, a: 'propio' })] },
       golpe('over', 'Terremoto', 'todosEnemigos', 1.20, 4, 'Causa 120% a todos con 35% de probabilidad de Aturdir.', [ef('stun', { prob: .35 })]),
     ] },

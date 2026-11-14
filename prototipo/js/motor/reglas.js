@@ -43,7 +43,7 @@ export const BUFFS = {
   celeridad: .20,      // Celeridad: +20% Velocidad
   letalidad: .30,      // Letalidad: +30% Daño Crítico (puntos)
   agudeza: .50,        // Agudeza: +50% Puntería (puntos)
-  espejismo: .30,      // Espejismo: devuelve al atacante el 30% del daño de cada golpe recibido
+  espejismo: .30,      // Reflejar: devuelve al atacante el 30% del daño de cada golpe recibido
   auraGelida: .20,     // Aura Gélida: −20% de daño de los golpes enemigos
   perforacion: .50,    // Perforación: +50% Penetración de escudo (puntos; tope 100%)
   auraLuz: 2,          // Aura de Luz: multiplica las curaciones que recibe

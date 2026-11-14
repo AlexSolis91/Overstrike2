@@ -28,7 +28,7 @@ export default {
     {
       categoria: 'basico', nombre: 'Lanzamiento de Escudo', objetivo: 'enemigo', estilo: 'ranged', color: 0x3b82f6,
       pct: 1.25, escala: 'hp', cd: 0,
-      desc: 'Causa 125% (escala por HP). Además, cada uno con 50% de probabilidad y por 1 ronda: gana Provocación, gana Espejismo y gana un Escudo del 50% de su HP máx.',
+      desc: 'Causa 125% (escala por HP). Además, cada uno con 50% de probabilidad y por 1 ronda: gana Provocación, gana Reflejar y gana un Escudo del 50% de su HP máx.',
       efectos: [
         { cuando: 'final', accion: { tipo: 'efecto', id: 'taunt', dur: 1, prob: .50, a: 'propio' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'mirror', dur: 1, prob: .50, a: 'propio' } },

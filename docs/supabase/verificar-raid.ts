@@ -56,7 +56,7 @@ const BUFFS = {
   celeridad: .20,      // Celeridad: +20% Velocidad
   letalidad: .30,      // Letalidad: +30% Daño Crítico (puntos)
   agudeza: .50,        // Agudeza: +50% Puntería (puntos)
-  espejismo: .30,      // Espejismo: devuelve al atacante el 30% del daño de cada golpe recibido
+  espejismo: .30,      // Reflejar: devuelve al atacante el 30% del daño de cada golpe recibido
   auraGelida: .20,     // Aura Gélida: −20% de daño de los golpes enemigos
   perforacion: .50,    // Perforación: +50% Penetración de escudo (puntos; tope 100%)
   auraLuz: 2,          // Aura de Luz: multiplica las curaciones que recibe
@@ -173,7 +173,7 @@ const EFECTOS = {
   fear:    { nombre: 'Miedo',        icono: '🎃', color: 0x94a3b8, tipo: 'debuff', tags: ['Control'],
     desc: `No puede usar su Especial ni su Over y hace −${p(1 - CONTROL.miedoDano)} de daño.` },
   // ---- Buffs
-  mirror:  { nombre: 'Espejismo', icono: '🪞', color: 0x67e8f9, tipo: 'buff', tags: ['Reflejo'],
+  mirror:  { nombre: 'Reflejar', icono: '🪞', imagen: 'assets/efectos/reflejar.webp', color: 0x67e8f9, tipo: 'buff', tags: ['Reflejo'],
     desc: `Cada golpe que recibe de un enemigo le devuelve al atacante el ${p(BUFFS.espejismo)} del daño, incluido el que absorba su Escudo (daño por efecto que ignora Armadura). Igual recibe el golpe completo.` },
   orgullo: { nombre: 'Orgullo Sayajin', icono: '⚜️', color: 0x60a5fa, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Cargas de Vegeta (máx. 5): las gana cuando su Rival usa un movimiento y con sus críticos. Al llegar a 5 se transforma; Final Flash las consume para hacer más daño. No se disipa ni se limpia.' },
@@ -1636,7 +1636,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         danoEfecto(a, d2, exceso, mov.color, { sinArmadura: true });
       }
     }
-    if (get(t, 'mirror') && t.lado !== a.lado && !a.muerto && aHp + aEsc > 0)   // Espejismo: devuelve parte del golpe (daño por efecto, no es golpe; ignora Armadura)
+    if (get(t, 'mirror') && t.lado !== a.lado && !a.muerto && aHp + aEsc > 0)   // Reflejar: devuelve parte del golpe (daño por efecto, no es golpe; ignora Armadura)
       danoEfecto(t, a, (aHp + aEsc) * BUFFS.espejismo, 0x67e8f9, { sinArmadura: true });
     const aura = get(t, 'fireAura');
     if (aura && !t.muerto && !a.muerto && t.lado !== a.lado) {
@@ -4501,7 +4501,7 @@ const { espacios } = __m["datos/reliquias.js"];
 
 // Ficha oficial #16 (diseñada el 2026-10-06). Loki, Dios del Engaño. Basado en Pelops el Vencedor (Raid): tanque que
 // envenena y confunde a quien lo ataca, roba todos los buffs a los envenenados y con su Over protege a su equipo con
-// Escudo, Furia y Espejismo (como el Escudo de Magma de Pelops) mientras él atrae los golpes con Provocación. Usurpó el trono de Asgard: tiene habilidad de líder.
+// Escudo, Furia y Reflejar (como el Escudo de Magma de Pelops) mientras él atrae los golpes con Provocación. Usurpó el trono de Asgard: tiene habilidad de líder.
 __e.default = {
   id: 'loki',
   franquicia: 'Marvel', grupos: ['asgard', 'dioses'],   // campaña: temas de las etapas
@@ -4551,7 +4551,7 @@ __e.default = {
     {
       categoria: 'over', nombre: 'Glorioso Propósito', objetivo: 'propio', estilo: 'support', color: 0x67e8f9,
       cd: 5,
-      desc: 'Todos los aliados ganan Furia, Espejismo (devuelve el 30% del daño de cada golpe recibido) y un Escudo del 50% del HP máx. de Loki (2 rondas). Loki gana Provocación (2 rondas). Efecto pasivo: mientras Loki viva y no tenga Desgaste, su equipo recibe −20% de daño.',
+      desc: 'Todos los aliados ganan Furia, Reflejar (devuelve el 30% del daño de cada golpe recibido) y un Escudo del 50% del HP máx. de Loki (2 rondas). Loki gana Provocación (2 rondas). Efecto pasivo: mientras Loki viva y no tenga Desgaste, su equipo recibe −20% de daño.',
       efectos: [
         { cuando: 'final', accion: { tipo: 'efecto', id: 'dmgUp', dur: 2, a: 'todosAliados' } },
         { cuando: 'final', accion: { tipo: 'escudo', pct: .50, escala: 'hpMax', dur: 2, a: 'todosAliados' } },
@@ -5452,7 +5452,7 @@ const { espacios } = __m["datos/reliquias.js"];
 // Ficha oficial #30, rediseñada el 2026-10-12: Itachi deja de ser un personaje de velocidad (eso es de Minato) y pasa a ser el
 // maestro del genjutsu. Clones de Cuervo (contador): cada uno absorbe un ataque enemigo contra él y los cuervos pueden asustar
 // al atacante; gana clones al aplicar Control. Tsukuyomi (Mega Aturdimiento + Debilitar), Susanoo: Espada de Totsuka (sella el
-// Over enemigo) y Espejo de Yata (Espejismo + Escudo). Sin Habilidad de Líder.
+// Over enemigo) y Espejo de Yata (Reflejar + Escudo). Sin Habilidad de Líder.
 __e.default = {
   id: 'itachi-uchiha',
   franquicia: 'Naruto', grupos: ['uchiha', 'akatsuki', 'konoha'],   // campaña: temas de las etapas
@@ -5492,7 +5492,7 @@ __e.default = {
     {
       categoria: 'over', nombre: 'Susanoo', objetivo: 'enemigo', estilo: 'melee', color: 0xef4444,
       pct: 1.65, escala: 'dano', cd: 5,
-      desc: 'La Espada de Totsuka causa 165% y sella el Over del objetivo (lo pone en su cooldown completo). El Espejo de Yata le da a Itachi Espejismo (2 rondas: devuelve el 30% del daño de cada golpe) y un Escudo del 200% de su HP máx. (2 rondas).',
+      desc: 'La Espada de Totsuka causa 165% y sella el Over del objetivo (lo pone en su cooldown completo). El Espejo de Yata le da a Itachi Reflejar (2 rondas: devuelve el 30% del daño de cada golpe) y un Escudo del 200% de su HP máx. (2 rondas).',
       efectos: [
         { accion: { tipo: 'activarCooldown', categoria: 'over' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'mirror', dur: 2, a: 'propio' } },
@@ -5530,11 +5530,11 @@ __e.default = {
   },
   pasiva: {
     nombre: 'Los Seis Caminos del Dolor',
-    desc: 'Al inicio de cada uno de sus turnos activa el siguiente Camino, siempre en este orden: Deva → Asura → Humano → Animal → Preta → Naraka → Deva… (empieza en Deva). Deva: gana Espejismo (1 ronda). Asura: sus golpes hacen +30% de daño. Humano: al terminar su movimiento le roba 1 buff al objetivo. Animal: invoca 1 criatura al azar. Preta: al terminar su movimiento le roba 5% del HP máx. al objetivo. Naraka: se cura 10% de su HP máx. y se limpia 1 debuff. En movimientos de área, Humano y Preta van a un enemigo golpeado al azar.',
+    desc: 'Al inicio de cada uno de sus turnos activa el siguiente Camino, siempre en este orden: Deva → Asura → Humano → Animal → Preta → Naraka → Deva… (empieza en Deva). Deva: gana Reflejar (1 ronda). Asura: sus golpes hacen +30% de daño. Humano: al terminar su movimiento le roba 1 buff al objetivo. Animal: invoca 1 criatura al azar. Preta: al terminar su movimiento le roba 5% del HP máx. al objetivo. Naraka: se cura 10% de su HP máx. y se limpia 1 debuff. En movimientos de área, Humano y Preta van a un enemigo golpeado al azar.',
     ciclo: {
       efecto: 'camino',
       fases: [
-        { id: 'deva', nombre: 'Camino Deva', icono: '☀️', desc: 'gana Espejismo (1 ronda).',
+        { id: 'deva', nombre: 'Camino Deva', icono: '☀️', desc: 'gana Reflejar (1 ronda).',
           alIniciar: { tipo: 'efecto', id: 'mirror', dur: 1, a: 'propio' } },
         { id: 'asura', nombre: 'Camino Asura', icono: '🚀', desc: 'sus golpes hacen +30% de daño.', bonoDano: .30 },
         { id: 'humano', nombre: 'Camino Humano', icono: '👤', desc: 'al terminar su movimiento le roba 1 buff al objetivo.',
@@ -8257,7 +8257,7 @@ __e.default = {
     {
       categoria: 'basico', nombre: 'Lanzamiento de Escudo', objetivo: 'enemigo', estilo: 'ranged', color: 0x3b82f6,
       pct: 1.25, escala: 'hp', cd: 0,
-      desc: 'Causa 125% (escala por HP). Además, cada uno con 50% de probabilidad y por 1 ronda: gana Provocación, gana Espejismo y gana un Escudo del 50% de su HP máx.',
+      desc: 'Causa 125% (escala por HP). Además, cada uno con 50% de probabilidad y por 1 ronda: gana Provocación, gana Reflejar y gana un Escudo del 50% de su HP máx.',
       efectos: [
         { cuando: 'final', accion: { tipo: 'efecto', id: 'taunt', dur: 1, prob: .50, a: 'propio' } },
         { cuando: 'final', accion: { tipo: 'efecto', id: 'mirror', dur: 1, prob: .50, a: 'propio' } },

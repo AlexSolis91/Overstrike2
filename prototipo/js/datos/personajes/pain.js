@@ -22,11 +22,11 @@ export default {
   },
   pasiva: {
     nombre: 'Los Seis Caminos del Dolor',
-    desc: 'Al inicio de cada uno de sus turnos activa el siguiente Camino, siempre en este orden: Deva → Asura → Humano → Animal → Preta → Naraka → Deva… (empieza en Deva). Deva: gana Espejismo (1 ronda). Asura: sus golpes hacen +30% de daño. Humano: al terminar su movimiento le roba 1 buff al objetivo. Animal: invoca 1 criatura al azar. Preta: al terminar su movimiento le roba 5% del HP máx. al objetivo. Naraka: se cura 10% de su HP máx. y se limpia 1 debuff. En movimientos de área, Humano y Preta van a un enemigo golpeado al azar.',
+    desc: 'Al inicio de cada uno de sus turnos activa el siguiente Camino, siempre en este orden: Deva → Asura → Humano → Animal → Preta → Naraka → Deva… (empieza en Deva). Deva: gana Reflejar (1 ronda). Asura: sus golpes hacen +30% de daño. Humano: al terminar su movimiento le roba 1 buff al objetivo. Animal: invoca 1 criatura al azar. Preta: al terminar su movimiento le roba 5% del HP máx. al objetivo. Naraka: se cura 10% de su HP máx. y se limpia 1 debuff. En movimientos de área, Humano y Preta van a un enemigo golpeado al azar.',
     ciclo: {
       efecto: 'camino',
       fases: [
-        { id: 'deva', nombre: 'Camino Deva', icono: '☀️', desc: 'gana Espejismo (1 ronda).',
+        { id: 'deva', nombre: 'Camino Deva', icono: '☀️', desc: 'gana Reflejar (1 ronda).',
           alIniciar: { tipo: 'efecto', id: 'mirror', dur: 1, a: 'propio' } },
         { id: 'asura', nombre: 'Camino Asura', icono: '🚀', desc: 'sus golpes hacen +30% de daño.', bonoDano: .30 },
         { id: 'humano', nombre: 'Camino Humano', icono: '👤', desc: 'al terminar su movimiento le roba 1 buff al objetivo.',

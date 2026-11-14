@@ -3,9 +3,10 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
-    id: '2026-11-14b', fecha: '14 de noviembre de 2026', titulo: 'Nuevo ícono: Aura Gélida',
+    id: '2026-11-14c', fecha: '14 de noviembre de 2026', titulo: 'Nuevos íconos: Aura Gélida y Reflejar',
     cambios: [
       { tipo: 'mejora', texto: '💠 El buff Aura Gélida tiene nuevo ícono.' },
+      { tipo: 'mejora', texto: '🪞 Espejismo ahora se llama Reflejar y tiene nuevo ícono (funciona igual).' },
     ],
   },
   {
