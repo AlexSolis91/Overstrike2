@@ -259,6 +259,8 @@ const EFECTOS = {
     desc: `No lo alcanzan los movimientos de área de los enemigos: ni su daño ni sus efectos.` },
   fortaleza: { nombre: 'Fortaleza', icono: '🪨', imagen: 'assets/efectos/fortaleza.webp?v=2', color: 0xa8a29e, tipo: 'buff', tags: ['Estadística'],
     desc: `+${p(BUFFS.fortaleza)} de Armadura.` },
+  escudoSagrado: { nombre: 'Escudo Sagrado', icono: '⚜️', imagen: 'assets/efectos/escudo-sagrado.webp', color: 0xfacc15, tipo: 'buff', tags: ['Esquiva'],
+    desc: 'Los próximos 2 golpes enemigos no le hacen daño ni le aplican sus efectos. Dura hasta gastarlos; si lo recibe otra vez vuelve a 2 (no se acumula). No bloquea el daño por turno.' },
   esquivar: { nombre: 'Esquivar', icono: '🌀', color: 0x7dd3fc, tipo: 'buff', tags: ['Esquiva'],
     desc: `${p(BUFFS.esquivar)} de probabilidad de esquivar cada golpe enemigo (no recibe su daño ni sus efectos).` },
   megaTaunt: { nombre: 'Mega Provocación', icono: '🎯', color: 0xef4444, tipo: 'buff', tags: ['Provocación'],
@@ -865,6 +867,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         case 'pierce': texto = `+${Math.round(BUFFS.perforacion * 100)}% Penetración de escudo · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'fortaleza': texto = `+${Math.round(BUFFS.fortaleza * 100)}% Armadura · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'esquivar': texto = `${Math.round(BUFFS.esquivar * 100)}% de esquivar cada golpe · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'escudoSagrado': texto = `Bloquea ${e.valor} golpe(s) más (sin daño ni efectos)`; n = e.valor; break;
         case 'megaTaunt': texto = `Los ataques de área enemigos solo lo alcanzan a él · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'solarBurn': texto = `Las curaciones le hacen daño (ignora Armadura y Escudo) · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'aoeDodge': texto = `Esquiva los movimientos de área de los enemigos (daño y efectos) · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -2002,6 +2005,11 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         texto = `🔇 ${NOMBRE_CAT[cat]} silenciado`;
         break;
       }
+      case 'escudoSagrado': {  // sin duración: bloquea los próximos 2 golpes; si ya lo tiene, vuelve a 2 (no se acumula)
+        const e = get(t, 'escudoSagrado');
+        if (e) e.valor = 2; else t.estados.push({ id: 'escudoSagrado', valor: 2, fuente: a.uid });
+        break;
+      }
       case 'wear': {           // sin duración: dura hasta que lo limpien
         if (get(t, 'wear')) { emitir('sinEfecto', { a: t.uid, texto: 'Ya tiene Desgaste' }); return; }
         t.estados.push({ id: 'wear', valor: acc.valorFinal ?? DEBUFFS.desgaste });
@@ -2794,6 +2802,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     // cada golpe intenta sus efectos: 2 golpes al mismo objetivo = 2 tiradas
     let huboCritico = false;
     if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) {
+      const sagrado = hostil && t.lado !== a.lado && get(t, 'escudoSagrado');   // Escudo Sagrado: bloquea seguro el golpe (gasta 1)
+      if (sagrado) { if (--sagrado.valor <= 0) quitar(t, sagrado); emitir('esquiva', { a: t.uid, golpe: true, texto: '⚜️ Escudo Sagrado' }); emitir('actualizar', {}, t); continue; }
       if (hostil && t.lado !== a.lado && get(t, 'esquivar') && rng() < BUFFS.esquivar) { emitir('esquiva', { a: t.uid, golpe: true }); continue; }   // Esquivar: ni daño ni efectos de ese golpe
       const cr = golpear(a, t, mov, ctxGolpe); huboCritico = cr || huboCritico;
       if (cr && ctx.acum && t.lado !== a.lado) ctx.acum.criticos = (ctx.acum.criticos || 0) + 1;   // condición criticosMin
@@ -2931,6 +2941,10 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       if (fa?.alFinal && S.actual === a && !ctx.forzado && !ctx.reaccion && !mov.recorreCiclo && !a.muerto) {
         const dest = mov.objetivo === 'enemigo' && principal && !principal.muerto && principal.lado !== a.lado ? principal : rng.elegir(sobrevivientes);
         if (dest) ejecutarAccion(a, fa.alFinal, { objetivo: dest, ejecutor: a });
+      }
+      if (mov.bonoPorUso) {           // el movimiento crece cada vez que se usa (p. ej. Juicio del Astro Rey: +20% por uso)
+        a.bonos[mov.categoria] = (a.bonos[mov.categoria] || 0) + mov.bonoPorUso;
+        emitir('bono', { id: a.uid, texto: `${mov.nombre} +${Math.round(a.bonos[mov.categoria] * 100)}%` }, a);
       }
       if (mov.bonoPorSobreviviente && sobrevivientes.length) {
         a.bonos[mov.categoria] = (a.bonos[mov.categoria] || 0) + mov.bonoPorSobreviviente * sobrevivientes.length;
@@ -8763,6 +8777,68 @@ __e.default = {
 
 return __e; })();
 
+__m["datos/personajes/thestalos.js"] = (() => { const __e: any = {};
+const { espacios } = __m["datos/reliquias.js"];
+
+// Ficha oficial (2026-11-14, kit del usuario). Thestalos, guardián del portal que impide que las dimensiones choquen
+// (el mismo guía del tutorial). Tanque · DoTer de Quemadura: Provocación y Asistir permanentes, crece en HP cada vez que lo
+// ataca un enemigo quemado, Escudo Sagrado (bloquea 2 golpes) y un Over que crece con cada uso y quema a todo el equipo rival.
+// Líder: Protector del Portal. Todos sus ataques escalan por HP.
+__e.default = {
+  id: 'thestalos',
+  franquicia: 'Overstrike', grupos: ['guardianes'],   // campaña: temas de las etapas
+  nombre: 'Thestalos',
+  rol: 'Tanque', rolSecundario: 'DoTer',
+  sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js); Unbreakable Force incluye a todos
+  emoji: '☀️', color: '#facc15', imagen: 'assets/personajes/thestalos.webp',
+  base: { hp: 830, dmg: 50, spd: 88 },
+  extra: {},
+  slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
+
+  lider: {
+    nombre: 'Protector del Portal',
+    desc: 'Todos los aliados tienen +10% de Daño DoT y +15% de Puntería.',
+    bonoStat: { dot: .10, acc: .15 },
+  },
+  pasiva: {
+    nombre: 'Corazones en Llamas',
+    desc: 'Tiene Provocación y Asistir permanentes. Cada vez que lo ataca un enemigo con Quemadura, gana +2% de HP máx. permanente por cada enemigo con Quemadura (sin límite).',
+    efectosPermanentes: ['taunt', 'assist'],
+    gatillo: 'alSerAtacado', filtro: { atacanteTiene: 'burn' },
+    accion: { tipo: 'bonoPermanente', stat: 'hpPct', pct: .02, por: 'quemadurasEnemigas', a: 'propio' },
+  },
+  movimientos: [
+    {
+      categoria: 'basico', nombre: 'Erupción Solar', objetivo: 'enemigo', estilo: 'ranged', color: 0xf97316,
+      pct: .80, escala: 'hp', cd: 0,
+      desc: 'Causa 80% (escala por HP) con 50% de probabilidad de aplicar Quemadura y 50% de probabilidad de aplicar Quemadura Solar.',
+      efectos: [
+        { accion: { tipo: 'efecto', id: 'burn', prob: .50 } },
+        { accion: { tipo: 'efecto', id: 'solarBurn', prob: .50 } },
+      ],
+    },
+    {
+      categoria: 'especial', nombre: 'Magma Strength', objetivo: 'propio', estilo: 'support', color: 0xfacc15, cd: 3,
+      desc: 'Thestalos gana Escudo Sagrado (bloquea los próximos 2 golpes) y se cura el 50% de su HP máx.',
+      efectos: [
+        { cuando: 'final', accion: { tipo: 'efecto', id: 'escudoSagrado', a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'curar', pct: .50, escala: 'hpMax', a: 'propio' } },
+      ],
+    },
+    {
+      categoria: 'over', nombre: 'Juicio del Astro Rey', objetivo: 'enemigo', estilo: 'melee', color: 0xfde047,
+      pct: 2.00, escala: 'hp', cd: 5, bonoPorUso: .20,
+      desc: 'Causa 200% (escala por HP) a un enemigo. Si sobrevive, aplica Quemadura a todos los enemigos. Cada uso aumenta 20% el daño de este movimiento (toda la partida).',
+      efectos: [
+        { cuando: 'final', condicion: { objetivoVivo: true }, accion: { tipo: 'efecto', id: 'burn', a: 'todosEnemigos' } },
+      ],
+    },
+  ],
+};
+
+
+return __e; })();
+
 __m["datos/personajes/index.js"] = (() => { const __e: any = {};
 // Registro de personajes. Cada ficha oficial nueva se agrega aquí y aparece sola en la construcción de equipos.
 const madara = __m["datos/personajes/madara-uchiha.js"].default;
@@ -8846,8 +8922,9 @@ const anakin = __m["datos/personajes/anakin-skywalker.js"].default;
 const obiWan = __m["datos/personajes/obi-wan-kenobi.js"].default;
 const luke = __m["datos/personajes/luke-skywalker.js"].default;
 const padme = __m["datos/personajes/padme-amidala.js"].default;
+const thestalos = __m["datos/personajes/thestalos.js"].default;
 
-const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke, padme];
+const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke, padme, thestalos];
 const porId = id => OFICIALES.find(p => p.id === id);
 
 __e["OFICIALES"] = OFICIALES;
@@ -8929,7 +9006,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 21;
+const REGLAS_RAID = 22;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;

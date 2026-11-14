@@ -276,6 +276,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'pierce': texto = `+${Math.round(BUFFS.perforacion * 100)}% Penetración de escudo · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'fortaleza': texto = `+${Math.round(BUFFS.fortaleza * 100)}% Armadura · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'esquivar': texto = `${Math.round(BUFFS.esquivar * 100)}% de esquivar cada golpe · ${e.dur} ronda(s)`; n = e.dur; break;
+        case 'escudoSagrado': texto = `Bloquea ${e.valor} golpe(s) más (sin daño ni efectos)`; n = e.valor; break;
         case 'megaTaunt': texto = `Los ataques de área enemigos solo lo alcanzan a él · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'solarBurn': texto = `Las curaciones le hacen daño (ignora Armadura y Escudo) · ${e.dur} ronda(s)`; n = e.dur; break;
         case 'aoeDodge': texto = `Esquiva los movimientos de área de los enemigos (daño y efectos) · ${e.dur} ronda(s)`; n = e.dur; break;
@@ -1413,6 +1414,11 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         texto = `🔇 ${NOMBRE_CAT[cat]} silenciado`;
         break;
       }
+      case 'escudoSagrado': {  // sin duración: bloquea los próximos 2 golpes; si ya lo tiene, vuelve a 2 (no se acumula)
+        const e = get(t, 'escudoSagrado');
+        if (e) e.valor = 2; else t.estados.push({ id: 'escudoSagrado', valor: 2, fuente: a.uid });
+        break;
+      }
       case 'wear': {           // sin duración: dura hasta que lo limpien
         if (get(t, 'wear')) { emitir('sinEfecto', { a: t.uid, texto: 'Ya tiene Desgaste' }); return; }
         t.estados.push({ id: 'wear', valor: acc.valorFinal ?? DEBUFFS.desgaste });
@@ -2205,6 +2211,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     // cada golpe intenta sus efectos: 2 golpes al mismo objetivo = 2 tiradas
     let huboCritico = false;
     if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) {
+      const sagrado = hostil && t.lado !== a.lado && get(t, 'escudoSagrado');   // Escudo Sagrado: bloquea seguro el golpe (gasta 1)
+      if (sagrado) { if (--sagrado.valor <= 0) quitar(t, sagrado); emitir('esquiva', { a: t.uid, golpe: true, texto: '⚜️ Escudo Sagrado' }); emitir('actualizar', {}, t); continue; }
       if (hostil && t.lado !== a.lado && get(t, 'esquivar') && rng() < BUFFS.esquivar) { emitir('esquiva', { a: t.uid, golpe: true }); continue; }   // Esquivar: ni daño ni efectos de ese golpe
       const cr = golpear(a, t, mov, ctxGolpe); huboCritico = cr || huboCritico;
       if (cr && ctx.acum && t.lado !== a.lado) ctx.acum.criticos = (ctx.acum.criticos || 0) + 1;   // condición criticosMin
@@ -2342,6 +2350,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       if (fa?.alFinal && S.actual === a && !ctx.forzado && !ctx.reaccion && !mov.recorreCiclo && !a.muerto) {
         const dest = mov.objetivo === 'enemigo' && principal && !principal.muerto && principal.lado !== a.lado ? principal : rng.elegir(sobrevivientes);
         if (dest) ejecutarAccion(a, fa.alFinal, { objetivo: dest, ejecutor: a });
+      }
+      if (mov.bonoPorUso) {           // el movimiento crece cada vez que se usa (p. ej. Juicio del Astro Rey: +20% por uso)
+        a.bonos[mov.categoria] = (a.bonos[mov.categoria] || 0) + mov.bonoPorUso;
+        emitir('bono', { id: a.uid, texto: `${mov.nombre} +${Math.round(a.bonos[mov.categoria] * 100)}%` }, a);
       }
       if (mov.bonoPorSobreviviente && sobrevivientes.length) {
         a.bonos[mov.categoria] = (a.bonos[mov.categoria] || 0) + mov.bonoPorSobreviviente * sobrevivientes.length;

@@ -3,6 +3,13 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-14', fecha: '14 de noviembre de 2026', titulo: 'Nuevo campeón: Thestalos',
+    cambios: [
+      { tipo: 'nuevo', texto: '☀️ Thestalos, el guardián del portal (Tanque · DoTer de Quemadura), en Sacred Aegis: Provocación y Asistir permanentes, crece en HP cuando lo atacan enemigos quemados y su Over crece con cada uso. Líder: +10% Daño DoT y +15% Puntería a su equipo.' },
+      { tipo: 'nuevo', texto: '⚜️ Nuevo buff Escudo Sagrado: bloquea los próximos 2 golpes enemigos (ni daño ni efectos).' },
+    ],
+  },
+  {
     id: '2026-11-13f', fecha: '13 de noviembre de 2026', titulo: 'Doctor Doom: Castigo del Dios Emperador',
     cambios: [
       { tipo: 'cambio', texto: 'Doctor Doom: cada golpe que recibe da un Escudo del 25% de su HP máx. al aliado más herido (ahora sin límite por ronda y dura 2 rondas).' },

@@ -136,6 +136,8 @@ export const EFECTOS = {
     desc: `No lo alcanzan los movimientos de área de los enemigos: ni su daño ni sus efectos.` },
   fortaleza: { nombre: 'Fortaleza', icono: '🪨', imagen: 'assets/efectos/fortaleza.webp?v=2', color: 0xa8a29e, tipo: 'buff', tags: ['Estadística'],
     desc: `+${p(BUFFS.fortaleza)} de Armadura.` },
+  escudoSagrado: { nombre: 'Escudo Sagrado', icono: '⚜️', imagen: 'assets/efectos/escudo-sagrado.webp', color: 0xfacc15, tipo: 'buff', tags: ['Esquiva'],
+    desc: 'Los próximos 2 golpes enemigos no le hacen daño ni le aplican sus efectos. Dura hasta gastarlos; si lo recibe otra vez vuelve a 2 (no se acumula). No bloquea el daño por turno.' },
   esquivar: { nombre: 'Esquivar', icono: '🌀', color: 0x7dd3fc, tipo: 'buff', tags: ['Esquiva'],
     desc: `${p(BUFFS.esquivar)} de probabilidad de esquivar cada golpe enemigo (no recibe su daño ni sus efectos).` },
   megaTaunt: { nombre: 'Mega Provocación', icono: '🎯', color: 0xef4444, tipo: 'buff', tags: ['Provocación'],

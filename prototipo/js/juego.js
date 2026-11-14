@@ -474,8 +474,8 @@ async function manejar(e) {
       aplicar(e);
       break;
     case 'esquiva':
-      FX.textoSobre(c(e.a), '💨 ESQUIVA', '#bfdbfe', 16, -125);
-      log(`${nombre(e.a)} esquiva el ataque de área`, 'fx');
+      FX.textoSobre(c(e.a), e.texto || '💨 ESQUIVA', e.texto ? '#fde68a' : '#bfdbfe', 16, -125);
+      log(e.texto ? `${nombre(e.a)} bloquea el golpe con su Escudo Sagrado` : `${nombre(e.a)} esquiva ${e.golpe ? 'el golpe' : 'el ataque de área'}`, 'fx');
       break;
     case 'sigiloRoto':
       aplicar(e); FX.textoSobre(c(e.a), '👤 Sigilo roto', '#cbd5e1', 14, -125);

@@ -81,9 +81,10 @@ insert into public.campeones (id, nombre, starter, sobres, activo) values
   ('anakin-skywalker', 'Anakin Skywalker', null, array['phantom']::text[], true),
   ('obi-wan-kenobi', 'Obi-Wan Kenobi', null, array['warriors']::text[], true),
   ('luke-skywalker', 'Luke Skywalker', null, array['warriors']::text[], true),
-  ('padme-amidala', 'Padmé Amidala', null, array['warriors']::text[], true)
+  ('padme-amidala', 'Padmé Amidala', null, array['warriors']::text[], true),
+  ('thestalos', 'Thestalos', null, array['sacred']::text[], true)
 on conflict (id) do update set nombre = excluded.nombre, starter = excluded.starter, sobres = excluded.sobres, activo = excluded.activo;
--- 81 campeones
+-- 82 campeones
 
 -- ============================================================ RELIQUIAS (requiere docs/sql/005_reliquias.sql y 006_horda.sql)
 insert into public.reliquia_tipos (tipo, categoria, planas, pcts) values
