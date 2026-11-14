@@ -843,6 +843,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (t.escudo > 0) { const abs = Math.min(t.escudo, aEsc); t.escudo -= abs; aHp += aEsc - abs; aEsc = abs; }
     else { aHp += aEsc; aEsc = 0; }
     t.hp -= aHp;
+    // pasiva "acumulaEscudos": suma (oculto) todo el daño que absorben los Escudos de su equipo; se libera con la acción
+    // "liberarReserva" (p. ej. Doctor Doom en Castigo del Dios Emperador)
+    if (aEsc > 0) for (const p of aliadosDe(t)) if (p.pasiva?.acumulaEscudos) p.reservaEscudos = (p.reservaEscudos || 0) + aEsc;
     return { aHp, aEsc };
   }
   const baseDe = (p, escala) => (ESCALADO[escala || 'dano'])(stats(p));
@@ -1903,6 +1906,15 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           }
           if (e) quitar(t, e);
           if (!t.muerto) { t.estados.push({ id: acc.marca, valor: 0, permanente: true, fuente: t.uid }); emitir('efecto', { a: t.uid, id: acc.marca, texto: EFECTOS[acc.marca].nombre }, t); }
+          break;
+        }
+        case 'liberarReserva': {      // libera el daño absorbido por los Escudos de su equipo (pasiva acumulaEscudos) en un enemigo al azar
+          const total = t.reservaEscudos || 0, d = total > 0 && rng.elegir(enemigosDe(t));
+          if (d) {
+            t.reservaEscudos = 0;
+            emitir('bonoVisible', { a: t.uid, texto: acc.texto || '¡Libera el daño!' }, t);
+            danoEfecto(t, d, total, acc.color ?? 0x22c55e, { sinArmadura: !!acc.sinArmadura });
+          }
           break;
         }
         case 'replicarDoT': {

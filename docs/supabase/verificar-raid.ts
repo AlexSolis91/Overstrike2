@@ -1432,6 +1432,9 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (t.escudo > 0) { const abs = Math.min(t.escudo, aEsc); t.escudo -= abs; aHp += aEsc - abs; aEsc = abs; }
     else { aHp += aEsc; aEsc = 0; }
     t.hp -= aHp;
+    // pasiva "acumulaEscudos": suma (oculto) todo el daño que absorben los Escudos de su equipo; se libera con la acción
+    // "liberarReserva" (p. ej. Doctor Doom en Castigo del Dios Emperador)
+    if (aEsc > 0) for (const p of aliadosDe(t)) if (p.pasiva?.acumulaEscudos) p.reservaEscudos = (p.reservaEscudos || 0) + aEsc;
     return { aHp, aEsc };
   }
   const baseDe = (p, escala) => (ESCALADO[escala || 'dano'])(stats(p));
@@ -2492,6 +2495,15 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           }
           if (e) quitar(t, e);
           if (!t.muerto) { t.estados.push({ id: acc.marca, valor: 0, permanente: true, fuente: t.uid }); emitir('efecto', { a: t.uid, id: acc.marca, texto: EFECTOS[acc.marca].nombre }, t); }
+          break;
+        }
+        case 'liberarReserva': {      // libera el daño absorbido por los Escudos de su equipo (pasiva acumulaEscudos) en un enemigo al azar
+          const total = t.reservaEscudos || 0, d = total > 0 && rng.elegir(enemigosDe(t));
+          if (d) {
+            t.reservaEscudos = 0;
+            emitir('bonoVisible', { a: t.uid, texto: acc.texto || '¡Libera el daño!' }, t);
+            danoEfecto(t, d, total, acc.color ?? 0x22c55e, { sinArmadura: !!acc.sinArmadura });
+          }
           break;
         }
         case 'replicarDoT': {
@@ -4650,6 +4662,8 @@ const { espacios } = __m["datos/reliquias.js"];
 // Ficha oficial #19 (revisada el 2026-10-07). Soporte de escudos: convierte el daño que recibe en escudos para el
 // más herido, escuda a todo el equipo y crece en HP; su Over roba los buffs enemigos y frena sus Overs.
 // Líder: Dios Emperador Doom.
+// 2026-11-13 (kit del usuario): escudo por cada golpe (sin límite, 2 rondas), reserva oculta de lo absorbido por los Escudos
+// del equipo que libera Castigo del Dios Emperador, Fervor 30%. Sim: 70.7% vs azar (77.1% líder); publicado así a pedido del usuario.
 __e.default = {
   id: 'doctor-doom',
   franquicia: 'Marvel', grupos: ['reyes'],   // campaña: temas de las etapas
@@ -4669,16 +4683,17 @@ __e.default = {
   },
   pasiva: {
     nombre: 'Soberano de Latveria',
-    desc: 'Hasta 2 veces por ronda: cuando Doctor Doom recibe daño de un golpe, el aliado más herido (puede ser él) gana un Escudo del 25% del HP máx. de Doctor Doom (1 ronda).',
-    gatillo: 'alRecibirGolpe', maxPorRonda: 2,
-    accion: { tipo: 'escudo', pct: .25, escala: 'hpMax', dur: 1, a: 'aliadoMasHerido' },
+    desc: 'Cada vez que Doctor Doom recibe daño de un golpe, el aliado más herido (puede ser él) gana un Escudo del 25% del HP máx. de Doctor Doom (2 rondas). Todo el daño que absorben los Escudos de su equipo se acumula y se libera con Castigo del Dios Emperador.',
+    gatillo: 'alRecibirGolpe',
+    accion: { tipo: 'escudo', pct: .25, escala: 'hpMax', dur: 2, a: 'aliadoMasHerido' },
+    acumulaEscudos: true,   // reserva oculta: no se ve hasta que se libera
   },
   movimientos: [
     {
       categoria: 'basico', nombre: 'Fervor Místico', objetivo: 'enemigo', estilo: 'ranged', color: 0x4ade80,
       pct: .95, escala: 'hp', cd: 0,
-      desc: 'Causa 95% (escala por HP) más el 10% del Escudo actual de Doctor Doom (no lo gasta).',
-      bonoPorEscudoPropio: .10,
+      desc: 'Causa 95% (escala por HP) más el 30% del Escudo actual de Doctor Doom (no lo gasta).',
+      bonoPorEscudoPropio: .30,
     },
     {
       categoria: 'especial', nombre: 'Protocolo Doombot', objetivo: 'propio', estilo: 'support', color: 0x86efac,
@@ -4690,12 +4705,13 @@ __e.default = {
       ],
     },
     {
-      categoria: 'over', nombre: 'Voluntad de Hierro', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x22c55e,
+      categoria: 'over', nombre: 'Castigo del Dios Emperador', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x22c55e,
       pct: 1.4, escala: 'hp', cd: 4,
-      desc: 'Causa 140% (escala por HP) a todos los enemigos. Les quita todos sus buffs y se los da al aliado de Doom en la misma posición (o a uno al azar si cayó). 60% de probabilidad, por enemigo, de poner su Over en cooldown completo.',
+      desc: 'Causa 140% (escala por HP) a todos los enemigos. Les quita todos sus buffs y se los da al aliado de Doom en la misma posición (o a uno al azar si cayó). 60% de probabilidad, por enemigo, de poner su Over en cooldown completo. Al final libera todo el daño absorbido por los Escudos de su equipo sobre un enemigo al azar (ignora Armadura).',
       efectos: [
         { accion: { tipo: 'transferirBuffs' } },
         { accion: { tipo: 'activarCooldown', categoria: 'over', prob: .60 } },
+        { cuando: 'final', accion: { tipo: 'liberarReserva', sinArmadura: true, texto: '⚡ ¡Castigo del Dios Emperador!', a: 'propio' } },
       ],
     },
   ],
@@ -8913,7 +8929,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 20;
+const REGLAS_RAID = 21;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;

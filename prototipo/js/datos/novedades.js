@@ -3,6 +3,14 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-13f', fecha: '13 de noviembre de 2026', titulo: 'Doctor Doom: Castigo del Dios Emperador',
+    cambios: [
+      { tipo: 'cambio', texto: 'Doctor Doom: cada golpe que recibe da un Escudo del 25% de su HP máx. al aliado más herido (ahora sin límite por ronda y dura 2 rondas).' },
+      { tipo: 'cambio', texto: 'Su Over ahora se llama Castigo del Dios Emperador: al final libera todo el daño que absorbieron los Escudos de su equipo sobre un enemigo al azar (ignora Armadura).' },
+      { tipo: 'cambio', texto: 'Fervor Místico suma el 30% de su Escudo actual (antes 10%).' },
+    ],
+  },
+  {
     id: '2026-11-13e', fecha: '13 de noviembre de 2026', titulo: 'Nueva campeona: Padmé Amidala',
     cambios: [
       { tipo: 'nuevo', texto: '👑 Padmé Amidala (Soporte · Control), en Legendary Warriors: cura y limpia a sus aliados, devuelve los debuffs que limpia a los enemigos, confunde a quien recibe buffs y su Over adelanta los turnos de su equipo y atrasa los del rival. Líder: los ataques de su equipo pueden confundir.' },
