@@ -3,6 +3,12 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-14b', fecha: '14 de noviembre de 2026', titulo: 'Nuevo ícono: Aura Gélida',
+    cambios: [
+      { tipo: 'mejora', texto: '💠 El buff Aura Gélida tiene nuevo ícono.' },
+    ],
+  },
+  {
     id: '2026-11-14', fecha: '14 de noviembre de 2026', titulo: 'Nuevo campeón: Thestalos',
     cambios: [
       { tipo: 'nuevo', texto: '☀️ Thestalos, el guardián del portal (Tanque · DoTer de Quemadura), en Sacred Aegis: Provocación y Asistir permanentes, crece en HP cuando lo atacan enemigos quemados y su Over crece con cada uso. Líder: +10% Daño DoT y +15% Puntería a su equipo.' },
