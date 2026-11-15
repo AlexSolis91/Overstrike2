@@ -16,6 +16,7 @@ import { habilidadesHtml } from './menu.js';
 import { efectosDe, selectorEfectos } from '../datos/efectosCampeon.js';
 import { confirmar } from './dialogo.js';
 import { bonoEstrellas } from '../motor/reglas.js';
+import { coincideNombre, buscadorHtml, reenfocar } from './buscar.js';
 
 const MAX_ESTRELLAS = 10;  // 5 normales + 5 moradas; también en _estrellas_maximas() y ascender() (docs/sql/031_estrellas_moradas.sql)
 const COSTO_MORADA = { copias: [10, 15, 20, 25, 30], polvo: [300, 500, 750, 1000, 1500] };   // igual que en el servidor
@@ -47,6 +48,8 @@ const ORO_FUSION = { 'Común': 1000, 'Raro': 5000, 'Especial': 20000 };
 const SIG_RAREZA = { 'Común': 'Raro', 'Raro': 'Especial', 'Especial': 'Épico' };
 let cfg = [];                 // sobres_config del servidor
 let colEfecto = null;         // pestaña Colección: buff o debuff por el que se filtran los campeones
+let colBusca = '';            // pestaña Colección: texto del buscador por nombre
+let soloFicha = null;         // ficha suelta de un campeón (Construcción de Equipos): { accion: { texto, fn }, alCerrar }
 let pestana = 'tienda', detalle = null, elegidoPortal = null, ocupado = false;
 
 // ---------------------------------------------------------------- avisos
@@ -299,15 +302,15 @@ function htmlStatsCuenta(p, r) {
 function htmlColeccion() {
   if (detalle) return htmlDetalle(porId(detalle));
   const tengo = OFICIALES.filter(p => col.has(p.id)).length;
-  const orden = OFICIALES.filter(p => !colEfecto || efectosDe(p).has(colEfecto)).sort((a, b) => (col.has(b.id) - col.has(a.id)) || a.nombre.localeCompare(b.nombre));
+  const orden = OFICIALES.filter(p => (!colEfecto || efectosDe(p).has(colEfecto)) && coincideNombre(p, colBusca)).sort((a, b) => (col.has(b.id) - col.has(a.id)) || a.nombre.localeCompare(b.nombre));
   const conCopias = OFICIALES.some(p => col.get(p.id)?.copias > 0);
   const nSel = selDesfrag ? [...selDesfrag.values()].reduce((s, n) => s + n, 0) : 0;
   return `<p class="tc-nota">Tienes <b>${tengo}/${OFICIALES.length}</b> campeones. Toca uno para ascenderlo, abrir espacios de reliquias o desfragmentar copias.</p>
     ${selDesfrag ? `<div class="tc-fila tc-maximos tc-selfrag-barra"><span>🧩 Toca los campeones con copias que quieres desfragmentar. ${nSel ? `<b>${num(nSel)} copia${nSel > 1 ? 's' : ''} de ${selDesfrag.size} ${selDesfrag.size > 1 ? 'campeones' : 'campeón'}</b> → ${num(nSel)}–${num(nSel * 2)} fragmentos de Runa.` : ''}</span>
       <span class="tc-selfrag-bot"><button class="eq-btn" data-sel-desfrag>Cancelar</button><button class="eq-listo" data-desfrag-sel ${nSel ? '' : 'disabled'}>Desfragmentar</button></span></div>`
       : conCopias ? '<div class="tc-fila tc-maximos"><span>🧩 Desfragmenta las copias de los campeones que no piensas ascender.</span><button class="eq-btn" data-sel-desfrag>Seleccionar para desfragmentar</button></div>' : ''}
-    <div class="tc-fila tc-col-filtro">${selectorEfectos('tc-efecto', colEfecto)}${colEfecto ? `<span>${orden.length} ${orden.length === 1 ? 'campeón puede ponerlo' : 'campeones pueden ponerlo'} · tienes ${orden.filter(p => col.has(p.id)).length}</span>` : ''}</div>
-    <div class="tc-grid">${orden.map(p => { const r = col.get(p.id);
+    <div class="tc-fila tc-col-filtro">${buscadorHtml('tc-buscar', colBusca)}${selectorEfectos('tc-efecto', colEfecto)}${colEfecto ? `<span>${orden.length} ${orden.length === 1 ? 'campeón puede ponerlo' : 'campeones pueden ponerlo'} · tienes ${orden.filter(p => col.has(p.id)).length}</span>` : ''}</div>
+    ${orden.length ? '' : '<p class="tc-vacio">Ningún campeón coincide con tu búsqueda.</p>'}<div class="tc-grid">${orden.map(p => { const r = col.get(p.id);
       if (selDesfrag) return celdaDesfrag(p, r);
       return `<button class="tc-carta ${r ? '' : 'falta'}" data-ver="${p.id}" style="--c:${p.color}">
         <div class="tc-img">${retrato(p)}</div>
@@ -348,7 +351,9 @@ function htmlDetalle(p) {
   const puedeAscender = r.estrellas < MAX_ESTRELLAS && r.copias >= costoCopias && (inv.frag_otros || 0) >= costoPolvo;
   const sigEsp = r.espacios, espOro = COSTO_ESPACIO.oro[sigEsp];
   const cerrados = ESPACIOS.filter(e => e.extra && !abiertosDe(r).includes(e.id));
-  return `<button class="eq-btn tc-volver" data-volver>← Colección</button>
+  const acc = soloFicha?.accion?.(p.id);
+  return `${soloFicha ? `<div class="tc-ficha-top"><button class="eq-btn tc-volver" data-volver>← Volver al equipo</button>${acc ? `<button class="eq-listo" data-ficha-accion>${acc.texto}</button>` : ''}</div>`
+    : '<button class="eq-btn tc-volver" data-volver>← Colección</button>'}
     <div class="tc-det" style="--c:${p.color}">
       <div class="tc-det-img">${retrato(p)}</div>
       <div class="tc-det-info">
@@ -358,7 +363,7 @@ function htmlDetalle(p) {
         <div class="tc-obtencion">Obtención:${obtencion(p)}</div>
       </div>
     </div>
-    <div class="tc-acciones">
+    ${soloFicha ? '' : `<div class="tc-acciones">
       <section><h4>⭐ Ascender</h4>
         ${r.estrellas >= MAX_ESTRELLAS ? '<p>¡Ya tiene las 5 estrellas moradas!</p>'
           : morada ? `<p>Sube a la <b class="tc-morada">${im + 1}ª estrella morada</b> (+5% a Vida, Daño y Velocidad). Cuesta <b>${costoCopias} copias</b> y <b>${ICONO_ESTELAR} ${num(costoPolvo)} de Polvo Estelar</b> (tienes ${num(inv.frag_otros)}).</p>
@@ -375,7 +380,7 @@ function htmlDetalle(p) {
         <p>Cada copia da 1 o 2 fragmentos de Runa de Invocación (${FRAG_POR_RUNA} = 1 Runa).</p>
         ${r.copias ? `<div class="tc-fila"><input id="tc-cant" type="number" min="1" max="${r.copias}" value="1"><button class="eq-btn" data-desfrag>Desfragmentar</button></div>` : '<p class="tc-tenue">No tiene copias para desfragmentar.</p>'}
       </section>
-    </div>
+    </div>`}
     ${htmlStatsCuenta(p, r)}
     ${htmlEspaciosReliquias(p, r)}
     <section class="tc-habilidades"><h4>✦ Habilidades</h4>${habilidadesHtml(p)}</section>`;
@@ -409,13 +414,28 @@ function pintar() {
 export async function abrirTC(tab = 'tienda') {
   if (!perfilActual()) return;
   if (!perfilActual().starter_elegido) return mostrarStarter();
+  if (soloFicha) cerrarTC();
   pestana = tab; detalle = null; relSel = null; slotSel = null;
   $('#tc').classList.remove('hidden');
   $('#tc-cont').innerHTML = '<p class="tc-vacio">Cargando…</p>';
   try { await recargar(); pintar(); }
   catch (e) { $('#tc-cont').innerHTML = `<p class="tc-vacio">${D.mensajeError(e)}</p>`; }
 }
-const cerrarTC = () => $('#tc').classList.add('hidden');
+function cerrarTC() {
+  $('#tc').classList.add('hidden');
+  if (!soloFicha) return;
+  const f = soloFicha; soloFicha = null; $('#tc').classList.remove('tc-ficha'); f.alCerrar?.();
+}
+// Ficha suelta de un campeón propio (Construcción de Equipos): estadísticas, líder, pasiva, movimientos y reliquias (se pueden cambiar).
+// accion(id) → { texto, fn } opcional: botón arriba (p. ej. "Agregar al equipo"); alCerrar() al cerrarla.
+export async function abrirFichaCampeon(id, { accion = null, alCerrar = null } = {}) {
+  if (!perfilActual()) return;
+  soloFicha = { accion, alCerrar }; pestana = 'coleccion'; detalle = id; relSel = null; slotSel = null;
+  $('#tc').classList.add('tc-ficha'); $('#tc').classList.remove('hidden');
+  $('#tc-cont').innerHTML = '<p class="tc-vacio">Cargando…</p>';
+  try { await recargar(); pintar(); }
+  catch (e) { $('#tc-cont').innerHTML = `<p class="tc-vacio">${D.mensajeError(e)}</p>`; }
+}
 export const tcAbierto = () => !$('#tc').classList.contains('hidden') || !$('#starter').classList.contains('hidden');
 
 // ---------------------------------------------------------------- acciones
@@ -563,7 +583,8 @@ async function ejecutar(e) {
   if ('ticket' in b.dataset) return abrirConTicket();
   if (b.dataset.ver && !col.has(b.dataset.ver)) return conCursor() ? undefined : hojaTactil(fichaBloqueado(porId(b.dataset.ver)));
   if (b.dataset.ver) { detalle = b.dataset.ver; slotSel = null; return pintar(); }
-  if ('volver' in b.dataset) { detalle = null; slotSel = null; return pintar(); }
+  if ('volver' in b.dataset) { if (soloFicha) return cerrarTC(); detalle = null; slotSel = null; return pintar(); }
+  if ('fichaAccion' in b.dataset && soloFicha) { const acc = soloFicha.accion?.(detalle); cerrarTC(); return acc?.fn(); }
   if ('ascender' in b.dataset) return accion(async () => { const n = await D.ascender(detalle); await recargar(); pintar();
     aviso(n > 5 ? `¡${porId(detalle).nombre} ganó su ${n - 5}ª estrella morada!` : `¡${porId(detalle).nombre} ascendió a ${n}★!`); });
   if (b.dataset.espacio) {
@@ -650,6 +671,8 @@ export function iniciarColeccion() {
     if (e.target.matches('[data-atributo]')) { relAtributo = e.target.value; pintar(); }
     if (e.target.id === 'tc-efecto') { colEfecto = e.target.value || null; pintar(); }
   });
+  $('#tc').addEventListener('input', e => { if (e.target.id === 'tc-buscar') { colBusca = e.target.value; pintar(); reenfocar('tc-buscar', true); } });
+  $('#tc').addEventListener('click', e => { if (e.target.closest('[data-limpiar="tc-buscar"]')) { colBusca = ''; pintar(); reenfocar('tc-buscar', true); } }, true);
   activarTip($('#tc'), '.tc-slot-panel [data-tip]', el => fichaEquipar(el.dataset.uid));
   activarTip($('#tc'), '.tc-carta.falta[data-ver]', el => fichaBloqueado(porId(el.dataset.ver)));
   $('#starter').addEventListener('click', e => {
@@ -665,7 +688,7 @@ export function iniciarColeccion() {
   addEventListener('inventario:cambio', async () => { if (!$('#tc').classList.contains('hidden')) { await recargar().catch(() => {}); pintar(); } });
   addEventListener('keydown', e => {
     if (e.key !== 'Escape' || $('#apertura')) return;
-    if (!$('#tc').classList.contains('hidden')) { if (slotSel) { slotSel = null; pintar(); } else if (relSel) { relSel = null; pintar(); } else if (detalle) { detalle = null; pintar(); } else cerrarTC(); }
+    if (!$('#tc').classList.contains('hidden')) { if (slotSel) { slotSel = null; pintar(); } else if (relSel) { relSel = null; pintar(); } else if (detalle && !soloFicha) { detalle = null; pintar(); } else cerrarTC(); }
     else if (!$('#starter').classList.contains('hidden')) $('#starter').classList.add('hidden');
   });
   pintarPie();

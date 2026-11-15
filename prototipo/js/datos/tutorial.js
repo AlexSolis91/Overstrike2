@@ -92,8 +92,14 @@ export const SEMILLA_TUTORIAL = 2026;
 // ---------------------------------------------------------------- mini tutoriales: la primera vez que entras a cada lugar
 export const MINI = {
   equipo: [
-    { texto: 'Aquí armas tu equipo de *5 campeones*. Toca un campeón para agregarlo y toca su lugar para quitarlo.' },
+    { texto: 'Aquí armas tu equipo de *5 campeones*. Toca un campeón para agregarlo y toca su lugar para quitarlo. Usa 🔍 para buscarlo por nombre.' },
+    { texto: 'Con *📂 Cargar Equipo* pones uno de tus equipos guardados y con *💾 Guardar* guardas el que armaste.' },
     { texto: 'En Partida rápida también puedes elegir al equipo rival o dejar que se arme al azar. Cuando estés listo, presiona *¡Listo!*', foco: '#eq-listo' },
+  ],
+  armar_equipos: [
+    { texto: 'La *Construcción de Equipos*: arma equipos con tus campeones, ponles nombre y guárdalos (hasta 20).', foco: '#eq-guardados' },
+    { texto: 'Toca un campeón para ver su ficha: estadísticas, habilidades y *reliquias* (puedes cambiarlas ahí mismo). Desde ahí lo agregas o lo quitas del equipo.' },
+    { texto: 'Luego, en la selección de cualquier modo, usa *📂 Cargar Equipo* para ponerlo de un toque.' },
   ],
   campana: [
     { texto: 'Bienvenido a la *Campaña*. Cada etapa es una batalla contra un equipo fijo del Portal.', foco: '#cp-mapa' },

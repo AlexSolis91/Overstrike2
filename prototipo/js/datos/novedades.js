@@ -3,6 +3,14 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-14d', fecha: '14 de noviembre de 2026', titulo: 'Construcción de Equipos y buscador',
+    cambios: [
+      { tipo: 'nuevo', texto: '🛠️ Construcción de Equipos (menú principal): arma hasta 20 equipos con tus campeones, ponles nombre y guárdalos. Toca un campeón para ver sus estadísticas, habilidades y reliquias, y cámbiale las reliquias ahí mismo.' },
+      { tipo: 'nuevo', texto: '📂 Cargar Equipo: en la selección de cualquier modo pon uno de tus equipos guardados de un toque. Con 💾 Guardar guardas el equipo que acabas de armar.' },
+      { tipo: 'mejora', texto: '🔍 Buscador por nombre en la Colección y al elegir campeones (sin importar acentos ni mayúsculas).' },
+    ],
+  },
+  {
     id: '2026-11-14c', fecha: '14 de noviembre de 2026', titulo: 'Nuevos íconos: Aura Gélida y Reflejar',
     cambios: [
       { tipo: 'mejora', texto: '💠 El buff Aura Gélida tiene nuevo ícono.' },

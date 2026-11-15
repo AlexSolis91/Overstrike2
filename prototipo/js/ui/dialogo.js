@@ -60,3 +60,26 @@ export function elegirOpcion(texto, opciones, { titulo = 'Elige' } = {}) {
   });
   return { promesa, cerrar: () => cerrar?.(null) };
 }
+
+// Pide un texto corto (p. ej. el nombre de un equipo). Resuelve con el texto (sin espacios a los lados) o null si cancela.
+export function pedirTexto(texto, { titulo = 'Escribe', valor = '', max = 24, aceptar = 'Aceptar', cancelar = 'Cancelar' } = {}) {
+  return (cola = cola.then(() => new Promise(ok => {
+    const fondo = document.createElement('div');
+    fondo.className = 'dlg-fondo';
+    fondo.innerHTML = `<div class="hov-caja dlg-caja" role="dialog" aria-modal="true"><h2></h2><p class="dlg-texto"></p>
+      <input class="dlg-input" type="text" autocomplete="off" spellcheck="false">
+      <div class="hov-botones"><button class="hd-btn sec" data-r="0">${cancelar}</button><button class="hd-btn" data-r="1">${aceptar}</button></div></div>`;
+    fondo.querySelector('h2').textContent = titulo;
+    fondo.querySelector('.dlg-texto').textContent = texto;
+    const inp = fondo.querySelector('input'); inp.maxLength = max; inp.value = valor;
+    const cerrar = r => { removeEventListener('keydown', tecla, true); fondo.remove(); ok(r ? inp.value.trim() || null : null); };
+    const tecla = e => {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cerrar(false); }
+      else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); cerrar(true); }
+    };
+    fondo.addEventListener('click', e => { const b = e.target.closest('[data-r]'); if (b) cerrar(b.dataset.r === '1'); else if (e.target === fondo) cerrar(false); });
+    addEventListener('keydown', tecla, true);
+    document.body.appendChild(fondo);
+    inp.focus(); inp.select();
+  })));
+}

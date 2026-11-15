@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=21">
-  <link rel="stylesheet" href="menu.css?v=56">
+  <link rel="stylesheet" href="menu.css?v=57">
 </head>
 <body data-pantalla="cargando">
   <!-- ============================================================ LOBBY -->
@@ -52,16 +52,20 @@
       <h2>Construye tu equipo</h2>
       <button id="eq-listo" class="eq-listo" disabled>¡Listo!</button>
     </header>
+    <div id="eq-guardados" class="eq-guardados"></div>
     <div class="eq-equipos">
       <div class="eq-fila" data-lado="jugador">
         <div class="eq-etq">Tu equipo</div>
         <div class="eq-slots"></div>
-        <button class="eq-btn eq-azar" data-lado="jugador" title="Llenar al azar">🎲</button>
+        <div class="eq-acc"><button class="eq-btn eq-azar" data-lado="jugador" title="Llenar al azar">🎲</button>
+          <button class="eq-btn eq-cargar" data-lado="jugador" title="Cargar un equipo guardado">📂 Cargar Equipo</button>
+          <button class="eq-btn eq-guardar" title="Guardar este equipo con un nombre">💾 Guardar</button></div>
       </div>
       <div class="eq-fila" data-lado="rival">
         <div class="eq-etq">Rival<div class="eq-modo"><button data-modo="azar">🎲 Aleatorio</button><button data-modo="construir">✋ Construir</button></div></div>
         <div class="eq-slots"></div>
-        <button class="eq-btn eq-azar" data-lado="rival" title="Llenar al azar">🎲</button>
+        <div class="eq-acc"><button class="eq-btn eq-azar" data-lado="rival" title="Llenar al azar">🎲</button>
+          <button class="eq-btn eq-cargar" data-lado="rival" title="Cargar un equipo guardado como rival">📂 Cargar Equipo</button></div>
       </div>
     </div>
     <div id="eq-lider" class="eq-lider"></div>

@@ -8,7 +8,8 @@ import { equipoCampana, irA } from './menu.js';
 import { OFICIALES, porId } from '../datos/personajes/index.js';
 import { LIGAS, liga, siguienteLiga, ATAQUES_DIARIOS, CAMPEONES_MINIMOS, BUSQUEDA_SEG, ORO_VICTORIA, SEMANAL, TEMPORADA, TEMPORADA_ESTELAR } from '../datos/arena.js';
 import { imgHtml } from './imagenes.js';
-import { VERSION } from '../datos/cuenta.js';
+import { VERSION } from '../datos/cuenta.js';
+
 import { confirmar, avisar } from './dialogo.js';
 
 const $ = s => document.querySelector(s);
@@ -127,6 +128,7 @@ function editar(tipo) {
   equipoCampana({
     titulo: tipo === 'ataque' ? '⚔️ Arena · equipo de Ataque' : '🛡️ Arena · equipo de Defensa', rivales: [], propios: disponibles, sinRival: true, volverTxt: '← Arena',
     inicial: (tipo === 'ataque' ? est.ataque : est.defensa).map(porId).filter(Boolean),
+    ocupados: new Map([...otro].map(id => [id, tipo === 'ataque' ? 'Defensa' : 'Ataque'])),
     alVolver: () => irA('arena'),
     alListo: async eq => {
       try { await D.arenaGuardarEquipo(tipo, eq.map(p => p.id)); } catch (e) { avisar(D.mensajeError(e)); }

@@ -6,6 +6,12 @@ import { sonar, musica, temaDePartida } from './audio.js';
 import { FONDOS } from '../datos/fondos.js';
 import { temporizar } from './graficos.js';
 import { efectosDe, selectorEfectos } from '../datos/efectosCampeon.js';
+import { coincideNombre, buscadorHtml, reenfocar } from './buscar.js';
+import { misEquipos, guardarEquipo, borrarEquipo, elegirEquipoGuardado, mensajeEquipos, filaEquipoHtml, MAX_EQUIPOS, MAX_NOMBRE } from './equipos.js';
+import { avisar, confirmar, pedirTexto } from './dialogo.js';
+import { perfilActual } from './cuenta.js';
+import { abrirFichaCampeon } from './coleccion.js';
+import * as D from '../servicios/datos.js';
 
 const $ = s => document.querySelector(s);
 const TAM = 5;                                   // los equipos siempre son de 5
@@ -16,6 +22,7 @@ const MODOS = [
   { id: 'hordas', nombre: 'Hordas', icono: '🧟', desc: 'Oleadas sin fin: ¿hasta dónde llegas?', activo: true },
   { id: 'jefe', nombre: 'Jefe de Raid', icono: '👑', desc: 'Todos contra Lich King: reparte daño y gana cofres', activo: true },
   { id: 'arena', nombre: 'Arena', icono: '🏟️', desc: 'Defiende y ataca: sube de liga', activo: true },
+  { id: 'equipos', nombre: 'Construcción de Equipos', icono: '🛠️', desc: 'Arma y guarda tus equipos para cargarlos en cualquier modo', activo: true },
 ];
 const ROL = { Invocador: 'Invoker' };          // mismos roles con distinto nombre en las fichas
 const rolesDe = p => [p.rol, p.rolSecundario].filter(Boolean).map(r => ROL[r] || r);
@@ -23,7 +30,8 @@ const CAT = { basico: 'Básico', especial: 'Especial', over: 'Over' };
 const OBJ = { enemigo: 'Un enemigo', aliado: 'Un aliado', propio: 'Propio', todosEnemigos: 'Todos los enemigos', todosAliados: 'Todos los aliados', azar: 'Enemigos al azar' };
 const pct = v => `${Math.round(v * 1000) / 10}%`;
 
-const E = { jugador: [], rival: [], rivalModo: 'azar', editando: 'jugador', filtro: null, efecto: null, sel: null, campana: null };
+const E = { jugador: [], rival: [], rivalModo: 'azar', editando: 'jugador', filtro: null, efecto: null, busca: '', sel: null, campana: null };
+// campana.armado (Construcción de Equipos): { id, nombre, original } del equipo guardado que se está editando (id null = nuevo)
 // campana (modo Campaña): { titulo, rivales: [fichas], propios: Set(ids), alListo(eqJ), alVolver() } · el rival es fijo y solo se eligen campeones propios
 let alJugar = null;
 
@@ -106,7 +114,7 @@ const aleatorio = (base = []) => {
   const resto = OFICIALES.filter(p => !base.some(b => b.id === p.id)).sort(() => Math.random() - .5);
   return [...base, ...resto].slice(0, TAM);
 };
-const listo = () => E.jugador.length === TAM && (E.campana || E.rivalModo === 'azar' || E.rival.length === TAM);
+const listo = () => E.jugador.length === TAM && (E.campana?.armado ? !!E.campana.armado.nombre.trim() : (E.campana || E.rivalModo === 'azar' || E.rival.length === TAM));
 
 function retrato(p, cls = '') {
   return `<div class="ret ${cls}" style="--c:${p.color}">${imgHtml(p.imagen, p.nombre) || `<span class="ret-emoji">${p.emoji}</span>`}</div>`;
@@ -117,6 +125,10 @@ function renderEquipo() {
   const camp = E.campana;
   document.body.classList.toggle('eq-campana', !!camp);
   document.body.classList.toggle('eq-sin-rival', !!camp?.sinRival);
+  document.body.classList.toggle('eq-constructor', !!camp?.armado);
+  document.body.classList.toggle('eq-guardables', !!perfilActual());
+  $('#eq-listo').textContent = camp?.armado ? '💾 Guardar' : '¡Listo!';
+  $('#eq-guardados').innerHTML = camp?.armado ? htmlConstructor() : '';
   $('#pantalla-equipo h2').textContent = camp ? camp.titulo : 'Construye tu equipo';
   $('#eq-volver').textContent = camp ? (camp.volverTxt || '← Portal') : '← Menú';
   if (camp) { E.editando = 'jugador'; E.rival = camp.rivales; }
@@ -145,10 +157,11 @@ function renderEquipo() {
   // filtros
   const roles = [...new Set(OFICIALES.flatMap(rolesDe))];
   $('#eq-filtros').innerHTML = `<span class="eq-editando">Eligiendo para: <b>${E.editando === 'jugador' ? 'Tu equipo' : 'Rival'}</b></span>` +
+    buscadorHtml('eq-buscar', E.busca) +
     [null, ...roles].map(r => `<button class="filtro ${E.filtro === r ? 'on' : ''}" data-rol="${r ?? ''}">${r ?? 'Todos'}</button>`).join('') + selectorEfectos('eq-efecto', E.efecto);
   // galería
-  const lista = OFICIALES.filter(p => (!E.filtro || rolesDe(p).includes(E.filtro)) && (!E.efecto || efectosDe(p).has(E.efecto)) && (!camp || camp.propios.has(p.id)));
-  $('#eq-galeria').innerHTML = !lista.length ? '<p class="eq-sin">Ningún campeón coincide con estos filtros.</p>' : lista.map(p => {
+  const lista = OFICIALES.filter(p => (!E.filtro || rolesDe(p).includes(E.filtro)) && (!E.efecto || efectosDe(p).has(E.efecto)) && coincideNombre(p, E.busca) && (!camp || camp.propios.has(p.id)));
+  $('#eq-galeria').innerHTML = !lista.length ? `<p class="eq-sin">${E.busca ? 'Ningún campeón coincide con tu búsqueda.' : 'Ningún campeón coincide con estos filtros.'}</p>` : lista.map(p => {
     const pos = equipoDe(E.editando).findIndex(x => x.id === p.id), bloq = camp?.bloqueados?.has(p.id);
     return `<div class="gc ${pos >= 0 ? 'elegido' : ''} ${bloq ? 'bloq' : ''}" data-id="${p.id}" style="--c:${p.color}" ${bloq ? `title="${camp.motivoBloqueo}"` : ''}>
       ${retrato(p, 'gc-img')}
@@ -160,8 +173,8 @@ function renderEquipo() {
     </div>`;
   }).join('');
   $('#eq-listo').disabled = !listo();
-  $('#eq-listo').title = listo() ? '' : camp ? 'Elige 5 de tus campeones' : 'Completa los 5 personajes de cada equipo que construyas';
-  if (camp && !lista.length) $('#eq-galeria').innerHTML = '<p class="eq-vacio">No tienes campeones todavía: abre tu Starter Pack en la Tienda.</p>';
+  $('#eq-listo').title = listo() ? '' : camp?.armado ? 'Elige 5 campeones y ponle nombre al equipo' : camp ? 'Elige 5 de tus campeones' : 'Completa los 5 personajes de cada equipo que construyas';
+  if (camp && !lista.length && !E.busca && !E.filtro && !E.efecto) $('#eq-galeria').innerHTML = '<p class="eq-vacio">No tienes campeones todavía: abre tu Starter Pack en la Tienda.</p>';
 }
 
 function alternarPersonaje(id) {
@@ -188,6 +201,115 @@ let avisoT = null;
 function aviso(t) {
   const a = $('#eq-aviso'); a.textContent = t; a.classList.add('ver');
   clearTimeout(avisoT); avisoT = setTimeout(() => a.classList.remove('ver'), 1800);
+}
+
+// ---------------------------------------------------------------- equipos guardados: Cargar / Guardar / Construcción de Equipos
+const esc = s => String(s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+let guardados = [];                                   // equipos guardados (barra de la Construcción de Equipos)
+const idsDe = eq => eq.map(p => p.id).join(',');
+const nuevoConstructor = () => ({ id: null, nombre: '', original: { ids: '', nombre: '' } });
+const cambiado = () => { const c = E.campana?.armado; return !!c && E.jugador.length > 0 && (idsDe(E.jugador) !== c.original.ids || c.nombre.trim() !== c.original.nombre); };
+const descartar = async () => !cambiado() || confirmar('Tienes cambios sin guardar en este equipo. ¿Descartarlos?', { aceptar: 'Descartar' });
+
+function htmlConstructor() {
+  const c = E.campana.armado;
+  return `<div class="eqg-barra">
+      <label class="eqg-nombre"><span>Nombre del equipo</span><input id="eqg-nombre" maxlength="${MAX_NOMBRE}" value="${esc(c.nombre)}" placeholder="Ej. Equipo de Arena" autocomplete="off" spellcheck="false"></label>
+      <div class="eqg-botones"><button class="eq-btn" data-eqg="nuevo">＋ Nuevo</button>
+        <button class="eq-btn" data-eqg="duplicar" ${c.id ? '' : 'disabled'}>⧉ Duplicar</button>
+        <button class="eq-btn" data-eqg="borrar" ${c.id ? '' : 'disabled'}>🗑️ Borrar</button></div>
+    </div>
+    <div class="eqg-lista"><span class="eqg-cuenta">Tus equipos<b>${guardados.length}/${MAX_EQUIPOS}</b></span>${guardados.length
+      ? guardados.map(eq => filaEquipoHtml(eq, `data-eqg-abrir="${eq.id}"`, eq.id === c.id)).join('')
+      : '<span class="eqg-vacio">Todavía no guardas ninguno: elige 5 campeones, ponle nombre y presiona 💾 Guardar.</span>'}</div>`;
+}
+
+export async function abrirConstructor() {
+  if (!perfilActual()) return avisar('Inicia sesión para construir y guardar tus equipos.');
+  let filas;
+  try { [filas, guardados] = await Promise.all([D.miColeccion(), misEquipos({ forzar: true })]); }
+  catch (e) { return avisar(mensajeEquipos(e)); }
+  E.campana = { titulo: '🛠️ Construcción de Equipos', rivales: [], propios: new Set((filas || []).map(r => r.campeon)), sinRival: true, volverTxt: '← Menú',
+    alVolver: () => irA('menu'), armado: nuevoConstructor() };
+  E.jugador = []; E.sel = null; E.filtro = null; E.efecto = null; E.busca = '';
+  irA('equipo');
+}
+function editarGuardado(eq) {
+  const c = E.campana.armado;
+  E.jugador = eq.campeones.map(id => OFICIALES.find(p => p.id === id)).filter(p => p && E.campana.propios.has(p.id));
+  Object.assign(c, { id: eq.id, nombre: eq.nombre, original: { ids: idsDe(E.jugador), nombre: eq.nombre } });
+  E.sel = null; sonar('elegir'); renderEquipo();
+}
+async function accionConstructor(que) {
+  const c = E.campana.armado;
+  if (que === 'nuevo') { if (!await descartar()) return; E.campana.armado = nuevoConstructor(); E.jugador = []; E.sel = null; return renderEquipo(); }
+  if (que === 'duplicar') {
+    if (guardados.length >= MAX_EQUIPOS) return avisar(`Ya tienes ${MAX_EQUIPOS} equipos guardados: borra uno para guardar otro.`);
+    Object.assign(c, { id: null, nombre: `${c.nombre.trim()} (copia)`.slice(0, MAX_NOMBRE), original: { ids: '', nombre: '' } });
+    renderEquipo(); return aviso('⧉ Copia lista: cámbiale el nombre o los campeones y presiona 💾 Guardar');
+  }
+  if (que === 'borrar') {
+    const eq = guardados.find(x => x.id === c.id); if (!eq) return;
+    if (!await confirmar(`¿Borrar el equipo "${eq.nombre}"? Esto no se puede deshacer.`, { aceptar: 'Borrar' })) return;
+    try { await borrarEquipo(eq.id); guardados = await misEquipos(); } catch (e) { return avisar(mensajeEquipos(e)); }
+    E.campana.armado = nuevoConstructor(); E.jugador = []; E.sel = null; sonar('quitar'); renderEquipo();
+    return aviso(`🗑️ "${eq.nombre}" borrado`);
+  }
+}
+async function guardarConstructor() {
+  const c = E.campana.armado, nombre = c.nombre.trim();
+  if (!c.id && guardados.length >= MAX_EQUIPOS) return avisar(`Ya tienes ${MAX_EQUIPOS} equipos guardados: borra uno para guardar otro.`);
+  try {
+    const fila = await guardarEquipo(c.id, nombre, E.jugador.map(p => p.id));
+    guardados = await misEquipos();
+    Object.assign(c, { id: fila.id, nombre: fila.nombre, original: { ids: idsDe(E.jugador), nombre: fila.nombre } });
+  } catch (e) { return avisar(mensajeEquipos(e)); }
+  sonar('listo'); renderEquipo(); aviso(`💾 "${nombre}" guardado`);
+}
+// Ficha del campeón dentro de la Construcción de Equipos: stats, habilidades y reliquias (se pueden cambiar) + agregar / quitar
+function fichaConstructor(id) {
+  sonar('abrir');
+  abrirFichaCampeon(id, {
+    accion: x => ({ texto: enEquipo('jugador', x) ? '✕ Quitar del equipo' : '＋ Agregar al equipo', fn: () => alternarPersonaje(x) }),
+    alCerrar: () => renderEquipo(),
+  });
+}
+
+// "📂 Cargar Equipo": pone un equipo guardado en la fila (si todos sus campeones pueden usarse en este modo)
+async function cargarGuardado(lado) {
+  const eq = await elegirEquipoGuardado(); if (!eq) return;
+  const f = eq.campeones.map(id => OFICIALES.find(p => p.id === id));
+  const no = m => avisar(`No es posible cargar el equipo "${eq.nombre}" ya que ${m}.`, { titulo: 'No se pudo cargar el equipo' });
+  if (f.some(p => !p)) return no('uno de sus campeones ya no está disponible');
+  const camp = E.campana;
+  if (camp) for (const p of f) {
+    const otro = camp.ocupados?.get(p.id);
+    if (otro) return no(`el campeón ${p.nombre} ya se encuentra en el equipo de ${otro}`);
+    if (!camp.propios.has(p.id)) return no(`ya no tienes a ${p.nombre}`);
+    if (camp.bloqueados?.has(p.id)) return no(`${p.nombre} no puede usarse aquí (${camp.motivoBloqueo.replace(/^🔒\s*/, '').replace(/\.$/, '')})`);
+  }
+  if (lado === 'rival') E.rivalModo = 'construir';
+  E[lado] = f; E.editando = lado; E.sel = null;
+  sonar('elegir'); renderEquipo(); aviso(`📂 "${eq.nombre}" cargado`);
+}
+// "💾 Guardar": guarda el equipo de la fila del jugador con un nombre (solo campeones propios)
+async function guardarDesdeSeleccion() {
+  if (E.jugador.length !== TAM) { sonar('resistido'); return aviso('Completa los 5 campeones de tu equipo para guardarlo'); }
+  let lista;
+  try {
+    lista = await misEquipos();
+    if (!E.campana) {                                 // en Partida rápida se puede elegir a cualquiera: solo se guardan campeones propios
+      const mios = new Set(((await D.miColeccion()) || []).map(r => r.campeon)), falta = E.jugador.find(p => !mios.has(p.id));
+      if (falta) return avisar(`No puedes guardar este equipo porque no tienes a ${falta.nombre}. Los equipos guardados solo usan tus campeones.`);
+    }
+  } catch (e) { return avisar(mensajeEquipos(e)); }
+  if (lista.length >= MAX_EQUIPOS) return avisar(`Ya tienes ${MAX_EQUIPOS} equipos guardados: borra uno en Construcción de Equipos para guardar otro.`);
+  const lider = E.jugador[0];
+  const nombre = await pedirTexto(`Ponle un nombre (hasta ${MAX_NOMBRE} letras). Líder: ${lider.nombre}${lider.lider ? ` · ${lider.lider.nombre}` : ' (sin habilidad de líder)'}.`,
+    { titulo: '💾 Guardar equipo', valor: `Equipo ${lista.length + 1}`, max: MAX_NOMBRE, aceptar: 'Guardar' });
+  if (!nombre) return;
+  try { await guardarEquipo(null, nombre, E.jugador.map(p => p.id)); } catch (e) { return avisar(mensajeEquipos(e)); }
+  sonar('listo'); aviso(`💾 "${nombre}" guardado`);
 }
 
 // ---------------------------------------------------------------- ficha completa de un personaje
@@ -240,15 +362,27 @@ export function iniciarMenu({ jugar, salirDePartida, abrirCampana, abrirHorda, a
     if (e.target.closest('[data-modo="hordas"]')) irA('horda');
     if (e.target.closest('[data-modo="arena"]')) irA('arena');
     if (e.target.closest('[data-modo="jefe"]')) irA('raid');
+    if (e.target.closest('[data-modo="equipos"]')) abrirConstructor();
+  });
+  $('#pantalla-equipo').addEventListener('input', e => {
+    if (e.target.id === 'eq-buscar') { E.busca = e.target.value; renderEquipo(); reenfocar('eq-buscar', true); }
+    if (e.target.id === 'eqg-nombre' && E.campana?.armado) { E.campana.armado.nombre = e.target.value; $('#eq-listo').disabled = !listo(); }
   });
   $('#eq-filtros').addEventListener('change', e => { if (e.target.id === 'eq-efecto') { E.efecto = e.target.value || null; renderEquipo(); } });
-  $('#eq-volver').addEventListener('click', () => { if (E.campana) { const c = E.campana; E.campana = null; c.alVolver?.(); } else irA('menu'); });
+  $('#eq-volver').addEventListener('click', async () => { if (E.campana?.armado && !await descartar()) return; if (E.campana) { const c = E.campana; E.campana = null; c.alVolver?.(); } else irA('menu'); });
   $('#pantalla-equipo').addEventListener('click', e => {
     const t = e.target;
-    const info = t.closest('.gc-info'); if (info) return abrirFicha(info.dataset.id);
+    if (t.closest('[data-limpiar="eq-buscar"]')) { E.busca = ''; renderEquipo(); return reenfocar('eq-buscar', true); }
+    const carg = t.closest('.eq-cargar'); if (carg) return cargarGuardado(carg.dataset.lado);
+    if (t.closest('.eq-guardar')) return guardarDesdeSeleccion();
+    const eqg = t.closest('[data-eqg]'); if (eqg) return accionConstructor(eqg.dataset.eqg);
+    const abrirG = t.closest('[data-eqg-abrir]');
+    if (abrirG) { const eq = guardados.find(x => x.id === abrirG.dataset.eqgAbrir); if (eq && eq.id !== E.campana?.armado?.id) descartar().then(ok => ok && editarGuardado(eq)); return; }
+    if (t.closest('#eq-guardados')) return;
+    const info = t.closest('.gc-info'); if (info) return E.campana?.armado ? fichaConstructor(info.dataset.id) : abrirFicha(info.dataset.id);
     const x = t.closest('.slot-x'); if (x) { if (E.campana && x.dataset.lado === 'rival') return; equipoDe(x.dataset.lado).splice(+x.dataset.i, 1); E.sel = null; return renderEquipo(); }
     const slot = t.closest('.slot'); if (slot) return tocarSlot(slot.dataset.lado, +slot.dataset.i);
-    const gc = t.closest('.gc'); if (gc) return alternarPersonaje(gc.dataset.id);
+    const gc = t.closest('.gc'); if (gc) return E.campana?.armado ? fichaConstructor(gc.dataset.id) : alternarPersonaje(gc.dataset.id);
     const f = t.closest('.filtro'); if (f) { E.filtro = f.dataset.rol || null; return renderEquipo(); }
     const m = t.closest('.eq-modo button'); if (m) { E.rivalModo = m.dataset.modo; E.editando = m.dataset.modo === 'construir' ? 'rival' : 'jugador'; E.sel = null; return renderEquipo(); }
     const az = t.closest('.eq-azar');
@@ -259,6 +393,7 @@ export function iniciarMenu({ jugar, salirDePartida, abrirCampana, abrirHorda, a
   });
   $('#eq-listo').addEventListener('click', () => {
     if (!listo()) return;
+    if (E.campana?.armado) return guardarConstructor();
     sonar('listo');
     if (E.campana) return E.campana.alListo([...E.jugador]);
     alJugar([...E.jugador], E.rivalModo === 'azar' ? aleatorio() : [...E.rival]);
@@ -272,9 +407,10 @@ export const seleccion = () => ({ rivalModo: E.rivalModo });
 export const equipoElegido = () => [...E.jugador];
 // Modo Campaña: abre la construcción de equipo con el rival fijo de la etapa y solo los campeones propios
 // bloqueados: Set de ids propios que se ven pero no se pueden elegir (p. ej. ya atacaron hoy al Jefe de Raid); motivoBloqueo explica por qué
-export function equipoCampana({ titulo, rivales, propios, alListo, alVolver, volverTxt, sinRival = false, inicial = null, bloqueados = null, motivoBloqueo = '' }) {
-  E.campana = { titulo, rivales, propios, alListo, alVolver, volverTxt, sinRival, bloqueados, motivoBloqueo };
+// ocupados: Map(id → nombre del otro equipo) que impide "Cargar" un equipo guardado con esos campeones (Arena: Ataque / Defensa)
+export function equipoCampana({ titulo, rivales, propios, alListo, alVolver, volverTxt, sinRival = false, inicial = null, bloqueados = null, motivoBloqueo = '', ocupados = null }) {
+  E.campana = { titulo, rivales, propios, alListo, alVolver, volverTxt, sinRival, bloqueados, motivoBloqueo, ocupados };
   E.jugador = (inicial || E.jugador).filter(p => propios.has(p.id) && !bloqueados?.has(p.id));   // conserva la última selección (si sigue siendo suya)
-  E.sel = null; E.filtro = null; E.efecto = null;
+  E.sel = null; E.filtro = null; E.efecto = null; E.busca = '';
   irA('equipo');
 }

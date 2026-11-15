@@ -118,6 +118,11 @@ export const misionesCobrar = id => rpc('misiones_cobrar', { p_id: id });
 export const miCampana = area => q(sb => sb.from('campana_progreso').select('dificultad, etapa, estrellas, victorias, ultima').eq('area', area));
 export const campanaCompletar = (area, dificultad, etapa, estrellas) => rpc('campana_completar', { p_area: area, p_dificultad: dificultad, p_etapa: etapa, p_estrellas: estrellas });
 
+// Construcción de Equipos (docs/sql/042_equipos_guardados.sql)
+export const misEquipos = () => q(sb => sb.from('equipos_guardados').select('id, nombre, campeones, creado').order('creado'));
+export const equipoGuardar = (id, nombre, campeones) => rpc('equipo_guardar', { p_id: id || null, p_nombre: nombre, p_campeones: campeones });
+export const equipoBorrar = id => rpc('equipo_borrar', { p_id: id });
+
 // Administrador (el servidor rechaza si no lo es)
 export async function adminGuardarSobre(id, cambios) {
   const filas = await q(sb => sb.from('sobres_config').update(cambios).eq('id', id).select());

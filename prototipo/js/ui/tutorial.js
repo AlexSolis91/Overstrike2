@@ -276,6 +276,8 @@ async function mini(clave) {
   } finally { corriendo = false; }
 }
 const PANTALLA_MINI = { equipo: 'equipo', campana: 'campana', horda: 'horda', raid: 'raid', arena: 'arena' };
+// La Construcción de Equipos usa la misma pantalla que la selección de equipo: tiene su propio mini tutorial
+const miniDePantalla = p => p === 'equipo' && document.body.classList.contains('eq-constructor') ? 'armar_equipos' : PANTALLA_MINI[p] || null;
 // Tienda / Colección: qué mini tutorial toca según lo que está viendo
 let vistaTC = null;
 function claveTC(v) {
@@ -290,7 +292,7 @@ function contexto() {
   if (!$('#misiones')?.classList.contains('hidden')) return 'misiones';
   if (!$('#tc')?.classList.contains('hidden')) return vistaTC?.pestana === 'coleccion' && vistaTC.detalle ? 'campeon' : claveTC(vistaTC);
   const p = document.body.dataset.pantalla;
-  return p === 'menu' ? 'menu' : PANTALLA_MINI[p] || null;
+  return p === 'menu' ? 'menu' : miniDePantalla(p);
 }
 const pasosDe = k => k === 'menu' ? MENU : MINI[k] || null;
 let ayuda = null, forzarAyuda = false;   // forzarAyuda: Thestalos lo señala en la despedida
@@ -341,7 +343,7 @@ export function iniciarTutorial({ jugar: fn }) {
   ayuda.addEventListener('click', repetirAyuda);
   document.body.appendChild(ayuda);
   setInterval(pintarAyuda, 600);
-  new MutationObserver(() => { const k = PANTALLA_MINI[document.body.dataset.pantalla]; if (k) mini(k); })
+  new MutationObserver(() => { const k = miniDePantalla(document.body.dataset.pantalla); if (k) mini(k); })
     .observe(document.body, { attributes: true, attributeFilter: ['data-pantalla'] });
   const mis = $('#misiones');
   if (mis) new MutationObserver(() => { if (!mis.classList.contains('hidden')) mini('misiones'); }).observe(mis, { attributes: true, attributeFilter: ['class'] });

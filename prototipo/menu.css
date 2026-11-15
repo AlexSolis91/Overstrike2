@@ -1279,3 +1279,69 @@ body.tuto-starter #starter-x { display: none; }
   border-radius: 50%; cursor: pointer; font: 900 19px Cinzel, serif; color: #1a1205; border: 2px solid #fde68a;
   background: radial-gradient(circle at 35% 30%, #fde68a, #c08a2c); box-shadow: 0 0 14px rgba(247, 201, 72, .55), 0 4px 10px rgba(0, 0, 0, .5); }
 #tuto-ayuda:hover { transform: scale(1.08); }
+
+/* ---------- buscador por nombre (Colección y selección de equipo) */
+.buscador { position: relative; display: inline-flex; align-items: center; flex: 0 1 220px; min-width: 140px; }
+.buscador > span { position: absolute; left: 9px; font-size: 12px; pointer-events: none; opacity: .75; }
+.buscador input {
+  width: 100%; font: 600 12px Inter, sans-serif; padding: 6px 28px 6px 28px; border-radius: 99px; color: var(--text);
+  background: #121826; border: 1px solid rgba(255, 255, 255, .14); outline: none;
+}
+.buscador input:focus { border-color: rgba(243, 213, 138, .6); }
+.buscador input::-webkit-search-cancel-button { display: none; }
+.buscador-x { position: absolute; right: 6px; width: 18px; height: 18px; padding: 0; border-radius: 50%; border: none; cursor: pointer; font-size: 9px; color: var(--text); background: rgba(255, 255, 255, .14); }
+.tc-col-filtro .buscador { flex-basis: 240px; }
+
+/* ---------- Cargar / Guardar equipo en la selección */
+.eq-acc { display: flex; flex-direction: column; gap: 4px; flex: none; }
+.eq-acc .eq-btn { white-space: nowrap; }
+.eq-cargar, .eq-guardar { font-size: 11px; padding: 4px 8px; }
+body:not(.eq-guardables) .eq-cargar, body:not(.eq-guardables) .eq-guardar, body.eq-constructor .eq-cargar, body.eq-constructor .eq-guardar,
+body.eq-campana .eq-fila[data-lado="rival"] .eq-cargar, .eq-fila.azar .eq-cargar { display: none; }
+@media (max-height: 520px) {
+  .eq-fila .eq-acc { order: 2; margin-left: auto; flex-direction: row; }
+  .eq-cargar, .eq-guardar { padding: 3px 7px; font-size: 10px; }
+}
+@media (max-width: 520px) and (orientation: portrait) { .eq-acc { flex-direction: row; margin-left: auto; } }
+
+/* ---------- Construcción de Equipos */
+.eq-guardados:empty { display: none; }
+.eq-guardados { display: grid; gap: 6px; }
+.eqg-barra { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; }
+.eqg-nombre { display: grid; gap: 3px; flex: 1 1 220px; font: 800 11px Inter, sans-serif; color: var(--muted); }
+.eqg-nombre input { font: 700 14px Inter, sans-serif; padding: 7px 10px; border-radius: 9px; color: var(--text); background: #121826; border: 1px solid rgba(243, 213, 138, .35); outline: none; }
+.eqg-nombre input:focus { border-color: var(--gold); }
+.eqg-botones { display: flex; gap: 6px; flex-wrap: wrap; }
+.eqg-botones .eq-btn:disabled { opacity: .4; cursor: not-allowed; }
+.eqg-lista { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; align-items: stretch; }
+.eqg-cuenta { flex: none; display: grid; place-content: center; text-align: center; font: 800 10px Inter, sans-serif; color: var(--muted); padding: 0 6px; }
+.eqg-cuenta b { display: block; font: 900 15px Cinzel, serif; color: var(--gold); }
+.eqg-vacio { align-self: center; font-size: 12px; color: var(--muted); }
+.eqg-fila {
+  flex: none; display: grid; gap: 4px; justify-items: start; text-align: left; padding: 6px 8px; border-radius: 10px; cursor: pointer; color: var(--text);
+  background: rgba(8, 11, 18, .7); border: 1px solid rgba(255, 255, 255, .1); min-width: 168px;
+}
+.eqg-fila:hover { border-color: rgba(243, 213, 138, .45); }
+.eqg-fila.on { border-color: var(--gold); box-shadow: inset 0 0 0 1px rgba(243, 213, 138, .3); background: rgba(243, 213, 138, .08); }
+.eqg-nom { font: 800 12.5px Inter, sans-serif; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.eqg-fila small { font-size: 10.5px; color: var(--muted); max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.eqg-minis { display: flex; gap: 3px; }
+.eqg-mini { width: 30px; height: 30px; border-radius: 6px; overflow: hidden; display: grid; place-items: center; font-size: 16px; background: radial-gradient(circle at 50% 40%, var(--c, #334155), #0a0d15 85%); border: 1px solid rgba(255, 255, 255, .15); }
+.eqg-mini:first-child { border-color: rgba(243, 213, 138, .8); }
+.eqg-mini img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; }
+/* ventana "Cargar Equipo" */
+.eqg-caja { width: min(560px, 94vw); }
+.eqg-cargar { display: grid; gap: 6px; max-height: min(60vh, 520px); overflow-y: auto; margin: 6px 0 4px; }
+.eqg-cargar .eqg-fila { width: 100%; min-width: 0; grid-template-columns: 1fr auto; align-items: center; }
+.eqg-cargar .eqg-fila small { grid-column: 1 / -1; max-width: none; }
+.eqg-cargar .eqg-nom { max-width: none; }
+.dlg-input { width: 100%; box-sizing: border-box; margin: 4px 0 10px; font: 700 15px Inter, sans-serif; padding: 9px 12px; border-radius: 9px; color: var(--text); background: #121826; border: 1px solid rgba(243, 213, 138, .45); outline: none; }
+@media (max-height: 520px) { .eqg-mini { width: 24px; height: 24px; } .eqg-fila { padding: 4px 6px; } .eqg-nombre input { padding: 4px 8px; font-size: 12px; } }
+
+/* ficha suelta del campeón (Construcción de Equipos): sin pestañas ni inventario */
+#tc.tc-ficha .tc-tabs { visibility: hidden; }
+#tc.tc-ficha #tc-inv { display: none; }
+#tc.tc-ficha .tc-tabs { height: 0; }
+.tc-ficha-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+.tc-ficha-top .tc-volver { margin: 0; }
+.tc-ficha-top .eq-listo { font-size: 13px; padding: 7px 14px; }
