@@ -314,7 +314,7 @@ async function guardarDesdeSeleccion() {
 
 // ---------------------------------------------------------------- ficha completa de un personaje
 function movHtml(m) {
-  const extra = [OBJ[m.objetivo], m.pct ? `${Math.round(m.pct * 100)}%${m.golpes > 1 ? ` × ${m.golpes}` : ''} (escala por ${m.escala === 'hp' ? 'HP' : m.escala === 'vel' ? 'Velocidad' : 'Daño'})` : null, m.cd ? `Cooldown ${m.cd}` : 'Sin cooldown'].filter(Boolean).join(' · ');
+  const extra = [OBJ[m.objetivo], m.pct ? `${Math.round(m.pct * 100)}%${m.golpes > 1 ? ` × ${m.golpes}` : ''} (escala por ${m.escala === 'danoHp' ? 'Daño y HP' : m.escala === 'hp' ? 'HP' : m.escala === 'vel' ? 'Velocidad' : 'Daño'})` : null, m.cd ? `Cooldown ${m.cd}` : 'Sin cooldown'].filter(Boolean).join(' · ');
   return `<div class="fm"><div class="fm-top"><span class="fm-cat ${m.categoria}">${CAT[m.categoria]}</span><b>${m.nombre}</b></div><small>${extra}</small><p>${m.desc || ''}</p></div>`;
 }
 function statsHtml(base, extra = {}) {

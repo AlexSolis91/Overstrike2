@@ -25,6 +25,7 @@ export const ESCALADO = {
   hp:   s => s.hp / 15,
   vel:  s => s.spd * .75,
   hpMax: s => s.hp,        // para curas/escudos "X% del HP máx."
+  danoHp: s => s.dmg * .60 + s.hp * .40 / 7.5,   // mixto (p. ej. Rayos Omega de Darkseid): 60% del Daño + 40% del HP ÷ 7.5
 };
 
 // Cooldown con el que empieza cada categoría (baja 1 al final de cada ronda).

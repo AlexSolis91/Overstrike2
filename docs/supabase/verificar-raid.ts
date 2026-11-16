@@ -38,6 +38,7 @@ const ESCALADO = {
   hp:   s => s.hp / 15,
   vel:  s => s.spd * .75,
   hpMax: s => s.hp,        // para curas/escudos "X% del HP máx."
+  danoHp: s => s.dmg * .60 + s.hp * .40 / 7.5,   // mixto (p. ej. Rayos Omega de Darkseid): 60% del Daño + 40% del HP ÷ 7.5
 };
 
 // Cooldown con el que empieza cada categoría (baja 1 al final de cada ronda).
@@ -758,8 +759,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (capas.permanente) for (const [k, v] of Object.entries(p.campana || {})) {     // poder del rival en modos como Campaña (y la furia del Jefe)
       if (k in flat) flat[k] += v; else if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
     }
-    if (capas.permanente) for (const [k, v] of Object.entries(p.permanente || {})) {
-      if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else sec[k] = (sec[k] || 0) + v;
+    if (capas.permanente) for (const [k, v] of Object.entries(p.permanente || {})) {   // hp/dmg/spd sin Pct = puntos fijos (p. ej. ganarHpMax de Darkseid)
+      if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else if (k in flat) flat[k] += v; else sec[k] = (sec[k] || 0) + v;
     }
     const php = p.pasiva?.porHpPerdido;                  // pasiva: +estadísticas por cada tramo completo de HP que le falta (p. ej. Capitán América)
     if (capas.buffs && php && p.hp != null) {
@@ -1834,6 +1835,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     }
     for (const p of P.filter(x => x.lado !== t.lado && !x.muerto)) pasivas(p, 'alMorirEnemigo', { objetivo: t, teniaAlMorir });
     for (const p of aliadosDe(t)) pasivas(p, 'alMorirAliado', { objetivo: t });   // p. ej. Almas Atadas de Gul'dan
+    for (const l of aliadosDe(t).filter(x => x.esLider && x.lider?.alMorirAliado)) ejecutarAccion(l, l.lider.alMorirAliado, { objetivo: t });   // líder: p. ej. Señor Supremo de Apokolips
     for (const p of aliadosDe(t)) if (p.sellado && p.pasiva.sello.romper.muereAliado) romperSello(p);
     const solo = aliadosDe(t);                        // pasiva "intocable": si cae el último de sus aliados, muere al instante
     if (solo.length === 1 && solo[0].pasiva?.intocable) morir(solo[0]);
@@ -2037,7 +2039,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         break;
       }
       case 'confuse': case 'fear': case 'dmgUp': case 'taunt': case 'fireAura': case 'frostAura': case 'infect': case 'blockBuffs': case 'protect': case 'regen':
-      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'agotar': case 'expuesto': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': case 'incite': case 'mirror': case 'anticipar': case 'auraLuz': case 'fortaleza': case 'esquivar': case 'megaTaunt': {
+      case 'frenzy': case 'haste': case 'bloodlust': case 'keen': case 'weaken': case 'agotar': case 'expuesto': case 'blind': case 'stealth': case 'pierce': case 'solarBurn': case 'aoeDodge': case 'incite': case 'mirror': case 'anticipar': case 'auraLuz': case 'fortaleza': case 'esquivar': case 'megaTaunt': case 'counter': case 'assist': {
         if (acc.id === 'stealth' && get(t, 'taunt')) { emitir('sinEfecto', { a: t.uid, texto: 'Con Provocación no puede tener Sigilo' }); return; }
         if (acc.id === 'taunt' && get(t, 'stealth')) { quitar(t, get(t, 'stealth')); emitir('sigiloRoto', { a: t.uid }, t); }
         if (acc.id === 'dmgUp') acc = { ...acc, valor: BUFFS.furia };      // Furia siempre +50%
@@ -2164,10 +2166,17 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         case 'efecto':
           for (let i = 0; i < (acc.veces || 1); i++) {
             if (!acc.idAzar) {
-              const antes = acc.alAcertar && new Set(t.estados);
+              const antes = (acc.alAcertar || acc.megaProb) && new Set(t.estados);
               intentarEfecto(a, t, acc);
-              // alAcertar: acción por cada efecto que de verdad quedó puesto (p. ej. +5% Armadura por Bomba de Tengen)
-              if (antes && t.estados.some(e => e.id === acc.id && !antes.has(e))) ejecutarAccion(a, acc.alAcertar, { ...ctx, objetivo: t });
+              const nuevo = antes && t.estados.find(e => e.id === acc.id && !antes.has(e));
+              let mega = false;
+              if (nuevo && acc.megaProb && !nuevo.mega && rng() < acc.megaProb) {   // megaProb: lo que entró pasa a Mega sin otra tirada (p. ej. Darkseid)
+                nuevo.mega = true; nuevo.turnos = Math.max(nuevo.turnos || 0, 2); mega = true;
+                emitir('bonoVisible', { a: t.uid, texto: `${EFECTOS[acc.id].icono} ¡${EFECTOS[acc.id].mega || EFECTOS[acc.id].nombre}!` }, t);
+              }
+              // alAcertar: acción por cada efecto que de verdad quedó puesto (p. ej. +5% Armadura por Bomba de Tengen); si pasó a Mega, alAcertarMega
+              const alA = mega && acc.alAcertarMega ? acc.alAcertarMega : acc.alAcertar;
+              if (nuevo && alA) ejecutarAccion(a, alA, { ...ctx, objetivo: t });
               continue;
             }
             const ids = acc.sinRepetir ? acc.idAzar.filter(id => !get(t, id)) : acc.idAzar;   // sinRepetir: no elige uno que ya tenga
@@ -2193,6 +2202,14 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           t.permanente[acc.stat] = actual + suma;
           t.hp += maxHp(t) - antes;
           emitir('bonoVisible', { a: t.uid, texto: `+${Math.round(suma * 100)}% ${NOMBRE_STAT[acc.stat] || acc.stat}` }, t);
+          break;
+        }
+        case 'ganarHpMax': {           // +HP máx. en puntos fijos, permanente (base 'hpMaxObjetivo' = HP máx. de ctx.objetivo); con curar, se cura lo mismo
+          const n = (acc.base === 'hpMaxObjetivo' ? (ctx.objetivo ? maxHp(ctx.objetivo) : 0) : baseDe(a, acc.escala || 'hpMax')) * (acc.pct ?? 1);
+          if (n <= 0) break;
+          t.permanente.hp = (t.permanente.hp || 0) + n;
+          emitir('bonoVisible', { a: t.uid, texto: `+${Math.round(n)} HP máx.` }, t);
+          if (acc.curar) curar(a, t, n);
           break;
         }
         case 'activarDoT': {           // hace el daño de un DoT al instante sin consumirlo (cuenta como daño DoT)
@@ -2870,6 +2887,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       const ae = l.lider.alEnemigoAoe;
       for (const x of aliadosDe(l)) if (rng() < ae.prob) aplicarEfecto(l, x, { id: ae.id, dur: ae.dur });
     }
+    if (mov.objetivo === 'todosEnemigos')                // pasiva "alEnemigoAoe": reacciona ANTES de que le llegue el ataque de área (p. ej. Escudo de Darkseid)
+      for (const x of P.filter(y => y.lado !== a.lado && !y.muerto)) pasivas(x, 'alEnemigoAoe', { objetivo: x, atacante: a });
     // 'azar': cada golpe va a un enemigo al azar (puede repetir; ignora Provocación)
     const azar = mov.objetivo === 'azar' ? Array.from({ length: mov.golpes || 1 }, () => rng.elegir(enemigosDe(a))).filter(Boolean) : null;
     const objetivos = azar ? azar : mov.objetivo === 'todosEnemigos' ? sinEsquiva(enemigosDe(a))
@@ -2924,6 +2943,18 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
             if (a.muerto) break;
             emitir('bonoVisible', { a: d.uid, texto: mov.salta.texto || '¡Salta!' }, d);
             resolverSobreObjetivo(a, d, { ...mov, pct: mov.salta.pct, golpes: 1, salta: null }, c);
+          }
+        }
+        if (mov.rebota && !a.muerto) {       // "rebota": si el golpeado queda con hpMenor o menos (o cae), el ataque pasa a otro enemigo al azar
+          const golpeados = new Set(objetivos);   // que no haya golpeado en esta ejecución; y así en cadena (p. ej. Rayos Omega de Darkseid)
+          let ult = objetivos[0];
+          while (ult && !a.muerto && (ult.muerto || ult.hp / maxHp(ult) <= mov.rebota.hpMenor + 1e-9)) {
+            const d = rng.elegir(enemigosDe(a).filter(x => !golpeados.has(x)));
+            if (!d) break;
+            golpeados.add(d);
+            emitir('bonoVisible', { a: d.uid, texto: mov.rebota.texto || '¡Rebota!' }, d);
+            resolverSobreObjetivo(a, d, { ...mov, golpes: 1, rebota: null }, c);
+            ult = d;
           }
         }
       }
@@ -8839,6 +8870,74 @@ __e.default = {
 
 return __e; })();
 
+__m["datos/personajes/darkseid.js"] = (() => { const __e: any = {};
+const { espacios } = __m["datos/reliquias.js"];
+
+// Ficha oficial (2026-11-16, kit del usuario). Darkseid, el tirano de Apokolips. Tanque · Daño: Mega Provocación permanente,
+// se escuda ANTES de cada ataque de área enemigo, roba vida con su Básico, sus Rayos Omega (Daño y HP) rebotan sobre los que
+// deja con 30% de HP o menos, y la Ecuación de la Anti-Vida posee al equipo rival y lo vuelve más fuerte por cada Posesión.
+// Líder: Señor Supremo de Apokolips (buff al azar a cada aliado cada ronda; absorbe el HP máx. de los aliados caídos).
+const BUFFS_TIRANO = ['frenzy', 'dmgUp', 'bloodlust', 'assist', 'counter', 'fortaleza', 'anticipar'];
+const POSESION = [
+  { tipo: 'bonoPermanente', stat: 'dmgPct', pct: .15, a: 'propio' },
+  { tipo: 'bonoPermanente', stat: 'hpPct', pct: .15, a: 'propio' },
+];
+const MEGA_POSESION = [
+  { tipo: 'bonoPermanente', stat: 'dmgPct', pct: .40, a: 'propio' },
+  { tipo: 'bonoPermanente', stat: 'hpPct', pct: .40, a: 'propio' },
+];
+
+__e.default = {
+  id: 'darkseid',
+  franquicia: 'DC', grupos: ['villanos'],   // campaña: temas de las etapas
+  nombre: 'Darkseid',
+  rol: 'Tanque', rolSecundario: 'Daño',
+  sobres: ['phantom'],  // sobres de la tienda (ver js/datos/sobres.js); Unbreakable Force incluye a todos
+  emoji: '👁️', color: '#dc2626', imagen: 'assets/personajes/darkseid.webp',
+  base: { hp: 820, dmg: 55, spd: 84 },
+  extra: {},
+  slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
+
+  lider: {
+    nombre: 'Señor Supremo de Apokolips',
+    desc: 'Al inicio de cada ronda, cada aliado gana un buff al azar hasta el final de la ronda: Frenesí, Furia, Letalidad, Asistir, Contraataque, Fortaleza o Anticipar. Cada vez que cae un aliado, Darkseid gana HP máx. igual al HP máx. del caído y se cura esa misma cantidad.',
+    alIniciarRonda: { tipo: 'efecto', idAzar: BUFFS_TIRANO, dur: 1, finDeRonda: true, a: 'todosAliados' },
+    alMorirAliado: { tipo: 'ganarHpMax', base: 'hpMaxObjetivo', pct: 1, curar: true, a: 'propio' },
+  },
+  pasiva: {
+    nombre: 'Dios de la Tiranía',
+    desc: 'Tiene Mega Provocación permanente y es inmune a Miedo. Cada vez que un enemigo usa un ataque de área, antes de recibir el daño gana un Escudo del 50% de su HP máx. (1 ronda; se suma al que tenga).',
+    efectosPermanentes: ['megaTaunt'],
+    inmuneA: ['fear'],
+    gatillo: 'alEnemigoAoe',
+    accion: { tipo: 'escudo', pct: .50, dur: 1, a: 'propio' },
+  },
+  movimientos: [
+    {
+      categoria: 'basico', nombre: 'Golpe del Tirano', objetivo: 'enemigo', estilo: 'melee', color: 0xdc2626,
+      pct: 1.20, escala: 'dano', cd: 0,
+      desc: 'Causa 120% (escala por Daño) y Darkseid se cura el 50% del daño causado.',
+      efectos: [{ cuando: 'final', accion: { tipo: 'curar', base: 'danoCausado', pct: .50, a: 'propio' } }],
+    },
+    {
+      categoria: 'especial', nombre: 'Rayos Omega', objetivo: 'enemigo', estilo: 'ranged', color: 0xef4444,
+      pct: 1.80, escala: 'danoHp', cd: 3, rebota: { hpMenor: .30, texto: '👁️ ¡Rayos Omega!' },
+      desc: 'Causa 180% (escala por Daño y HP: 60% del Daño + 40% del HP ÷ 7.5). Si el objetivo queda con 30% de HP o menos (o cae), el rayo rebota a otro enemigo al azar que no haya golpeado en este ataque, y así sucesivamente.',
+    },
+    {
+      categoria: 'over', nombre: 'La Ecuación de la Anti-Vida', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x7f1d1d,
+      pct: 2.80, escala: 'dano', cd: 6,
+      desc: 'Causa 280% (escala por Daño) a todos los enemigos con 60% de probabilidad de Posesión; cada Posesión tiene 30% de volverse Mega Posesión. Por cada Posesión que entra, Darkseid gana +15% de Daño y +15% de HP máx. permanentes; por cada Mega Posesión, +40% de cada uno.',
+      efectos: [{ accion: { tipo: 'efecto', id: 'possess', prob: .60, megaProb: .30,
+        alAcertar: { tipo: 'multiple', acciones: POSESION, a: 'propio' },
+        alAcertarMega: { tipo: 'multiple', acciones: MEGA_POSESION, a: 'propio' } } }],
+    },
+  ],
+};
+
+
+return __e; })();
+
 __m["datos/personajes/index.js"] = (() => { const __e: any = {};
 // Registro de personajes. Cada ficha oficial nueva se agrega aquí y aparece sola en la construcción de equipos.
 const madara = __m["datos/personajes/madara-uchiha.js"].default;
@@ -8923,8 +9022,9 @@ const obiWan = __m["datos/personajes/obi-wan-kenobi.js"].default;
 const luke = __m["datos/personajes/luke-skywalker.js"].default;
 const padme = __m["datos/personajes/padme-amidala.js"].default;
 const thestalos = __m["datos/personajes/thestalos.js"].default;
+const darkseid = __m["datos/personajes/darkseid.js"].default;
 
-const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke, padme, thestalos];
+const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke, padme, thestalos, darkseid];
 const porId = id => OFICIALES.find(p => p.id === id);
 
 __e["OFICIALES"] = OFICIALES;
@@ -9006,7 +9106,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 22;
+const REGLAS_RAID = 23;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;
