@@ -781,6 +781,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
   // HP sobre el que se calcula el daño por % de HP máx. (Bombas, DoT, Robar HP, "X% del HP máx."). Normalmente es el HP máx.;
   // los jefes de la Horda tienen un HP de referencia más bajo (opción rival hpRefJefe) para que ese daño no los borre.
   const hpPorcentual = p => p.hpRef ? Math.min(p.hpRef, maxHp(p)) : maxHp(p);
+  // Fracción de HP (el Jefe de Raid usa su barra compartida)
+  const fraccionHp = (p, hp = p.hp) => hp / (p.barra?.total || maxHp(p));
   // Desglose para el panel: cuánto suma o resta cada origen (se agregan por capas, en este orden)
   function desglose(p) {
     const orden = ['estrellas', 'reliquias', 'buffs', 'debuffs', 'lider', 'permanente'], capas = {}, out = {};
@@ -2204,6 +2206,9 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           emitir('bonoVisible', { a: t.uid, texto: `+${Math.round(suma * 100)}% ${NOMBRE_STAT[acc.stat] || acc.stat}` }, t);
           break;
         }
+        case 'danoHpMax':              // daño por efecto = pct × HP máx. del objetivo (jefes: su HP de referencia); no es crítico (p. ej. Saitama)
+          danoEfecto(a, t, acc.pct * hpPorcentual(t), acc.color || 0xfacc15, { sinArmadura: !!acc.sinArmadura });
+          break;
         case 'ganarHpMax': {           // +HP máx. en puntos fijos, permanente (base 'hpMaxObjetivo' = HP máx. de ctx.objetivo); con curar, se cura lo mismo
           const n = (acc.base === 'hpMaxObjetivo' ? (ctx.objetivo ? maxHp(ctx.objetivo) : 0) : baseDe(a, acc.escala || 'hpMax')) * (acc.pct ?? 1);
           if (n <= 0) break;
@@ -2588,6 +2593,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (cond.objetivoEliminado) return !!ctx.objetivo?.muerto;
     if (cond.objetivoVivo) return !!ctx.objetivo && !ctx.objetivo.muerto;        // el objetivo sobrevivió al movimiento
     if (cond.propioHpMenor != null) return !!ctx.ejecutor && !ctx.ejecutor.muerto && ctx.ejecutor.hp < cond.propioHpMenor * maxHp(ctx.ejecutor);
+    if (cond.objetivoHpMinAntes != null) return !!ctx.objetivo && fraccionHp(ctx.objetivo, ctx.hpObjetivoAntes ?? ctx.objetivo.hp) > cond.objetivoHpMinAntes;   // tenía MÁS de ese % antes del movimiento (p. ej. Golpe Serio)
+    if (cond.azar != null) return rng() < cond.azar;      // probabilidad simple (p. ej. 50% por golpe de Golpes Normales Consecutivos)
     if (cond.objetivoMasHpQueYo) return !!ctx.objetivo && !!ctx.atacante && (ctx.hpObjetivoAntes ?? ctx.objetivo.hp) > ctx.atacante.hp;
     if (cond.objetivoOverListo) {      // el objetivo tiene su Over listo para usar (sin cooldown ni Silencio)
       const t = ctx.objetivo;
@@ -8938,6 +8945,58 @@ __e.default = {
 
 return __e; })();
 
+__m["datos/personajes/saitama.js"] = (() => { const __e: any = {};
+const { espacios } = __m["datos/reliquias.js"];
+
+// Ficha oficial (2026-11-16, kit del usuario). Saitama, "El Calvo con Capa" (One Punch Man): rompió su limitador con
+// 100 flexiones, 100 abdominales, 100 sentadillas y 10 km diarios. Daño antitanque: +200% contra Provocación, daño por %
+// del HP máx. del objetivo, Perforación para atravesar Escudos y un Golpe Serio que castiga a los que están casi intactos.
+// Sin habilidad de líder (en el lore no lidera a nadie). Inmune a debuffs, pero sin ninguna protección.
+__e.default = {
+  id: 'saitama',
+  franquicia: 'One Punch Man', grupos: ['justicieros'],   // campaña: temas de las etapas
+  nombre: 'Saitama',
+  rol: 'Daño',
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js); Unbreakable Force incluye a todos
+  emoji: '👊', color: '#facc15', imagen: 'assets/personajes/saitama.webp',
+  base: { hp: 700, dmg: 90, spd: 115 },
+  extra: {},
+  slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
+
+  pasiva: {
+    nombre: 'Limitador Roto',
+    desc: 'Sus golpes hacen +200% de daño a enemigos con Provocación o Mega Provocación. Es inmune a todos los debuffs.',
+    bonoContra: { efecto: ['taunt', 'megaTaunt'], pct: 2.00 },
+    inmuneA: ['debuff'],
+  },
+  movimientos: [
+    {
+      categoria: 'basico', nombre: 'Golpe Normal', objetivo: 'enemigo', estilo: 'melee', color: 0xfacc15,
+      pct: 1.50, escala: 'dano', cd: 0, ignoraArmadura: .20,
+      desc: 'Causa 150% (escala por Daño) ignorando 20 puntos de Armadura, más 10% del HP máx. del objetivo como daño por efecto (contra jefes, de su HP de referencia).',
+      efectos: [{ accion: { tipo: 'danoHpMax', pct: .10 } }],
+    },
+    {
+      categoria: 'especial', nombre: 'Golpes Normales Consecutivos', objetivo: 'enemigo', estilo: 'melee', color: 0xfde047,
+      pct: .20, golpes: 10, escala: 'dano', cd: 3,
+      desc: 'Gana Perforación (1 ronda) y causa 10 golpes de 20% (escala por Daño) al mismo objetivo. Cada golpe acertado tiene 50% de probabilidad de darle +5% de Daño permanente (sin límite).',
+      efectos: [
+        { cuando: 'antes', accion: { tipo: 'efecto', id: 'pierce', dur: 1, a: 'propio' } },
+        { condicion: { azar: .50 }, accion: { tipo: 'bonoPermanente', stat: 'dmgPct', pct: .05, a: 'propio' } },
+      ],
+    },
+    {
+      categoria: 'over', nombre: 'Serie Seria: Golpe Serio', objetivo: 'enemigo', estilo: 'melee', color: 0xef4444,
+      pct: 3.00, escala: 'dano', cd: 7, ignoraArmadura: 1,
+      desc: 'Causa 300% (escala por Daño) ignorando toda la Armadura. Si el objetivo tenía más del 80% de su HP, recibe además el 50% de su HP máx. como daño por efecto (ignora Armadura; contra jefes, de su HP de referencia).',
+      efectos: [{ condicion: { objetivoHpMinAntes: .80 }, accion: { tipo: 'danoHpMax', pct: .50, sinArmadura: true, color: 0xef4444 } }],
+    },
+  ],
+};
+
+
+return __e; })();
+
 __m["datos/personajes/index.js"] = (() => { const __e: any = {};
 // Registro de personajes. Cada ficha oficial nueva se agrega aquí y aparece sola en la construcción de equipos.
 const madara = __m["datos/personajes/madara-uchiha.js"].default;
@@ -9023,8 +9082,9 @@ const luke = __m["datos/personajes/luke-skywalker.js"].default;
 const padme = __m["datos/personajes/padme-amidala.js"].default;
 const thestalos = __m["datos/personajes/thestalos.js"].default;
 const darkseid = __m["datos/personajes/darkseid.js"].default;
+const saitama = __m["datos/personajes/saitama.js"].default;
 
-const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke, padme, thestalos, darkseid];
+const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke, padme, thestalos, darkseid, saitama];
 const porId = id => OFICIALES.find(p => p.id === id);
 
 __e["OFICIALES"] = OFICIALES;
@@ -9106,7 +9166,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 23;
+const REGLAS_RAID = 24;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;

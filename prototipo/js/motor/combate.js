@@ -189,6 +189,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   // HP sobre el que se calcula el daño por % de HP máx. (Bombas, DoT, Robar HP, "X% del HP máx."). Normalmente es el HP máx.;
   // los jefes de la Horda tienen un HP de referencia más bajo (opción rival hpRefJefe) para que ese daño no los borre.
   const hpPorcentual = p => p.hpRef ? Math.min(p.hpRef, maxHp(p)) : maxHp(p);
+  // Fracción de HP (el Jefe de Raid usa su barra compartida)
+  const fraccionHp = (p, hp = p.hp) => hp / (p.barra?.total || maxHp(p));
   // Desglose para el panel: cuánto suma o resta cada origen (se agregan por capas, en este orden)
   function desglose(p) {
     const orden = ['estrellas', 'reliquias', 'buffs', 'debuffs', 'lider', 'permanente'], capas = {}, out = {};
@@ -1612,6 +1614,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           emitir('bonoVisible', { a: t.uid, texto: `+${Math.round(suma * 100)}% ${NOMBRE_STAT[acc.stat] || acc.stat}` }, t);
           break;
         }
+        case 'danoHpMax':              // daño por efecto = pct × HP máx. del objetivo (jefes: su HP de referencia); no es crítico (p. ej. Saitama)
+          danoEfecto(a, t, acc.pct * hpPorcentual(t), acc.color || 0xfacc15, { sinArmadura: !!acc.sinArmadura });
+          break;
         case 'ganarHpMax': {           // +HP máx. en puntos fijos, permanente (base 'hpMaxObjetivo' = HP máx. de ctx.objetivo); con curar, se cura lo mismo
           const n = (acc.base === 'hpMaxObjetivo' ? (ctx.objetivo ? maxHp(ctx.objetivo) : 0) : baseDe(a, acc.escala || 'hpMax')) * (acc.pct ?? 1);
           if (n <= 0) break;
@@ -1996,6 +2001,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (cond.objetivoEliminado) return !!ctx.objetivo?.muerto;
     if (cond.objetivoVivo) return !!ctx.objetivo && !ctx.objetivo.muerto;        // el objetivo sobrevivió al movimiento
     if (cond.propioHpMenor != null) return !!ctx.ejecutor && !ctx.ejecutor.muerto && ctx.ejecutor.hp < cond.propioHpMenor * maxHp(ctx.ejecutor);
+    if (cond.objetivoHpMinAntes != null) return !!ctx.objetivo && fraccionHp(ctx.objetivo, ctx.hpObjetivoAntes ?? ctx.objetivo.hp) > cond.objetivoHpMinAntes;   // tenía MÁS de ese % antes del movimiento (p. ej. Golpe Serio)
+    if (cond.azar != null) return rng() < cond.azar;      // probabilidad simple (p. ej. 50% por golpe de Golpes Normales Consecutivos)
     if (cond.objetivoMasHpQueYo) return !!ctx.objetivo && !!ctx.atacante && (ctx.hpObjetivoAntes ?? ctx.objetivo.hp) > ctx.atacante.hp;
     if (cond.objetivoOverListo) {      // el objetivo tiene su Over listo para usar (sin cooldown ni Silencio)
       const t = ctx.objetivo;

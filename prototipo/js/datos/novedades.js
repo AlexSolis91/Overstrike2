@@ -3,6 +3,12 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-16b', fecha: '16 de noviembre de 2026', titulo: 'Nuevo campeón: Saitama',
+    cambios: [
+      { tipo: 'nuevo', texto: '👊 Saitama, el Calvo con Capa (Daño antitanque), en Legendary Warriors: +200% de daño contra enemigos con Provocación, golpes que quitan un % del HP máx. del objetivo, Golpes Normales Consecutivos que lo hacen más fuerte y un Golpe Serio devastador contra quien está casi intacto. Inmune a debuffs, pero sin ninguna protección.' },
+    ],
+  },
+  {
     id: '2026-11-16', fecha: '16 de noviembre de 2026', titulo: 'Nuevo campeón: Darkseid',
     cambios: [
       { tipo: 'nuevo', texto: '👁️ Darkseid, el tirano de Apokolips (Tanque · Daño), en Phantom of Chaos: Mega Provocación permanente, se escuda antes de cada ataque de área enemigo, sus Rayos Omega rebotan sobre los enemigos que deja con poco HP y la Ecuación de la Anti-Vida posee al equipo rival y lo hace más fuerte. Líder: un buff al azar a cada aliado cada ronda y absorbe el HP máx. de los aliados caídos.' },
