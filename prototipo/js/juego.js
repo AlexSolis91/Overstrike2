@@ -42,6 +42,7 @@ import { confirmar, elegirOpcion } from './ui/dialogo.js';
 import { iniciarNovedades, revisarNovedades } from './ui/novedades.js';
 import { iniciarTutorial, tutorialEnBatalla, finBatallaTutorial } from './ui/tutorial.js';
 import { iniciarPrimerosPasos } from './ui/primerosPasos.js';
+import { iniciarNotificaciones } from './ui/notificaciones.js';
 
 const { gsap } = window;
 const $ = s => document.querySelector(s);
@@ -83,16 +84,19 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   inicioPartida = Date.now();
   const vivo = opciones?.arena?.vivo;
   const hordaG = opciones?.horda?.g, rep = opciones?.horda?.rep;   // Horda: la cuenta queda congelada al abrir el portal; rep = partida reconstruida
-  const cuenta = vivo ? cuentaDesdeServidor(opciones.arena.equipoMio) : opciones?.raid?.equipoMio ? cuentaDesdeServidor(opciones.raid.equipoMio) : hordaG ? cuentaDesdeServidor(hordaG.cuenta) : await cargarCuenta();   // tus estrellas y reliquias pelean contigo
+  const repe = opciones?.repeticion;                           // repetición de un combate de Arena: los equipos tal como pelearon
+  const cuenta = repe ? cuentaDesdeServidor(repe.equipoAtk) : vivo ? cuentaDesdeServidor(opciones.arena.equipoMio) : opciones?.raid?.equipoMio ? cuentaDesdeServidor(opciones.raid.equipoMio) : hordaG ? cuentaDesdeServidor(hordaG.cuenta) : await cargarCuenta();   // tus estrellas y reliquias pelean contigo
   eqJ = eqJ.map(d => conCuenta(d, cuenta));
   if (opciones?.arena?.equipoRival) { const cr = cuentaDesdeServidor(opciones.arena.equipoRival); eqR = eqR.map(d => conCuenta(d, cr)); }   // la Defensa de otro jugador con sus estrellas y reliquias
+  if (repe?.equipoDef) { const cr = cuentaDesdeServidor(repe.equipoDef); eqR = eqR.map(d => conCuenta(d, cr)); }
   if (opciones?.practicaArena) eqR = eqR.map(d => conCuenta(d, cuenta));     // práctica de Arena: tu propia Defensa, con tus estrellas y reliquias
   combate = rep ? rep.combate : crearCombate({ equipoJugador: eqJ, equipoRival: eqR, rival: opciones?.rival, invertido: !!opciones?.invertido, ...(opciones?.semilla != null ? { semilla: opciones.semilla } : {}) });
   P = combate.personajes;
   const serie = opciones?.serie || 0;                         // en una serie de repeticiones siempre va en Auto y ×2
   ui = { actual: null, inspeccionado: P[0].uid, miTurno: false, movSel: null, objetivosValidos: null, tipoObjetivo: null, ocupado: true, opciones: null,
     camp: opciones?.campana || null, horda: opciones?.horda || null, arena: opciones?.arena || null, raid: opciones?.raid || null, vivo: null, serie,
-    tuto: !!opciones?.tutorial, auto: !opciones?.tutorial && (!!serie || autoActivo) };   // tuto: batalla guiada del tutorial (sin Auto al empezar)
+    repe: repe ? { lista: repe.decisiones || [], i: 0, ...repe } : null,
+    tuto: !!opciones?.tutorial, auto: !repe && !opciones?.tutorial && (!!serie || autoActivo) };   // tuto: batalla guiada del tutorial (sin Auto al empezar)
   setVelocidad(serie ? 2 : velocidad); marcarControles();
   ui.pruebas = !opciones && esAdmin();                         // herramienta de pruebas: solo el administrador y solo en Partida rápida
   $('#btn-test').classList.toggle('hidden', !ui.pruebas);
@@ -108,7 +112,8 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   entrarCartas(Object.values(cartas));
   refrescarPanel();
   actualizarJefe();
-  mostrarRivalArena(opciones?.arena?.rival);
+  if (repe) mostrarRivalArena({ nombre: repe.defensor, poder: repe.poderDef, titulo: 'Defensa' }, { nombre: repe.atacante, poder: repe.poderAtk, titulo: 'Ataque' });
+  else mostrarRivalArena(opciones?.arena?.rival, opciones?.arena?.yo);
   if (rep) restaurarHorda(rep);
   if (vivo) { ui.vivo = conectarVivo(opciones.arena, { alAbandonar: () => abandonoRival() }); ui.auto = false; marcarControles(); }
   else if (ui.raid) { ui.raid.decisiones = []; ui.raid.rnd = crearRng(semillaIA(opciones.semilla)); }
@@ -116,6 +121,8 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   await wait(1100);
   await anunciar();
   if (vivo) { banner(`⚔️ EN VIVO vs ${opciones.arena.rival?.nombre || 'rival'}`, { size: 40, color: '#fde68a', hold: 1.2 }); await wait(1500); }
+  else if (repe) { banner(`▶️ Repetición · ${repe.atacante} vs ${repe.defensor}`, { size: 34, color: '#bae6fd', hold: 1.2 }); await wait(1500);
+    if (repe.otraVersion) log('⚠️ Esta batalla se jugó con otra versión del juego: la repetición puede verse distinta.', 'sys'); }
   else if (ui.arena?.rival?.nombre) { banner(`⚔️ vs ${ui.arena.rival.nombre}`, { size: 40, color: '#fde68a', hold: 1.2 }); await wait(1500); }
   if (ui.tuto) await tutorialEnBatalla('inicio');
   await procesar(rep ? { ...rep.r, eventos: [] } : combate.iniciar());
@@ -197,13 +204,20 @@ function marcarControles() {
 }
 // Barra del Jefe (Campaña): nombre, vida y estado de furia
 // Arena: placa con el jugador del equipo rival (nombre, liga y puntos), junto a su fila de cartas
-function mostrarRivalArena(r) {
-  const el = $('#arena-rival');
-  if (!r?.nombre) return el.classList.add('hidden');
+// y la mía (nombre y Poder de mi Ataque) junto a mis cartas. Debajo de cada nombre, el Poder de ese equipo.
+function mostrarRivalArena(r, yo = null) {
+  const el = $('#arena-rival'), mio = $('#arena-yo');
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-  const l = r.liga ? liga(r.liga) : null;
-  el.innerHTML = `<small>Rival</small><b>${esc(r.nombre)}</b>${l ? `<span class="ar-liga" style="--lc:${l.color}">${l.icono} ${l.id}</span>` : ''}${r.puntos != null ? `<em>${Number(r.puntos).toLocaleString('es-MX')} pts</em>` : ''}`;
-  el.classList.remove('hidden');
+  const nombreYPoder = x => `<div class="ap-nom"><b>${esc(x.nombre)}</b>${x.poder ? `<i class="ap-poder">⚡ ${Number(x.poder).toLocaleString('es-MX')}</i>` : ''}</div>`;
+  if (!r?.nombre) el.classList.add('hidden');
+  else {
+    const l = r.liga ? liga(r.liga) : null;
+    el.innerHTML = `<small>${r.titulo || 'Rival'}</small>${nombreYPoder(r)}${l ? `<span class="ar-liga" style="--lc:${l.color}">${l.icono} ${l.id}</span>` : ''}${r.puntos != null ? `<em>${Number(r.puntos).toLocaleString('es-MX')} pts</em>` : ''}`;
+    el.classList.remove('hidden');
+  }
+  if (!yo?.nombre) return mio.classList.add('hidden');
+  mio.innerHTML = `<small>${yo.titulo || 'Tú'}</small>${nombreYPoder(yo)}`;
+  mio.classList.remove('hidden');
 }
 function actualizarJefe() {
   if (ui.raid) return actualizarRaid();
@@ -527,6 +541,18 @@ async function procesar(res) {
   const esp = res.esperando;
   const actor = por(esp.id);
   ui.actual = esp.id; ui.opciones = esp.opciones;
+  if (ui.repe) {                                             // repetición: cada turno (de los dos lados) sale de las decisiones guardadas
+    ui.miTurno = false;
+    inspeccionar(actor.uid);
+    setHint(`▶️ Repetición · ${actor.lado === 'jugador' ? ui.repe.atacante : ui.repe.defensor}: ${actor.nombre}`);
+    await wait(650);
+    if (esta !== partida) return;
+    const d = ui.repe.lista[ui.repe.i++];
+    let r = null;
+    try { if (d) r = combate.actuar({ categoria: d.c, objetivo: d.o || null, forma: d.f || null }); } catch (e) { r = null; }
+    if (!r) return terminar({ ganador: ui.repe.gano ? 'jugador' : 'rival', ronda: combate.ronda, cortada: true });
+    return procesar(r);
+  }
   if (actor.lado === 'jugador') {
     if (esp.formas) ui.forma = null;
     if (esp.formas && !ui.auto) {                             // pasiva "formas" (p. ej. Luke): primero elige la forma de este turno
@@ -612,6 +638,7 @@ function terminar(fin) {
   botonesResultado(gano);
   if (ui.horda) return void finHorda(base, false);
   if (ui.raid) return void finRaid(base, fin);
+  if (ui.repe) return void finRepeticion(base, fin);
   if (ui.arena) return void finArena(base, fin);
   if (!ui.camp) return void temporizar(() => esta === partida && mostrarResultados({ ...base, recompensas: fin.recompensas || [] }), 700);
   // Campaña: estrellas y cobro en el servidor; luego (si es una serie) la siguiente repetición
@@ -796,6 +823,20 @@ async function finArena(base, fin) {
     : `⚠️ ${error || 'No se pudo guardar el resultado'}`;
 }
 
+// Repetición: solo se muestra (no cobra nada). El título habla desde quien la mira (atacante o defensor).
+async function finRepeticion(base, fin) {
+  const r = ui.repe, esta = partida;
+  const ganoAtk = fin.cortada ? r.gano : fin.ganador === 'jugador' && !fin.limite;
+  await wait(700);
+  if (esta !== partida) return;
+  const mio = r.soy === 'defensor' ? !ganoAtk : ganoAtk;
+  mostrarResultados({ ...base, gano: mio, empate: false, recompensas: [] });
+  const sin = document.querySelector('.res-sin'); if (sin) sin.textContent = 'Repetición: no da puntos ni recompensas.';
+  $('#ov-title').textContent = `▶️ ${ganoAtk ? `Ganó ${r.atacante}` : `${r.defensor} resistió`}`;
+  $('#ov-sub').textContent = fin.cortada ? '⚠️ La repetición no pudo seguir (el juego cambió desde esa batalla). Este fue el resultado real.'
+    : `Repetición · ${r.atacante} (Ataque) vs ${r.defensor} (Defensa) · Ronda ${fin.ronda}`;
+}
+
 // Jefe de Raid: manda el daño (una sola vez) y, si la verificación está encendida, el servidor repite la batalla
 function enviarRaid() {
   const r = ui.raid;
@@ -866,11 +907,11 @@ async function finVivo(base, fin) {
 // Botones de la ventana de resultados: en Campaña son Siguiente etapa / Repetir / Cambiar equipo / Portal
 function botonesResultado(gano) {
   const camp = ui.camp;
-  const h = !!ui.horda, pr = !!ultima?.opciones?.practicaArena, ar = !!ui.arena || pr, rd = !!ui.raid;
-  $('#ov-revancha').classList.toggle('hidden', h || rd || (ar && !pr)); $('#ov-equipo').classList.toggle('hidden', h || ar || rd);
+  const h = !!ui.horda, pr = !!ultima?.opciones?.practicaArena, ar = !!ui.arena || pr, rd = !!ui.raid, rp = !!ui.repe;
+  $('#ov-revancha').classList.toggle('hidden', h || rd || (ar && !pr)); $('#ov-equipo').classList.toggle('hidden', h || ar || rd || rp);
   $('#ov-siguiente').classList.toggle('hidden', !(camp && gano && siguienteEtapa(camp)));
-  $('#ov-revancha').textContent = camp ? '🔁 Repetir' : '⚔️ Revancha';
-  $('#ov-menu').textContent = camp ? '🌀 Portal' : rd ? '👑 Jefe de Raid' : h ? '🧟 Horda' : ar && !ui.arena?.amistoso ? '🏟️ Arena' : '🏠 Menú';
+  $('#ov-revancha').textContent = camp ? '🔁 Repetir' : rp ? '🔁 Ver otra vez' : '⚔️ Revancha';
+  $('#ov-menu').textContent = rp ? (ui.repe.volver === 'arena' ? '🏟️ Arena' : '🏠 Menú') : camp ? '🌀 Portal' : rd ? '👑 Jefe de Raid' : h ? '🧟 Horda' : ar && !ui.arena?.amistoso ? '🏟️ Arena' : '🏠 Menú';
 }
 // Serie de repeticiones: 5 s entre batallas (o lo que aún pida el servidor entre cobros) y lanza la siguiente en Auto ×2
 function programarRepeticion(esta) {
@@ -1007,7 +1048,7 @@ $('#ov-equipo').addEventListener('click', () => {
   if (c) return elegirEquipoEtapa(c.dif, c.etapa);
   cargarSeleccion(ultima.jugador.map(porId), ultima.rival.map(porId), ultima.rivalModo); irA('equipo');
 });
-$('#ov-menu').addEventListener('click', () => { serieT?.(); serieT = null; irA(ultima.opciones?.campana ? 'campana' : ultima.opciones?.raid ? 'raid' : ultima.opciones?.horda ? 'horda' : (ultima.opciones?.arena && !ultima.opciones.arena.amistoso) || ultima.opciones?.practicaArena ? 'arena' : 'menu'); });
+$('#ov-menu').addEventListener('click', () => { serieT?.(); serieT = null; irA(ultima.opciones?.repeticion ? ultima.opciones.repeticion.volver || 'menu' : ultima.opciones?.campana ? 'campana' : ultima.opciones?.raid ? 'raid' : ultima.opciones?.horda ? 'horda' : (ultima.opciones?.arena && !ultima.opciones.arena.amistoso) || ultima.opciones?.practicaArena ? 'arena' : 'menu'); });
 $('#ov-siguiente').addEventListener('click', () => { serieT?.(); const c = ultima.opciones?.campana, e = c && siguienteEtapa(c); if (e) elegirEquipoEtapa(c.dif, e); });
 $('#overlay').addEventListener('click', e => {
   const b = e.target.closest('#res-serie-stop'); if (!b) return;
@@ -1056,6 +1097,7 @@ iniciarCampana({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) }
 iniciarHorda({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 iniciarArena({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 iniciarSocial({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
+iniciarNotificaciones();
 iniciarActualizacion();
 iniciarTutorial({ jugar: (j, r, opciones) => jugar(j, r, 'construir', opciones) });
 iniciarPrimerosPasos();

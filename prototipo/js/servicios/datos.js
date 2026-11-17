@@ -92,6 +92,11 @@ export const arenaIntercambiarEquipos = () => rpc('arena_intercambiar_equipos');
 export const arenaMisTitulos = () => rpc('arena_mis_titulos');
 export const arenaRanking = liga => rpc('arena_ranking', { p_liga: liga || null });
 export const arenaHistorial = () => rpc('arena_historial_defensa');
+// Notificaciones, perfil de Arena y repeticiones (docs/sql/043_notificaciones_perfil.sql)
+export const notificaciones = () => rpc('notificaciones_lista');
+export const leerNotificaciones = ids => rpc('notificaciones_leer', { p_ids: ids || null });
+export const arenaPerfil = nombre => rpc('arena_perfil', { p_nombre: nombre });
+export const arenaRepeticion = combate => rpc('arena_repeticion', { p_combate: combate });
 // Arena en vivo (docs/sql/009_arena_vivo.sql)
 export const arenaVivoBuscar = (ataque, version) => rpc('arena_vivo_buscar', { p_ataque: ataque, p_version: version });
 export const arenaVivoCancelar = () => rpc('arena_vivo_cancelar');

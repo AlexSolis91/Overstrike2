@@ -1345,3 +1345,61 @@ body.eq-campana .eq-fila[data-lado="rival"] .eq-cargar, .eq-fila.azar .eq-cargar
 .tc-ficha-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
 .tc-ficha-top .tc-volver { margin: 0; }
 .tc-ficha-top .eq-listo { font-size: 13px; padding: 7px 14px; }
+
+/* ---------- notificaciones (docs/sql/043): campana del lobby, ventana emergente y registro */
+#btn-notif { position: absolute; right: 12px; top: 12px; z-index: 6; padding: 7px 11px; border: 1px solid rgba(253, 230, 138, .5); border-radius: 8px; background: rgba(8, 11, 24, .88); color: #fff; font-size: 18px; line-height: 1; cursor: pointer; }
+#btn-notif:hover { border-color: var(--gold); }
+#btn-notif.hidden, #notif-badge.hidden { display: none; }
+#notif-badge { position: absolute; top: -7px; right: -7px; min-width: 18px; padding: 2px 5px; border-radius: 99px; background: #dc2626; color: #fff; font: 800 11px Inter, sans-serif; box-shadow: 0 0 0 2px #0b0f1a; }
+#notif-toasts { position: fixed; right: max(14px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom)); z-index: 10001; display: flex; flex-direction: column; gap: 8px; width: min(360px, calc(100vw - 28px)); pointer-events: none; }
+.nt-toast { pointer-events: auto; position: relative; display: flex; align-items: flex-start; gap: 10px; padding: 11px 32px 11px 12px; border: 1px solid rgba(245, 210, 122, .45); border-radius: 12px; background: rgba(10, 13, 28, .96); box-shadow: 0 10px 28px rgba(0, 0, 0, .55); color: #e5e7eb; font: 500 13.5px/1.4 Inter, sans-serif; cursor: pointer; animation: nt-entra .35s cubic-bezier(.2, 1.3, .4, 1) both; }
+.nt-toast.sale { animation: nt-sale .35s ease-in forwards; }
+.nt-toast b { color: #fde68a; }
+.nt-mas-toast { justify-content: center; padding-right: 12px; color: var(--muted); }
+@keyframes nt-entra { from { opacity: 0; transform: translateX(40px); } }
+@keyframes nt-sale { to { opacity: 0; transform: translateX(40px); } }
+.nt-ico { flex: none; font-size: 20px; line-height: 1.1; }
+.nt-x { position: absolute; top: 6px; right: 6px; border: 0; background: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 2px 5px; }
+.nt-x:hover { color: #fff; }
+.nt-mas { color: #4ade80; font-style: normal; font-weight: 800; }
+.nt-menos { color: #f87171; font-style: normal; font-weight: 800; }
+.nt-jug, .ar-nombre { cursor: pointer; text-decoration: underline dotted rgba(253, 230, 138, .5); text-underline-offset: 3px; }
+.nt-jug:hover, .ar-nombre:hover { color: var(--gold); }
+.nt-toast .ar-liga, .nt-lista .ar-liga { font-size: 11px; padding: 0 6px; }
+#notif-registro .nt-caja { position: relative; width: min(560px, calc(100vw - 32px)); max-height: min(640px, calc(100vh - 40px)); display: flex; flex-direction: column; padding: 16px; border-radius: 16px; background: #111827; border: 1px solid rgba(245, 210, 122, .4); color: var(--text); }
+.nt-caja header { display: flex; align-items: center; justify-content: space-between; }
+.nt-caja h3 { margin: 0; font: 900 18px Cinzel, serif; color: var(--gold); }
+.nt-caja header .nt-x { position: static; font-size: 16px; }
+.nt-tabs { display: flex; gap: 6px; margin: 12px 0 8px; flex-wrap: wrap; }
+.nt-tabs button { padding: 6px 12px; border: 1px solid rgba(255, 255, 255, .15); border-radius: 99px; background: transparent; color: var(--muted); font: 700 12px Inter, sans-serif; cursor: pointer; }
+.nt-tabs button.on { border-color: var(--gold); color: #fde68a; background: rgba(245, 210, 122, .1); }
+.nt-lista { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; min-height: 0; }
+.nt-lista li { display: flex; align-items: flex-start; gap: 10px; padding: 10px 6px; border-bottom: 1px solid rgba(255, 255, 255, .07); font: 500 13.5px/1.4 Inter, sans-serif; }
+.nt-lista li.nueva { background: rgba(245, 210, 122, .07); border-left: 3px solid var(--gold); }
+.nt-txt { flex: 1; min-width: 0; }
+.nt-txt small { display: block; color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+.nt-txt b { color: #fde68a; }
+.nt-acc { display: flex; flex-direction: column; gap: 4px; }
+.nt-acc .eq-btn { padding: 4px 9px; font-size: 12px; white-space: nowrap; }
+.nt-caja .tc-tenue { margin: 8px 0 0; font-size: 11.5px; }
+
+/* ---------- perfil de Arena */
+.pf-caja { position: relative; width: min(400px, calc(100vw - 32px)); padding: 20px; border-radius: 16px; background: #111827; border: 1px solid var(--lc, rgba(245, 210, 122, .4)); box-shadow: 0 0 40px color-mix(in srgb, var(--lc, #f5d27a) 25%, transparent); color: var(--text); }
+.pf-cab { display: flex; align-items: center; gap: 14px; }
+.pf-avatar { flex: none; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--lc, var(--gold)); background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, .15), rgba(0, 0, 0, .4)); font: 900 26px Cinzel, serif; color: #fff; }
+.pf-cab h3 { margin: 0 0 4px; font: 900 21px Cinzel, serif; color: #fff; word-break: break-all; }
+.pf-elo { font: 900 16px Inter, sans-serif; color: #fff; margin-left: 4px; }
+.pf-cab small { color: var(--muted); }
+.pf-titulos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.pf-poder { margin: 14px 0 10px; padding: 10px; border-radius: 12px; text-align: center; background: rgba(250, 204, 21, .08); border: 1px solid rgba(250, 204, 21, .3); }
+.pf-poder small { display: block; color: var(--muted); font: 800 10px Inter, sans-serif; letter-spacing: .15em; text-transform: uppercase; }
+.pf-poder b { display: block; font: 900 26px Inter, sans-serif; color: #fde047; }
+.pf-poder span { font-size: 12px; color: var(--muted); }
+.pf-datos { display: grid; gap: 6px; margin: 0; }
+.pf-datos div { display: flex; justify-content: space-between; gap: 10px; padding: 7px 10px; border-radius: 8px; background: rgba(255, 255, 255, .04); font-size: 13.5px; }
+.pf-datos dt { color: var(--muted); }
+.pf-datos dd { margin: 0; font-weight: 700; text-align: right; }
+.pf-datos small { color: var(--muted); font-weight: 500; }
+.ar-poder { margin-left: 6px; padding: 1px 8px; border-radius: 99px; background: rgba(250, 204, 21, .12); border: 1px solid rgba(250, 204, 21, .35); color: #fde047; font: 800 12px Inter, sans-serif; letter-spacing: 0; text-transform: none; vertical-align: middle; }
+.ar-miperfil { margin-top: 8px; }
+.ar-acc { display: flex; gap: 4px; flex-wrap: wrap; }

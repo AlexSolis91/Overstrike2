@@ -3,6 +3,15 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-17', fecha: '17 de noviembre de 2026', titulo: 'Notificaciones, perfil y Poder',
+    cambios: [
+      { tipo: 'nuevo', texto: '🔔 Notificaciones: cuando alguien ataca tu Defensa aparece un aviso abajo a la derecha (si resistió o cayó, y ante quién). En la 🔔 del menú está el registro con tus ataques recibidos, recompensas y cambios de liga.' },
+      { tipo: 'nuevo', texto: '▶ Repeticiones: mira cómo atacaron tu Defensa desde las notificaciones o desde la pestaña Defensas de la Arena.' },
+      { tipo: 'nuevo', texto: '👤 Perfil de Arena: toca el nombre de un jugador para ver su liga, victorias y derrotas, mejor récord, títulos y su Poder de equipo.' },
+      { tipo: 'nuevo', texto: '⚡ Poder: cada equipo muestra su Poder (sube con estrellas y reliquias). En la batalla ves el Poder de la Defensa rival bajo su nombre y el de tu Ataque bajo el tuyo.' },
+    ],
+  },
+  {
     id: '2026-11-16c', fecha: '16 de noviembre de 2026', titulo: 'Nuevo campeón: Garou',
     cambios: [
       { tipo: 'nuevo', texto: '🐺 Garou, el Cazador de Héroes (Daño), en Legendary Warriors: caza a Saitama (o al enemigo más fuerte) como su Rival y despierta con cada golpe que recibe y cada Over que ve. Con 5 de Despertar, o la primera vez que caería, se transforma para siempre en 🌌 Garou Cósmico: inmune a Control, gana un turno extra, copia los Over enemigos (+150% de Daño esa ronda) y desata la Fisión Nuclear Cósmica.' },

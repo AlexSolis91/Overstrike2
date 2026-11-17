@@ -122,6 +122,7 @@ export const MINI = {
     { texto: 'La *Arena*: aquí peleas contra los equipos de otros jugadores.' },
     { texto: 'Primero arma tu *Defensa*: el equipo que pelearán los demás cuando te ataquen.', foco: '#ar-tabs' },
     { texto: 'Gana ataques para sumar puntos y subir de *liga*. Cada temporada dura 4 semanas y da premios según tu liga.' },
+    { texto: 'El *⚡ Poder* de cada equipo sube con las estrellas y las reliquias de sus campeones. Toca el nombre de cualquier jugador para ver su *perfil*, y revisa la 🔔 del menú para saber quién atacó tu Defensa.' },
   ],
   tienda: [
     { texto: 'La *Tienda*. Aquí abres sobres con oro para conseguir campeones nuevos.' },
