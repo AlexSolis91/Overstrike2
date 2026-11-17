@@ -1,7 +1,7 @@
 // Genera docs/sql/catalogo.sql: la lista de campeones (con su Starter Pack y sus sobres) que necesita el SERVIDOR
 // para abrir sobres y Starter Packs. Se vuelve a generar cada vez que agregamos o reclasificamos un campeón.
 // Uso (desde la carpeta prototipo):  node herramientas/generar_catalogo.mjs
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
@@ -9,15 +9,20 @@ const aqui = path.dirname(fileURLToPath(import.meta.url));
 const { OFICIALES } = await import(pathToFileURL(path.join(aqui, '../js/datos/personajes/index.js')).href);
 const { RELIQUIAS, TIPOS, RANGOS } = await import(pathToFileURL(path.join(aqui, '../js/datos/reliquias.js')).href);
 
+// Fuerza (% de victorias en partidas al azar; herramientas/fuerza_campeones.mjs): estadística del servidor
+const archivoFuerza = path.join(aqui, 'fuerza.json');
+const FUERZA = existsSync(archivoFuerza) ? JSON.parse(readFileSync(archivoFuerza, 'utf8')).fuerza : {};
 const q = s => s == null ? 'null' : `'${String(s).replace(/'/g, "''")}'`;
-const filas = OFICIALES.map(p => `  (${q(p.id)}, ${q(p.nombre)}, ${q(p.starter || null)}, array[${(p.sobres || []).map(q).join(', ')}]::text[], true)`);
+const filas = OFICIALES.map(p => `  (${q(p.id)}, ${q(p.nombre)}, ${q(p.starter || null)}, array[${(p.sobres || []).map(q).join(', ')}]::text[], true, ${q(p.rol)}, ${FUERZA[p.id] ?? 50})`);
 const rangos = [];
 for (const [stat, porRareza] of Object.entries(RANGOS)) for (const [rareza, r] of Object.entries(porRareza)) if (r) rangos.push(`  (${q(rareza)}, ${q(stat)}, ${r[0]}, ${r[1]})`);
 const sql = `-- Catálogo de campeones para el servidor (GENERADO por herramientas/generar_catalogo.mjs, no editar a mano).
 -- Cómo usarlo: Supabase → SQL Editor → New query → pegar todo → Run. Se puede ejecutar las veces que haga falta.
-insert into public.campeones (id, nombre, starter, sobres, activo) values
+-- (rol y fuerza: columnas del paso 44)
+insert into public.campeones (id, nombre, starter, sobres, activo, rol, fuerza) values
 ${filas.join(',\n')}
-on conflict (id) do update set nombre = excluded.nombre, starter = excluded.starter, sobres = excluded.sobres, activo = excluded.activo;
+on conflict (id) do update set nombre = excluded.nombre, starter = excluded.starter, sobres = excluded.sobres, activo = excluded.activo,
+  rol = excluded.rol, fuerza = excluded.fuerza;
 -- ${OFICIALES.length} campeones
 
 -- ============================================================ RELIQUIAS (requiere docs/sql/005_reliquias.sql y 006_horda.sql)
