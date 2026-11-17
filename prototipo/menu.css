@@ -1401,5 +1401,7 @@ body.eq-campana .eq-fila[data-lado="rival"] .eq-cargar, .eq-fila.azar .eq-cargar
 .pf-datos dd { margin: 0; font-weight: 700; text-align: right; }
 .pf-datos small { color: var(--muted); font-weight: 500; }
 .ar-poder { margin-left: 6px; padding: 1px 8px; border-radius: 99px; background: rgba(250, 204, 21, .12); border: 1px solid rgba(250, 204, 21, .35); color: #fde047; font: 800 12px Inter, sans-serif; letter-spacing: 0; text-transform: none; vertical-align: middle; }
-.ar-miperfil { margin-top: 8px; }
+.ar-miperfil { width: 100%; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, .08); text-align: left; }
+.ar-miperfil h4 { margin: 0 0 4px; }
+.ar-miperfil .pf-poder { margin: 8px 0; }
 .ar-acc { display: flex; gap: 4px; flex-wrap: wrap; }

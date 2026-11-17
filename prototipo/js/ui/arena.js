@@ -17,14 +17,15 @@ import { abrirPerfil } from './perfilArena.js';
 
 const $ = s => document.querySelector(s);
 const num = n => Number(n || 0).toLocaleString('es-MX');
-let jugar = null, miCuenta = null, est = null, error = '', pestana = 'arena', ranking = null, historial = null, propios = new Set(), buscando = null;
+let jugar = null, miCuenta = null, miPerfil = null, est = null, error = '', pestana = 'arena', ranking = null, historial = null, propios = new Set(), buscando = null;
 
 async function cargar() {
   error = '';
   if (!perfilActual()) { est = null; return; }
   try {
-    const [e, col, t, cu] = await Promise.all([D.arenaEstado(), D.miColeccion(), D.arenaMisTitulos().catch(() => []), cargarCuenta()]);
-    est = e; propios = new Set((col || []).map(r => r.campeon)); titulos = t || []; miCuenta = cu;
+    const [e, col, t, cu, pf] = await Promise.all([D.arenaEstado(), D.miColeccion(), D.arenaMisTitulos().catch(() => []), cargarCuenta(),
+      D.arenaPerfil(perfilActual().nombre).catch(() => null)]);
+    est = e; propios = new Set((col || []).map(r => r.campeon)); titulos = t || []; miCuenta = cu; miPerfil = pf;
   } catch (e) { est = null; error = /arena_estado|function/i.test(e?.message || '') ? 'Falta ejecutar docs/sql/008_arena.sql en el servidor.' : D.mensajeError(e); }
 }
 
@@ -52,7 +53,7 @@ function htmlArena() {
       <button id="ar-buscar" class="hd-btn ar-buscar" ${listo ? '' : 'disabled'}>🔍 Buscar rival</button>
       ${listo ? '' : '<small>Publica tu Defensa y arma tu Ataque para buscar rival.</small>'}
       <div class="ar-stats">⚔️ ${est.victorias}V / ${est.derrotas}D · 🛡️ ${est.def_victorias}V / ${est.def_derrotas}D · Temporada ${est.temporada} (termina ${new Date(est.fin_temporada + 'T00:00:00').toLocaleDateString('es-MX')})</div>
-      <button class="eq-btn ar-miperfil" data-perfil="${esc(perfilActual()?.nombre)}">👤 Mi perfil</button>
+      ${htmlMiPerfil()}
     </section>
     <section class="ar-panel">
       <h4>⚔️ Equipo de Ataque ${poderDe(est.ataque)}</h4>${fila(est.ataque)}<button class="eq-btn" data-editar="ataque">Editar Ataque</button>
@@ -61,6 +62,19 @@ function htmlArena() {
       <h4>🛡️ Equipo de Defensa ${poderDe(est.defensa)}</h4>${fila(est.defensa)}<button class="eq-btn" data-editar="defensa">${est.defensa?.length === 5 ? 'Editar Defensa' : 'Publicar Defensa'}</button>
       <p class="tc-tenue">Un campeón no puede estar en los dos equipos. Tu Defensa pelea (con la IA) cuando otros te atacan: cada defensa exitosa te da puntos.</p>
     </section></div>`;
+}
+// Mi perfil, directo en la pantalla: Poder de mis dos equipos, victorias y derrotas, totales y mejor récord
+function htmlMiPerfil() {
+  const atk = est.ataque?.length === 5 ? poderEquipo(est.ataque, miCuenta) : 0, def = est.defensa?.length === 5 ? poderEquipo(est.defensa, miCuenta) : 0;
+  const v = est.victorias + est.def_victorias, d = est.derrotas + est.def_derrotas;
+  const pct = (a, b) => a + b ? ` <small>(${Math.round(a / (a + b) * 100)}%)</small>` : '';
+  return `<div class="ar-miperfil"><h4>👤 Mi perfil</h4>
+    <div class="pf-poder"><small>Poder de equipo</small><b>${formatoPoder(atk + def)}</b><span>⚔️ Ataque ${num(atk)} · 🛡️ Defensa ${num(def)}</span></div>
+    <dl class="pf-datos">
+      <div><dt>Temporada ${est.temporada}</dt><dd>${num(v)} V · ${num(d)} D${pct(v, d)}</dd></div>
+      ${miPerfil ? `<div><dt>Total en Arena</dt><dd>${num(miPerfil.total_v)} V · ${num(miPerfil.total_d)} D${pct(miPerfil.total_v, miPerfil.total_d)}</dd></div>
+      <div><dt>Mejor récord</dt><dd>🏅 ${num(Math.max(miPerfil.mejor, est.puntos))} pts</dd></div>` : ''}
+    </dl></div>`;
 }
 function htmlRanking() {
   if (!ranking) return '<p class="tc-vacio">Cargando…</p>';
