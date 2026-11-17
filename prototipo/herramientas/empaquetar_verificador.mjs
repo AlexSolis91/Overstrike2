@@ -9,7 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const JS = resolve(AQUI, '../js');
 const SALIDA = resolve(AQUI, '../../docs/supabase/verificar-raid.ts');
-const ENTRADAS = ['motor/verificar.js', 'datos/cuenta.js'].map(f => resolve(JS, f));
+const ENTRADAS = ['motor/verificar.js', 'motor/autoBatalla.js', 'datos/cuenta.js'].map(f => resolve(JS, f));
 
 const modulos = new Map();
 const orden = [], visitando = new Set();
@@ -73,20 +73,39 @@ const encabezado = `// @ts-nocheck
 // ARCHIVO GENERADO por prototipo/herramientas/empaquetar_verificador.mjs: no editar a mano.
 // Repite un ataque al Jefe de Raid con el MISMO motor del juego (viene incluido abajo) y cuenta el daño que sale de esa repetición.
 // Si el ataque se jugó con otra versión del juego (fichas distintas), acepta el daño reportado, igual que la Arena.
+// Con { accion: 'auto' }: juega con la IA (los dos lados) los combates de Arena marcados como auto-batalla pendiente y los
+// cobra con arena_auto_resultado (solo el servidor puede marcarlos y cobrarlos).
 // Las llaves SUPABASE_URL, SUPABASE_ANON_KEY y SUPABASE_SERVICE_ROLE_KEY las pone Supabase solo: no hay que escribir ninguna.
 // Después de publicarla (y cada vez que cambien las fichas, generarla y publicarla otra vez), encender en el SQL Editor:
 //   update public.raid_config set verificar = true;
 `;
 const servidor = `
 const { repetirRaid } = __m["motor/verificar.js"];
+const { jugarCombateIA } = __m["motor/autoBatalla.js"];
 const { VERSION } = __m["datos/cuenta.js"];
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const json = (d, status = 200) => new Response(JSON.stringify(d), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
 
+// Auto-batallas de Arena pendientes (unas pocas por llamada, para no pasar el tiempo de CPU)
+async function autoBatallas() {
+  const admin = createClient(Deno.env.get('SUPABASE_URL'), Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'));
+  const { data: lista, error } = await admin.from('arena_combates').select('*').eq('auto', 'pendiente').eq('terminado', false).order('iniciado').limit(6);
+  if (error) return { error: error.message };
+  let hechos = 0;
+  for (const c of lista || []) {
+    const r = jugarCombateIA(c);
+    const { error: e } = await admin.rpc('arena_auto_resultado', { p_combate: c.id, p_gano: r ? r.gano : null, p_decisiones: r ? r.decisiones : null, p_version: VERSION });
+    if (!e) hechos++;
+  }
+  return { hechos };
+}
+
 Deno.serve(async req => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   try {
-    const { ataque } = await req.json();
+    const cuerpo = await req.json();
+    if (cuerpo?.accion === 'auto') return json(await autoBatallas());
+    const { ataque } = cuerpo;
     const url = Deno.env.get('SUPABASE_URL');
     const usuario = createClient(url, Deno.env.get('SUPABASE_ANON_KEY'), { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } });
     const { data: { user } } = await usuario.auth.getUser();
@@ -105,5 +124,5 @@ Deno.serve(async req => {
 const base = `const __m: any = {};\n\n${paquete}\n`;
 writeFileSync(SALIDA, `${encabezado}import { createClient } from 'npm:@supabase/supabase-js@2';\n\n${base}${servidor}`);
 const i = process.argv.indexOf('--prueba');
-if (i > 0) writeFileSync(process.argv[i + 1], `${base.replaceAll('const __e: any', 'const __e').replace('const __m: any', 'const __m')}\nexport const repetirRaid = __m["motor/verificar.js"].repetirRaid;\nexport const VERSION = __m["datos/cuenta.js"].VERSION;\nexport const repetirCombate = __m["motor/verificar.js"].repetirCombate;\n`);
+if (i > 0) writeFileSync(process.argv[i + 1], `${base.replaceAll('const __e: any', 'const __e').replace('const __m: any', 'const __m')}\nexport const repetirRaid = __m["motor/verificar.js"].repetirRaid;\nexport const VERSION = __m["datos/cuenta.js"].VERSION;\nexport const repetirCombate = __m["motor/verificar.js"].repetirCombate;\nexport const jugarCombateIA = __m["motor/autoBatalla.js"].jugarCombateIA;\n`);
 console.log(`${orden.length} módulos · ${Math.round(readFileSync(SALIDA).length / 1024)} KB → ${relative(process.cwd(), SALIDA)}`);

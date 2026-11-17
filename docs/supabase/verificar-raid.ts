@@ -3,6 +3,8 @@
 // ARCHIVO GENERADO por prototipo/herramientas/empaquetar_verificador.mjs: no editar a mano.
 // Repite un ataque al Jefe de Raid con el MISMO motor del juego (viene incluido abajo) y cuenta el daño que sale de esa repetición.
 // Si el ataque se jugó con otra versión del juego (fichas distintas), acepta el daño reportado, igual que la Arena.
+// Con { accion: 'auto' }: juega con la IA (los dos lados) los combates de Arena marcados como auto-batalla pendiente y los
+// cobra con arena_auto_resultado (solo el servidor puede marcarlos y cobrarlos).
 // Las llaves SUPABASE_URL, SUPABASE_ANON_KEY y SUPABASE_SERVICE_ROLE_KEY las pone Supabase solo: no hay que escribir ninguna.
 // Después de publicarla (y cada vez que cambien las fichas, generarla y publicarla otra vez), encender en el SQL Editor:
 //   update public.raid_config set verificar = true;
@@ -9431,15 +9433,68 @@ __e["repetirRaid"] = repetirRaid;
 __e["semillaIA"] = semillaIA;
 return __e; })();
 
+__m["motor/autoBatalla.js"] = (() => { const __e: any = {};
+// Auto-batalla de Arena en el servidor (sin DOM): juega un combate registrado con la IA en los dos lados, con la misma
+// semilla y los mismos datos de cuenta que una batalla normal. La Defensa decide con el azar de semilla de siempre
+// (semillaIA), así que el resultado se puede verificar y repetir como cualquier otro (repetirCombate).
+const { crearCombate } = __m["motor/combate.js"];
+const { elegirIA } = __m["motor/ia.js"];
+const { crearRng } = __m["motor/rng.js"];
+const { semillaIA } = __m["motor/verificar.js"];
+const { porId } = __m["datos/personajes/index.js"];
+const { cuentaDesdeServidor, conCuenta } = __m["datos/cuenta.js"];
+
+const semillaAtaqueIA = semilla => (semilla ^ 0x2f6b1c3d) >>> 0;
+
+// c: fila de arena_combates (ataque, defensa, semilla, equipo_atk, equipo_def). Devuelve { gano, decisiones, rondas } o null
+// si algún campeón no existe en esta versión del juego.
+function jugarCombateIA(c, maxTurnos = 3000) {
+  const atk = c.ataque.map(porId), def = c.defensa.map(porId);
+  if (atk.some(x => !x) || def.some(x => !x)) return null;
+  const cuentaA = cuentaDesdeServidor(c.equipo_atk), cuentaD = c.equipo_def ? cuentaDesdeServidor(c.equipo_def) : null;
+  const combate = crearCombate({ equipoJugador: atk.map(d => conCuenta(d, cuentaA)), equipoRival: cuentaD ? def.map(d => conCuenta(d, cuentaD)) : def, semilla: c.semilla });
+  const rndA = crearRng(semillaAtaqueIA(c.semilla)), rndD = crearRng(semillaIA(c.semilla));
+  const decisiones = [];
+  let r = combate.iniciar(), q = 0;
+  while (!r.fin && r.esperando && q++ < maxTurnos) {
+    const actor = combate.personajes.find(p => p.uid === r.esperando.id);
+    const d = elegirIA(combate, actor.lado === 'rival' ? rndD : rndA);
+    decisiones.push({ c: d.categoria, o: d.objetivo || null });
+    r = combate.actuar(d);
+  }
+  return { gano: r.fin?.ganador === 'jugador' && !r.fin?.limite, decisiones, rondas: combate.ronda };
+}
+
+__e["jugarCombateIA"] = jugarCombateIA;
+__e["semillaAtaqueIA"] = semillaAtaqueIA;
+return __e; })();
+
 const { repetirRaid } = __m["motor/verificar.js"];
+const { jugarCombateIA } = __m["motor/autoBatalla.js"];
 const { VERSION } = __m["datos/cuenta.js"];
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const json = (d, status = 200) => new Response(JSON.stringify(d), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
 
+// Auto-batallas de Arena pendientes (unas pocas por llamada, para no pasar el tiempo de CPU)
+async function autoBatallas() {
+  const admin = createClient(Deno.env.get('SUPABASE_URL'), Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'));
+  const { data: lista, error } = await admin.from('arena_combates').select('*').eq('auto', 'pendiente').eq('terminado', false).order('iniciado').limit(6);
+  if (error) return { error: error.message };
+  let hechos = 0;
+  for (const c of lista || []) {
+    const r = jugarCombateIA(c);
+    const { error: e } = await admin.rpc('arena_auto_resultado', { p_combate: c.id, p_gano: r ? r.gano : null, p_decisiones: r ? r.decisiones : null, p_version: VERSION });
+    if (!e) hechos++;
+  }
+  return { hechos };
+}
+
 Deno.serve(async req => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   try {
-    const { ataque } = await req.json();
+    const cuerpo = await req.json();
+    if (cuerpo?.accion === 'auto') return json(await autoBatallas());
+    const { ataque } = cuerpo;
     const url = Deno.env.get('SUPABASE_URL');
     const usuario = createClient(url, Deno.env.get('SUPABASE_ANON_KEY'), { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } });
     const { data: { user } } = await usuario.auth.getUser();
