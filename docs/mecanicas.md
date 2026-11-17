@@ -929,3 +929,14 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - **Pasiva `redirigirOver { prob, maxPorRonda, texto }`**: cuando un enemigo usa su **Over de un solo objetivo** contra alguien de su equipo, con `prob` (máx. `maxPorRonda` por ronda, no si tiene un Control que le quite el turno) el Over completo (daño y efectos) cae sobre **otro enemigo al azar** (puede ser el propio atacante). P. ej. Agujero Dimensional de Blast (50%, 1 por ronda).
 - Marca **Cubos de Dios 🧊** (`cubosDios`, contador de Blast, máx. 5): +1 al inicio de cada ronda, con Portal Dimensional y con cada rescate; Colapso Gravitacional los consume (`consumeCargas { pct: .35, efecto: 'cubosDios' }`).
 - Turno extra por movimientos enemigos: `alUsarMovimientoEnemigo` con `filtro.categorias` + acción `turnoExtra { maxPorRonda, clave }` (Blast: Especial u Over, máx. 3 por ronda).
+
+## Piezas nuevas (2026-11-17, Tirion Fordring)
+- **Líder `alCurar { prob, efecto, dur }`**: cada curación real (> 0) que un miembro de su equipo da a otro de su equipo tiene `prob` de darle ese efecto al curado (p. ej. La Cruzada Argenta: 25% de Escudo Sagrado).
+- **Líder `alAtacarCon { efecto, accion }`**: cada vez que un aliado empieza un movimiento que golpea teniendo ese efecto, el líder ejecuta la acción sobre él (p. ej. con Escudo Sagrado: cura el 20% del HP máx. de Tirion, en cada ataque mientras le dure).
+- **Gatillo `alHpBajoPropio`** (con `hp`): la primera vez que él mismo queda con ese % de HP o menos (una vez por partida). P. ej. Paladín de la Mano de Plata (20%): limpia sus debuffs y gana Escudo Sagrado, Protección y Fortaleza.
+- **Gatillo `alQuedarSolo`**: cuando caen todos sus aliados y él sigue vivo (una vez por partida). P. ej. Tirion: usa su Over 4 veces seguidas sin activar su cooldown.
+- **Revivido**: todo personaje que vuelve a la vida (Revivir, Reanimar, anillo, Esclavo de la Runa…) queda marcado internamente (`revivido`).
+- **Acción `ejecutar { soloRevividos, texto }`**: elimina al instante a un enemigo al azar (con `soloRevividos`, solo uno que haya revivido), sin importar Escudo, inmortalidad (Edo Tensei, zonas) ni último aliento. Nunca a jefes.
+- **Acción `reanimar`** ahora cuenta cuántos revivió (`ctx.reanimados`) y no revive a quien no puede volver (esclavos de Frostmourne).
+- **Condición `ctxCero: [cuentas]`** (efectos `final`): ninguna de esas cuentas del movimiento pasó (p. ej. Una Luz en la Oscuridad cura al equipo si no revivió ni ejecutó a nadie).
+- **Curar `base: 'danoCausado'` a `todosAliados`**: cada aliado recibe el daño total del movimiento (p. ej. Luz del Alba).

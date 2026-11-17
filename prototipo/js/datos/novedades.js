@@ -3,6 +3,12 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-17c', fecha: '17 de noviembre de 2026', titulo: 'Nuevo campeón: Tirion Fordring',
+    cambios: [
+      { tipo: 'nuevo', texto: '⚜️ Tirion Fordring, Alto Señor de la Cruzada Argenta (Soporte · Daño), en Sacred Aegis: su Luz del Alba daña a todos los enemigos y cura a cada aliado el daño total; protege con Escudo Sagrado y Protección; Una Luz en la Oscuridad revive a un aliado y elimina a un enemigo que haya revivido. Como líder, las curaciones de su equipo pueden dar Escudo Sagrado y quien ataca con él se cura. Si cae todo su equipo, levanta a los caídos con su Over 4 veces seguidas.' },
+    ],
+  },
+  {
     id: '2026-11-17b', fecha: '17 de noviembre de 2026', titulo: 'Nuevo campeón: Blast',
     cambios: [
       { tipo: 'nuevo', texto: '🌌 Blast, Clase S Rango 1 (Daño · Control), en Legendary Warriors: llega al rescate de cada aliado que queda con 30% de HP o menos (Escudo del 50% de su HP máx.), gana un turno extra cada vez que un enemigo usa su Especial o su Over (máx. 3 por ronda), reúne Cubos de Dios para su Colapso Gravitacional (+35% de daño cada uno) y con su Agujero Dimensional puede desviar un Over enemigo hacia otro enemigo.' },

@@ -1411,6 +1411,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     Object.assign(x, { muerto: false, estados: [], escudo: 0, inmune: false, recienLiberado: false, reviveEn: 0, reviveRonda: 0, revivePasivaRonda: 0 });
     for (const id of x.pasiva?.efectosPermanentes || []) x.estados.push({ id, permanente: true });
     x.hp = maxHp(x) * (hpPct ?? x.pasiva?.revivir?.hp ?? 1);
+    x.revivido = true;                               // volvió a la vida al menos una vez (acción "ejecutar" con soloRevividos, p. ej. Tirion)
     if (x.pasiva?.rival) elegirRival(x);
     emitir('revivir', { a: x.uid, nombre: x.pasiva?.revivir && hpPct == null ? x.pasiva.nombre : '' }, x);
     const ar = x.pasiva?.alRevivir;                  // pasiva "alRevivir { prob, accion }": al revivir (por cualquier medio) tira la probabilidad (p. ej. Dark Wukong)
@@ -1751,6 +1752,10 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     a.est.curacion += real;                                         // solo lo que realmente sanó
     emitir('curacion', { de: a.uid, a: t.uid, cantidad: real, robo: silencioso }, t);
     if (real > 0) for (const p of aliadosDe(t)) if (p !== t) pasivas(p, 'alCurarAliado', { objetivo: t, curacion: real });
+    if (real > 0 && a.lado === t.lado) for (const l of lideresDe(t)) {   // líder "alCurar { prob, efecto, dur }": las curaciones de su equipo pueden dar ese buff (p. ej. Cruzada Argenta)
+      const lc = l.lider?.alCurar;
+      if (lc && !t.muerto && rng() < lc.prob) aplicarEfecto(l, t, { id: lc.efecto, dur: lc.dur });
+    }
     const dc = a.pasiva?.danoPorCuracion;                           // pasiva "danoPorCuracion": lo que sanó de verdad hiere a los enemigos (p. ej. Nezuko)
     if (dc && real > 0 && !a.muerto) {
       const previo = repartiendoCuracion; repartiendoCuracion = true;
@@ -1794,23 +1799,23 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     }
   }
 
-  function morir(t, asesino = null) {
+  function morir(t, asesino = null, forzado = false) {
     if (t.muerto) return;
-    const re = t.estados.find(e => e.inmortalMientras && !porUid(e.inmortalMientras)?.muerto);   // marca "inmortal mientras X viva" (p. ej. Edo Tensei)
+    const re = !forzado && t.estados.find(e => e.inmortalMientras && !porUid(e.inmortalMientras)?.muerto);   // marca "inmortal mientras X viva" (p. ej. Edo Tensei)
     if (re) {
       t.hp = 1;
       emitir('bonoVisible', { a: t.uid, texto: re.textoInmortal || '¡No puede morir!' }, t);
       emitir('actualizar', {}, t);
       return;
     }
-    if (get(t, 'zona')?.zona?.inmortal) {             // zona "inmortal": mientras dure, su portador no baja de 1 HP
+    if (!forzado && get(t, 'zona')?.zona?.inmortal) {             // zona "inmortal": mientras dure, su portador no baja de 1 HP
       t.hp = 1;
       emitir('bonoVisible', { a: t.uid, texto: get(t, 'zona').zona.textoInmortal || '¡No puede caer!' }, t);
       emitir('actualizar', {}, t);
       return;
     }
     const ua = t.pasiva?.ultimoAliento;               // la primera vez que muere: queda con 1 HP (y puede transformarse)
-    if (ua && !t.usoUltimoAliento) {
+    if (ua && !t.usoUltimoAliento && !forzado) {
       t.usoUltimoAliento = true; t.hp = Math.max(1, (ua.hp || 0) * maxHp(t));   // hp: % de su HP máx. con el que queda (1 HP si no se indica)
       emitir('pasiva', { id: t.uid, nombre: t.pasiva.nombre });
       emitir('actualizar', {}, t);
@@ -1826,6 +1831,13 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (t.forma?.hastaMorir) revertir(t);            // forma "hastaMorir": al caer vuelve a su forma base (p. ej. Dark Wukong → Wukong)
     t.muerto = true; t.hp = 0; t.escudo = 0; t.estados = [];
     emitir('muerte', { a: t.uid, invocaciones, lider: t.esLider && !!t.lider }, t);
+    // gatillo "alQuedarSolo": si con esta muerte cayeron todos sus aliados y él sigue vivo (una vez por partida). Va como reacción,
+    // dentro de la acción en curso (nunca después de calcular el turno siguiente)
+    for (const x of P) if (x.lado === t.lado && x !== t && !x.muerto && !x.quedoSolo && x.pasiva
+      && [x.pasiva, ...(x.pasiva.tambien || [])].some(g => g.gatillo === 'alQuedarSolo') && P.every(y => y.lado !== x.lado || y === x || y.muerto)) {
+      x.quedoSolo = true;
+      reacciones.push(() => { if (!x.muerto && enemigosDe(x).length) pasivas(x, 'alQuedarSolo', { objetivo: x }); });
+    }
     // pasiva "sucesorDe": si cae el líder indicado de su equipo, ese aliado surge como nuevo líder (p. ej. Obito tras Pain)
     if (t.esLider && t.lider) {
       const s = aliadosDe(t).find(x => x !== t && !x.muerto && x.lider && x.pasiva?.sucesorDe?.id === t.id);
@@ -2272,7 +2284,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           break;
         }
         case 'reanimar': {              // revive hasta N aliados caídos con % de HP y les pone una marca (p. ej. Edo Tensei)
-          const caidos = rng.barajar(P.filter(x => x.lado === a.lado && x.muerto && x !== a && !(x.reviveEn > 0) && !(x.revivePasivaRonda > 0))).slice(0, acc.cantidad || 1);
+          const caidos = rng.barajar(P.filter(x => x.lado === a.lado && x.muerto && x !== a && !(x.reviveEn > 0) && !(x.revivePasivaRonda > 0) && !x.noRevivir)).slice(0, acc.cantidad || 1);
+          ctx.reanimados = (ctx.reanimados || 0) + caidos.length;
           for (const x of caidos) {
             revivir(x, acc.hp ?? .5);
             if (x.muerto || !acc.marca) continue;            // sin marca: solo revive (p. ej. Gul'dan)
@@ -2280,6 +2293,17 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
               textoInmortal: acc.textoInmortal, alGolpear: acc.alGolpear });
             emitir('efecto', { a: x.uid, id: acc.marca, texto: `${EFECTOS[acc.marca].icono} ${EFECTOS[acc.marca].nombre}` }, x);
           }
+          break;
+        }
+        case 'ejecutar': {             // elimina al instante a un enemigo al azar (con soloRevividos: uno que haya vuelto a la vida), sin importar
+          // Escudo, inmortalidad ni último aliento. Nunca a jefes. P. ej. Una Luz en la Oscuridad de Tirion
+          const v = rng.elegir(enemigosDe(a).filter(x => !x.jefe && !x.barra && (!acc.soloRevividos || x.revivido)));
+          if (!v) break;
+          ctx.ejecutados = (ctx.ejecutados || 0) + 1;
+          emitir('bonoVisible', { a: v.uid, texto: acc.texto || '✝️ ¡Ejecutado!' }, v);
+          v.ultimoDanoDe = a; v.hp = 0;
+          morir(v, a, true);
+          comprobarFin();
           break;
         }
         case 'marcar': {               // pone una marca (tipo marca: sin tirada, no se limpia ni disipa) con dueño; si ya la tiene de él, renueva
@@ -2614,6 +2638,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (cond.objetivoHpMinAntes != null) return !!ctx.objetivo && fraccionHp(ctx.objetivo, ctx.hpObjetivoAntes ?? ctx.objetivo.hp) > cond.objetivoHpMinAntes;   // tenía MÁS de ese % antes del movimiento (p. ej. Golpe Serio)
     if (cond.azar != null) return rng() < cond.azar;      // probabilidad simple (p. ej. 50% por golpe de Golpes Normales Consecutivos)
     if (cond.objetivoMasHpQueYo) return !!ctx.objetivo && !!ctx.atacante && (ctx.hpObjetivoAntes ?? ctx.objetivo.hp) > ctx.atacante.hp;
+    if (cond.ctxCero) return [].concat(cond.ctxCero).every(k => !(ctx[k] > 0));   // ninguna de esas cuentas del movimiento pasó (p. ej. nadie revivido ni ejecutado)
     if (cond.objetivoOverListo) {      // el objetivo tiene su Over listo para usar (sin cooldown ni Silencio)
       const t = ctx.objetivo;
       return !!t && t.movimientos.some(m => m.categoria === 'over') && !(t.cds.over > 0) && !movBloqueado(t, 'over');
@@ -2938,6 +2963,10 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     emitir('movimiento', { id: a.uid, categoria: mov.categoria, nombre: mov.nombre, estilo: mov.estilo, color: mov.color,
       objetivos: objetivos.map(t => t.uid), forzado: !!ctx.forzado, golpea: !!mov.pct, aplica: efectosQueAplica(mov), elemento: mov.elemento || null });
     const atacanteTenia = new Set(a.estados.map(e => e.id));   // lo que tenía el atacante al empezar (para "atacado por un enemigo con X")
+    if (mov.pct && !a.muerto) for (const l of lideresDe(a)) {   // líder "alAtacarCon { efecto, accion }": un aliado ataca con ese efecto activo (p. ej. Cruzada Argenta: cura 20% del HP de Tirion)
+      const lc = l.lider?.alAtacarCon;
+      if (lc && get(a, lc.efecto)) ejecutarAccion(l, lc.accion, { objetivo: a });
+    }
 
     if (mov.consumeCargas) {                          // consume todas sus cargas (de ese tipo): cada una suma daño a este movimiento
       const idc = mov.consumeCargas.efecto || 'cargas', e = get(a, idc);
@@ -3094,8 +3123,12 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (S.fin) return;
     for (const p of P) {
       if (p.muerto || !p.pasiva) continue;
-      const umbrales = [p.pasiva, ...(p.pasiva.tambien || [])].filter(g => g.gatillo === 'alAliadoHpBajo').map(g => g.hp ?? .3);
-      if (!umbrales.length) continue;
+      const entradas = [p.pasiva, ...(p.pasiva.tambien || [])];
+      // gatillo "alHpBajoPropio" (con hp): la primera vez que él mismo queda con ese % de HP o menos (una vez por partida)
+      const propio = entradas.filter(g => g.gatillo === 'alHpBajoPropio').map(g => g.hp ?? .3);
+      if (propio.length && !p.hpBajoPropio && p.hp / maxHp(p) <= Math.max(...propio)) { p.hpBajoPropio = true; pasivas(p, 'alHpBajoPropio', { objetivo: p }); }
+      const umbrales = entradas.filter(g => g.gatillo === 'alAliadoHpBajo').map(g => g.hp ?? .3);
+      if (!umbrales.length || p.muerto) continue;
       const hp = Math.max(...umbrales);
       for (const x of aliadosDe(p)) {
         if (x === p || x.muerto || x.hp / maxHp(x) > hp) continue;
@@ -9219,6 +9252,76 @@ __e.default = {
 
 return __e; })();
 
+__m["datos/personajes/tirion-fordring.js"] = (() => { const __e: any = {};
+const { espacios } = __m["datos/reliquias.js"];
+
+// Ficha oficial (2026-11-17, kit del usuario). Tirion Fordring (Warcraft): Alto Señor de la Cruzada Argenta, paladín de la
+// Mano de Plata que guió el asalto a la Ciudadela de la Corona de Hielo. Cura, protege con la Luz y devuelve la vida a los caídos.
+const ULTIMA_LUZ = { tipo: 'usarMovimiento', categoria: 'over' };
+
+__e.default = {
+  id: 'tirion-fordring',
+  franquicia: 'Warcraft', grupos: ['alianza'],   // campaña: temas de las etapas
+  nombre: 'Tirion Fordring',
+  rol: 'Support', rolSecundario: 'Daño',
+  sobres: ['sacred'],  // sobres de la tienda (ver js/datos/sobres.js); Unbreakable Force incluye a todos
+  emoji: '⚜️', color: '#facc15', imagen: 'assets/personajes/tirion-fordring.webp',
+  base: { hp: 650, dmg: 52, spd: 90 },
+  extra: {},
+  slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
+
+  lider: {
+    nombre: 'La Cruzada Argenta',
+    desc: 'Las curaciones del equipo aliado tienen 25% de probabilidad de dar Escudo Sagrado al curado. Cada vez que un aliado ataca con Escudo Sagrado activo, Tirion le cura el 20% de su propio HP máx.',
+    alCurar: { prob: .25, efecto: 'escudoSagrado' },
+    alAtacarCon: { efecto: 'escudoSagrado', accion: { tipo: 'curar', escala: 'hpMax', pct: .20, a: 'objetivo' } },
+  },
+
+  pasiva: {
+    nombre: 'Paladín de la Mano de Plata',
+    desc: 'La primera vez que queda con 20% de HP o menos, limpia todos sus debuffs y gana Escudo Sagrado, Protección y Fortaleza (2 rondas). Si caen todos sus aliados y él sigue en pie, ejecuta Una Luz en la Oscuridad 4 veces sin activar su cooldown (una vez por partida).',
+    gatillo: 'alHpBajoPropio', hp: .20,
+    accion: { tipo: 'multiple', a: 'propio', acciones: [
+      { tipo: 'limpiar' },
+      { tipo: 'efecto', id: 'escudoSagrado' },
+      { tipo: 'efecto', id: 'protect', dur: 2 },
+      { tipo: 'efecto', id: 'fortaleza', dur: 2 },
+    ] },
+    tambien: [
+      { gatillo: 'alQuedarSolo', accion: { tipo: 'multiple', a: 'propio', acciones: [ULTIMA_LUZ, ULTIMA_LUZ, ULTIMA_LUZ, ULTIMA_LUZ] } },
+    ],
+  },
+  movimientos: [
+    {
+      categoria: 'basico', nombre: 'Luz del Alba', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xfde68a,
+      pct: .70, escala: 'hp', cd: 0,
+      desc: 'Causa 70% (escala con HP) a todos los enemigos y cura a cada aliado lo mismo que el daño total que causó.',
+      efectos: [{ cuando: 'final', accion: { tipo: 'curar', base: 'danoCausado', pct: 1, a: 'todosAliados' } }],
+    },
+    {
+      categoria: 'especial', nombre: 'Protección de la Luz', objetivo: 'aliado', estilo: 'support', color: 0xfacc15, cd: 2,
+      desc: 'Cura al aliado el 25% del HP máx. de Tirion y le da Escudo Sagrado y Protección (2 rondas).',
+      efectos: [
+        { accion: { tipo: 'curar', escala: 'hpMax', pct: .25 } },
+        { accion: { tipo: 'efecto', id: 'escudoSagrado' } },
+        { accion: { tipo: 'efecto', id: 'protect', dur: 2 } },
+      ],
+    },
+    {
+      categoria: 'over', nombre: 'Una Luz en la Oscuridad', objetivo: 'propio', estilo: 'support', color: 0xfffbeb, cd: 5,
+      desc: 'Elimina a un enemigo que haya sido revivido (sin importar su Escudo ni lo que lo revivió; no a jefes) y revive a un aliado caído al azar con 50% de HP. Si no hay a quién, cura el 20% del HP máx. de Tirion a todo su equipo.',
+      efectos: [
+        { cuando: 'final', accion: { tipo: 'ejecutar', soloRevividos: true, a: 'propio', texto: '✝️ ¡Vuelve a la tierra!' } },
+        { cuando: 'final', accion: { tipo: 'reanimar', cantidad: 1, hp: .50, a: 'propio' } },
+        { cuando: 'final', condicion: { ctxCero: ['ejecutados', 'reanimados'] }, accion: { tipo: 'curar', escala: 'hpMax', pct: .20, a: 'todosAliados' } },
+      ],
+    },
+  ],
+};
+
+
+return __e; })();
+
 __m["datos/personajes/index.js"] = (() => { const __e: any = {};
 // Registro de personajes. Cada ficha oficial nueva se agrega aquí y aparece sola en la construcción de equipos.
 const madara = __m["datos/personajes/madara-uchiha.js"].default;
@@ -9307,8 +9410,9 @@ const darkseid = __m["datos/personajes/darkseid.js"].default;
 const saitama = __m["datos/personajes/saitama.js"].default;
 const garou = __m["datos/personajes/garou.js"].default;
 const blast = __m["datos/personajes/blast.js"].default;
+const tirion = __m["datos/personajes/tirion-fordring.js"].default;
 
-const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke, padme, thestalos, darkseid, saitama, garou, blast];
+const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke, padme, thestalos, darkseid, saitama, garou, blast, tirion];
 const porId = id => OFICIALES.find(p => p.id === id);
 
 __e["OFICIALES"] = OFICIALES;
@@ -9390,7 +9494,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 26;
+const REGLAS_RAID = 27;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;

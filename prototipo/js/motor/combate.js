@@ -813,6 +813,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     Object.assign(x, { muerto: false, estados: [], escudo: 0, inmune: false, recienLiberado: false, reviveEn: 0, reviveRonda: 0, revivePasivaRonda: 0 });
     for (const id of x.pasiva?.efectosPermanentes || []) x.estados.push({ id, permanente: true });
     x.hp = maxHp(x) * (hpPct ?? x.pasiva?.revivir?.hp ?? 1);
+    x.revivido = true;                               // volvió a la vida al menos una vez (acción "ejecutar" con soloRevividos, p. ej. Tirion)
     if (x.pasiva?.rival) elegirRival(x);
     emitir('revivir', { a: x.uid, nombre: x.pasiva?.revivir && hpPct == null ? x.pasiva.nombre : '' }, x);
     const ar = x.pasiva?.alRevivir;                  // pasiva "alRevivir { prob, accion }": al revivir (por cualquier medio) tira la probabilidad (p. ej. Dark Wukong)
@@ -1153,6 +1154,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     a.est.curacion += real;                                         // solo lo que realmente sanó
     emitir('curacion', { de: a.uid, a: t.uid, cantidad: real, robo: silencioso }, t);
     if (real > 0) for (const p of aliadosDe(t)) if (p !== t) pasivas(p, 'alCurarAliado', { objetivo: t, curacion: real });
+    if (real > 0 && a.lado === t.lado) for (const l of lideresDe(t)) {   // líder "alCurar { prob, efecto, dur }": las curaciones de su equipo pueden dar ese buff (p. ej. Cruzada Argenta)
+      const lc = l.lider?.alCurar;
+      if (lc && !t.muerto && rng() < lc.prob) aplicarEfecto(l, t, { id: lc.efecto, dur: lc.dur });
+    }
     const dc = a.pasiva?.danoPorCuracion;                           // pasiva "danoPorCuracion": lo que sanó de verdad hiere a los enemigos (p. ej. Nezuko)
     if (dc && real > 0 && !a.muerto) {
       const previo = repartiendoCuracion; repartiendoCuracion = true;
@@ -1196,23 +1201,23 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     }
   }
 
-  function morir(t, asesino = null) {
+  function morir(t, asesino = null, forzado = false) {
     if (t.muerto) return;
-    const re = t.estados.find(e => e.inmortalMientras && !porUid(e.inmortalMientras)?.muerto);   // marca "inmortal mientras X viva" (p. ej. Edo Tensei)
+    const re = !forzado && t.estados.find(e => e.inmortalMientras && !porUid(e.inmortalMientras)?.muerto);   // marca "inmortal mientras X viva" (p. ej. Edo Tensei)
     if (re) {
       t.hp = 1;
       emitir('bonoVisible', { a: t.uid, texto: re.textoInmortal || '¡No puede morir!' }, t);
       emitir('actualizar', {}, t);
       return;
     }
-    if (get(t, 'zona')?.zona?.inmortal) {             // zona "inmortal": mientras dure, su portador no baja de 1 HP
+    if (!forzado && get(t, 'zona')?.zona?.inmortal) {             // zona "inmortal": mientras dure, su portador no baja de 1 HP
       t.hp = 1;
       emitir('bonoVisible', { a: t.uid, texto: get(t, 'zona').zona.textoInmortal || '¡No puede caer!' }, t);
       emitir('actualizar', {}, t);
       return;
     }
     const ua = t.pasiva?.ultimoAliento;               // la primera vez que muere: queda con 1 HP (y puede transformarse)
-    if (ua && !t.usoUltimoAliento) {
+    if (ua && !t.usoUltimoAliento && !forzado) {
       t.usoUltimoAliento = true; t.hp = Math.max(1, (ua.hp || 0) * maxHp(t));   // hp: % de su HP máx. con el que queda (1 HP si no se indica)
       emitir('pasiva', { id: t.uid, nombre: t.pasiva.nombre });
       emitir('actualizar', {}, t);
@@ -1228,6 +1233,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (t.forma?.hastaMorir) revertir(t);            // forma "hastaMorir": al caer vuelve a su forma base (p. ej. Dark Wukong → Wukong)
     t.muerto = true; t.hp = 0; t.escudo = 0; t.estados = [];
     emitir('muerte', { a: t.uid, invocaciones, lider: t.esLider && !!t.lider }, t);
+    // gatillo "alQuedarSolo": si con esta muerte cayeron todos sus aliados y él sigue vivo (una vez por partida). Va como reacción,
+    // dentro de la acción en curso (nunca después de calcular el turno siguiente)
+    for (const x of P) if (x.lado === t.lado && x !== t && !x.muerto && !x.quedoSolo && x.pasiva
+      && [x.pasiva, ...(x.pasiva.tambien || [])].some(g => g.gatillo === 'alQuedarSolo') && P.every(y => y.lado !== x.lado || y === x || y.muerto)) {
+      x.quedoSolo = true;
+      reacciones.push(() => { if (!x.muerto && enemigosDe(x).length) pasivas(x, 'alQuedarSolo', { objetivo: x }); });
+    }
     // pasiva "sucesorDe": si cae el líder indicado de su equipo, ese aliado surge como nuevo líder (p. ej. Obito tras Pain)
     if (t.esLider && t.lider) {
       const s = aliadosDe(t).find(x => x !== t && !x.muerto && x.lider && x.pasiva?.sucesorDe?.id === t.id);
@@ -1674,7 +1686,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'reanimar': {              // revive hasta N aliados caídos con % de HP y les pone una marca (p. ej. Edo Tensei)
-          const caidos = rng.barajar(P.filter(x => x.lado === a.lado && x.muerto && x !== a && !(x.reviveEn > 0) && !(x.revivePasivaRonda > 0))).slice(0, acc.cantidad || 1);
+          const caidos = rng.barajar(P.filter(x => x.lado === a.lado && x.muerto && x !== a && !(x.reviveEn > 0) && !(x.revivePasivaRonda > 0) && !x.noRevivir)).slice(0, acc.cantidad || 1);
+          ctx.reanimados = (ctx.reanimados || 0) + caidos.length;
           for (const x of caidos) {
             revivir(x, acc.hp ?? .5);
             if (x.muerto || !acc.marca) continue;            // sin marca: solo revive (p. ej. Gul'dan)
@@ -1682,6 +1695,17 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
               textoInmortal: acc.textoInmortal, alGolpear: acc.alGolpear });
             emitir('efecto', { a: x.uid, id: acc.marca, texto: `${EFECTOS[acc.marca].icono} ${EFECTOS[acc.marca].nombre}` }, x);
           }
+          break;
+        }
+        case 'ejecutar': {             // elimina al instante a un enemigo al azar (con soloRevividos: uno que haya vuelto a la vida), sin importar
+          // Escudo, inmortalidad ni último aliento. Nunca a jefes. P. ej. Una Luz en la Oscuridad de Tirion
+          const v = rng.elegir(enemigosDe(a).filter(x => !x.jefe && !x.barra && (!acc.soloRevividos || x.revivido)));
+          if (!v) break;
+          ctx.ejecutados = (ctx.ejecutados || 0) + 1;
+          emitir('bonoVisible', { a: v.uid, texto: acc.texto || '✝️ ¡Ejecutado!' }, v);
+          v.ultimoDanoDe = a; v.hp = 0;
+          morir(v, a, true);
+          comprobarFin();
           break;
         }
         case 'marcar': {               // pone una marca (tipo marca: sin tirada, no se limpia ni disipa) con dueño; si ya la tiene de él, renueva
@@ -2016,6 +2040,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (cond.objetivoHpMinAntes != null) return !!ctx.objetivo && fraccionHp(ctx.objetivo, ctx.hpObjetivoAntes ?? ctx.objetivo.hp) > cond.objetivoHpMinAntes;   // tenía MÁS de ese % antes del movimiento (p. ej. Golpe Serio)
     if (cond.azar != null) return rng() < cond.azar;      // probabilidad simple (p. ej. 50% por golpe de Golpes Normales Consecutivos)
     if (cond.objetivoMasHpQueYo) return !!ctx.objetivo && !!ctx.atacante && (ctx.hpObjetivoAntes ?? ctx.objetivo.hp) > ctx.atacante.hp;
+    if (cond.ctxCero) return [].concat(cond.ctxCero).every(k => !(ctx[k] > 0));   // ninguna de esas cuentas del movimiento pasó (p. ej. nadie revivido ni ejecutado)
     if (cond.objetivoOverListo) {      // el objetivo tiene su Over listo para usar (sin cooldown ni Silencio)
       const t = ctx.objetivo;
       return !!t && t.movimientos.some(m => m.categoria === 'over') && !(t.cds.over > 0) && !movBloqueado(t, 'over');
@@ -2340,6 +2365,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     emitir('movimiento', { id: a.uid, categoria: mov.categoria, nombre: mov.nombre, estilo: mov.estilo, color: mov.color,
       objetivos: objetivos.map(t => t.uid), forzado: !!ctx.forzado, golpea: !!mov.pct, aplica: efectosQueAplica(mov), elemento: mov.elemento || null });
     const atacanteTenia = new Set(a.estados.map(e => e.id));   // lo que tenía el atacante al empezar (para "atacado por un enemigo con X")
+    if (mov.pct && !a.muerto) for (const l of lideresDe(a)) {   // líder "alAtacarCon { efecto, accion }": un aliado ataca con ese efecto activo (p. ej. Cruzada Argenta: cura 20% del HP de Tirion)
+      const lc = l.lider?.alAtacarCon;
+      if (lc && get(a, lc.efecto)) ejecutarAccion(l, lc.accion, { objetivo: a });
+    }
 
     if (mov.consumeCargas) {                          // consume todas sus cargas (de ese tipo): cada una suma daño a este movimiento
       const idc = mov.consumeCargas.efecto || 'cargas', e = get(a, idc);
@@ -2496,8 +2525,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (S.fin) return;
     for (const p of P) {
       if (p.muerto || !p.pasiva) continue;
-      const umbrales = [p.pasiva, ...(p.pasiva.tambien || [])].filter(g => g.gatillo === 'alAliadoHpBajo').map(g => g.hp ?? .3);
-      if (!umbrales.length) continue;
+      const entradas = [p.pasiva, ...(p.pasiva.tambien || [])];
+      // gatillo "alHpBajoPropio" (con hp): la primera vez que él mismo queda con ese % de HP o menos (una vez por partida)
+      const propio = entradas.filter(g => g.gatillo === 'alHpBajoPropio').map(g => g.hp ?? .3);
+      if (propio.length && !p.hpBajoPropio && p.hp / maxHp(p) <= Math.max(...propio)) { p.hpBajoPropio = true; pasivas(p, 'alHpBajoPropio', { objetivo: p }); }
+      const umbrales = entradas.filter(g => g.gatillo === 'alAliadoHpBajo').map(g => g.hp ?? .3);
+      if (!umbrales.length || p.muerto) continue;
       const hp = Math.max(...umbrales);
       for (const x of aliadosDe(p)) {
         if (x === p || x.muerto || x.hp / maxHp(x) > hp) continue;
