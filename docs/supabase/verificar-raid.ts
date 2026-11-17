@@ -210,6 +210,8 @@ const EFECTOS = {
     desc: 'Contador de Trunks (máx. 5): gana 1 cuando un DoT daña a un enemigo (máx. 2 por ronda), 2 cuando un aliado se transforma y con sus ataques. Con 5 se transforma para siempre en Super Saiyajin. No se disipa ni se limpia.' },
   potencialGohan: { nombre: 'Potencial', icono: '🔥', color: 0x8b5cf6, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Contador de Gohan (máx. 3): gana 1 al proteger a su equipo y 3 si cae un aliado. Con 3 despierta para siempre como Gohan Bestia. No se disipa ni se limpia.' },
+  despertarGarou: { nombre: 'Despertar', icono: '🐺', color: 0xdc2626, tipo: 'marca', tags: ['Carga'], noDisipable: true,
+    desc: 'Contador de Garou (máx. 5): gana 1 con cada golpe que recibe, 1 cada vez que un enemigo usa su Over y 2 con Modo Monstruo Humano. Con 5 despierta para siempre como Garou Cósmico. No se disipa ni se limpia.' },
   iraBroly: { nombre: 'Ira', icono: '💢', color: 0x84cc16, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Contador de Broly (máx. 5): gana 1 con cada golpe que recibe (y con sus ataques). Con 5 se transforma para siempre en Broly Super Saiyajin Legendario. No se disipa ni se limpia.' },
   almasShadowmourne: { nombre: 'Almas de Shadowmourne', icono: '🪓', color: 0x7dd3fc, tipo: 'marca', tags: ['Carga'], noDisipable: true,
@@ -762,6 +764,9 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (capas.permanente) for (const [k, v] of Object.entries(p.permanente || {})) {   // hp/dmg/spd sin Pct = puntos fijos (p. ej. ganarHpMax de Darkseid)
       if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else if (k in flat) flat[k] += v; else sec[k] = (sec[k] || 0) + v;
     }
+    if (capas.buffs) for (const [k, v] of Object.entries(p.bonoRonda || {})) {      // bonos hasta el final de la ronda (acción "bonoRonda"; se borran al iniciar la siguiente)
+      if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else if (k in flat) flat[k] += v; else sec[k] = (sec[k] || 0) + v;
+    }
     const php = p.pasiva?.porHpPerdido;                  // pasiva: +estadísticas por cada tramo completo de HP que le falta (p. ej. Capitán América)
     if (capas.buffs && php && p.hp != null) {
       const tramos = Math.floor(Math.max(0, 1 - p.hp / ((b.hp + flat.hp) * (1 + pct.hp) * todo)) / php.cada + 1e-9);
@@ -851,6 +856,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         case 'marcaDemonio': texto = `Acumula el daño que recibe: ${Math.round(e.valor || 0)} · se libera al volver a usar Contra Venganza`; n = Math.round(e.valor || 0); break;
         case 'soresu': texto = `${e.valor} de Soresu (máx. 10): +${e.valor * 2}% Armadura y +${e.valor} Bloqueo`; n = e.valor; break;
         case 'heroeCaido': texto = `${e.valor} de Héroe Caído: +${e.valor}% Daño, Velocidad, Prob. y Daño Crítico y Penetración${p.forma ? '' : e.valor < 30 ? ` · con 30 se convierte en Lord Vader` : ''}`; n = e.valor; break;
+        case 'despertarGarou': texto = `${e.valor} de Despertar (máx. 5): con 5 despierta como Garou Cósmico`; n = e.valor; break;
         case 'iraBroly': texto = `${e.valor} de Ira (máx. 5): con 5 despierta al Super Saiyajin Legendario`; n = e.valor; break;
         case 'almasShadowmourne': texto = `${e.valor} Alma(s) de Shadowmourne (máx. 20): +${e.valor * 15} de Daño · toda la batalla`; n = e.valor; break;
         case 'cuervos': texto = `${e.valor} clon(es) de cuervo: cada uno absorbe un ataque enemigo contra Itachi`; n = e.valor; break;
@@ -936,7 +942,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       if (fr.texto && S.ronda === fr.desde) emitir('jefeFuria', { id: j.uid, texto: fr.texto }, j);
     }
     S.actuaron = new Set(); S.orden = [];
-    for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; p.turnosExtraRonda = {}; }
+    for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; p.turnosExtraRonda = {}; p.bonoRonda = {}; }
     for (const x of P) {                                    // pasiva "revivirRonda": muerto, cada inicio de ronda puede revivir (una vez por partida)
       const rr = x.pasiva?.revivirRonda;
       if (!rr || !x.muerto || x.revivioRonda || x.noRevivir || rng() >= rr.prob) continue;
@@ -1358,13 +1364,13 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
   function elegirRival(v, avisar = true) {
     const l = enemigosDe(v);
     if (!l.length) return;
-    const r = l.find(x => x.id === 'goku') || l.reduce((x, y) => stats(y).dmg > stats(x).dmg ? y : x);
+    const r = l.find(x => x.id === (v.pasiva?.rival?.id || 'goku')) || l.reduce((x, y) => stats(y).dmg > stats(x).dmg ? y : x);
     r.estados.push({ id: 'rival', fuente: v.uid, permanente: true });
     if (avisar) emitir('efecto', { a: r.uid, id: 'rival', texto: `👑 Nuevo Rival de ${v.nombre}` }, r);
   }
   function ganarOrgullo(p, n) {
     const rv = p.pasiva?.rival;
-    if (!rv || p.muerto) return;
+    if (!rv || rv.sinOrgullo || p.muerto) return;          // sinOrgullo: solo la Rivalidad, sin cargas de Orgullo (p. ej. Garou)
     ganarCargas(p, n, rv.max || 5, 'orgullo');
     revisarTransformacion(p);
   }
@@ -1455,6 +1461,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     }
     if (ctx.cargas && mov.consumeCargas) d *= 1 + ctx.cargas * mov.consumeCargas.pct;   // cargas consumidas por este movimiento
     if (a.pasiva?.rival && esRival(a, t)) d *= 1 + a.pasiva.rival.bono;      // Rivalidad: más daño a su Rival
+    if (mov.bonoRival && esRival(a, t)) d *= 1 + mov.bonoRival;              // movimiento: +X% extra si el objetivo es su Rival (p. ej. Garou)
     if (mov.bonoContra && [].concat(mov.bonoContra.efecto).some(id => get(t, id))) d *= 1 + mov.bonoContra.pct;   // p. ej. Kirin contra quemados
     const agujas = mov.consumeAgujas && get(t, 'aguja');     // Antares: +X% por cada aguja del objetivo (y las consume)
     if (agujas) { d *= 1 + agujas.valor * mov.consumeAgujas.pct; quitar(t, agujas); emitir('bono', { id: a.uid, texto: `📍 Antares ×${agujas.valor}` }, a, t); }
@@ -2206,6 +2213,12 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           emitir('bonoVisible', { a: t.uid, texto: `+${Math.round(suma * 100)}% ${NOMBRE_STAT[acc.stat] || acc.stat}` }, t);
           break;
         }
+        case 'bonoRonda': {            // +stat hasta el final de esta ronda; se acumula con cada uso (p. ej. Copia de Técnicas de Garou Cósmico)
+          t.bonoRonda ||= {};
+          t.bonoRonda[acc.stat] = (t.bonoRonda[acc.stat] || 0) + acc.pct;
+          emitir('bonoVisible', { a: t.uid, texto: `+${Math.round(acc.pct * 100)}% ${NOMBRE_STAT[acc.stat] || acc.stat} (esta ronda)` }, t);
+          break;
+        }
         case 'danoHpMax':              // daño por efecto = pct × HP máx. del objetivo (jefes: su HP de referencia); no es crítico (p. ej. Saitama)
           danoEfecto(a, t, acc.pct * hpPorcentual(t), acc.color || 0xfacc15, { sinArmadura: !!acc.sinArmadura });
           break;
@@ -2291,7 +2304,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
             if ((t.turnosExtraRonda[k] || 0) >= acc.maxPorRonda) break;
             t.turnosExtraRonda[k] = (t.turnosExtraRonda[k] || 0) + 1;
           }
-          if (t !== a) { if (!S.cola.includes(t)) S.cola.push(t); }   // a otro (p. ej. Espíritu de la Fuerza de Yoda): lo toma al terminar el turno en curso
+          if (t !== a || (S.actual && S.actual !== t)) { if (!S.cola.includes(t)) S.cola.push(t); }   // a otro (p. ej. Espíritu de la Fuerza de Yoda) o ganado fuera de su turno (p. ej. Garou al transformarse por un golpe): lo toma al terminar el turno en curso
           else t.turnosExtra = (t.turnosExtra || 0) + 1;
           emitir('turnoExtraGanado', { id: t.uid }, t);
           ganoTurnoExtra(t);
@@ -8997,6 +9010,111 @@ __e.default = {
 
 return __e; })();
 
+__m["datos/personajes/garou.js"] = (() => { const __e: any = {};
+const { espacios } = __m["datos/reliquias.js"];
+
+// Ficha oficial (2026-11-16, kit del usuario). Garou, el Cazador de Héroes (One Punch Man): caza al héroe más fuerte (Saitama si
+// está), aprende de cada golpe que recibe y de cada técnica que ve (Despertar) hasta convertirse para siempre en Garou Cósmico,
+// que copió el poder de Saitama: inmune a Control, se potencia al azar cada turno y copia los Over enemigos (+150% de Daño esa ronda).
+// Sin habilidad de líder (lobo solitario).
+const BUFFS_COSMICOS = ['dmgUp', 'frenzy', 'bloodlust'];
+
+const garouCosmico = {
+  nombre: 'Garou Cósmico',
+  emoji: '🌌', color: '#7c3aed', imagen: 'assets/transformaciones/garou-cosmico.webp',
+  base: { hp: 760, dmg: 95, spd: 125 },
+  extra: {},
+  pasiva: {
+    nombre: 'Modo Miedo Cósmico',
+    desc: 'Inmune a Control. Rivalidad: +40% de daño a su Rival 👑. Al inicio de cada uno de sus turnos tiene 50% de probabilidad de ganar Furia, 50% de Frenesí y 50% de Letalidad (cada uno por separado, 1 ronda). Copia de Técnicas: cada vez que un enemigo usa su Over, gana +150% de Daño hasta el final de esa ronda (se acumula).',
+    inmuneA: ['Control'],
+    rival: { id: 'saitama', bono: .40, sinOrgullo: true },
+    gatillo: 'alIniciarTurno',
+    accion: { tipo: 'multiple', a: 'propio', acciones: BUFFS_COSMICOS.map(id => ({ tipo: 'efecto', id, dur: 1, prob: .50 })) },
+    tambien: [
+      { gatillo: 'alUsarMovimientoEnemigo', filtro: { categorias: ['over'] }, accion: { tipo: 'bonoRonda', stat: 'dmgPct', pct: 1.50, a: 'propio' } },
+    ],
+  },
+  movimientos: [
+    {
+      categoria: 'basico', nombre: 'Puño Cósmico de Flujo', objetivo: 'enemigo', estilo: 'melee', color: 0x8b5cf6,
+      pct: 2.00, escala: 'dano', cd: 0,
+      desc: 'Causa 200% y le roba 1 buff al objetivo.',
+      efectos: [{ cuando: 'final', accion: { tipo: 'robarBuffs', cantidad: 1 } }],
+    },
+    {
+      categoria: 'especial', nombre: 'Estallido de Rayos Gamma', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xa855f7, cd: 3,
+      pct: 1.40, escala: 'dano',
+      desc: 'Causa 140% a todos los enemigos con 40% de probabilidad de Debilitar (2 rondas).',
+      efectos: [{ accion: { tipo: 'efecto', id: 'weaken', dur: 2, prob: .40 } }],
+    },
+    {
+      categoria: 'over', nombre: 'Fisión Nuclear Cósmica', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x6d28d9, cd: 6,
+      pct: 3.50, escala: 'dano',
+      desc: 'Causa 350% a todos los enemigos y aplica Miedo (2 rondas) y Sangrado a cada enemigo golpeado.',
+      efectos: [
+        { accion: { tipo: 'efecto', id: 'fear', dur: 2 } },
+        { accion: { tipo: 'efecto', id: 'bleed' } },
+      ],
+    },
+  ],
+};
+
+const DESPERTAR = n => ({ tipo: 'ganarCargas', cantidad: n, max: 5, efecto: 'despertarGarou', a: 'propio' });
+
+__e.default = {
+  id: 'garou',
+  franquicia: 'One Punch Man', grupos: ['villanos'],   // campaña: temas de las etapas
+  nombre: 'Garou',
+  rol: 'Daño',
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js); Unbreakable Force incluye a todos
+  emoji: '🐺', color: '#dc2626', imagen: 'assets/personajes/garou.webp',
+  base: { hp: 700, dmg: 75, spd: 118 },
+  extra: {},
+  slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
+
+  pasiva: {
+    nombre: 'Cazador de Héroes',
+    desc: 'Rivalidad: al empezar marca como Rival 👑 a Saitama (si está en el equipo enemigo) o al enemigo con más Daño, y le hace +30% de daño; si su Rival muere, elige otro. Gana 1 de Despertar 🐺 con cada golpe que recibe y cada vez que un enemigo usa su Over (máx. 5). Con 5 se transforma para siempre en Garou Cósmico. La primera vez que caería, queda con 30% de HP y se transforma. Al transformarse gana Furia, Frenesí y Letalidad (1 ronda) y un turno extra.',
+    rival: { id: 'saitama', bono: .30, sinOrgullo: true },
+    transformarConCargas: { efecto: 'despertarGarou', cargas: 5 },
+    ultimoAliento: { hp: .30, transformar: true },
+    gatillo: 'alTransformarse',
+    accion: { tipo: 'multiple', a: 'propio', acciones: [...BUFFS_COSMICOS.map(id => ({ tipo: 'efecto', id, dur: 1 })), { tipo: 'turnoExtra' }] },
+    tambien: [
+      { gatillo: 'alRecibirGolpe', accion: DESPERTAR(1) },
+      { gatillo: 'alUsarMovimientoEnemigo', filtro: { categorias: ['over'] }, accion: DESPERTAR(1) },
+    ],
+  },
+  transformacion: garouCosmico,
+  movimientos: [
+    {
+      categoria: 'basico', nombre: 'Puño de Flujo del Agua que Rompe Rocas', objetivo: 'enemigo', estilo: 'melee', color: 0x38bdf8,
+      pct: 2.20, escala: 'dano', cd: 0,
+      desc: 'Causa 220% con 50% de probabilidad de ganar Contraataque (1 ronda).',
+      efectos: [{ cuando: 'final', accion: { tipo: 'efecto', id: 'counter', dur: 1, prob: .50, a: 'propio' } }],
+    },
+    {
+      categoria: 'especial', nombre: 'Arte Marcial Mixta', objetivo: 'enemigo', estilo: 'melee', color: 0xf97316,
+      pct: .40, golpes: 5, escala: 'dano', cd: 3,
+      desc: '5 golpes de 40% al mismo objetivo. Cada golpe tiene 50% de probabilidad de aplicar un debuff al azar: Debilitar, Desgaste o Expuesto (2 rondas).',
+      efectos: [{ accion: { tipo: 'efecto', idAzar: ['weaken', 'wear', 'expuesto'], dur: 2, prob: .50 } }],
+    },
+    {
+      categoria: 'over', nombre: 'Modo Monstruo Humano', objetivo: 'enemigo', estilo: 'melee', color: 0xdc2626,
+      pct: 2.50, escala: 'dano', cd: 5, bonoRival: .50,
+      desc: 'Causa 250% (+50% si el objetivo es su Rival) con 50% de probabilidad de Miedo (2 rondas). Gana 2 de Despertar.',
+      efectos: [
+        { accion: { tipo: 'efecto', id: 'fear', dur: 2, prob: .50 } },
+        { cuando: 'final', accion: DESPERTAR(2) },
+      ],
+    },
+  ],
+};
+
+
+return __e; })();
+
 __m["datos/personajes/index.js"] = (() => { const __e: any = {};
 // Registro de personajes. Cada ficha oficial nueva se agrega aquí y aparece sola en la construcción de equipos.
 const madara = __m["datos/personajes/madara-uchiha.js"].default;
@@ -9083,8 +9201,9 @@ const padme = __m["datos/personajes/padme-amidala.js"].default;
 const thestalos = __m["datos/personajes/thestalos.js"].default;
 const darkseid = __m["datos/personajes/darkseid.js"].default;
 const saitama = __m["datos/personajes/saitama.js"].default;
+const garou = __m["datos/personajes/garou.js"].default;
 
-const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke, padme, thestalos, darkseid, saitama];
+const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke, padme, thestalos, darkseid, saitama, garou];
 const porId = id => OFICIALES.find(p => p.id === id);
 
 __e["OFICIALES"] = OFICIALES;
@@ -9166,7 +9285,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 24;
+const REGLAS_RAID = 25;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;

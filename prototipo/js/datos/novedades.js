@@ -3,6 +3,13 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-16c', fecha: '16 de noviembre de 2026', titulo: 'Nuevo campeón: Garou',
+    cambios: [
+      { tipo: 'nuevo', texto: '🐺 Garou, el Cazador de Héroes (Daño), en Legendary Warriors: caza a Saitama (o al enemigo más fuerte) como su Rival y despierta con cada golpe que recibe y cada Over que ve. Con 5 de Despertar, o la primera vez que caería, se transforma para siempre en 🌌 Garou Cósmico: inmune a Control, gana un turno extra, copia los Over enemigos (+150% de Daño esa ronda) y desata la Fisión Nuclear Cósmica.' },
+      { tipo: 'cambio', texto: '✨ Un turno extra ganado durante el turno de otro (por ejemplo, al transformarse por un golpe) ahora se juega en cuanto termina ese turno.' },
+    ],
+  },
+  {
     id: '2026-11-16b', fecha: '16 de noviembre de 2026', titulo: 'Nuevo campeón: Saitama',
     cambios: [
       { tipo: 'nuevo', texto: '👊 Saitama, el Calvo con Capa (Daño antitanque), en Legendary Warriors: +200% de daño contra enemigos con Provocación, golpes que quitan un % del HP máx. del objetivo, Golpes Normales Consecutivos que lo hacen más fuerte y un Golpe Serio devastador contra quien está casi intacto. Inmune a debuffs, pero sin ninguna protección.' },

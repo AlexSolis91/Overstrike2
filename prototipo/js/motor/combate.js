@@ -170,6 +170,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (capas.permanente) for (const [k, v] of Object.entries(p.permanente || {})) {   // hp/dmg/spd sin Pct = puntos fijos (p. ej. ganarHpMax de Darkseid)
       if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else if (k in flat) flat[k] += v; else sec[k] = (sec[k] || 0) + v;
     }
+    if (capas.buffs) for (const [k, v] of Object.entries(p.bonoRonda || {})) {      // bonos hasta el final de la ronda (acción "bonoRonda"; se borran al iniciar la siguiente)
+      if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v; else if (k in flat) flat[k] += v; else sec[k] = (sec[k] || 0) + v;
+    }
     const php = p.pasiva?.porHpPerdido;                  // pasiva: +estadísticas por cada tramo completo de HP que le falta (p. ej. Capitán América)
     if (capas.buffs && php && p.hp != null) {
       const tramos = Math.floor(Math.max(0, 1 - p.hp / ((b.hp + flat.hp) * (1 + pct.hp) * todo)) / php.cada + 1e-9);
@@ -259,6 +262,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'marcaDemonio': texto = `Acumula el daño que recibe: ${Math.round(e.valor || 0)} · se libera al volver a usar Contra Venganza`; n = Math.round(e.valor || 0); break;
         case 'soresu': texto = `${e.valor} de Soresu (máx. 10): +${e.valor * 2}% Armadura y +${e.valor} Bloqueo`; n = e.valor; break;
         case 'heroeCaido': texto = `${e.valor} de Héroe Caído: +${e.valor}% Daño, Velocidad, Prob. y Daño Crítico y Penetración${p.forma ? '' : e.valor < 30 ? ` · con 30 se convierte en Lord Vader` : ''}`; n = e.valor; break;
+        case 'despertarGarou': texto = `${e.valor} de Despertar (máx. 5): con 5 despierta como Garou Cósmico`; n = e.valor; break;
         case 'iraBroly': texto = `${e.valor} de Ira (máx. 5): con 5 despierta al Super Saiyajin Legendario`; n = e.valor; break;
         case 'almasShadowmourne': texto = `${e.valor} Alma(s) de Shadowmourne (máx. 20): +${e.valor * 15} de Daño · toda la batalla`; n = e.valor; break;
         case 'cuervos': texto = `${e.valor} clon(es) de cuervo: cada uno absorbe un ataque enemigo contra Itachi`; n = e.valor; break;
@@ -344,7 +348,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       if (fr.texto && S.ronda === fr.desde) emitir('jefeFuria', { id: j.uid, texto: fr.texto }, j);
     }
     S.actuaron = new Set(); S.orden = [];
-    for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; p.turnosExtraRonda = {}; }
+    for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; p.turnosExtraRonda = {}; p.bonoRonda = {}; }
     for (const x of P) {                                    // pasiva "revivirRonda": muerto, cada inicio de ronda puede revivir (una vez por partida)
       const rr = x.pasiva?.revivirRonda;
       if (!rr || !x.muerto || x.revivioRonda || x.noRevivir || rng() >= rr.prob) continue;
@@ -766,13 +770,13 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   function elegirRival(v, avisar = true) {
     const l = enemigosDe(v);
     if (!l.length) return;
-    const r = l.find(x => x.id === 'goku') || l.reduce((x, y) => stats(y).dmg > stats(x).dmg ? y : x);
+    const r = l.find(x => x.id === (v.pasiva?.rival?.id || 'goku')) || l.reduce((x, y) => stats(y).dmg > stats(x).dmg ? y : x);
     r.estados.push({ id: 'rival', fuente: v.uid, permanente: true });
     if (avisar) emitir('efecto', { a: r.uid, id: 'rival', texto: `👑 Nuevo Rival de ${v.nombre}` }, r);
   }
   function ganarOrgullo(p, n) {
     const rv = p.pasiva?.rival;
-    if (!rv || p.muerto) return;
+    if (!rv || rv.sinOrgullo || p.muerto) return;          // sinOrgullo: solo la Rivalidad, sin cargas de Orgullo (p. ej. Garou)
     ganarCargas(p, n, rv.max || 5, 'orgullo');
     revisarTransformacion(p);
   }
@@ -863,6 +867,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     }
     if (ctx.cargas && mov.consumeCargas) d *= 1 + ctx.cargas * mov.consumeCargas.pct;   // cargas consumidas por este movimiento
     if (a.pasiva?.rival && esRival(a, t)) d *= 1 + a.pasiva.rival.bono;      // Rivalidad: más daño a su Rival
+    if (mov.bonoRival && esRival(a, t)) d *= 1 + mov.bonoRival;              // movimiento: +X% extra si el objetivo es su Rival (p. ej. Garou)
     if (mov.bonoContra && [].concat(mov.bonoContra.efecto).some(id => get(t, id))) d *= 1 + mov.bonoContra.pct;   // p. ej. Kirin contra quemados
     const agujas = mov.consumeAgujas && get(t, 'aguja');     // Antares: +X% por cada aguja del objetivo (y las consume)
     if (agujas) { d *= 1 + agujas.valor * mov.consumeAgujas.pct; quitar(t, agujas); emitir('bono', { id: a.uid, texto: `📍 Antares ×${agujas.valor}` }, a, t); }
@@ -1614,6 +1619,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           emitir('bonoVisible', { a: t.uid, texto: `+${Math.round(suma * 100)}% ${NOMBRE_STAT[acc.stat] || acc.stat}` }, t);
           break;
         }
+        case 'bonoRonda': {            // +stat hasta el final de esta ronda; se acumula con cada uso (p. ej. Copia de Técnicas de Garou Cósmico)
+          t.bonoRonda ||= {};
+          t.bonoRonda[acc.stat] = (t.bonoRonda[acc.stat] || 0) + acc.pct;
+          emitir('bonoVisible', { a: t.uid, texto: `+${Math.round(acc.pct * 100)}% ${NOMBRE_STAT[acc.stat] || acc.stat} (esta ronda)` }, t);
+          break;
+        }
         case 'danoHpMax':              // daño por efecto = pct × HP máx. del objetivo (jefes: su HP de referencia); no es crítico (p. ej. Saitama)
           danoEfecto(a, t, acc.pct * hpPorcentual(t), acc.color || 0xfacc15, { sinArmadura: !!acc.sinArmadura });
           break;
@@ -1699,7 +1710,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
             if ((t.turnosExtraRonda[k] || 0) >= acc.maxPorRonda) break;
             t.turnosExtraRonda[k] = (t.turnosExtraRonda[k] || 0) + 1;
           }
-          if (t !== a) { if (!S.cola.includes(t)) S.cola.push(t); }   // a otro (p. ej. Espíritu de la Fuerza de Yoda): lo toma al terminar el turno en curso
+          if (t !== a || (S.actual && S.actual !== t)) { if (!S.cola.includes(t)) S.cola.push(t); }   // a otro (p. ej. Espíritu de la Fuerza de Yoda) o ganado fuera de su turno (p. ej. Garou al transformarse por un golpe): lo toma al terminar el turno en curso
           else t.turnosExtra = (t.turnosExtra || 0) + 1;
           emitir('turnoExtraGanado', { id: t.uid }, t);
           ganoTurnoExtra(t);
