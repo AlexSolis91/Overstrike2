@@ -86,6 +86,8 @@ export const EFECTOS = {
     desc: 'Contador de Trunks (máx. 5): gana 1 cuando un DoT daña a un enemigo (máx. 2 por ronda), 2 cuando un aliado se transforma y con sus ataques. Con 5 se transforma para siempre en Super Saiyajin. No se disipa ni se limpia.' },
   potencialGohan: { nombre: 'Potencial', icono: '🔥', color: 0x8b5cf6, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Contador de Gohan (máx. 3): gana 1 al proteger a su equipo y 3 si cae un aliado. Con 3 despierta para siempre como Gohan Bestia. No se disipa ni se limpia.' },
+  cubosDios: { nombre: 'Cubos de Dios', icono: '🧊', color: 0x93c5fd, tipo: 'marca', tags: ['Carga'], noDisipable: true,
+    desc: 'Contador de Blast (máx. 5): gana 1 al inicio de cada ronda, 1 con Portal Dimensional y 1 cada vez que rescata a un aliado. Colapso Gravitacional los consume todos (+35% de daño cada uno). No se disipa ni se limpia.' },
   despertarGarou: { nombre: 'Despertar', icono: '🐺', color: 0xdc2626, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Contador de Garou (máx. 5): gana 1 con cada golpe que recibe, 1 cada vez que un enemigo usa su Over y 2 con Modo Monstruo Humano. Con 5 despierta para siempre como Garou Cósmico. No se disipa ni se limpia.' },
   iraBroly: { nombre: 'Ira', icono: '💢', color: 0x84cc16, tipo: 'marca', tags: ['Carga'], noDisipable: true,

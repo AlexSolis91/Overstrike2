@@ -3,6 +3,12 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-17b', fecha: '17 de noviembre de 2026', titulo: 'Nuevo campeón: Blast',
+    cambios: [
+      { tipo: 'nuevo', texto: '🌌 Blast, Clase S Rango 1 (Daño · Control), en Legendary Warriors: llega al rescate de cada aliado que queda con 30% de HP o menos (Escudo del 50% de su HP máx.), gana un turno extra cada vez que un enemigo usa su Especial o su Over (máx. 3 por ronda), reúne Cubos de Dios para su Colapso Gravitacional (+35% de daño cada uno) y con su Agujero Dimensional puede desviar un Over enemigo hacia otro enemigo.' },
+    ],
+  },
+  {
     id: '2026-11-17', fecha: '17 de noviembre de 2026', titulo: 'Notificaciones, perfil y Poder',
     cambios: [
       { tipo: 'nuevo', texto: '🔔 Notificaciones: cuando alguien ataca tu Defensa aparece un aviso abajo a la derecha (si resistió o cayó, y ante quién). En la 🔔 del menú está el registro con tus ataques recibidos, recompensas y cambios de liga.' },

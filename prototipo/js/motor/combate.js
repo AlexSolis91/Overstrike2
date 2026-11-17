@@ -262,6 +262,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'marcaDemonio': texto = `Acumula el daño que recibe: ${Math.round(e.valor || 0)} · se libera al volver a usar Contra Venganza`; n = Math.round(e.valor || 0); break;
         case 'soresu': texto = `${e.valor} de Soresu (máx. 10): +${e.valor * 2}% Armadura y +${e.valor} Bloqueo`; n = e.valor; break;
         case 'heroeCaido': texto = `${e.valor} de Héroe Caído: +${e.valor}% Daño, Velocidad, Prob. y Daño Crítico y Penetración${p.forma ? '' : e.valor < 30 ? ` · con 30 se convierte en Lord Vader` : ''}`; n = e.valor; break;
+        case 'cubosDios': texto = `${e.valor} Cubos de Dios (máx. 5): su Over los consume (+35% de daño cada uno)`; n = e.valor; break;
         case 'despertarGarou': texto = `${e.valor} de Despertar (máx. 5): con 5 despierta como Garou Cósmico`; n = e.valor; break;
         case 'iraBroly': texto = `${e.valor} de Ira (máx. 5): con 5 despierta al Super Saiyajin Legendario`; n = e.valor; break;
         case 'almasShadowmourne': texto = `${e.valor} Alma(s) de Shadowmourne (máx. 20): +${e.valor * 15} de Daño · toda la batalla`; n = e.valor; break;
@@ -348,7 +349,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       if (fr.texto && S.ronda === fr.desde) emitir('jefeFuria', { id: j.uid, texto: fr.texto }, j);
     }
     S.actuaron = new Set(); S.orden = [];
-    for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; p.turnosExtraRonda = {}; p.bonoRonda = {}; }
+    for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; p.turnosExtraRonda = {}; p.bonoRonda = {}; p.redirigidosRonda = 0; }
     for (const x of P) {                                    // pasiva "revivirRonda": muerto, cada inicio de ronda puede revivir (una vez por partida)
       const rr = x.pasiva?.revivirRonda;
       if (!rr || !x.muerto || x.revivioRonda || x.noRevivir || rng() >= rr.prob) continue;
@@ -2301,6 +2302,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     moverse(a, mov, objetivo, ctx);
     profundidad--;
     procesarReacciones();
+    if (!profundidad) revisarHpBajo();
   }
 
   function moverse(a, mov, objetivo, ctx) {
@@ -2315,6 +2317,21 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     }
     if (mov.objetivo === 'todosEnemigos')                // pasiva "alEnemigoAoe": reacciona ANTES de que le llegue el ataque de área (p. ej. Escudo de Darkseid)
       for (const x of P.filter(y => y.lado !== a.lado && !y.muerto)) pasivas(x, 'alEnemigoAoe', { objetivo: x, atacante: a });
+    // pasiva "redirigirOver { prob, maxPorRonda }": un Over enemigo de UN objetivo contra su equipo cae sobre otro enemigo al azar
+    // (incluso el propio atacante), con todo su daño y efectos (p. ej. Agujero Dimensional de Blast)
+    if (!ctx.forzado && mov.categoria === 'over' && mov.objetivo === 'enemigo' && objetivo && objetivo.lado !== a.lado) {
+      for (const p of P.filter(x => x.lado === objetivo.lado && !x.muerto && x.pasiva?.redirigirOver && !conControl(x))) {
+        const ro = p.pasiva.redirigirOver;
+        if ((p.redirigidosRonda || 0) >= (ro.maxPorRonda ?? 1) || rng() >= ro.prob) continue;
+        const nuevo = rng.elegir(P.filter(x => x.lado === a.lado && !x.muerto));
+        if (!nuevo) break;
+        p.redirigidosRonda = (p.redirigidosRonda || 0) + 1;
+        emitir('pasiva', { id: p.uid, nombre: ro.texto || p.pasiva.nombre });
+        emitir('bonoVisible', { a: p.uid, texto: `${ro.texto || 'Portal'}: ¡el Over cae sobre ${nuevo.nombre}!` }, p);
+        objetivo = nuevo;
+        break;
+      }
+    }
     // 'azar': cada golpe va a un enemigo al azar (puede repetir; ignora Provocación)
     const azar = mov.objetivo === 'azar' ? Array.from({ length: mov.golpes || 1 }, () => rng.elegir(enemigosDe(a))).filter(Boolean) : null;
     const objetivos = azar ? azar : mov.objetivo === 'todosEnemigos' ? sinEsquiva(enemigosDe(a))
@@ -2469,7 +2486,27 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   function ejecutar(fn) {
     EV = [];
     fn();
+    revisarHpBajo();
     return { eventos: EV, esperando: S.esperando, fin: S.fin };
+  }
+  // Gatillo "alAliadoHpBajo" (entrada de pasiva con hp: umbral): la PRIMERA vez que cada aliado (no él mismo) queda vivo con
+  // ese % de HP o menos, una vez por aliado y por partida. ctx.objetivo = ese aliado (p. ej. Al Rescate de Blast).
+  // No procesa reacciones pendientes: se resuelven en su momento normal (si no, cambiarían el turno que ya se está esperando).
+  function revisarHpBajo() {
+    if (S.fin) return;
+    for (const p of P) {
+      if (p.muerto || !p.pasiva) continue;
+      const umbrales = [p.pasiva, ...(p.pasiva.tambien || [])].filter(g => g.gatillo === 'alAliadoHpBajo').map(g => g.hp ?? .3);
+      if (!umbrales.length) continue;
+      const hp = Math.max(...umbrales);
+      for (const x of aliadosDe(p)) {
+        if (x === p || x.muerto || x.hp / maxHp(x) > hp) continue;
+        p.hpBajoVisto ||= new Set();
+        if (p.hpBajoVisto.has(x.uid)) continue;
+        p.hpBajoVisto.add(x.uid);
+        pasivas(p, 'alAliadoHpBajo', { objetivo: x });
+      }
+    }
   }
 
   const crearLado = lado => (lado === 'jugador' ? equipoJugador : equipoRival).forEach((d, i) => P.push(crearPersonaje(d, lado, i)));

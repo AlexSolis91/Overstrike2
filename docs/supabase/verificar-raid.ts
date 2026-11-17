@@ -212,6 +212,8 @@ const EFECTOS = {
     desc: 'Contador de Trunks (máx. 5): gana 1 cuando un DoT daña a un enemigo (máx. 2 por ronda), 2 cuando un aliado se transforma y con sus ataques. Con 5 se transforma para siempre en Super Saiyajin. No se disipa ni se limpia.' },
   potencialGohan: { nombre: 'Potencial', icono: '🔥', color: 0x8b5cf6, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Contador de Gohan (máx. 3): gana 1 al proteger a su equipo y 3 si cae un aliado. Con 3 despierta para siempre como Gohan Bestia. No se disipa ni se limpia.' },
+  cubosDios: { nombre: 'Cubos de Dios', icono: '🧊', color: 0x93c5fd, tipo: 'marca', tags: ['Carga'], noDisipable: true,
+    desc: 'Contador de Blast (máx. 5): gana 1 al inicio de cada ronda, 1 con Portal Dimensional y 1 cada vez que rescata a un aliado. Colapso Gravitacional los consume todos (+35% de daño cada uno). No se disipa ni se limpia.' },
   despertarGarou: { nombre: 'Despertar', icono: '🐺', color: 0xdc2626, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Contador de Garou (máx. 5): gana 1 con cada golpe que recibe, 1 cada vez que un enemigo usa su Over y 2 con Modo Monstruo Humano. Con 5 despierta para siempre como Garou Cósmico. No se disipa ni se limpia.' },
   iraBroly: { nombre: 'Ira', icono: '💢', color: 0x84cc16, tipo: 'marca', tags: ['Carga'], noDisipable: true,
@@ -858,6 +860,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         case 'marcaDemonio': texto = `Acumula el daño que recibe: ${Math.round(e.valor || 0)} · se libera al volver a usar Contra Venganza`; n = Math.round(e.valor || 0); break;
         case 'soresu': texto = `${e.valor} de Soresu (máx. 10): +${e.valor * 2}% Armadura y +${e.valor} Bloqueo`; n = e.valor; break;
         case 'heroeCaido': texto = `${e.valor} de Héroe Caído: +${e.valor}% Daño, Velocidad, Prob. y Daño Crítico y Penetración${p.forma ? '' : e.valor < 30 ? ` · con 30 se convierte en Lord Vader` : ''}`; n = e.valor; break;
+        case 'cubosDios': texto = `${e.valor} Cubos de Dios (máx. 5): su Over los consume (+35% de daño cada uno)`; n = e.valor; break;
         case 'despertarGarou': texto = `${e.valor} de Despertar (máx. 5): con 5 despierta como Garou Cósmico`; n = e.valor; break;
         case 'iraBroly': texto = `${e.valor} de Ira (máx. 5): con 5 despierta al Super Saiyajin Legendario`; n = e.valor; break;
         case 'almasShadowmourne': texto = `${e.valor} Alma(s) de Shadowmourne (máx. 20): +${e.valor * 15} de Daño · toda la batalla`; n = e.valor; break;
@@ -944,7 +947,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       if (fr.texto && S.ronda === fr.desde) emitir('jefeFuria', { id: j.uid, texto: fr.texto }, j);
     }
     S.actuaron = new Set(); S.orden = [];
-    for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; p.turnosExtraRonda = {}; p.bonoRonda = {}; }
+    for (const p of P) { p.desempate = rng(); p.usosPasiva = 0; p.turnosExtraRonda = {}; p.bonoRonda = {}; p.redirigidosRonda = 0; }
     for (const x of P) {                                    // pasiva "revivirRonda": muerto, cada inicio de ronda puede revivir (una vez por partida)
       const rr = x.pasiva?.revivirRonda;
       if (!rr || !x.muerto || x.revivioRonda || x.noRevivir || rng() >= rr.prob) continue;
@@ -2897,6 +2900,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     moverse(a, mov, objetivo, ctx);
     profundidad--;
     procesarReacciones();
+    if (!profundidad) revisarHpBajo();
   }
 
   function moverse(a, mov, objetivo, ctx) {
@@ -2911,6 +2915,21 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     }
     if (mov.objetivo === 'todosEnemigos')                // pasiva "alEnemigoAoe": reacciona ANTES de que le llegue el ataque de área (p. ej. Escudo de Darkseid)
       for (const x of P.filter(y => y.lado !== a.lado && !y.muerto)) pasivas(x, 'alEnemigoAoe', { objetivo: x, atacante: a });
+    // pasiva "redirigirOver { prob, maxPorRonda }": un Over enemigo de UN objetivo contra su equipo cae sobre otro enemigo al azar
+    // (incluso el propio atacante), con todo su daño y efectos (p. ej. Agujero Dimensional de Blast)
+    if (!ctx.forzado && mov.categoria === 'over' && mov.objetivo === 'enemigo' && objetivo && objetivo.lado !== a.lado) {
+      for (const p of P.filter(x => x.lado === objetivo.lado && !x.muerto && x.pasiva?.redirigirOver && !conControl(x))) {
+        const ro = p.pasiva.redirigirOver;
+        if ((p.redirigidosRonda || 0) >= (ro.maxPorRonda ?? 1) || rng() >= ro.prob) continue;
+        const nuevo = rng.elegir(P.filter(x => x.lado === a.lado && !x.muerto));
+        if (!nuevo) break;
+        p.redirigidosRonda = (p.redirigidosRonda || 0) + 1;
+        emitir('pasiva', { id: p.uid, nombre: ro.texto || p.pasiva.nombre });
+        emitir('bonoVisible', { a: p.uid, texto: `${ro.texto || 'Portal'}: ¡el Over cae sobre ${nuevo.nombre}!` }, p);
+        objetivo = nuevo;
+        break;
+      }
+    }
     // 'azar': cada golpe va a un enemigo al azar (puede repetir; ignora Provocación)
     const azar = mov.objetivo === 'azar' ? Array.from({ length: mov.golpes || 1 }, () => rng.elegir(enemigosDe(a))).filter(Boolean) : null;
     const objetivos = azar ? azar : mov.objetivo === 'todosEnemigos' ? sinEsquiva(enemigosDe(a))
@@ -3065,7 +3084,27 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
   function ejecutar(fn) {
     EV = [];
     fn();
+    revisarHpBajo();
     return { eventos: EV, esperando: S.esperando, fin: S.fin };
+  }
+  // Gatillo "alAliadoHpBajo" (entrada de pasiva con hp: umbral): la PRIMERA vez que cada aliado (no él mismo) queda vivo con
+  // ese % de HP o menos, una vez por aliado y por partida. ctx.objetivo = ese aliado (p. ej. Al Rescate de Blast).
+  // No procesa reacciones pendientes: se resuelven en su momento normal (si no, cambiarían el turno que ya se está esperando).
+  function revisarHpBajo() {
+    if (S.fin) return;
+    for (const p of P) {
+      if (p.muerto || !p.pasiva) continue;
+      const umbrales = [p.pasiva, ...(p.pasiva.tambien || [])].filter(g => g.gatillo === 'alAliadoHpBajo').map(g => g.hp ?? .3);
+      if (!umbrales.length) continue;
+      const hp = Math.max(...umbrales);
+      for (const x of aliadosDe(p)) {
+        if (x === p || x.muerto || x.hp / maxHp(x) > hp) continue;
+        p.hpBajoVisto ||= new Set();
+        if (p.hpBajoVisto.has(x.uid)) continue;
+        p.hpBajoVisto.add(x.uid);
+        pasivas(p, 'alAliadoHpBajo', { objetivo: x });
+      }
+    }
   }
 
   const crearLado = lado => (lado === 'jugador' ? equipoJugador : equipoRival).forEach((d, i) => P.push(crearPersonaje(d, lado, i)));
@@ -9117,6 +9156,69 @@ __e.default = {
 
 return __e; })();
 
+__m["datos/personajes/blast.js"] = (() => { const __e: any = {};
+const { espacios } = __m["datos/reliquias.js"];
+
+// Ficha oficial (2026-11-17, kit del usuario). Blast, Clase S Rango 1 (One Punch Man): el héroe más fuerte, casi nunca visto,
+// "héroe por hobby" que aparece cuando las cosas están perdidas (salvó a una Tatsumaki niña). Busca los Cubos de Dios y domina
+// la teletransportación con portales dimensionales y la gravedad (desvió con un portal los ataques de Garou Cósmico).
+// Sin habilidad de líder (trabaja solo).
+const CUBO = { tipo: 'ganarCargas', cantidad: 1, max: 5, efecto: 'cubosDios', a: 'propio' };
+
+__e.default = {
+  id: 'blast',
+  franquicia: 'One Punch Man', grupos: ['justicieros'],   // campaña: temas de las etapas
+  nombre: 'Blast',
+  rol: 'Daño', rolSecundario: 'Control',
+  sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js); Unbreakable Force incluye a todos
+  emoji: '🌌', color: '#93c5fd', imagen: 'assets/personajes/blast.webp',
+  base: { hp: 730, dmg: 75, spd: 114 },
+  extra: {},
+  slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
+
+  pasiva: {
+    nombre: 'Héroe por Hobby',
+    desc: 'Al rescate: la primera vez que cada aliado queda con 30% de HP o menos, Blast se teletransporta a su lado: le da un Escudo del 50% del HP máx. de Blast (2 rondas) y gana 1 Cubo de Dios 🧊. Cada vez que un enemigo usa su Especial o su Over, Blast gana 1 turno extra (máx. 3 por ronda). Gana 1 Cubo al inicio de cada ronda (máx. 5). Agujero Dimensional: una vez por ronda, cuando un enemigo usa su Over contra un solo aliado, 50% de probabilidad de abrir un portal y que el Over completo caiga sobre otro enemigo al azar.',
+    redirigirOver: { prob: .50, maxPorRonda: 1, texto: '🌀 Agujero Dimensional' },
+    gatillo: 'alUsarMovimientoEnemigo', filtro: { categorias: ['especial', 'over'] },
+    accion: { tipo: 'turnoExtra', a: 'propio', maxPorRonda: 3, clave: 'blast' },
+    tambien: [
+      { gatillo: 'alAliadoHpBajo', hp: .30, accion: { tipo: 'escudo', pct: .50, dur: 2, a: 'objetivo' } },
+      { gatillo: 'alAliadoHpBajo', hp: .30, accion: CUBO },
+      { gatillo: 'alIniciarRonda', accion: CUBO },
+    ],
+  },
+  movimientos: [
+    {
+      categoria: 'basico', nombre: 'Golpe Gravitatorio', objetivo: 'enemigo', estilo: 'melee', color: 0x93c5fd,
+      pct: 1.10, escala: 'dano', cd: 0,
+      desc: 'Causa 110% con 30% de probabilidad de dejarlo Expuesto (2 rondas).',
+      efectos: [{ accion: { tipo: 'efecto', id: 'expuesto', dur: 2, prob: .30 } }],
+    },
+    {
+      categoria: 'especial', nombre: 'Portal Dimensional', objetivo: 'enemigo', estilo: 'melee', color: 0x60a5fa, cd: 3,
+      pct: 1.70, escala: 'dano', ignoraProvocacion: true,
+      desc: 'Aparece por un portal a la espalda de cualquier enemigo (ignora Provocación y Sigilo): causa 170%, gana Esquivar (1 ronda) y 1 Cubo de Dios.',
+      efectos: [
+        { cuando: 'final', accion: { tipo: 'efecto', id: 'esquivar', dur: 1, a: 'propio' } },
+        { cuando: 'final', accion: CUBO },
+      ],
+    },
+    {
+      categoria: 'over', nombre: 'Colapso Gravitacional', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x1e3a8a, cd: 5,
+      pct: 1.40, escala: 'dano', consumeCargas: { pct: .35, efecto: 'cubosDios' },
+      desc: 'Un pequeño agujero negro aplasta a todos los enemigos: 140% (+35% por cada Cubo de Dios, que consume) con 60% de Aturdimiento y Desgaste a cada enemigo golpeado.',
+      efectos: [
+        { accion: { tipo: 'efecto', id: 'stun', prob: .60 } },
+        { accion: { tipo: 'efecto', id: 'wear' } },
+      ],
+    },
+  ],
+};
+
+
+return __e; })();
+
 __m["datos/personajes/index.js"] = (() => { const __e: any = {};
 // Registro de personajes. Cada ficha oficial nueva se agrega aquí y aparece sola en la construcción de equipos.
 const madara = __m["datos/personajes/madara-uchiha.js"].default;
@@ -9204,8 +9306,9 @@ const thestalos = __m["datos/personajes/thestalos.js"].default;
 const darkseid = __m["datos/personajes/darkseid.js"].default;
 const saitama = __m["datos/personajes/saitama.js"].default;
 const garou = __m["datos/personajes/garou.js"].default;
+const blast = __m["datos/personajes/blast.js"].default;
 
-const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke, padme, thestalos, darkseid, saitama, garou];
+const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke, padme, thestalos, darkseid, saitama, garou, blast];
 const porId = id => OFICIALES.find(p => p.id === id);
 
 __e["OFICIALES"] = OFICIALES;
@@ -9287,7 +9390,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 25;
+const REGLAS_RAID = 26;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;
