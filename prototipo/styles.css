@@ -474,7 +474,7 @@ body.movil-v.en-raid #hint { top: 152px; }
 .ap-nom { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; line-height: 1.15; }
 .ap-nom b { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .ap-poder { font: 800 11px Inter, sans-serif; font-style: normal; color: #fde047; }
-#arena-yo { position: absolute; bottom: 12px; left: 12px; z-index: 3; pointer-events: none; display: flex; align-items: center; gap: 9px; max-width: 240px; padding: 5px 14px; border-radius: 99px;
+#arena-yo { position: absolute; top: var(--yo-top, calc(100% - 142px)); left: 50%; transform: translateX(-50%); z-index: 3; pointer-events: none; display: flex; align-items: center; gap: 9px; max-width: 240px; padding: 5px 14px; border-radius: 99px;
   background: rgba(8, 11, 18, .85); border: 1px solid rgba(96, 165, 250, .55); box-shadow: 0 4px 16px rgba(0, 0, 0, .5); backdrop-filter: blur(6px); white-space: nowrap; }
 #arena-yo small { font: 800 10px Inter, sans-serif; letter-spacing: .18em; text-transform: uppercase; color: #93c5fd; }
 #arena-yo b { font: 900 15px Cinzel, serif; color: #fff; }
@@ -482,3 +482,5 @@ body.movil #arena-yo { padding: 3px 10px; gap: 6px; }
 body.movil #arena-yo b { font-size: 12px; }
 body.movil #arena-yo small, body.movil .ap-poder { font-size: 9px; }
 body.movil-h #arena-rival .ap-nom { flex-basis: 100%; }
+body.movil-h #arena-yo { top: auto; bottom: 12px; left: 12px; transform: none; }   /* horizontal: los movimientos van a la derecha */
+body.movil-v #arena-yo { top: auto; bottom: calc(max(8px, env(safe-area-inset-bottom)) + 70px); }

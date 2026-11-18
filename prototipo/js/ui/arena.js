@@ -217,7 +217,8 @@ export async function verRepeticion(combate, volver = 'arena') {
   catch (e) { return avisar(/arena_repeticion|function/i.test(e?.message || '') ? 'Falta ejecutar docs/sql/043_notificaciones_perfil.sql en el servidor.' : D.mensajeError(e)); }
   const atk = r.ataque.map(porId), def = r.defensa.map(porId);
   if (atk.some(x => !x) || def.some(x => !x)) return avisar('Esa repetición tiene campeones que ya no existen.');
-  jugar(atk, def, { semilla: r.semilla, repeticion: { decisiones: r.decisiones || [], equipoAtk: r.equipo_atk, equipoDef: r.equipo_def, atacante: r.atacante,
+  const inverso = r.soy === 'defensor';                  // quien la mira siempre abajo: el defensor ve su Defensa abajo (como en vivo)
+  jugar(inverso ? def : atk, inverso ? atk : def, { semilla: r.semilla, invertido: inverso, repeticion: { inverso, decisiones: r.decisiones || [], equipoAtk: r.equipo_atk, equipoDef: r.equipo_def, atacante: r.atacante,
     defensor: r.defensor, soy: r.soy, gano: !!r.gano, otraVersion: !!r.version && r.version !== VERSION, volver,
     poderAtk: poderEquipo(r.ataque, r.equipo_atk), poderDef: poderEquipo(r.defensa, r.equipo_def || null) } });
 }

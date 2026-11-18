@@ -146,6 +146,9 @@ function layout() {
   world.scale.set(s);
   world.x = (w - W * s) / 2;
   world.y = top + (avail - H * s) / 2;
+  // Arena: la placa con mi nombre y Poder va justo debajo de la zona de mis cartas (borde inferior en y = 740 del tablero)
+  // y nunca encima de los movimientos (barra de ~88 px abajo; la placa mide ~38 px)
+  document.getElementById('field')?.style.setProperty('--yo-top', `${Math.round(Math.min(world.y + 740 * s + 8, h - 100 - 38))}px`);
 }
 
 // ---------------------------------------------------------------- texturas

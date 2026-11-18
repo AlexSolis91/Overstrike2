@@ -85,10 +85,11 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   const vivo = opciones?.arena?.vivo;
   const hordaG = opciones?.horda?.g, rep = opciones?.horda?.rep;   // Horda: la cuenta queda congelada al abrir el portal; rep = partida reconstruida
   const repe = opciones?.repeticion;                           // repetición de un combate de Arena: los equipos tal como pelearon
-  const cuenta = repe ? cuentaDesdeServidor(repe.equipoAtk) : vivo ? cuentaDesdeServidor(opciones.arena.equipoMio) : opciones?.raid?.equipoMio ? cuentaDesdeServidor(opciones.raid.equipoMio) : hordaG ? cuentaDesdeServidor(hordaG.cuenta) : await cargarCuenta();   // tus estrellas y reliquias pelean contigo
+  const cuenta = repe ? (repe.inverso ? (repe.equipoDef ? cuentaDesdeServidor(repe.equipoDef) : null) : cuentaDesdeServidor(repe.equipoAtk)) : vivo ? cuentaDesdeServidor(opciones.arena.equipoMio) : opciones?.raid?.equipoMio ? cuentaDesdeServidor(opciones.raid.equipoMio) : hordaG ? cuentaDesdeServidor(hordaG.cuenta) : await cargarCuenta();   // tus estrellas y reliquias pelean contigo
   eqJ = eqJ.map(d => conCuenta(d, cuenta));
   if (opciones?.arena?.equipoRival) { const cr = cuentaDesdeServidor(opciones.arena.equipoRival); eqR = eqR.map(d => conCuenta(d, cr)); }   // la Defensa de otro jugador con sus estrellas y reliquias
-  if (repe?.equipoDef) { const cr = cuentaDesdeServidor(repe.equipoDef); eqR = eqR.map(d => conCuenta(d, cr)); }
+  const datosRival = repe && (repe.inverso ? repe.equipoAtk : repe.equipoDef);   // repetición: el equipo de arriba con sus estrellas y reliquias
+  if (datosRival) { const cr = cuentaDesdeServidor(datosRival); eqR = eqR.map(d => conCuenta(d, cr)); }
   if (opciones?.practicaArena) eqR = eqR.map(d => conCuenta(d, cuenta));     // práctica de Arena: tu propia Defensa, con tus estrellas y reliquias
   combate = rep ? rep.combate : crearCombate({ equipoJugador: eqJ, equipoRival: eqR, rival: opciones?.rival, invertido: !!opciones?.invertido, ...(opciones?.semilla != null ? { semilla: opciones.semilla } : {}) });
   P = combate.personajes;
@@ -112,7 +113,10 @@ async function iniciarPartida(eqJ, eqR, opciones = null) {
   entrarCartas(Object.values(cartas));
   refrescarPanel();
   actualizarJefe();
-  if (repe) mostrarRivalArena({ nombre: repe.defensor, poder: repe.poderDef, titulo: 'Defensa' }, { nombre: repe.atacante, poder: repe.poderAtk, titulo: 'Ataque' });
+  if (repe) {
+    const atk = { nombre: repe.atacante, poder: repe.poderAtk, titulo: 'Ataque' }, def = { nombre: repe.defensor, poder: repe.poderDef, titulo: 'Defensa' };
+    mostrarRivalArena(repe.inverso ? atk : def, repe.inverso ? def : atk);
+  }
   else mostrarRivalArena(opciones?.arena?.rival, opciones?.arena?.yo);
   if (rep) restaurarHorda(rep);
   if (vivo) { ui.vivo = conectarVivo(opciones.arena, { alAbandonar: () => abandonoRival() }); ui.auto = false; marcarControles(); }
@@ -544,13 +548,13 @@ async function procesar(res) {
   if (ui.repe) {                                             // repetición: cada turno (de los dos lados) sale de las decisiones guardadas
     ui.miTurno = false;
     inspeccionar(actor.uid);
-    setHint(`▶️ Repetición · ${actor.lado === 'jugador' ? ui.repe.atacante : ui.repe.defensor}: ${actor.nombre}`);
+    setHint(`▶️ Repetición · ${(actor.lado === 'jugador') !== !!ui.repe.inverso ? ui.repe.atacante : ui.repe.defensor}: ${actor.nombre}`);
     await wait(650);
     if (esta !== partida) return;
     const d = ui.repe.lista[ui.repe.i++];
     let r = null;
-    try { if (d) r = combate.actuar({ categoria: d.c, objetivo: d.o || null, forma: d.f || null }); } catch (e) { r = null; }
-    if (!r) return terminar({ ganador: ui.repe.gano ? 'jugador' : 'rival', ronda: combate.ronda, cortada: true });
+    try { if (d) r = combate.actuar({ categoria: d.c, objetivo: (ui.repe.inverso ? swapUid(d.o) : d.o) || null, forma: d.f || null }); } catch (e) { r = null; }   // inverso: los uid guardados son desde el atacante
+    if (!r) return terminar({ ganador: ui.repe.gano !== !!ui.repe.inverso ? 'jugador' : 'rival', ronda: combate.ronda, cortada: true });
     return procesar(r);
   }
   if (actor.lado === 'jugador') {
@@ -826,7 +830,7 @@ async function finArena(base, fin) {
 // Repetición: solo se muestra (no cobra nada). El título habla desde quien la mira (atacante o defensor).
 async function finRepeticion(base, fin) {
   const r = ui.repe, esta = partida;
-  const ganoAtk = fin.cortada ? r.gano : fin.ganador === 'jugador' && !fin.limite;
+  const ganoAtk = fin.cortada ? r.gano : fin.ganador === (r.inverso ? 'rival' : 'jugador') && !fin.limite;
   await wait(700);
   if (esta !== partida) return;
   const mio = r.soy === 'defensor' ? !ganoAtk : ganoAtk;

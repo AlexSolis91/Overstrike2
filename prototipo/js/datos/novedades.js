@@ -3,6 +3,14 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-18', fecha: '18 de noviembre de 2026', titulo: 'Repeticiones y Arena en vivo',
+    cambios: [
+      { tipo: 'mejora', texto: '▶ En las repeticiones siempre ves tu equipo abajo: si te atacaron, tu Defensa aparece abajo y el atacante arriba.' },
+      { tipo: 'mejora', texto: '⚡ La placa con tu nombre y tu Poder ahora va centrada, justo debajo de tus cartas.' },
+      { tipo: 'cambio', texto: '⚔️ Arena en vivo: los combates entre dos jugadores ya guardan el resultado y dan sus puntos, y no vuelve a emparejarte con un rival que ya se desconectó.' },
+    ],
+  },
+  {
     id: '2026-11-17c', fecha: '17 de noviembre de 2026', titulo: 'Nuevo campeón: Tirion Fordring',
     cambios: [
       { tipo: 'nuevo', texto: '⚜️ Tirion Fordring, Alto Señor de la Cruzada Argenta (Soporte · Daño), en Sacred Aegis: su Luz del Alba daña a todos los enemigos y cura a cada aliado el daño total; protege con Escudo Sagrado y Protección; Una Luz en la Oscuridad revive a un aliado y elimina a un enemigo que haya revivido. Como líder, las curaciones de su equipo pueden dar Escudo Sagrado y quien ataca con él se cura. Si cae todo su equipo, levanta a los caídos con su Over 4 veces seguidas.' },
