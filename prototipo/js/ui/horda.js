@@ -24,9 +24,9 @@ export const PRECIO_TROFEOS = { 'Raro': 100, 'Especial': 400, 'Épico': 1500 }; 
 const lunesMx = () => { const h = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' })); h.setDate(h.getDate() - (h.getDay() + 6) % 7);
   return `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-${String(h.getDate()).padStart(2, '0')}`; };
 const HITOS = [
-  { oleada: 10, txt: `🪙 10,000 de oro · 1 vale de sobre · 25 Trofeos` },
-  { oleada: 20, txt: `🪙 20,000 de oro · 2 vales de sobre · 75 Trofeos` },
-  { oleada: 30, txt: `1 Épica al azar del lote · 🪙 40,000 de oro · 150 Trofeos` },
+  { oleada: 10, txt: `🪙 8,000 de oro · 1 vale de sobre · 25 Trofeos` },
+  { oleada: 20, txt: `🪙 16,000 de oro · 2 vales de sobre · 75 Trofeos` },
+  { oleada: 30, txt: `1 Épica al azar del lote · 🪙 32,000 de oro · 150 Trofeos` },
 ];
 const tienda = () => Object.entries(RELIQUIAS).filter(([, r]) => (r.lote || 'orcos') === 'orcos' && PRECIO_TROFEOS[r.rarity] && !r.soloReceta)
   .map(([id, r]) => ({ id, ...r }));

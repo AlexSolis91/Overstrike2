@@ -51,8 +51,8 @@ export function oleada(n, horda = HORDAS.orcos, rng = Math.random) {
 export const defsOleada = (o, horda = HORDAS.orcos) => o.enemigos.map(id => horda.enemigos[id]);
 
 // ---------------------------------------------------------------- recompensas (el servidor las da; esto es la regla)
-export const ORO_PASO = 90;                                    // 2026-11-01: −40% (antes 1,000 + 150 por oleada); docs/sql/021
-export const oroOleada = n => 600 + ORO_PASO * (n - 1);
+export const ORO_PASO = 72;                                    // 2026-11-19: −20% (antes 600 + 90; y antes 1,000 + 150); docs/sql/047
+export const oroOleada = n => 480 + ORO_PASO * (n - 1);
 export const MULT_ORO = { miniJefe: 3, jefe: 5 };
 export const PROB_RELIQUIA = .30;
 export const PROB_FRAGMENTOS = .02;           // 1–3 fragmentos de Runa de Invocación
