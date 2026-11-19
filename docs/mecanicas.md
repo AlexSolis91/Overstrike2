@@ -123,7 +123,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | 🧪 Veneno | DoT, Veneno | Inicio del turno | **Escalonado**: cada Veneno vale 2% + 5% del Daño DoT de quien lo aplicó; las acumulaciones **no se suman**: el daño es el Veneno más alto × **1.5^(acumulaciones − 1)** (`DOT.multVeneno`). Hasta **10** acumulaciones (pasiva `venenoMax` las sube, p. ej. Orochimaru); al tope, un Veneno nuevo refresca el más débil. `activarDoT` usa el mismo cálculo |
 | 🩸 Sangrado | DoT, Sangrado | Cada golpe recibido | 3% + 10% Daño DoT. No se acumula (se queda el más alto). Sin duración. Si ya sangraba y recibe otro: 30% de convertirse en Hemorragia |
 | 🩸 Hemorragia | DoT, Sangrado | Cada golpe recibido **y** cada movimiento propio | Crece +1 punto por golpe recibido. Sin duración. Un Sangrado nuevo no le hace nada |
-| 💣 Bomba | DoT, Explosivo | Al llegar a 0 su contador | Máx. 3. Salpica 25% a los aliados del objetivo. Si el portador muere, explota solo la salpicadura. Limpiar la desactiva |
+| 💣 Bomba | DoT, Explosivo | Al llegar a 0 su contador | Máx. 2 (jefes: 5). En un mismo movimiento, a cada portador solo le pueden estallar tantas Bombas como su máximo (por `detonar`, pasivas al golpear o al morir); la cuenta regresiva no tiene ese límite. Salpica 25% a los aliados del objetivo. Si el portador muere, explota solo la salpicadura. Limpiar la desactiva |
 
 ### Control (etiqueta `Control`)
 
@@ -198,7 +198,7 @@ Solo existen **buffs** y **debuffs**. Cada uno lleva **etiquetas** internas para
 | `robarHP` | pct | Roba % del HP máx. y cura al ladrón |
 | `danoEfecto` | fraccion | Daño por efecto = fracción del daño que activó la acción |
 | `replicarDoT` | efecto, factor | Daño por efecto igual a factor × el DoT del objetivo, sobre el HP máx. de cada destino |
-| `detonar` | — | Explota ya todas las Bombas del objetivo |
+| `detonar` | — | Explota ya las Bombas del objetivo (las que pasen del cupo de estallidos del movimiento se quedan puestas) |
 | `usarMovimiento` + `despues: true` | categoria | Igual, pero **espera** a que termine el movimiento en curso; si su destino cayó, va a otro enemigo al azar. Destino `a: { distintos: N }` = N enemigos al azar distintos. P. ej. Anillo de Hielo: 2 Descargas de Escarcha |
 | `usarMovimiento` | categoria | Usa uno de sus propios movimientos sobre el destino, igual que el normal (puede aplicar efectos, activa Hemorragia, etc.), pero **no** gasta su turno ni cambia su cooldown. P. ej. Absolute Zero de Sub-Zero: Ice Blast a un enemigo al azar |
 | `propagar` | efecto | Copia un debuff del objetivo principal **en su estado actual** (intensidad, duración restante, acumulación, turnos, capas, reducción de Desgaste…) a los destinos. Cada copia hace su Tirada de Puntería y se apila con las reglas normales. Funciona aunque el objetivo muera. **Restricción:** si la ficha indica un debuff (`efecto: 'burn'`, como Purgatorio de Rengoku), solo propaga ese y, si el objetivo no lo tiene, no pasa nada. Sin restricción (`efecto: 'azar'`, como Bola de Fuerza de Reptile), elige uno al azar entre **cualquier** debuff que el objetivo **ya tenía antes** del movimiento. El Silencio copiado bloquea un movimiento al azar del nuevo objetivo |

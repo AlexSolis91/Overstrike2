@@ -87,7 +87,7 @@ export const DOT = {
   quemadura: (base, dot) => base * (1 + dot),
   maxVeneno: 10, durVeneno: 3,
   multVeneno: 1.5,   // Veneno escalonado: daño = el Veneno más alto × 1.5 por cada acumulación extra (no se suman)
-  maxBombas: 3, contadorBomba: 2, salpicaduraBomba: .25,
+  maxBombas: 2, maxBombasJefe: 5, contadorBomba: 2, salpicaduraBomba: .25,
   hemorragiaProb: .30, hemorragiaCrece: .01,
   quemaduraSuma: .10,         // una quemadura nueva suma el 10% de la más débil
 };

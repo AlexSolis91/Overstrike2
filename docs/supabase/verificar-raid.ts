@@ -102,7 +102,7 @@ const DOT = {
   quemadura: (base, dot) => base * (1 + dot),
   maxVeneno: 10, durVeneno: 3,
   multVeneno: 1.5,   // Veneno escalonado: daño = el Veneno más alto × 1.5 por cada acumulación extra (no se suman)
-  maxBombas: 3, contadorBomba: 2, salpicaduraBomba: .25,
+  maxBombas: 2, maxBombasJefe: 5, contadorBomba: 2, salpicaduraBomba: .25,
   hemorragiaProb: .30, hemorragiaCrece: .01,
   quemaduraSuma: .10,         // una quemadura nueva suma el 10% de la más débil
 };
@@ -145,7 +145,7 @@ const EFECTOS = {
   hemo:    { nombre: 'Hemorragia',  icono: '🩸', color: 0xffd36b, tipo: 'debuff', tags: ['DoT', 'Sangrado'],
     desc: `Pierde HP con cada golpe que recibe y cada vez que usa un movimiento, y crece +${p(DOT.hemorragiaCrece)} con cada golpe. Dura hasta que la limpien.` },
   bomb:    { nombre: 'Bomba',       icono: '💣', color: 0xffb03b, tipo: 'debuff', tags: ['DoT', 'Explosivo'],
-    desc: `Explota al terminar su cuenta regresiva (${DOT.contadorBomba} rondas): ${p(DOT.bomba(0))} de su HP máx. y ${p(DOT.salpicaduraBomba)} de eso a cada uno de sus aliados. Máximo ${DOT.maxBombas} a la vez.` },
+    desc: `Explota al terminar su cuenta regresiva (${DOT.contadorBomba} rondas): ${p(DOT.bomba(0))} de su HP máx. y ${p(DOT.salpicaduraBomba)} de eso a cada uno de sus aliados. Máximo ${DOT.maxBombas} a la vez (jefes: ${DOT.maxBombasJefe}). En un mismo ataque solo le pueden estallar tantas Bombas como su máximo.` },
   // ---- Control
   stun:    { nombre: 'Aturdimiento', mega: 'Mega Aturdimiento', icono: '💫', color: 0xfacc15, tipo: 'debuff', tags: ['Control'],
     desc: `Pierde su próximo turno. Mega Aturdimiento: 2 turnos.` },
@@ -809,6 +809,10 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
   }
   const get = (p, id) => p.estados.find(e => e.id === id);
   const todos = (p, id) => p.estados.filter(e => e.id === id);
+  // Bombas: máximo a la vez por portador (los jefes aguantan más) y, dentro de un mismo movimiento, a cada portador solo le pueden
+  // estallar tantas Bombas como ese máximo (S.detonaciones solo existe durante un movimiento; la cuenta regresiva no se limita)
+  const maxBombasDe = p => (p.jefe || p.barra) ? DOT.maxBombasJefe : DOT.maxBombas;
+  const cupoDetonacion = p => S.detonaciones ? Math.max(0, maxBombasDe(p) - (S.detonaciones.get(p) || 0)) : Infinity;
   const vivos = lado => P.filter(p => p.lado === lado && !p.muerto);
   const enemigosDe = p => vivos(p.lado === 'jugador' ? 'rival' : 'jugador');
   const aliadosDe = p => vivos(p.lado);
@@ -1855,7 +1859,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       if (rv.rondaSiguiente) { t.revivePasivaRonda = S.ronda + 1; emitir('extension', { a: t.uid, texto: '🐒 Revivirá al final de la próxima ronda' }, t); }   // p. ej. Wukong
       else { t.reviveEn = rv.turnos + (S.actual ? 1 : 0); emitir('extension', { a: t.uid, texto: `🐒 Revivirá en ${rv.turnos} turnos` }, t); }
     }
-    for (const b of bombas) explotarBomba(t, b, true);
+    for (const b of bombas.slice(0, cupoDetonacion(t))) explotarBomba(t, b, true);
     if (asesino && asesino.lado !== t.lado) pasivas(asesino, 'alEliminar', { objetivo: t });
     for (const v of rivalDe) {
       const b = v.pasiva.rival.alMorirRival || 0;
@@ -1884,6 +1888,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
   function explotarBomba(t, b, soloSalpicadura) {
     const d = b.valor * hpPorcentual(t) * (S.factorBombas || 1);     // movimiento "potenciaBombas": las que estallan durante él hacen ×factor
     let total = 0;
+    if (S.detonaciones) S.detonaciones.set(t, (S.detonaciones.get(t) || 0) + 1);
     emitir('explosion', { a: t.uid, soloSalpicadura });
     if (!soloSalpicadura && !t.muerto && !intocable(t)) {
       const real = d * (1 - reduccion(t, 'dot'));
@@ -2006,7 +2011,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         break;
       }
       case 'bomb': {
-        if (todos(t, 'bomb').length >= DOT.maxBombas) { emitir('sinEfecto', { a: t.uid, texto: 'Máximo de bombas' }); return; }
+        if (todos(t, 'bomb').length >= maxBombasDe(t)) { emitir('sinEfecto', { a: t.uid, texto: 'Máximo de bombas' }); return; }
         t.estados.push({ id: 'bomb', valor: acc.valorFinal ?? DOT.bomba(sa.dot), contador: acc.dur ?? DOT.contadorBomba, fuente: a.uid });
         texto = `💣 Bomba (${acc.dur ?? DOT.contadorBomba})`;
         break;
@@ -2595,9 +2600,10 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           break;
         }
         case 'detonar': {
-          const bombas = todos(t, 'bomb');
-          t.estados = t.estados.filter(e => e.id !== 'bomb');
-          if (!bombas.length) emitir('sinEfecto', { a: t.uid, texto: 'Sin bombas' });
+          const todas = todos(t, 'bomb'), bombas = todas.slice(0, cupoDetonacion(t));   // las que pasen del cupo del movimiento se quedan
+          t.estados = t.estados.filter(e => !bombas.includes(e));
+          if (!todas.length) emitir('sinEfecto', { a: t.uid, texto: 'Sin bombas' });
+          else if (!bombas.length) emitir('sinEfecto', { a: t.uid, texto: 'Ya estallaron sus Bombas' });
           for (const b of bombas) if (!t.muerto) explotarBomba(t, b, false);
           break;
         }
@@ -2995,6 +3001,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         bombasPrevias: new Set(enemigosDe(a).flatMap(x => todos(x, 'bomb'))), bombasPotenciadas: new Set() };   // pasiva "potenciaBombas"
       const factorBombasAntes = S.factorBombas;      // movimiento "potenciaBombas": las Bombas que estallen durante él hacen ×factor
       if (mov.potenciaBombas) S.factorBombas = mov.potenciaBombas.factor;
+      const detonacionesAntes = S.detonaciones;      // límite de Bombas que pueden estallar a cada portador durante este movimiento
+      S.detonaciones = new Map();
       if (mov.invocar) invocar(a, mov.invocar);
       else if (mov.desatar) desatar(a, mov);
       else if (azar) azar.forEach((t, i) => {
@@ -3041,6 +3049,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       };
       for (const ef of mov.efectos || []) if (ef.cuando === 'final' && cumple(ef.condicion, final)) ejecutarAccion(a, ef.accion, final);
       S.factorBombas = factorBombasAntes;
+      S.detonaciones = detonacionesAntes;
       const fa = a.faseActiva;                         // ciclo: efecto final de la fase activa (solo en su turno, con su propio movimiento)
       if (fa?.alFinal && S.actual === a && !ctx.forzado && !ctx.reaccion && !mov.recorreCiclo && !a.muerto) {
         const dest = mov.objetivo === 'enemigo' && principal && !principal.muerto && principal.lado !== a.lado ? principal : rng.elegir(sobrevivientes);
@@ -9493,7 +9502,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 28;
+const REGLAS_RAID = 29;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;

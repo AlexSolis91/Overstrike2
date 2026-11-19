@@ -3,6 +3,13 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-19', fecha: '19 de noviembre de 2026', titulo: 'Ajuste de Bombas',
+    cambios: [
+      { tipo: 'cambio', texto: '💣 Bombas: un campeón puede tener como máximo 2 a la vez (antes 3); los jefes aguantan hasta 5. El daño de cada Bomba no cambia.' },
+      { tipo: 'cambio', texto: '💥 En un mismo ataque, a cada enemigo solo le pueden estallar tantas Bombas como su máximo (2, o 5 a un jefe). Las que sobren se quedan puestas para después.' },
+    ],
+  },
+  {
     id: '2026-11-18', fecha: '18 de noviembre de 2026', titulo: 'Repeticiones y Arena en vivo',
     cambios: [
       { tipo: 'mejora', texto: '▶ En las repeticiones siempre ves tu equipo abajo: si te atacaron, tu Defensa aparece abajo y el atacante arriba.' },

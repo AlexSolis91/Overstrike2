@@ -211,6 +211,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   }
   const get = (p, id) => p.estados.find(e => e.id === id);
   const todos = (p, id) => p.estados.filter(e => e.id === id);
+  // Bombas: máximo a la vez por portador (los jefes aguantan más) y, dentro de un mismo movimiento, a cada portador solo le pueden
+  // estallar tantas Bombas como ese máximo (S.detonaciones solo existe durante un movimiento; la cuenta regresiva no se limita)
+  const maxBombasDe = p => (p.jefe || p.barra) ? DOT.maxBombasJefe : DOT.maxBombas;
+  const cupoDetonacion = p => S.detonaciones ? Math.max(0, maxBombasDe(p) - (S.detonaciones.get(p) || 0)) : Infinity;
   const vivos = lado => P.filter(p => p.lado === lado && !p.muerto);
   const enemigosDe = p => vivos(p.lado === 'jugador' ? 'rival' : 'jugador');
   const aliadosDe = p => vivos(p.lado);
@@ -1257,7 +1261,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       if (rv.rondaSiguiente) { t.revivePasivaRonda = S.ronda + 1; emitir('extension', { a: t.uid, texto: '🐒 Revivirá al final de la próxima ronda' }, t); }   // p. ej. Wukong
       else { t.reviveEn = rv.turnos + (S.actual ? 1 : 0); emitir('extension', { a: t.uid, texto: `🐒 Revivirá en ${rv.turnos} turnos` }, t); }
     }
-    for (const b of bombas) explotarBomba(t, b, true);
+    for (const b of bombas.slice(0, cupoDetonacion(t))) explotarBomba(t, b, true);
     if (asesino && asesino.lado !== t.lado) pasivas(asesino, 'alEliminar', { objetivo: t });
     for (const v of rivalDe) {
       const b = v.pasiva.rival.alMorirRival || 0;
@@ -1286,6 +1290,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   function explotarBomba(t, b, soloSalpicadura) {
     const d = b.valor * hpPorcentual(t) * (S.factorBombas || 1);     // movimiento "potenciaBombas": las que estallan durante él hacen ×factor
     let total = 0;
+    if (S.detonaciones) S.detonaciones.set(t, (S.detonaciones.get(t) || 0) + 1);
     emitir('explosion', { a: t.uid, soloSalpicadura });
     if (!soloSalpicadura && !t.muerto && !intocable(t)) {
       const real = d * (1 - reduccion(t, 'dot'));
@@ -1408,7 +1413,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         break;
       }
       case 'bomb': {
-        if (todos(t, 'bomb').length >= DOT.maxBombas) { emitir('sinEfecto', { a: t.uid, texto: 'Máximo de bombas' }); return; }
+        if (todos(t, 'bomb').length >= maxBombasDe(t)) { emitir('sinEfecto', { a: t.uid, texto: 'Máximo de bombas' }); return; }
         t.estados.push({ id: 'bomb', valor: acc.valorFinal ?? DOT.bomba(sa.dot), contador: acc.dur ?? DOT.contadorBomba, fuente: a.uid });
         texto = `💣 Bomba (${acc.dur ?? DOT.contadorBomba})`;
         break;
@@ -1997,9 +2002,10 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'detonar': {
-          const bombas = todos(t, 'bomb');
-          t.estados = t.estados.filter(e => e.id !== 'bomb');
-          if (!bombas.length) emitir('sinEfecto', { a: t.uid, texto: 'Sin bombas' });
+          const todas = todos(t, 'bomb'), bombas = todas.slice(0, cupoDetonacion(t));   // las que pasen del cupo del movimiento se quedan
+          t.estados = t.estados.filter(e => !bombas.includes(e));
+          if (!todas.length) emitir('sinEfecto', { a: t.uid, texto: 'Sin bombas' });
+          else if (!bombas.length) emitir('sinEfecto', { a: t.uid, texto: 'Ya estallaron sus Bombas' });
           for (const b of bombas) if (!t.muerto) explotarBomba(t, b, false);
           break;
         }
@@ -2397,6 +2403,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         bombasPrevias: new Set(enemigosDe(a).flatMap(x => todos(x, 'bomb'))), bombasPotenciadas: new Set() };   // pasiva "potenciaBombas"
       const factorBombasAntes = S.factorBombas;      // movimiento "potenciaBombas": las Bombas que estallen durante él hacen ×factor
       if (mov.potenciaBombas) S.factorBombas = mov.potenciaBombas.factor;
+      const detonacionesAntes = S.detonaciones;      // límite de Bombas que pueden estallar a cada portador durante este movimiento
+      S.detonaciones = new Map();
       if (mov.invocar) invocar(a, mov.invocar);
       else if (mov.desatar) desatar(a, mov);
       else if (azar) azar.forEach((t, i) => {
@@ -2443,6 +2451,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       };
       for (const ef of mov.efectos || []) if (ef.cuando === 'final' && cumple(ef.condicion, final)) ejecutarAccion(a, ef.accion, final);
       S.factorBombas = factorBombasAntes;
+      S.detonaciones = detonacionesAntes;
       const fa = a.faseActiva;                         // ciclo: efecto final de la fase activa (solo en su turno, con su propio movimiento)
       if (fa?.alFinal && S.actual === a && !ctx.forzado && !ctx.reaccion && !mov.recorreCiclo && !a.muerto) {
         const dest = mov.objetivo === 'enemigo' && principal && !principal.muerto && principal.lado !== a.lado ? principal : rng.elegir(sobrevivientes);

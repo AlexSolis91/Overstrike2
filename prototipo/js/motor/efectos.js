@@ -19,7 +19,7 @@ export const EFECTOS = {
   hemo:    { nombre: 'Hemorragia',  icono: '🩸', color: 0xffd36b, tipo: 'debuff', tags: ['DoT', 'Sangrado'],
     desc: `Pierde HP con cada golpe que recibe y cada vez que usa un movimiento, y crece +${p(DOT.hemorragiaCrece)} con cada golpe. Dura hasta que la limpien.` },
   bomb:    { nombre: 'Bomba',       icono: '💣', color: 0xffb03b, tipo: 'debuff', tags: ['DoT', 'Explosivo'],
-    desc: `Explota al terminar su cuenta regresiva (${DOT.contadorBomba} rondas): ${p(DOT.bomba(0))} de su HP máx. y ${p(DOT.salpicaduraBomba)} de eso a cada uno de sus aliados. Máximo ${DOT.maxBombas} a la vez.` },
+    desc: `Explota al terminar su cuenta regresiva (${DOT.contadorBomba} rondas): ${p(DOT.bomba(0))} de su HP máx. y ${p(DOT.salpicaduraBomba)} de eso a cada uno de sus aliados. Máximo ${DOT.maxBombas} a la vez (jefes: ${DOT.maxBombasJefe}). En un mismo ataque solo le pueden estallar tantas Bombas como su máximo.` },
   // ---- Control
   stun:    { nombre: 'Aturdimiento', mega: 'Mega Aturdimiento', icono: '💫', color: 0xfacc15, tipo: 'debuff', tags: ['Control'],
     desc: `Pierde su próximo turno. Mega Aturdimiento: 2 turnos.` },
