@@ -1,8 +1,9 @@
-// Obi-Wan Kenobi: cargas Soresu (+Armadura/+Bloqueo), Especial (Escudo + HP máx. por carga), Over (consume cargas y su bono,
-// Mega Aturdimiento por cada 5) y líder General Kenobi (al bloquear baja cooldowns del equipo).
+// Obi-Wan Kenobi: buff Soresu con cargas (+Armadura/+Bloqueo, se disipa y se roba entero), Especial (Escudo + HP máx. por carga),
+// Over (+15% por carga sin gastarlas y Escudo al equipo igual al daño) y líder General Kenobi (al bloquear baja cooldowns).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { crearCombate, elegirIA, porId, azar, combate, estado } from './util.mjs';
+import { EFECTOS } from '../js/motor/efectos.js';
 
 const OBI = ['obi-wan-kenobi', 'shaka', 'satoru-gojo', 'kratos', 'batman'];
 const RIVAL = ['anakin-skywalker', 'loki', 'goku', 'meliodas', 'wukong'];
@@ -24,28 +25,49 @@ function partidas(n, alEvento, antes) {
   return terminadas;
 }
 
-test('Obi-Wan empieza con Contraataque y Provocación permanentes, 15% de Bloqueo y +15% de Armadura', () => {
+test('Obi-Wan empieza con Contraataque y Provocación permanentes y sin Armadura ni Bloqueo base (salen del buff Soresu)', () => {
   const c = combate(OBI, RIVAL);
   const obi = c.personajes.find(p => p.id === 'obi-wan-kenobi');
   assert.ok(estado(obi, 'counter') && estado(obi, 'taunt'));
   const cargas = estado(obi, 'soresu')?.valor || 0;   // puede haber recibido golpes antes de su primer turno
-  assert.ok(c.stats(obi).block - cargas * .01 >= .15 - 1e-9,   // + lo que den sus reliquias de prueba
-     `bloqueo ${c.stats(obi).block} con ${cargas} cargas`);
+  const s = c.stats(obi, { buffs: true });            // sin reliquias ni estrellas: solo su base + buffs
+  assert.ok(Math.abs(s.block - cargas * .02) < 1e-9 && Math.abs(s.armor - cargas * .05) < 1e-9, `bloqueo ${s.block}, armadura ${s.armor}, ${cargas} cargas`);
 });
 
-test('Soresu: gana cargas al recibir golpes (máx. 10) con su bono; el Over las consume con su bono y aturde', () => {
-  let maxCargas = 0, overConCargas = 0, megas = 0, bonoOk = true;
+test('Soresu: buff con cargas (máx. 10) que dan +5% Armadura y +2% Bloqueo cada una; el Over no las gasta y escuda al equipo', () => {
+  let maxCargas = 0, overs = 0, gasto = 0, escudosOver = 0;
   const n = 30, ok = partidas(n, (e, c, obi) => {
     const s = estado(obi, 'soresu')?.valor || 0;
     maxCargas = Math.max(maxCargas, s);
-    if (!obi.muerto && Math.abs((obi.permanente.block || 0) - s * .01) > 1e-9) bonoOk = false;
-    if (e.t === 'movimiento' && e.id === obi.uid && e.categoria === 'over') overConCargas++;
-    if (e.t === 'efecto' && e.texto === 'Mega Aturdimiento') megas++;
+    if (e.t === 'movimiento' && e.id === obi.uid && e.categoria === 'over') { overs++; c.__antes = s; }
+    if (e.t === 'escudo' && e.de === obi.uid && c.__antes != null) escudosOver++;
+    if (e.t === 'movimientoFin' && e.id === obi.uid && c.__antes != null) { if (s < c.__antes) gasto++; c.__antes = null; }
   });
   assert.equal(ok, n, 'todas las partidas terminan');
-  assert.ok(maxCargas === 10, `máximo de cargas ${maxCargas}`);
-  assert.ok(bonoOk, 'el bono de Bloqueo siempre corresponde a las cargas actuales');
-  assert.ok(overConCargas > 0 && megas > 0, `overs ${overConCargas}, megas ${megas}`);
+  assert.equal(maxCargas, 10, `máximo de cargas ${maxCargas}`);
+  assert.ok(overs > 0 && escudosOver > 0, `overs ${overs}, escudos ${escudosOver}`);
+  assert.equal(gasto, 0, 'el Over no gasta cargas');
+  assert.equal(EFECTOS.soresu.tipo, 'buff');
+});
+
+test('Robar el buff Soresu se lleva todas sus cargas y su bono', () => {
+  const g = porId('garou'), cosmico = { ...g, pasiva: g.transformacion.pasiva, transformacion: null, movimientos: g.transformacion.movimientos };
+  let robado = false;
+  for (let sem = 1; sem < 40 && !robado; sem++) {
+    const c = combate([cosmico], ['obi-wan-kenobi'], { semilla: sem });
+    const ga = c.personajes.find(p => p.lado === 'jugador'), obi = c.personajes.find(p => p.lado === 'rival');
+    while (c.esperando?.id !== ga.uid && !c.fin) c.actuar(elegirIA(c, azar(sem)));
+    if (c.fin) continue;
+    obi.estados = obi.estados.filter(e => e.id !== 'soresu'); obi.estados.push({ id: 'soresu', valor: 6 });
+    const antes = c.stats(ga, { buffs: true }).armor;
+    c.actuar({ categoria: 'basico', objetivo: obi.uid });
+    if (estado(obi, 'soresu')) continue;                 // bloqueó el golpe: otra semilla
+    robado = true;
+    const v = estado(ga, 'soresu')?.valor;                 // 6 + la carga que le dio el golpe antes del robo
+    assert.equal(v, 7);
+    assert.ok(Math.abs(c.stats(ga, { buffs: true }).armor - antes - v * .05) < 1e-9, 'el ladrón gana +5% de Armadura por carga');
+  }
+  assert.ok(robado, 'se pudo probar el robo');
 });
 
 test('Especial: +2% de HP máx. por carga a los aliados (permanente, sin gastar cargas); líder: al bloquear baja cooldowns', () => {

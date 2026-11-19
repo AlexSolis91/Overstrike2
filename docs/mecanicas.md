@@ -940,3 +940,8 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - **Acción `reanimar`** ahora cuenta cuántos revivió (`ctx.reanimados`) y no revive a quien no puede volver (esclavos de Frostmourne).
 - **Condición `ctxCero: [cuentas]`** (efectos `final`): ninguna de esas cuentas del movimiento pasó (p. ej. Una Luz en la Oscuridad cura al equipo si no revivió ni ejecutó a nadie).
 - **Curar `base: 'danoCausado'` a `todosAliados`**: cada aliado recibe el daño total del movimiento (p. ej. Luz del Alba).
+
+## Piezas nuevas (2026-11-19, Obi-Wan: Soresu como buff)
+- **Efecto con bono por carga** (`bonoPorValor { stat: valor }` en `efectos.js`): el efecto da ese bono × sus cargas (`valor`), calculado en vivo en `stats()`; si lo disipan o lo roban, el bono se va con él (o pasa al ladrón). Soresu es la excepción a la regla de marcas: **buff exclusivo** de Obi-Wan (máx. 10 cargas, sin duración; se disipa y se roba entero): +5% Armadura y +2% Bloqueo por carga. Obi-Wan ya no tiene Armadura ni Bloqueo base.
+- **Movimiento `bonoPorCargasPropias { efecto, pct }`**: +pct de daño por cada carga de ese efecto que tiene el atacante, **sin gastarlas** (Tengo el Terreno Elevado: +15% por Soresu).
+- **Acción `escudo` con `base: 'danoCausado'`**: Escudo igual al daño total del movimiento (Tengo el Terreno Elevado: a todos sus aliados, 2 rondas).

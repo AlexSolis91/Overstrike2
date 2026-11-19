@@ -5,8 +5,8 @@ import { espacios } from '../reliquias.js';
 // al equipo y le sube el HP máx. según sus cargas; su Over las consume (Mega Aturdimiento por cada 5).
 // General de la Legión 212: tiene habilidad de líder. Todos sus ataques escalan por HP. Enemigo jurado: Anakin.
 // Sim 2026-11-10: 70.6% vs azar; 76.0% como líder. El usuario aprobó publicarlo así (no ajustar sin preguntar).
-const BONO_SORESU = { efecto: 'soresu', bonos: { armor: .02, block: .01 } };
-const MEGA_AL_AZAR = { tipo: 'efecto', id: 'stun', mega: true, a: { enemigoAzarSinMega: 'stun' } };
+// 2026-11-19 (usuario): Soresu es un buff exclusivo (se disipa y se roba con todas sus cargas): +5% Armadura y +2% Bloqueo
+// por carga, sin Armadura ni Bloqueo base. El Over ya no consume cargas: +15% por carga y Escudo al equipo igual al daño.
 
 export default {
   id: 'obi-wan-kenobi',
@@ -16,7 +16,7 @@ export default {
   sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🛡️', color: '#38bdf8', imagen: 'assets/personajes/obi-wan-kenobi.webp',
   base: { hp: 800, dmg: 50, spd: 94 },
-  extra: { armor: .15, block: .15 },
+  extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
   lider: {
@@ -27,11 +27,10 @@ export default {
   },
   pasiva: {
     nombre: 'Maestría Soresu',
-    desc: 'Contraataque y Provocación permanentes. Cada golpe enemigo que recibe le da 1 carga de Soresu (máx. 10); cada carga da +2% de Armadura y +1 de Bloqueo. Hace +20% de daño a Anakin Skywalker (y a Lord Vader).',
+    desc: 'Contraataque y Provocación permanentes. Cada golpe enemigo que recibe le da 1 carga de su buff Soresu (máx. 10; no vence, pero se puede disipar o robar con todas sus cargas); cada carga da +5% de Armadura y +2% de Bloqueo. Hace +20% de daño a Anakin Skywalker (y a Lord Vader).',
     efectosPermanentes: ['counter', 'taunt'],
     gatillo: 'alRecibirGolpe',
     accion: { tipo: 'ganarCargas', efecto: 'soresu', cantidad: 1, max: 10, a: 'propio' },
-    bonoPorCarga: BONO_SORESU,
     enemigoJurado: { id: 'anakin-skywalker', bono: .20 },
   },
   movimientos: [
@@ -52,12 +51,9 @@ export default {
     },
     {
       categoria: 'over', nombre: 'Tengo el Terreno Elevado', objetivo: 'enemigo', estilo: 'melee', color: 0x0ea5e9,
-      pct: 1.50, escala: 'hp', cd: 5, consumeCargas: { pct: .20, efecto: 'soresu' },
-      desc: 'Causa 150% (escala por HP) a un enemigo y consume todas sus cargas de Soresu (y su bono): +20% de daño por carga. Por cada 5 cargas consumidas, aplica Mega Aturdimiento a un enemigo al azar que no lo tenga.',
-      efectos: [
-        { cuando: 'final', condicion: { cargasConsumidasMin: 5 }, accion: MEGA_AL_AZAR },
-        { cuando: 'final', condicion: { cargasConsumidasMin: 10 }, accion: MEGA_AL_AZAR },
-      ],
+      pct: 1.50, escala: 'hp', cd: 5, bonoPorCargasPropias: { efecto: 'soresu', pct: .15 },
+      desc: 'Causa 150% (escala por HP) a un enemigo, +15% de daño por cada carga de Soresu (no las gasta). Da a todos sus aliados un Escudo igual al daño causado (2 rondas).',
+      efectos: [{ cuando: 'final', accion: { tipo: 'escudo', base: 'danoCausado', pct: 1, dur: 2, a: 'todosAliados' } }],
     },
   ],
 };

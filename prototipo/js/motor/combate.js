@@ -123,6 +123,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     }
     for (const e of p.estados) {
       if (!capas[EFECTOS[e.id]?.tipo === 'debuff' ? 'debuffs' : 'buffs']) continue;
+      const bv = EFECTOS[e.id]?.bonoPorValor;          // efecto con bono por cada carga que lleva (p. ej. Soresu: +5% Armadura y +2% Bloqueo por carga)
+      if (bv) for (const [k, v] of Object.entries(bv)) { if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v * (e.valor || 0); else sec[k] = (sec[k] || 0) + v * (e.valor || 0); }
       if (e.id === 'dmgUp') pct.dmg += e.valor;
       if (e.id === 'protect') sec.res += BUFFS.proteccion;
       if (e.id === 'fortaleza') sec.armor = (sec.armor || 0) + BUFFS.fortaleza;
@@ -260,7 +262,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'potencialGohan': texto = `${e.valor} de Potencial (máx. 3): con 3 despierta como Gohan Bestia`; n = e.valor; break;
         case 'theOne': { const bc = p.pasiva?.bonoPorCarga; texto = `${e.valor} de The One (máx. 12)${bc ? `: +${Math.round(e.valor * bc.pct * 100)}% HP máx.` : ''}${e.valor >= 12 ? ' · ¡THE ONE!' : ''}`; n = e.valor; break; }
         case 'marcaDemonio': texto = `Acumula el daño que recibe: ${Math.round(e.valor || 0)} · se libera al volver a usar Contra Venganza`; n = Math.round(e.valor || 0); break;
-        case 'soresu': texto = `${e.valor} de Soresu (máx. 10): +${e.valor * 2}% Armadura y +${e.valor} Bloqueo`; n = e.valor; break;
+        case 'soresu': texto = `${e.valor} de Soresu (máx. 10): +${e.valor * 5}% Armadura y +${e.valor * 2}% Bloqueo`; n = e.valor; break;
         case 'heroeCaido': texto = `${e.valor} de Héroe Caído: +${e.valor}% Daño, Velocidad, Prob. y Daño Crítico y Penetración${p.forma ? '' : e.valor < 30 ? ` · con 30 se convierte en Lord Vader` : ''}`; n = e.valor; break;
         case 'cubosDios': texto = `${e.valor} Cubos de Dios (máx. 5): su Over los consume (+35% de daño cada uno)`; n = e.valor; break;
         case 'despertarGarou': texto = `${e.valor} de Despertar (máx. 5): con 5 despierta como Garou Cósmico`; n = e.valor; break;
@@ -868,6 +870,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       d *= 1 + Math.max(0, tramos) * mov.bonoPorHpPerdido.pct;
     }
     if (ctx.cargas && mov.consumeCargas) d *= 1 + ctx.cargas * mov.consumeCargas.pct;   // cargas consumidas por este movimiento
+    if (mov.bonoPorCargasPropias) d *= 1 + (get(a, mov.bonoPorCargasPropias.efecto)?.valor || 0) * mov.bonoPorCargasPropias.pct;   // + % por cada carga que tiene (sin gastarlas; p. ej. Tengo el Terreno Elevado)
     if (a.pasiva?.rival && esRival(a, t)) d *= 1 + a.pasiva.rival.bono;      // Rivalidad: más daño a su Rival
     if (mov.bonoRival && esRival(a, t)) d *= 1 + mov.bonoRival;              // movimiento: +X% extra si el objetivo es su Rival (p. ej. Garou)
     if (mov.bonoContra && [].concat(mov.bonoContra.efecto).some(id => get(t, id))) d *= 1 + mov.bonoContra.pct;   // p. ej. Kirin contra quemados
@@ -1771,7 +1774,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
         case 'potenciarInvocaciones': potenciarInvocaciones(t, acc.potencia || 1, acc.renovar, acc.veces || 1, acc.conAparecer); break;
         case 'escudo':           // Escudo de pct × HP máx. (o la escala indicada) de quien lo pone, durante `dur` rondas (1 por defecto)
           if (acc.prob != null && rng() >= acc.prob) break;
-          darEscudo(a, t, baseDe(a, acc.escala || 'hpMax') * acc.pct, acc.dur ?? 1);
+          darEscudo(a, t, (acc.base === 'danoCausado' ? (ctx.danoCausado || 0) : baseDe(a, acc.escala || 'hpMax')) * acc.pct, acc.dur ?? 1);   // base 'danoCausado': el daño total del movimiento
           break;
         case 'limpiar': ctx.limpiados = (ctx.limpiados || 0) + limpiar(a, t, acc); break;
         case 'reiniciarCooldowns': {         // pone en 0 los cooldowns indicados del objetivo

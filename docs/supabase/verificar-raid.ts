@@ -248,8 +248,8 @@ const EFECTOS = {
     desc: 'Cuando un enemigo gana un turno adicional, el portador juega un turno adicional ANTES que él.' },
   heroeCaido: { nombre: 'Héroe Caído', icono: '🌑', color: 0xdc2626, tipo: 'marca', tags: ['Carga'], noDisipable: true,
     desc: 'Contador de Anakin (sin máximo): cada marca da +1% de Daño, +1 de Prob. Crítico, +1 de Daño Crítico, +1% de Velocidad y +1 de Penetración de escudo, para siempre. Con 30 se transforma en Lord Vader y las conserva.' },
-  soresu: { nombre: 'Soresu', icono: '🛡️', color: 0x60a5fa, tipo: 'marca', tags: ['Carga'], noDisipable: true,
-    desc: 'Contador de Obi-Wan (máx. 10): gana 1 con cada golpe enemigo que recibe. Cada carga da +2% de Armadura y +1 de Bloqueo. Su Especial sube el HP máx. del equipo según sus cargas y su Over las consume todas.' },
+  soresu: { nombre: 'Soresu', icono: '🛡️', color: 0x60a5fa, tipo: 'buff', tags: ['Estadística'], bonoPorValor: { armor: .05, block: .02 },
+    desc: 'Buff exclusivo de Obi-Wan (máx. 10 cargas): gana 1 con cada golpe enemigo que recibe. Cada carga da +5% de Armadura y +2% de Bloqueo. No vence; si lo disipan o lo roban, se va con todas sus cargas.' },
   counter: { nombre: 'Contraataque', icono: '⚔️', color: 0xf97316, tipo: 'buff', tags: ['Contraataque'],
     desc: 'Cuando un enemigo lo ataca, responde con su movimiento básico contra el atacante (una vez por movimiento enemigo; no gasta su turno).' },
   assist: { nombre: 'Asistir', icono: '🤝', color: 0x38bdf8, tipo: 'buff', tags: ['Asistir'],
@@ -721,6 +721,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     }
     for (const e of p.estados) {
       if (!capas[EFECTOS[e.id]?.tipo === 'debuff' ? 'debuffs' : 'buffs']) continue;
+      const bv = EFECTOS[e.id]?.bonoPorValor;          // efecto con bono por cada carga que lleva (p. ej. Soresu: +5% Armadura y +2% Bloqueo por carga)
+      if (bv) for (const [k, v] of Object.entries(bv)) { if (k.endsWith('Pct')) pct[k.slice(0, -3)] += v * (e.valor || 0); else sec[k] = (sec[k] || 0) + v * (e.valor || 0); }
       if (e.id === 'dmgUp') pct.dmg += e.valor;
       if (e.id === 'protect') sec.res += BUFFS.proteccion;
       if (e.id === 'fortaleza') sec.armor = (sec.armor || 0) + BUFFS.fortaleza;
@@ -858,7 +860,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         case 'potencialGohan': texto = `${e.valor} de Potencial (máx. 3): con 3 despierta como Gohan Bestia`; n = e.valor; break;
         case 'theOne': { const bc = p.pasiva?.bonoPorCarga; texto = `${e.valor} de The One (máx. 12)${bc ? `: +${Math.round(e.valor * bc.pct * 100)}% HP máx.` : ''}${e.valor >= 12 ? ' · ¡THE ONE!' : ''}`; n = e.valor; break; }
         case 'marcaDemonio': texto = `Acumula el daño que recibe: ${Math.round(e.valor || 0)} · se libera al volver a usar Contra Venganza`; n = Math.round(e.valor || 0); break;
-        case 'soresu': texto = `${e.valor} de Soresu (máx. 10): +${e.valor * 2}% Armadura y +${e.valor} Bloqueo`; n = e.valor; break;
+        case 'soresu': texto = `${e.valor} de Soresu (máx. 10): +${e.valor * 5}% Armadura y +${e.valor * 2}% Bloqueo`; n = e.valor; break;
         case 'heroeCaido': texto = `${e.valor} de Héroe Caído: +${e.valor}% Daño, Velocidad, Prob. y Daño Crítico y Penetración${p.forma ? '' : e.valor < 30 ? ` · con 30 se convierte en Lord Vader` : ''}`; n = e.valor; break;
         case 'cubosDios': texto = `${e.valor} Cubos de Dios (máx. 5): su Over los consume (+35% de daño cada uno)`; n = e.valor; break;
         case 'despertarGarou': texto = `${e.valor} de Despertar (máx. 5): con 5 despierta como Garou Cósmico`; n = e.valor; break;
@@ -1466,6 +1468,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       d *= 1 + Math.max(0, tramos) * mov.bonoPorHpPerdido.pct;
     }
     if (ctx.cargas && mov.consumeCargas) d *= 1 + ctx.cargas * mov.consumeCargas.pct;   // cargas consumidas por este movimiento
+    if (mov.bonoPorCargasPropias) d *= 1 + (get(a, mov.bonoPorCargasPropias.efecto)?.valor || 0) * mov.bonoPorCargasPropias.pct;   // + % por cada carga que tiene (sin gastarlas; p. ej. Tengo el Terreno Elevado)
     if (a.pasiva?.rival && esRival(a, t)) d *= 1 + a.pasiva.rival.bono;      // Rivalidad: más daño a su Rival
     if (mov.bonoRival && esRival(a, t)) d *= 1 + mov.bonoRival;              // movimiento: +X% extra si el objetivo es su Rival (p. ej. Garou)
     if (mov.bonoContra && [].concat(mov.bonoContra.efecto).some(id => get(t, id))) d *= 1 + mov.bonoContra.pct;   // p. ej. Kirin contra quemados
@@ -2369,7 +2372,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         case 'potenciarInvocaciones': potenciarInvocaciones(t, acc.potencia || 1, acc.renovar, acc.veces || 1, acc.conAparecer); break;
         case 'escudo':           // Escudo de pct × HP máx. (o la escala indicada) de quien lo pone, durante `dur` rondas (1 por defecto)
           if (acc.prob != null && rng() >= acc.prob) break;
-          darEscudo(a, t, baseDe(a, acc.escala || 'hpMax') * acc.pct, acc.dur ?? 1);
+          darEscudo(a, t, (acc.base === 'danoCausado' ? (ctx.danoCausado || 0) : baseDe(a, acc.escala || 'hpMax')) * acc.pct, acc.dur ?? 1);   // base 'danoCausado': el daño total del movimiento
           break;
         case 'limpiar': ctx.limpiados = (ctx.limpiados || 0) + limpiar(a, t, acc); break;
         case 'reiniciarCooldowns': {         // pone en 0 los cooldowns indicados del objetivo
@@ -8705,8 +8708,8 @@ const { espacios } = __m["datos/reliquias.js"];
 // al equipo y le sube el HP máx. según sus cargas; su Over las consume (Mega Aturdimiento por cada 5).
 // General de la Legión 212: tiene habilidad de líder. Todos sus ataques escalan por HP. Enemigo jurado: Anakin.
 // Sim 2026-11-10: 70.6% vs azar; 76.0% como líder. El usuario aprobó publicarlo así (no ajustar sin preguntar).
-const BONO_SORESU = { efecto: 'soresu', bonos: { armor: .02, block: .01 } };
-const MEGA_AL_AZAR = { tipo: 'efecto', id: 'stun', mega: true, a: { enemigoAzarSinMega: 'stun' } };
+// 2026-11-19 (usuario): Soresu es un buff exclusivo (se disipa y se roba con todas sus cargas): +5% Armadura y +2% Bloqueo
+// por carga, sin Armadura ni Bloqueo base. El Over ya no consume cargas: +15% por carga y Escudo al equipo igual al daño.
 
 __e.default = {
   id: 'obi-wan-kenobi',
@@ -8716,7 +8719,7 @@ __e.default = {
   sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js)
   emoji: '🛡️', color: '#38bdf8', imagen: 'assets/personajes/obi-wan-kenobi.webp',
   base: { hp: 800, dmg: 50, spd: 94 },
-  extra: { armor: .15, block: .15 },
+  extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
   lider: {
@@ -8727,11 +8730,10 @@ __e.default = {
   },
   pasiva: {
     nombre: 'Maestría Soresu',
-    desc: 'Contraataque y Provocación permanentes. Cada golpe enemigo que recibe le da 1 carga de Soresu (máx. 10); cada carga da +2% de Armadura y +1 de Bloqueo. Hace +20% de daño a Anakin Skywalker (y a Lord Vader).',
+    desc: 'Contraataque y Provocación permanentes. Cada golpe enemigo que recibe le da 1 carga de su buff Soresu (máx. 10; no vence, pero se puede disipar o robar con todas sus cargas); cada carga da +5% de Armadura y +2% de Bloqueo. Hace +20% de daño a Anakin Skywalker (y a Lord Vader).',
     efectosPermanentes: ['counter', 'taunt'],
     gatillo: 'alRecibirGolpe',
     accion: { tipo: 'ganarCargas', efecto: 'soresu', cantidad: 1, max: 10, a: 'propio' },
-    bonoPorCarga: BONO_SORESU,
     enemigoJurado: { id: 'anakin-skywalker', bono: .20 },
   },
   movimientos: [
@@ -8752,12 +8754,9 @@ __e.default = {
     },
     {
       categoria: 'over', nombre: 'Tengo el Terreno Elevado', objetivo: 'enemigo', estilo: 'melee', color: 0x0ea5e9,
-      pct: 1.50, escala: 'hp', cd: 5, consumeCargas: { pct: .20, efecto: 'soresu' },
-      desc: 'Causa 150% (escala por HP) a un enemigo y consume todas sus cargas de Soresu (y su bono): +20% de daño por carga. Por cada 5 cargas consumidas, aplica Mega Aturdimiento a un enemigo al azar que no lo tenga.',
-      efectos: [
-        { cuando: 'final', condicion: { cargasConsumidasMin: 5 }, accion: MEGA_AL_AZAR },
-        { cuando: 'final', condicion: { cargasConsumidasMin: 10 }, accion: MEGA_AL_AZAR },
-      ],
+      pct: 1.50, escala: 'hp', cd: 5, bonoPorCargasPropias: { efecto: 'soresu', pct: .15 },
+      desc: 'Causa 150% (escala por HP) a un enemigo, +15% de daño por cada carga de Soresu (no las gasta). Da a todos sus aliados un Escudo igual al daño causado (2 rondas).',
+      efectos: [{ cuando: 'final', accion: { tipo: 'escudo', base: 'danoCausado', pct: 1, dur: 2, a: 'todosAliados' } }],
     },
   ],
 };
@@ -9494,7 +9493,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 27;
+const REGLAS_RAID = 28;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;
