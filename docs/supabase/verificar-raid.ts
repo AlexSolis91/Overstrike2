@@ -2012,7 +2012,9 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       }
       case 'bomb': {
         if (todos(t, 'bomb').length >= maxBombasDe(t)) { emitir('sinEfecto', { a: t.uid, texto: 'Máximo de bombas' }); return; }
-        t.estados.push({ id: 'bomb', valor: acc.valorFinal ?? DOT.bomba(sa.dot), contador: acc.dur ?? DOT.contadorBomba, fuente: a.uid });
+        // pasiva "bombasPorHpFaltante { cada, pct }": +pct de daño por cada `cada` de HP que le falte al que la pone (fijo al colocarla)
+        const bh = a.pasiva?.bombasPorHpFaltante, bonoHp = bh ? 1 + Math.floor((1 - Math.max(0, a.hp) / maxHp(a)) / bh.cada + 1e-9) * bh.pct : 1;
+        t.estados.push({ id: 'bomb', valor: (acc.valorFinal ?? DOT.bomba(sa.dot)) * bonoHp, contador: acc.dur ?? DOT.contadorBomba, fuente: a.uid, movId: S.movEnCurso });
         texto = `💣 Bomba (${acc.dur ?? DOT.contadorBomba})`;
         break;
       }
@@ -2266,6 +2268,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           break;
         }
         case 'transformar': transformar(t, acc.turnos); break;
+        case 'quitarTransformacion': quitarTransformacion(t); break;
         case 'extenderInvocaciones': {      // +N turnos a todas sus invocaciones activas
           const l = todos(t, 'summon');
           if (!l.length) break;
@@ -2600,11 +2603,15 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           break;
         }
         case 'detonar': {
-          const todas = todos(t, 'bomb'), bombas = todas.slice(0, cupoDetonacion(t));   // las que pasen del cupo del movimiento se quedan
+          // soloDelMovimiento: solo las que puso este mismo movimiento (p. ej. Lazo Divino); factor: esas estallan ×factor
+          const todas = todos(t, 'bomb').filter(b => !acc.soloDelMovimiento || (b.fuente === a.uid && b.movId === ctx.movId)), bombas = todas.slice(0, cupoDetonacion(t));   // las que pasen del cupo del movimiento se quedan
           t.estados = t.estados.filter(e => !bombas.includes(e));
-          if (!todas.length) emitir('sinEfecto', { a: t.uid, texto: 'Sin bombas' });
+          if (!todas.length) { if (!acc.soloDelMovimiento) emitir('sinEfecto', { a: t.uid, texto: 'Sin bombas' }); }
           else if (!bombas.length) emitir('sinEfecto', { a: t.uid, texto: 'Ya estallaron sus Bombas' });
+          const fAntes = S.factorBombas;
+          if (acc.factor) S.factorBombas = (fAntes || 1) * acc.factor;
           for (const b of bombas) if (!t.muerto) explotarBomba(t, b, false);
+          S.factorBombas = fAntes;
           break;
         }
       }
@@ -2637,7 +2644,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (cond.enemigosCon) { const { efectos, min = 1 } = cond.enemigosCon; return !!ctx.ejecutor && enemigosDe(ctx.ejecutor).filter(x => [].concat(efectos).some(id => get(x, id))).length >= min; }      // algún golpe del movimiento rompió una capa de Mega Congelación
     if (cond.cargasConsumidasMin) return (ctx.cargas || 0) >= cond.cargasConsumidasMin;
     if (cond.objetivoEfectoDurMin) { const e = ctx.objetivo && get(ctx.objetivo, cond.objetivoEfectoDurMin.efecto); return !!e && (e.dur ?? 0) >= cond.objetivoEfectoDurMin.dur; }
-    if (cond.algunGolpeadoTenia) return !!ctx.golpeadosTenian?.has(cond.algunGolpeadoTenia);
+    if (cond.algunGolpeadoTenia) return [].concat(cond.algunGolpeadoTenia).some(id => ctx.golpeadosTenian?.has(id));   // uno o una lista (cualquiera)
+    if (cond.ultimoGolpeCritico) return !!ctx.ultimoCritico;          // el último golpe del movimiento fue crítico (p. ej. Lazo Divino)
     if (cond.invocacionesMin) return (ctx.invocaciones || 0) >= cond.invocacionesMin;
     if (cond.propioInvocacion) return !!ctx.ejecutor && todos(ctx.ejecutor, 'summon').some(e => e.key === cond.propioInvocacion);   // quien ejecuta tiene esa invocación activa
     if (cond.propioSinInvocacion) return !!ctx.ejecutor && !todos(ctx.ejecutor, 'summon').some(e => e.key === cond.propioSinInvocacion);
@@ -2688,6 +2696,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     if (!f || p.muerto || (p.forma && !p.forma.permanente)) return;
     const ratio = p.hp / maxHp(p), pasivaAntes = p.pasiva;
     if (!p.formaBase) p.formaBase = { base: p.base, extra: p.extra, pasiva: p.pasiva, movimientos: p.movimientos, cds: p.cds, transformacion: p.transformacion };
+    p.formaOriginal ||= { base: p.base, extra: p.extra, pasiva: p.pasiva, movimientos: p.movimientos, transformacion: p.transformacion, lider: p.lider };   // para "quitarTransformacion" (también tras formas permanentes)
     const permViejos = (p.pasiva?.efectosPermanentes || []).filter(id => !(f.pasiva?.efectosPermanentes || []).includes(id));
     if (permViejos.length) p.estados = p.estados.filter(e => !(e.permanente && permViejos.includes(e.id)));   // efectos permanentes de la pasiva anterior (p. ej. Contraataque de Anakin)
     p.base = f.base; p.extra = f.extra || {}; p.pasiva = f.pasiva || null; p.movimientos = clonar(f.movimientos);
@@ -2704,6 +2713,22 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       emitir('pasiva', { id: x.uid, nombre: x.pasiva.nombre });
       for (const acc of [].concat(x.pasiva.alTransformarseAliado)) ejecutarAccion(x, acc, { objetivo: p });   // una acción o una lista
     }
+  }
+  // acción "quitarTransformacion": vuelve a su forma ORIGINAL aunque la forma sea permanente o de una cadena (p. ej. Guadaña Divina
+  // de Goku Black). Conserva buffs, debuffs, escudos y cooldowns; cambia los efectos permanentes de la pasiva. Puede volver a
+  // transformarse si cumple su condición. Nunca a jefes.
+  function quitarTransformacion(p) {
+    const o = p.formaOriginal;
+    if (!p.forma || !o || p.muerto || p.jefe || p.barra) return false;
+    const ratio = p.hp / maxHp(p);
+    const permAhora = p.pasiva?.efectosPermanentes || [], permOrig = o.pasiva?.efectosPermanentes || [];
+    p.estados = p.estados.filter(e => !(e.permanente && permAhora.includes(e.id) && !permOrig.includes(e.id)));
+    for (const id of permOrig) if (!p.estados.some(e => e.permanente && e.id === id)) p.estados.push({ id, permanente: true });
+    Object.assign(p, { base: o.base, extra: o.extra, pasiva: o.pasiva, movimientos: clonar(o.movimientos), transformacion: o.transformacion, lider: o.lider, forma: null, formaBase: null });
+    p.hp = ratio * maxHp(p);
+    emitir('transformacionFin', { id: p.uid }, p);
+    emitir('bonoVisible', { a: p.uid, texto: '✖ ¡Transformación anulada!' }, p);
+    return true;
   }
   function revertir(p) {
     const ratio = p.hp / maxHp(p), b = p.formaBase;
@@ -2878,10 +2903,12 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
     // cada golpe intenta sus efectos: 2 golpes al mismo objetivo = 2 tiradas
     let huboCritico = false;
     if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) {
+      if (ctx.acum) ctx.acum.ultimoCritico = false;              // condición ultimoGolpeCritico (un golpe esquivado o bloqueado por Escudo Sagrado no es crítico)
       const sagrado = hostil && t.lado !== a.lado && get(t, 'escudoSagrado');   // Escudo Sagrado: bloquea seguro el golpe (gasta 1)
       if (sagrado) { if (--sagrado.valor <= 0) quitar(t, sagrado); emitir('esquiva', { a: t.uid, golpe: true, texto: '⚜️ Escudo Sagrado' }); emitir('actualizar', {}, t); continue; }
       if (hostil && t.lado !== a.lado && get(t, 'esquivar') && rng() < BUFFS.esquivar) { emitir('esquiva', { a: t.uid, golpe: true }); continue; }   // Esquivar: ni daño ni efectos de ese golpe
       const cr = golpear(a, t, mov, ctxGolpe); huboCritico = cr || huboCritico;
+      if (ctx.acum) ctx.acum.ultimoCritico = !!cr;
       if (cr && ctx.acum && t.lado !== a.lado) ctx.acum.criticos = (ctx.acum.criticos || 0) + 1;   // condición criticosMin
       efectosDelGolpe();
     }
@@ -2965,7 +2992,9 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       }
     }
     // 'azar': cada golpe va a un enemigo al azar (puede repetir; ignora Provocación)
-    const azar = mov.objetivo === 'azar' ? Array.from({ length: mov.golpes || 1 }, () => rng.elegir(enemigosDe(a))).filter(Boolean) : null;
+    // entre: N → primero elige hasta N enemigos distintos y reparte los golpes al azar entre ellos (p. ej. Lazo Divino)
+    const grupoAzar = mov.objetivo === 'azar' && mov.entre ? rng.barajar(enemigosDe(a)).slice(0, mov.entre) : null;
+    const azar = mov.objetivo === 'azar' ? Array.from({ length: mov.golpes || 1 }, () => rng.elegir(grupoAzar || enemigosDe(a))).filter(Boolean) : null;
     const objetivos = azar ? azar : mov.objetivo === 'todosEnemigos' ? sinEsquiva(enemigosDe(a))
       : mov.objetivo === 'todosAliados' ? aliadosDe(a)
         : mov.objetivo === 'propio' ? [a] : [objetivo].filter(Boolean);
@@ -2997,6 +3026,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       const invocacionesAntes = todos(a, 'summon').length;    // invocaciones activas al ejecutar el movimiento
       const vivosAlEmpezar = new Set(objetivos.filter(t => !t.muerto));
       const previos = principal ? clonar(principal.estados) : [];    // para Propagar aunque el objetivo muera
+      const miMovId = movId, movEnCursoAntes = S.movEnCurso;   // las Bombas que ponga este movimiento llevan su id (detonar soloDelMovimiento)
+      S.movEnCurso = miMovId;
       const c = { ...ctx, acum: { dano: 0, tenian: new Set() },
         bombasPrevias: new Set(enemigosDe(a).flatMap(x => todos(x, 'bomb'))), bombasPotenciadas: new Set() };   // pasiva "potenciaBombas"
       const factorBombasAntes = S.factorBombas;      // movimiento "potenciaBombas": las Bombas que estallen durante él hacen ×factor
@@ -3006,7 +3037,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       if (mov.invocar) invocar(a, mov.invocar);
       else if (mov.desatar) desatar(a, mov);
       else if (azar) azar.forEach((t, i) => {
-        if (t.muerto) t = rng.elegir(enemigosDe(a));        // si el elegido ya cayó, el golpe va a otro enemigo vivo
+        if (t.muerto) t = rng.elegir((grupoAzar || []).filter(x => !x.muerto)) || rng.elegir(enemigosDe(a));   // si el elegido ya cayó, el golpe va a otro enemigo vivo (del grupo, si hay)
         if (!t || a.muerto) return;
         // recorreCiclo: el golpe i usa la fase i del ciclo (su bono de daño y sus efectos), sin cambiar la fase activa
         const f = mov.recorreCiclo ? a.pasiva?.ciclo?.fases?.[i % a.pasiva.ciclo.fases.length] || null : undefined;
@@ -3043,13 +3074,14 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       const sobrevivientes = [...new Set(objetivos)].filter(t => !t.muerto && t.lado !== a.lado);
       const eliminados = [...new Set(objetivos)].filter(t => t.muerto && t.lado !== a.lado && vivosAlEmpezar.has(t)).length;
       const final = {
-        ejecutor: a, sobrevivientes, eliminados, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, rompioMega: !!c.acum.rompioMega, criticos: c.acum.criticos || 0, disipados: c.acum.disipados || 0, invocaciones: invocacionesAntes, esMovimiento: true, categoriaMov: mov.categoria,
+        ejecutor: a, sobrevivientes, eliminados, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, ultimoCritico: !!c.acum.ultimoCritico, movId: miMovId, rompioMega: !!c.acum.rompioMega, criticos: c.acum.criticos || 0, disipados: c.acum.disipados || 0, invocaciones: invocacionesAntes, esMovimiento: true, categoriaMov: mov.categoria,
         estadoDe: id => (principal && !principal.muerto && get(principal, id)) || previos.find(e => e.id === id),
         debuffsPrevios: previos.filter(e => EFECTOS[e.id]?.tipo === 'debuff'),
       };
       for (const ef of mov.efectos || []) if (ef.cuando === 'final' && cumple(ef.condicion, final)) ejecutarAccion(a, ef.accion, final);
       S.factorBombas = factorBombasAntes;
       S.detonaciones = detonacionesAntes;
+      S.movEnCurso = movEnCursoAntes;
       const fa = a.faseActiva;                         // ciclo: efecto final de la fase activa (solo en su turno, con su propio movimiento)
       if (fa?.alFinal && S.actual === a && !ctx.forzado && !ctx.reaccion && !mov.recorreCiclo && !a.muerto) {
         const dest = mov.objetivo === 'enemigo' && principal && !principal.muerto && principal.lado !== a.lado ? principal : rng.elegir(sobrevivientes);
@@ -9330,6 +9362,65 @@ __e.default = {
 
 return __e; })();
 
+__m["datos/personajes/goku-black.js"] = (() => { const __e: any = {};
+const { espacios } = __m["datos/reliquias.js"];
+
+// Ficha oficial (2026-11-19, kit del usuario). Goku Black (Dragon Ball Super): Zamasu en el cuerpo robado de Goku, el
+// "dios" que quiere borrar a los mortales. Corta con su Espada de Ki, siembra Bombas con su Lazo Divino y con la Guadaña
+// Divina castiga a quien se interpone (Provocación) y anula las transformaciones. Sin habilidad de líder.
+const LAZO_DIVINO = {
+  categoria: 'especial', nombre: 'Lazo Divino', objetivo: 'azar', golpes: 5, entre: 3, estilo: 'ranged', color: 0xf472b6,
+  pct: .40, escala: 'dano', cd: 3,
+  desc: '5 golpes de 40% repartidos al azar entre hasta 3 enemigos, cada uno con 45% de probabilidad de Bomba. Si el último golpe es crítico, hace estallar las Bombas que puso este ataque con el doble de daño.',
+  efectos: [
+    { accion: { tipo: 'efecto', id: 'bomb', prob: .45 } },
+    { cuando: 'final', condicion: { ultimoGolpeCritico: true }, accion: { tipo: 'detonar', a: 'todosEnemigos', soloDelMovimiento: true, factor: 2 } },
+  ],
+};
+
+__e.default = {
+  id: 'goku-black',
+  franquicia: 'Dragon Ball', grupos: ['villanos'],   // campaña: temas de las etapas
+  nombre: 'Goku Black',
+  rol: 'Daño', rolSecundario: 'DoTer',
+  sobres: ['bloodline'],  // sobres de la tienda (ver js/datos/sobres.js); Unbreakable Force incluye a todos
+  emoji: '🌹', color: '#ec4899', imagen: 'assets/personajes/goku-black.webp',
+  base: { hp: 650, dmg: 80, spd: 116 },
+  extra: {},
+  slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
+
+  pasiva: {
+    nombre: 'Deidad Entre Mortales',
+    desc: 'Cada vez que recibe daño (de cualquier tipo) tiene 5% de probabilidad de poner sus cooldowns en 0 y ganar un turno adicional. Por cada 10% de HP que le falte, las Bombas que coloca hacen +10% de daño (se fija al colocarlas).',
+    gatillo: 'alRecibirDano', prob: .05,
+    accion: { tipo: 'multiple', a: 'propio', acciones: [{ tipo: 'reiniciarCooldowns' }, { tipo: 'turnoExtra' }] },
+    bombasPorHpFaltante: { cada: .10, pct: .10 },
+  },
+  movimientos: [
+    {
+      categoria: 'basico', nombre: 'Espada de Ki', objetivo: 'enemigo', estilo: 'melee', color: 0xf9a8d4,
+      pct: 1.15, escala: 'dano', cd: 0,
+      desc: 'Causa 115% a un enemigo con 35% de probabilidad de Sangrado.',
+      efectos: [{ accion: { tipo: 'efecto', id: 'bleed', prob: .35 } }],
+    },
+    LAZO_DIVINO,
+    {
+      categoria: 'over', nombre: 'Guadaña Divina', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xdb2777,
+      pct: .75, escala: 'dano', cd: 5,
+      desc: 'Causa 75% a todos los enemigos. A los que tengan Provocación o Mega Provocación les pone 2 Bombas y Sangrado (seguros). A los que estén transformados los devuelve a su forma original. Si algún enemigo golpeado ya tenía Bomba o Sangrado, Black ejecuta Lazo Divino al final (sin activar su cooldown).',
+      efectos: [
+        { condicion: { objetivoTeniaAntes: ['taunt', 'megaTaunt'] }, accion: { tipo: 'efecto', id: 'bomb', veces: 2, irresistible: true } },
+        { condicion: { objetivoTeniaAntes: ['taunt', 'megaTaunt'] }, accion: { tipo: 'efecto', id: 'bleed', irresistible: true } },
+        { accion: { tipo: 'quitarTransformacion' } },
+        { cuando: 'final', condicion: { algunGolpeadoTenia: ['bomb', 'bleed'] }, accion: { tipo: 'usarMovimiento', categoria: 'especial', a: 'propio' } },
+      ],
+    },
+  ],
+};
+
+
+return __e; })();
+
 __m["datos/personajes/index.js"] = (() => { const __e: any = {};
 // Registro de personajes. Cada ficha oficial nueva se agrega aquí y aparece sola en la construcción de equipos.
 const madara = __m["datos/personajes/madara-uchiha.js"].default;
@@ -9419,8 +9510,9 @@ const saitama = __m["datos/personajes/saitama.js"].default;
 const garou = __m["datos/personajes/garou.js"].default;
 const blast = __m["datos/personajes/blast.js"].default;
 const tirion = __m["datos/personajes/tirion-fordring.js"].default;
+const gokuBlack = __m["datos/personajes/goku-black.js"].default;
 
-const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke, padme, thestalos, darkseid, saitama, garou, blast, tirion];
+const OFICIALES = [madara, rengoku, alexstrasza, sunJinWoo, shaka, goku, vegeta, batman, joker, reptile, subZero, scorpion, aldebaran, rhaenys, thor, loki, lichKing, jaina, doom, kratos, daenerys, wukong, naruto, sasuke, skeletor, heMan, saga, camus, milo, itachi, pain, gilgamesh, ozymandias, minato, antares, baran, orochimaru, ghostRider, venom, spiderMan, carnage, gaara, sasori, obito, deidara, broly, gohan, trunks, hashirama, tobirama, pinguino, natsu, kyo, iori, sillad, rakan, muzan, poisonIvy, ermac, shinobu, mrFreeze, baruka, bjorn, aokiji, doomsday, escanor, meliodas, marik, yorichi, tengen, yoda, capitanAmerica, nezuko, jonSnow, superman, satoruGojo, sukuna, anakin, obiWan, luke, padme, thestalos, darkseid, saitama, garou, blast, tirion, gokuBlack];
 const porId = id => OFICIALES.find(p => p.id === id);
 
 __e["OFICIALES"] = OFICIALES;
@@ -9502,7 +9594,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 30;
+const REGLAS_RAID = 31;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;

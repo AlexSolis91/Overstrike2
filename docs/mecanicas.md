@@ -945,3 +945,11 @@ Datos en `js/datos/reliquias.js`; servidor en `docs/sql/005_reliquias.sql` (+ `d
 - **Efecto con bono por carga** (`bonoPorValor { stat: valor }` en `efectos.js`): el efecto da ese bono × sus cargas (`valor`), calculado en vivo en `stats()`; si lo disipan o lo roban, el bono se va con él (o pasa al ladrón). Soresu es la excepción a la regla de marcas: **buff exclusivo** de Obi-Wan (máx. 10 cargas, sin duración; se disipa y se roba entero): +5% Armadura y +2% Bloqueo por carga. Obi-Wan ya no tiene Armadura ni Bloqueo base.
 - **Movimiento `bonoPorCargasPropias { efecto, pct }`**: +pct de daño por cada carga de ese efecto que tiene el atacante, **sin gastarlas** (Tengo el Terreno Elevado: +15% por Soresu).
 - **Acción `escudo` con `base: 'danoCausado'`**: Escudo igual al daño total del movimiento (Tengo el Terreno Elevado: a todos sus aliados, 2 rondas).
+
+## Piezas nuevas (2026-11-19, Goku Black)
+- **Movimiento `objetivo: 'azar'` con `entre: N`**: primero elige hasta N enemigos distintos y reparte sus golpes al azar entre ellos (si uno cae, el golpe va a otro del grupo; si no queda ninguno, a cualquier enemigo). P. ej. Lazo Divino: 5 golpes entre hasta 3.
+- **Condición `ultimoGolpeCritico`** (efectos `final`): el último golpe del movimiento fue crítico (un golpe esquivado o bloqueado no lo es).
+- **Acción `detonar` con `soloDelMovimiento` y `factor`**: solo hace estallar las Bombas que puso **ese mismo movimiento** del ejecutor (las demás se quedan), y esas estallan ×factor. Respeta el cupo de estallidos por movimiento. P. ej. Lazo Divino: ×2 si el último golpe fue crítico.
+- **Pasiva `bombasPorHpFaltante { cada, pct }`**: las Bombas que coloca hacen +pct de daño por cada `cada` de HP que le falte al colocarlas (el valor queda fijo). P. ej. Goku Black: +10% por cada 10%.
+- **Condición `algunGolpeadoTenia`** ahora acepta una lista (cualquiera de esos efectos antes de ser golpeado).
+- **Acción `quitarTransformacion`**: devuelve al objetivo a su **forma original**, aunque la forma sea permanente o parte de una cadena (Goku → SSJ → SSJ3 vuelve a Goku). Conserva buffs, debuffs, escudos y cooldowns; cambia los efectos permanentes de la pasiva por los de la forma original. Puede volver a transformarse si cumple su condición. Nunca a jefes. P. ej. Guadaña Divina.

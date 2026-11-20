@@ -3,6 +3,12 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-20', fecha: '20 de noviembre de 2026', titulo: 'Nuevo campeón: Goku Black',
+    cambios: [
+      { tipo: 'nuevo', texto: '🌹 Goku Black (Daño · DoTer), en Bloodline Awakening: al recibir daño puede reiniciar sus cooldowns y ganar un turno extra, y sus Bombas pegan más mientras menos HP tenga. Su Lazo Divino reparte 5 golpes entre hasta 3 enemigos sembrando Bombas (si el último golpe es crítico, estallan al doble), y su Guadaña Divina castiga a quien tiene Provocación, anula las transformaciones enemigas y desata otro Lazo Divino si alguien ya tenía Bomba o Sangrado.' },
+    ],
+  },
+  {
     id: '2026-11-19b', fecha: '19 de noviembre de 2026', titulo: 'Ajuste de oro en la Horda',
     cambios: [
       { tipo: 'cambio', texto: '🪙 Horda: el oro por oleada baja 20% (480 en la oleada 1, +72 por oleada; ×3 mini-jefe, ×5 jefe) y el oro de los premios de primera vez pasa a 8,000 / 16,000 / 32,000. Trofeos, vales, reliquias y Polvo Estelar no cambian.' },

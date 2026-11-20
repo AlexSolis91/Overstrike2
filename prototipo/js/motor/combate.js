@@ -1414,7 +1414,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       }
       case 'bomb': {
         if (todos(t, 'bomb').length >= maxBombasDe(t)) { emitir('sinEfecto', { a: t.uid, texto: 'Máximo de bombas' }); return; }
-        t.estados.push({ id: 'bomb', valor: acc.valorFinal ?? DOT.bomba(sa.dot), contador: acc.dur ?? DOT.contadorBomba, fuente: a.uid });
+        // pasiva "bombasPorHpFaltante { cada, pct }": +pct de daño por cada `cada` de HP que le falte al que la pone (fijo al colocarla)
+        const bh = a.pasiva?.bombasPorHpFaltante, bonoHp = bh ? 1 + Math.floor((1 - Math.max(0, a.hp) / maxHp(a)) / bh.cada + 1e-9) * bh.pct : 1;
+        t.estados.push({ id: 'bomb', valor: (acc.valorFinal ?? DOT.bomba(sa.dot)) * bonoHp, contador: acc.dur ?? DOT.contadorBomba, fuente: a.uid, movId: S.movEnCurso });
         texto = `💣 Bomba (${acc.dur ?? DOT.contadorBomba})`;
         break;
       }
@@ -1668,6 +1670,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'transformar': transformar(t, acc.turnos); break;
+        case 'quitarTransformacion': quitarTransformacion(t); break;
         case 'extenderInvocaciones': {      // +N turnos a todas sus invocaciones activas
           const l = todos(t, 'summon');
           if (!l.length) break;
@@ -2002,11 +2005,15 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'detonar': {
-          const todas = todos(t, 'bomb'), bombas = todas.slice(0, cupoDetonacion(t));   // las que pasen del cupo del movimiento se quedan
+          // soloDelMovimiento: solo las que puso este mismo movimiento (p. ej. Lazo Divino); factor: esas estallan ×factor
+          const todas = todos(t, 'bomb').filter(b => !acc.soloDelMovimiento || (b.fuente === a.uid && b.movId === ctx.movId)), bombas = todas.slice(0, cupoDetonacion(t));   // las que pasen del cupo del movimiento se quedan
           t.estados = t.estados.filter(e => !bombas.includes(e));
-          if (!todas.length) emitir('sinEfecto', { a: t.uid, texto: 'Sin bombas' });
+          if (!todas.length) { if (!acc.soloDelMovimiento) emitir('sinEfecto', { a: t.uid, texto: 'Sin bombas' }); }
           else if (!bombas.length) emitir('sinEfecto', { a: t.uid, texto: 'Ya estallaron sus Bombas' });
+          const fAntes = S.factorBombas;
+          if (acc.factor) S.factorBombas = (fAntes || 1) * acc.factor;
           for (const b of bombas) if (!t.muerto) explotarBomba(t, b, false);
+          S.factorBombas = fAntes;
           break;
         }
       }
@@ -2039,7 +2046,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (cond.enemigosCon) { const { efectos, min = 1 } = cond.enemigosCon; return !!ctx.ejecutor && enemigosDe(ctx.ejecutor).filter(x => [].concat(efectos).some(id => get(x, id))).length >= min; }      // algún golpe del movimiento rompió una capa de Mega Congelación
     if (cond.cargasConsumidasMin) return (ctx.cargas || 0) >= cond.cargasConsumidasMin;
     if (cond.objetivoEfectoDurMin) { const e = ctx.objetivo && get(ctx.objetivo, cond.objetivoEfectoDurMin.efecto); return !!e && (e.dur ?? 0) >= cond.objetivoEfectoDurMin.dur; }
-    if (cond.algunGolpeadoTenia) return !!ctx.golpeadosTenian?.has(cond.algunGolpeadoTenia);
+    if (cond.algunGolpeadoTenia) return [].concat(cond.algunGolpeadoTenia).some(id => ctx.golpeadosTenian?.has(id));   // uno o una lista (cualquiera)
+    if (cond.ultimoGolpeCritico) return !!ctx.ultimoCritico;          // el último golpe del movimiento fue crítico (p. ej. Lazo Divino)
     if (cond.invocacionesMin) return (ctx.invocaciones || 0) >= cond.invocacionesMin;
     if (cond.propioInvocacion) return !!ctx.ejecutor && todos(ctx.ejecutor, 'summon').some(e => e.key === cond.propioInvocacion);   // quien ejecuta tiene esa invocación activa
     if (cond.propioSinInvocacion) return !!ctx.ejecutor && !todos(ctx.ejecutor, 'summon').some(e => e.key === cond.propioSinInvocacion);
@@ -2090,6 +2098,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     if (!f || p.muerto || (p.forma && !p.forma.permanente)) return;
     const ratio = p.hp / maxHp(p), pasivaAntes = p.pasiva;
     if (!p.formaBase) p.formaBase = { base: p.base, extra: p.extra, pasiva: p.pasiva, movimientos: p.movimientos, cds: p.cds, transformacion: p.transformacion };
+    p.formaOriginal ||= { base: p.base, extra: p.extra, pasiva: p.pasiva, movimientos: p.movimientos, transformacion: p.transformacion, lider: p.lider };   // para "quitarTransformacion" (también tras formas permanentes)
     const permViejos = (p.pasiva?.efectosPermanentes || []).filter(id => !(f.pasiva?.efectosPermanentes || []).includes(id));
     if (permViejos.length) p.estados = p.estados.filter(e => !(e.permanente && permViejos.includes(e.id)));   // efectos permanentes de la pasiva anterior (p. ej. Contraataque de Anakin)
     p.base = f.base; p.extra = f.extra || {}; p.pasiva = f.pasiva || null; p.movimientos = clonar(f.movimientos);
@@ -2106,6 +2115,22 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       emitir('pasiva', { id: x.uid, nombre: x.pasiva.nombre });
       for (const acc of [].concat(x.pasiva.alTransformarseAliado)) ejecutarAccion(x, acc, { objetivo: p });   // una acción o una lista
     }
+  }
+  // acción "quitarTransformacion": vuelve a su forma ORIGINAL aunque la forma sea permanente o de una cadena (p. ej. Guadaña Divina
+  // de Goku Black). Conserva buffs, debuffs, escudos y cooldowns; cambia los efectos permanentes de la pasiva. Puede volver a
+  // transformarse si cumple su condición. Nunca a jefes.
+  function quitarTransformacion(p) {
+    const o = p.formaOriginal;
+    if (!p.forma || !o || p.muerto || p.jefe || p.barra) return false;
+    const ratio = p.hp / maxHp(p);
+    const permAhora = p.pasiva?.efectosPermanentes || [], permOrig = o.pasiva?.efectosPermanentes || [];
+    p.estados = p.estados.filter(e => !(e.permanente && permAhora.includes(e.id) && !permOrig.includes(e.id)));
+    for (const id of permOrig) if (!p.estados.some(e => e.permanente && e.id === id)) p.estados.push({ id, permanente: true });
+    Object.assign(p, { base: o.base, extra: o.extra, pasiva: o.pasiva, movimientos: clonar(o.movimientos), transformacion: o.transformacion, lider: o.lider, forma: null, formaBase: null });
+    p.hp = ratio * maxHp(p);
+    emitir('transformacionFin', { id: p.uid }, p);
+    emitir('bonoVisible', { a: p.uid, texto: '✖ ¡Transformación anulada!' }, p);
+    return true;
   }
   function revertir(p) {
     const ratio = p.hp / maxHp(p), b = p.formaBase;
@@ -2280,10 +2305,12 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
     // cada golpe intenta sus efectos: 2 golpes al mismo objetivo = 2 tiradas
     let huboCritico = false;
     if (mov.pct) for (let i = 0; i < (mov.golpes || 1) && !t.muerto; i++) {
+      if (ctx.acum) ctx.acum.ultimoCritico = false;              // condición ultimoGolpeCritico (un golpe esquivado o bloqueado por Escudo Sagrado no es crítico)
       const sagrado = hostil && t.lado !== a.lado && get(t, 'escudoSagrado');   // Escudo Sagrado: bloquea seguro el golpe (gasta 1)
       if (sagrado) { if (--sagrado.valor <= 0) quitar(t, sagrado); emitir('esquiva', { a: t.uid, golpe: true, texto: '⚜️ Escudo Sagrado' }); emitir('actualizar', {}, t); continue; }
       if (hostil && t.lado !== a.lado && get(t, 'esquivar') && rng() < BUFFS.esquivar) { emitir('esquiva', { a: t.uid, golpe: true }); continue; }   // Esquivar: ni daño ni efectos de ese golpe
       const cr = golpear(a, t, mov, ctxGolpe); huboCritico = cr || huboCritico;
+      if (ctx.acum) ctx.acum.ultimoCritico = !!cr;
       if (cr && ctx.acum && t.lado !== a.lado) ctx.acum.criticos = (ctx.acum.criticos || 0) + 1;   // condición criticosMin
       efectosDelGolpe();
     }
@@ -2367,7 +2394,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       }
     }
     // 'azar': cada golpe va a un enemigo al azar (puede repetir; ignora Provocación)
-    const azar = mov.objetivo === 'azar' ? Array.from({ length: mov.golpes || 1 }, () => rng.elegir(enemigosDe(a))).filter(Boolean) : null;
+    // entre: N → primero elige hasta N enemigos distintos y reparte los golpes al azar entre ellos (p. ej. Lazo Divino)
+    const grupoAzar = mov.objetivo === 'azar' && mov.entre ? rng.barajar(enemigosDe(a)).slice(0, mov.entre) : null;
+    const azar = mov.objetivo === 'azar' ? Array.from({ length: mov.golpes || 1 }, () => rng.elegir(grupoAzar || enemigosDe(a))).filter(Boolean) : null;
     const objetivos = azar ? azar : mov.objetivo === 'todosEnemigos' ? sinEsquiva(enemigosDe(a))
       : mov.objetivo === 'todosAliados' ? aliadosDe(a)
         : mov.objetivo === 'propio' ? [a] : [objetivo].filter(Boolean);
@@ -2399,6 +2428,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       const invocacionesAntes = todos(a, 'summon').length;    // invocaciones activas al ejecutar el movimiento
       const vivosAlEmpezar = new Set(objetivos.filter(t => !t.muerto));
       const previos = principal ? clonar(principal.estados) : [];    // para Propagar aunque el objetivo muera
+      const miMovId = movId, movEnCursoAntes = S.movEnCurso;   // las Bombas que ponga este movimiento llevan su id (detonar soloDelMovimiento)
+      S.movEnCurso = miMovId;
       const c = { ...ctx, acum: { dano: 0, tenian: new Set() },
         bombasPrevias: new Set(enemigosDe(a).flatMap(x => todos(x, 'bomb'))), bombasPotenciadas: new Set() };   // pasiva "potenciaBombas"
       const factorBombasAntes = S.factorBombas;      // movimiento "potenciaBombas": las Bombas que estallen durante él hacen ×factor
@@ -2408,7 +2439,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       if (mov.invocar) invocar(a, mov.invocar);
       else if (mov.desatar) desatar(a, mov);
       else if (azar) azar.forEach((t, i) => {
-        if (t.muerto) t = rng.elegir(enemigosDe(a));        // si el elegido ya cayó, el golpe va a otro enemigo vivo
+        if (t.muerto) t = rng.elegir((grupoAzar || []).filter(x => !x.muerto)) || rng.elegir(enemigosDe(a));   // si el elegido ya cayó, el golpe va a otro enemigo vivo (del grupo, si hay)
         if (!t || a.muerto) return;
         // recorreCiclo: el golpe i usa la fase i del ciclo (su bono de daño y sus efectos), sin cambiar la fase activa
         const f = mov.recorreCiclo ? a.pasiva?.ciclo?.fases?.[i % a.pasiva.ciclo.fases.length] || null : undefined;
@@ -2445,13 +2476,14 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       const sobrevivientes = [...new Set(objetivos)].filter(t => !t.muerto && t.lado !== a.lado);
       const eliminados = [...new Set(objetivos)].filter(t => t.muerto && t.lado !== a.lado && vivosAlEmpezar.has(t)).length;
       const final = {
-        ejecutor: a, sobrevivientes, eliminados, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, rompioMega: !!c.acum.rompioMega, criticos: c.acum.criticos || 0, disipados: c.acum.disipados || 0, invocaciones: invocacionesAntes, esMovimiento: true, categoriaMov: mov.categoria,
+        ejecutor: a, sobrevivientes, eliminados, objetivo: principal, danoCausado: c.acum.dano, golpeadosTenian: c.acum.tenian, ultimoCritico: !!c.acum.ultimoCritico, movId: miMovId, rompioMega: !!c.acum.rompioMega, criticos: c.acum.criticos || 0, disipados: c.acum.disipados || 0, invocaciones: invocacionesAntes, esMovimiento: true, categoriaMov: mov.categoria,
         estadoDe: id => (principal && !principal.muerto && get(principal, id)) || previos.find(e => e.id === id),
         debuffsPrevios: previos.filter(e => EFECTOS[e.id]?.tipo === 'debuff'),
       };
       for (const ef of mov.efectos || []) if (ef.cuando === 'final' && cumple(ef.condicion, final)) ejecutarAccion(a, ef.accion, final);
       S.factorBombas = factorBombasAntes;
       S.detonaciones = detonacionesAntes;
+      S.movEnCurso = movEnCursoAntes;
       const fa = a.faseActiva;                         // ciclo: efecto final de la fase activa (solo en su turno, con su propio movimiento)
       if (fa?.alFinal && S.actual === a && !ctx.forzado && !ctx.reaccion && !mov.recorreCiclo && !a.muerto) {
         const dest = mov.objetivo === 'enemigo' && principal && !principal.muerto && principal.lado !== a.lado ? principal : rng.elegir(sobrevivientes);
