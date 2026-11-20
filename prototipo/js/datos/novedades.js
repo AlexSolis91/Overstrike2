@@ -3,6 +3,12 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-20b', fecha: '20 de noviembre de 2026', titulo: 'Over listo',
+    cambios: [
+      { tipo: 'mejora', texto: '☀️ Cuando el Over de tu campeón está listo, su botón brilla con un borde de luz solar y late con una onda dorada; el turno en que se carga da un destello para que no se te pase.' },
+    ],
+  },
+  {
     id: '2026-11-20', fecha: '20 de noviembre de 2026', titulo: 'Nuevo campeón: Goku Black',
     cambios: [
       { tipo: 'nuevo', texto: '🌹 Goku Black (Daño · DoTer), en Bloodline Awakening: al recibir daño puede reiniciar sus cooldowns y ganar un turno extra, y sus Bombas pegan más mientras menos HP tenga. Su Lazo Divino reparte 5 golpes entre hasta 3 enemigos sembrando Bombas (si el último golpe es crítico, estallan al doble), y su Guadaña Divina castiga a quien tiene Provocación, anula las transformaciones enemigas y desata otro Lazo Divino si alguien ya tenía Bomba o Sangrado.' },

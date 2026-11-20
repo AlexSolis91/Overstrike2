@@ -119,6 +119,17 @@ function calculoTexto(m, v) {
 }
 
 // ---------------------------------------------------------------- barra de movimientos (abajo)
+// Over listo: borde solar + latido (CSS .listo). El turno en que se carga da además un estallido de luz (una vez por carga);
+// se guarda la hora de la carga para que, si la barra se vuelve a dibujar, el estallido siga donde iba y no se repita.
+const overCargado = new Map();   // uid -> momento en que quedó listo
+const ESTALLIDO_MS = 700;
+function adornoOver(p) {
+  if (!overCargado.has(p.uid)) overCargado.set(p.uid, performance.now());
+  const t = performance.now() - overCargado.get(p.uid);
+  return '<span class="over-brillo"></span><span class="over-onda"></span>'
+    + (t < ESTALLIDO_MS ? `<span class="over-estallido" style="--estallido:-${Math.round(t)}ms"></span>` : '');
+}
+
 export function renderAccion(p, v, ui) {
   const bar = $('#actionbar');
   if (!p || !v || !ui.miTurno) {
@@ -128,12 +139,15 @@ export function renderAccion(p, v, ui) {
   }
   bar.innerHTML = (v.movs || p.movimientos).map(m => {
     const cd = v.cds[m.categoria] ?? 0, mudo = v.silenciado === m.categoria;
+    if (m.categoria === 'over' && cd) overCargado.delete(p.uid);     // en cooldown: la próxima vez que se cargue vuelve a estallar
     // bloqueado por otra regla del motor (p. ej. Incitar: solo el Básico)
     const op = ui.opciones?.find(o => o.categoria === m.categoria);
     const bloq = !cd && !mudo && op?.disponible === false;
     const motivo = mudo ? '🔇 Silenciado' : bloq ? (op?.agotado ? '✔ Ya usado' : op?.sellado ? '🔒 Sellado' : op?.sinCaidos ? '⚰️ Sin aliados caídos' : op?.sinSacrificio ? '🥚 Sin invocaciones para sacrificar' : op?.miedo ? '🎃 Miedo' : v.estados.some(e => e.id === 'incite') ? '🗣️ Incitado' : 'No disponible') : cd ? '' : 'Listo';
     const calc = calculoTexto(m, v);
-    return `<button class="act ${m.categoria} ${cd || mudo || bloq || ui.ocupado ? 'off' : ''} ${mudo || bloq ? 'mudo' : ''} ${ui.movSel === m.categoria ? 'sel' : ''}" data-cat="${m.categoria}">
+    const listo = m.categoria === 'over' && !(cd || mudo || bloq || ui.ocupado);
+    return `<button class="act ${m.categoria} ${cd || mudo || bloq || ui.ocupado ? 'off' : ''} ${mudo || bloq ? 'mudo' : ''} ${ui.movSel === m.categoria ? 'sel' : ''}${listo ? ' listo' : ''}" data-cat="${m.categoria}">
+      ${listo ? adornoOver(p) : ''}
       <div class="act-top"><span class="act-cat">${CAT[m.categoria]}</span><span class="act-cd ${cd || mudo || bloq ? '' : 'ok'}">${motivo}</span></div>
       <div class="act-name">${m.nombre}</div>
       <div class="act-calc">${calc ? calc.split(' · ')[0] : OBJ[m.objetivo]}</div>

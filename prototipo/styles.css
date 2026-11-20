@@ -201,6 +201,37 @@ section h3::after { content: ''; flex: 1; height: 1px; background: linear-gradie
 .act:not(.off):hover { transform: translateY(-4px); border-color: var(--ac); box-shadow: 0 12px 28px rgba(0, 0, 0, .5), 0 0 18px color-mix(in srgb, var(--ac) 35%, transparent); }
 .act.sel { transform: translateY(-6px); border-color: var(--ac); box-shadow: 0 0 0 2px var(--ac), 0 0 24px color-mix(in srgb, var(--ac) 45%, transparent); }
 .act.off { cursor: default; opacity: .5; filter: saturate(.6); }
+/* Over listo: borde de luz solar que gira, latido punzante con onda dorada, destello que barre y estallido al cargarse */
+@property --sol { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+.act.over.listo { border-color: transparent; animation: over-latido 1.8s ease-in-out infinite; }
+.act.over.listo::after {
+  content: ''; position: absolute; inset: -2px; border-radius: 13px; padding: 2px; pointer-events: none;
+  background: conic-gradient(from var(--sol), #fbbf24, #fff7c2, #f59e0b, #fde047, #fbbf24);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: over-gira 3s linear infinite;
+}
+.over-brillo { position: absolute; inset: 0; border-radius: 12px; overflow: hidden; pointer-events: none; }
+.over-brillo::before { content: ''; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; background: linear-gradient(100deg, transparent, rgba(255, 240, 180, .3), transparent); animation: over-barre 3.6s ease-in-out infinite; }
+.over-onda { position: absolute; inset: 0; border-radius: 12px; border: 2px solid #fde047; opacity: 0; pointer-events: none; animation: over-onda 1.8s ease-out infinite; }
+.over-estallido { position: absolute; inset: 0; border-radius: 12px; pointer-events: none; opacity: 0; animation: over-estallido .7s ease-out var(--estallido, 0ms) 1 both; }
+@keyframes over-gira { to { --sol: 360deg; } }
+@keyframes over-latido {
+  0%, 70%, 100% { scale: 1; box-shadow: 0 8px 24px rgba(0, 0, 0, .45), 0 0 10px 2px rgba(251, 191, 36, .35); }
+  78% { scale: 1.045; box-shadow: 0 8px 24px rgba(0, 0, 0, .45), 0 0 26px 8px rgba(253, 224, 71, .8); }
+  86% { scale: 1; }
+}
+@keyframes over-onda { 0%, 70% { opacity: 0; transform: scale(1); } 76% { opacity: .9; } 100% { opacity: 0; transform: scale(1.25); } }
+@keyframes over-barre { 0%, 60% { left: -60%; } 100% { left: 130%; } }
+@keyframes over-estallido {
+  0% { opacity: 1; box-shadow: 0 0 0 0 rgba(253, 224, 71, 0); background: rgba(253, 224, 71, .0); }
+  35% { opacity: 1; box-shadow: 0 0 40px 16px rgba(253, 224, 71, .9); background: rgba(253, 224, 71, .28); }
+  100% { opacity: 0; box-shadow: 0 0 60px 24px rgba(253, 224, 71, 0); background: rgba(253, 224, 71, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .act.over.listo, .act.over.listo::after, .over-brillo::before, .over-onda, .over-estallido { animation: none; }
+  .act.over.listo { box-shadow: 0 8px 24px rgba(0, 0, 0, .45), 0 0 14px 3px rgba(251, 191, 36, .5); }
+  .over-onda, .over-estallido { display: none; }
+}
 .act-top { display: flex; align-items: center; gap: 6px; }
 .act-cat { font-size: 9px; font-weight: 900; letter-spacing: .8px; text-transform: uppercase; color: var(--ac); }
 .act-cd { margin-left: auto; font-size: 10px; font-weight: 800; color: var(--muted); }
