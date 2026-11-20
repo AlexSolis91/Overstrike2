@@ -1405,3 +1405,27 @@ body.eq-campana .eq-fila[data-lado="rival"] .eq-cargar, .eq-fila.azar .eq-cargar
 .ar-miperfil h4 { margin: 0 0 4px; }
 .ar-miperfil .pf-poder { margin: 8px 0; }
 .ar-acc { display: flex; gap: 4px; flex-wrap: wrap; }
+
+/* Estadísticas de balance, solo admin (js/ui/estadisticas.js) */
+.est-caja { width: min(900px, 96vw); text-align: left; }
+.est-caja h2 { text-align: center; color: var(--gold, #f3d58a); font-size: 24px; }
+.est-tabs { display: flex; gap: 6px; justify-content: center; margin: 8px 0 10px; flex-wrap: wrap; }
+.est-tabs button { padding: 7px 14px; border-radius: 999px; border: 1px solid #334155; background: rgba(255, 255, 255, .04); color: #cbd5e1; font: 700 13px Inter, sans-serif; cursor: pointer; }
+.est-tabs button.on { border-color: var(--gold, #f3d58a); color: #111827; background: var(--gold, #f3d58a); }
+.est-barra { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 13px; color: #cbd5e1; }
+.est-barra select { margin-left: 6px; padding: 4px 8px; border-radius: 8px; background: #0b1220; color: #e5e7eb; border: 1px solid #334155; }
+.est-ayuda { margin: 6px 0 8px; font-size: 11.5px; color: var(--muted); }
+.est-nota { text-align: center; color: var(--muted); margin: 26px 0; }
+.est-error { color: #fca5a5; }
+.est-tabla-caja { max-height: 58vh; overflow: auto; border-radius: 10px; border: 1px solid #1f2937; margin-bottom: 14px; }
+.est-tabla { width: 100%; border-collapse: collapse; font-size: 12.5px; color: #e5e7eb; }
+.est-tabla th { position: sticky; top: 0; background: #111827; padding: 8px 8px; text-align: right; font-size: 11px; color: #94a3b8; white-space: nowrap; cursor: pointer; user-select: none; }
+.est-tabla th:nth-child(-n+2) { text-align: left; cursor: default; }
+.est-tabla th.on { color: var(--gold, #f3d58a); }
+.est-tabla td { padding: 5px 8px; border-top: 1px solid #1f2937; text-align: right; white-space: nowrap; }
+.est-tabla td:nth-child(-n+2) { text-align: left; }
+.est-tabla td:first-child { color: var(--muted); width: 28px; }
+.est-tabla td small { display: block; font-size: 10px; color: var(--muted); }
+.est-camp img { width: 26px; height: 26px; border-radius: 6px; object-fit: cover; vertical-align: middle; margin-right: 8px; }
+.est-tabla tr.poca td { opacity: .45; }
+.est-tabla tbody tr:hover td { background: rgba(255, 255, 255, .04); }

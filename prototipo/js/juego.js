@@ -40,6 +40,7 @@ import { liga } from './datos/arena.js';
 
 import { confirmar, elegirOpcion } from './ui/dialogo.js';
 import { iniciarNovedades, revisarNovedades } from './ui/novedades.js';
+import { iniciarEstadisticas } from './ui/estadisticas.js';
 import { iniciarTutorial, tutorialEnBatalla, finBatallaTutorial } from './ui/tutorial.js';
 import { iniciarPrimerosPasos } from './ui/primerosPasos.js';
 import { iniciarNotificaciones } from './ui/notificaciones.js';
@@ -68,7 +69,8 @@ await precargar(
   EFECTOS,
 );
 const ld = $('#loading'); ld.classList.add('fade'); setTimeout(() => ld.remove(), 500);
-iniciarNovedades(); setTimeout(revisarNovedades, 1200);   // "Qué cambió": se abre sola si hay una novedad sin ver
+iniciarNovedades(); setTimeout(revisarNovedades, 1200);
+iniciarEstadisticas();                                // 📊 panel de balance (solo administradores)   // "Qué cambió": se abre sola si hay una novedad sin ver
 
 // ---------------------------------------------------------------- partida (se crea con los equipos elegidos)
 let combate = null, P = [], ui = { ocupado: true }, vistas = {}, cartas = {};
@@ -848,7 +850,11 @@ function enviarRaid() {
   if (r.envio) return r.envio;
   const j = P.find(p => p.lado === 'rival');
   const dano = Math.max(0, Math.round(r.hpInicio - Math.max(0, j.hp)));
+  // lo que hizo cada campeón del jugador (panel de balance del admin); se manda después de terminar, sin esperar
+  const stats = P.filter(p => p.lado === 'jugador').map(p => ({ id: p.id, dano: Math.round(p.est.dano), recibido: Math.round(p.est.recibido), curacion: Math.round(p.est.curacion), escudo: Math.round(p.est.escudo) }));
+  const guardarStats = () => D.raidEstadisticasGuardar(r.ataque, stats).catch(() => null);
   r.envio = D.raidTerminar(r.ataque, dano, r.decisiones || [], r.ronda || 0).then(async res => {
+    guardarStats();
     if (!res?.pendiente) return { ...res, dano };
     const sb = await supabase(), v = await sb.functions.invoke('verificar-raid', { body: { ataque: r.ataque } });
     if (v.error) throw v.error;

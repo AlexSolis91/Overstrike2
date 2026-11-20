@@ -77,6 +77,11 @@ export const raidEstado = () => rpc('raid_estado');
 export const raidUsadosHoy = () => rpc('raid_usados_hoy');
 export const raidEntrar = (dificultad, equipo, version) => rpc('raid_entrar', { p_dif: dificultad, p_equipo: equipo, p_version: version });
 // Manda también la ronda (docs/sql/029_misiones_raid.sql). Sin ese SQL se usa la versión anterior: el daño se guarda igual.
+// Estadísticas de balance (docs/sql/048_estadisticas_admin.sql): lo que hizo cada campeón en un ataque al Jefe de Raid
+export const raidEstadisticasGuardar = (ataque, stats) => rpc('raid_estadisticas_guardar', { p_ataque: ataque, p_stats: stats });
+export const adminEstadisticasArena = periodo => rpc('admin_estadisticas_arena', { p_periodo: periodo });
+export const adminEstadisticasHorda = horda => rpc('admin_estadisticas_horda', { p_horda: horda });
+export const adminEstadisticasRaid = dificultad => rpc('admin_estadisticas_raid', { p_dificultad: dificultad });
 export const raidTerminar = (ataque, dano, decisiones, ronda) => rpc('raid_terminar', { p_ataque: ataque, p_dano: dano, p_decisiones: decisiones, p_ronda: ronda })
   .catch(e => { if (!/raid_terminar|schema cache|does not exist/i.test(e?.message || '')) throw e; return rpc('raid_terminar', { p_ataque: ataque, p_dano: dano, p_decisiones: decisiones }); });
 export const raidReclamar = (dia, dificultad) => rpc('raid_reclamar', { p_dia: dia, p_dif: dificultad });
