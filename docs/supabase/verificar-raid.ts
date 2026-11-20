@@ -8616,7 +8616,7 @@ const lordVader = {
   nombre: 'Lord Vader',
   rol: 'Daño', rolSecundario: 'Control',
   emoji: '🌑', color: '#dc2626', imagen: 'assets/transformaciones/lord-vader.webp',
-  base: { hp: 720, dmg: 92, spd: 105 },
+  base: { hp: 720, dmg: 88, spd: 105 },
   extra: { armor: .20 },
   pasiva: {
     nombre: 'El Elegido Corrompido',
@@ -9054,7 +9054,7 @@ __e.default = {
   rol: 'Daño',
   sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js); Unbreakable Force incluye a todos
   emoji: '👊', color: '#facc15', imagen: 'assets/personajes/saitama.webp',
-  base: { hp: 700, dmg: 90, spd: 115 },
+  base: { hp: 700, dmg: 120, spd: 115 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
@@ -9502,7 +9502,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 29;
+const REGLAS_RAID = 30;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;

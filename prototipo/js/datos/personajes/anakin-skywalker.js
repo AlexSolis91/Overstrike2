@@ -10,7 +10,7 @@ const lordVader = {
   nombre: 'Lord Vader',
   rol: 'Daño', rolSecundario: 'Control',
   emoji: '🌑', color: '#dc2626', imagen: 'assets/transformaciones/lord-vader.webp',
-  base: { hp: 720, dmg: 92, spd: 105 },
+  base: { hp: 720, dmg: 88, spd: 105 },
   extra: { armor: .20 },
   pasiva: {
     nombre: 'El Elegido Corrompido',

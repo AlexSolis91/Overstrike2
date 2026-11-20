@@ -11,7 +11,7 @@ export default {
   rol: 'Daño',
   sobres: ['warriors'],  // sobres de la tienda (ver js/datos/sobres.js); Unbreakable Force incluye a todos
   emoji: '👊', color: '#facc15', imagen: 'assets/personajes/saitama.webp',
-  base: { hp: 700, dmg: 90, spd: 115 },
+  base: { hp: 700, dmg: 120, spd: 115 },
   extra: {},
   slots: espacios('obsidiana', 'pechera', 'anilloCobre'),
 
