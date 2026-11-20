@@ -907,7 +907,9 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
         case 'fireAura': texto = `Quema (5%, 1 turno) al enemigo que lo golpee · ${e.permanente ? 'permanente' : `${e.dur} ronda(s)`}`; n = e.permanente ? '∞' : e.dur; break;
       }
       const fase = e.id === 'camino' ? p.pasiva?.ciclo?.fases?.[e.valor] : e.id === 'sello' ? p.pasiva?.sello : e.id === 'zona' ? e.zona : null;      // ciclo: se ve el icono y el nombre de la fase activa
-      out.push(grupo(e.id, { nombre, texto, n, ...(fase ? { nombre: fase.nombre, icono: fase.icono } : {}) }));
+      // capas/mega: para dibujar el bloque de hielo y las estrellas del Aturdimiento sobre la carta (solo visual)
+      const extraVista = e.id === 'freeze' ? { capas: e.capas || 0, mega: !!e.mega } : e.id === 'stun' ? { mega: !!e.mega } : {};
+      out.push(grupo(e.id, { nombre, texto, n, ...extraVista, ...(fase ? { nombre: fase.nombre, icono: fase.icono } : {}) }));
     }
     const ven = todos(p, 'poison');
     if (ven.length) out.push(grupo('poison', { nombre: `Veneno ×${ven.length}`, n: ven.length,

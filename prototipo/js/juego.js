@@ -345,11 +345,16 @@ async function manejar(e) {
       log(`${nombre(e.a)} pierde ${Math.round(e.dano)} (${{ burn: 'Quemadura', poison: 'Veneno', bleed: 'Sangrado', hemo: 'Hemorragia', bomb: 'Bomba', solarBurn: 'Quemadura Solar', aguja: 'Agujas Escarlata' }[e.tipo]})`, 'dmg');
       await wait(320);
       break;
-    case 'pierdeTurno':
-      aplicar(e); FX.textoSobre(c(e.id), MOTIVO[e.motivo] || 'PIERDE EL TURNO', '#fde047', 18, -125);
-      log(`${nombre(e.id)} pierde su turno`, 'fx');
-      await wait(850);
+    case 'pierdeTurno': {        // sin texto: estrellas (Aturdimiento), el hielo estalla (Congelación) o 🔇 (Silencio)
+      const mega = !!vistas[e.id]?.estados.find(x => x.id === e.motivo)?.mega;
+      if (e.motivo === 'freeze') cartas[e.id].hieloLento = true;
+      aplicar(e);
+      if (MOTIVO[e.motivo]) FX.perdioTurno(c(e.id), e.motivo, mega);
+      else FX.textoSobre(c(e.id), 'PIERDE EL TURNO', '#fde047', 18, -125);
+      log(`${nombre(e.id)} pierde su turno (${MOTIVO[e.motivo] || 'control'})`, 'fx');
+      await wait(e.motivo === 'stun' ? 1100 : 900);
       break;
+    }
     case 'poseido':
       aplicar(e); FX.textoSobre(c(e.id), '👁️ POSEÍDO', '#d8b4fe', 18, -125);
       log(`${nombre(e.id)} está poseído y ataca a su propio equipo`, 'fx');

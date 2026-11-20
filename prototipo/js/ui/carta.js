@@ -154,6 +154,9 @@ export class Carta {
     this.flashG = new PIXI.Graphics().roundRect(-CW / 2, -CH / 2, CW, CH, 12).fill(0xffffff);
     this.flashG.alpha = 0; this.flashG.blendMode = 'add'; body.addChild(this.flashG);
     this.cracks = new PIXI.Graphics(); body.addChild(this.cracks);
+    // Congelación: bloque de hielo sobre la carta (crece desde abajo; se agrieta, estalla o se derrite según cómo se va)
+    this.hieloC = new PIXI.Container(); this.hieloC.y = CH / 2 + 3; body.addChildAt(this.hieloC, body.getChildIndex(this.flashG));
+    this.hielo = { capas: 0, hay: false };
     this.summonRow = new PIXI.Container(); this.summonRow.position.set(-CW / 2 + 4, -CH / 2 + 8); body.addChild(this.summonRow);
 
     if (p.esLider) {                                                   // casilla de líder: resplandor dorado
@@ -191,6 +194,7 @@ export class Carta {
     }
     this.statusRow = new PIXI.Container(); this.statusRow.y = CH / 2;   // sobre el borde inferior de la carta
     c.addChild(this.statusRow);
+    this.estrellas = new PIXI.Container(); c.addChild(this.estrellas);   // Aturdimiento: estrellas girando mientras dure
     this.marker = txt('▼', { size: 22, fill: '#ffd36b', stroke: 4 }); this.marker.y = -CH / 2 - 20; this.marker.alpha = 0; c.addChild(this.marker);
 
     c.eventMode = 'static'; c.cursor = 'pointer';
@@ -232,6 +236,9 @@ export class Carta {
   aplicar(v, instantaneo = false) {
     const primera = !this.v;
     this.v = v;
+    const f = v.estados.find(e => e.id === 'freeze'), h = { capas: v.muerto ? 0 : f?.capas || 0, mega: !!f?.mega, hay: !!f && !v.muerto };
+    const hPrev = this.hielo; this.hielo = h;
+    if (h.capas !== hPrev.capas) this.transicionHielo(hPrev, h, instantaneo || primera, v.muerto);
     this.dmgText.text = Math.round(v.stats.dmg);
     this.dmgText.style.fill = v.estados.some(e => e.id === 'dmgUp') ? '#7dffa8' : '#ffd2b8';
     this.spdText.text = Math.round(v.stats.spd);
@@ -404,11 +411,108 @@ export class Carta {
     });
   }
 
+  // ---------------------------------------------------------------- hielo (Congelación)
+  transicionHielo(antes, ahora, instantaneo, murio) {
+    const lento = this.hieloLento; this.hieloLento = false;
+    if (ahora.capas > 0 && antes.capas === 0) return this.bloqueHielo(ahora.capas, !instantaneo, false);
+    if (ahora.capas > antes.capas) { this.bloqueHielo(ahora.capas, false, false); return void gsap.fromTo(this.hieloC.scale, { x: 1.08, y: 1.08 }, { x: 1, y: 1, duration: .3, ease: 'back.out(3)' }); }
+    if (ahora.capas > 0) return instantaneo ? this.bloqueHielo(ahora.capas, false, true) : this.agrietarHielo(ahora.capas);
+    if (instantaneo) return this.quitarHielo();
+    if (!ahora.hay && !murio) return this.derretirHielo();          // lo limpiaron o lo disiparon: se derrite
+    this.romperHielo(lento);                                        // último golpe, perdió el turno o cayó: estalla
+  }
+  quitarHielo() {
+    gsap.killTweensOf(this.hieloC); gsap.killTweensOf(this.hieloC.scale);
+    this.hieloC.removeChildren().forEach(o => o.destroy());
+    this.hieloC.alpha = 1; this.hieloC.x = 0; this.hieloC.scale.set(1); this.hieloBanda = null;
+  }
+  bloqueHielo(capas, crecer, agrietado) {
+    this.quitarHielo();
+    const mega = capas > 1, w = CW + 6, h = CH + 6, x0 = -w / 2, y0 = -h;      // el contenedor está en el borde de abajo
+    const g = new PIXI.Graphics();
+    g.roundRect(x0, y0, w, h, 14).fill({ color: mega ? 0x7cc8f2 : 0xa5dcf7, alpha: mega ? .46 : .3 });
+    const facetas = [[0, 0, .45, 0, .2, .3], [.45, 0, 1, 0, .75, .25], [0, .35, .3, .55, 0, .8], [.6, .4, 1, .3, 1, .7], [.25, .7, .7, .62, .5, 1], [.3, .3, .65, .35, .5, .6]];
+    facetas.forEach((q, i) => g.poly(q.map((v, k) => k % 2 ? y0 + v * h : x0 + v * w)).fill({ color: 0xffffff, alpha: [.13, .08, .1, .07, .11, .05][i] * (mega ? 1.3 : 1) }));
+    g.roundRect(x0, y0, w, h, 14).stroke({ width: mega ? 5 : 3, color: 0xe0f7ff, alpha: .95 });
+    if (mega) g.roundRect(x0 + 7, y0 + 7, w - 14, h - 14, 9).stroke({ width: 2, color: 0xffffff, alpha: .55 });
+    for (const [cx, cy, sx, sy] of [[x0, y0, 1, 1], [x0 + w, y0, -1, 1], [x0, 0, 1, -1], [x0 + w, 0, -1, -1]])   // escarcha en las esquinas
+      for (let i = 0; i < 4; i++) { const L = 14 + i * 6; g.moveTo(cx + sx * 3, cy + sy * (4 + i * 6)).lineTo(cx + sx * L, cy + sy * 3).stroke({ width: 1.5, color: 0xffffff, alpha: .55 }); }
+    const masc = new PIXI.Graphics().roundRect(x0, y0, w, h, 14).fill(0xffffff);
+    const banda = new PIXI.Graphics().poly([-18, y0 - 20, 18, y0 - 20, -12, 20, -48, 20]).fill({ color: 0xffffff, alpha: .28 });
+    banda.blendMode = 'add'; banda.mask = masc;
+    this.hieloGrietas = new PIXI.Graphics();
+    this.hieloC.addChild(g, masc, banda, this.hieloGrietas);
+    this.hieloBanda = banda; this.hieloBandaT = Math.random() * 3;
+    if (agrietado) this.dibujarGrietas(false);
+    if (crecer) {
+      gsap.fromTo(this.hieloC.scale, { y: 0 }, { y: 1, duration: .38, ease: 'back.out(1.6)' });
+      const { x, y } = this.c;
+      burst(x, y + CH / 2, { n: 18, colors: [0xbae6fd, 0xffffff], speed: 5, size: .22 });
+    }
+  }
+  dibujarGrietas(animar) {
+    const g = this.hieloGrietas, cx = rand(-30, 30), cy = -CH / 2 + rand(-40, 40);
+    for (let i = 0; i < 7; i++) {
+      let a = i / 7 * Math.PI * 2 + rand(-.3, .3), px = cx, py = cy;
+      g.moveTo(px, py);
+      for (let k = 0; k < 4; k++) { a += rand(-.5, .5); const L = rand(14, 30); px += Math.cos(a) * L; py += Math.sin(a) * L; g.lineTo(px, py); }
+    }
+    g.stroke({ width: 2.2, color: 0xffffff, alpha: .95 });
+    if (animar) gsap.fromTo(g, { alpha: 0 }, { alpha: 1, duration: .25 });
+  }
+  agrietarHielo(capas) {
+    this.bloqueHielo(capas, false, false);
+    this.dibujarGrietas(true);
+    const { x, y } = this.c;
+    burst(x, y, { n: 14, colors: [0xe0f7ff, 0xffffff, 0x7dd3fc], speed: 7, size: .2 });
+    gsap.fromTo(this.hieloC, { x: 5 }, { x: 0, duration: .4, ease: 'elastic.out(1,0.3)' });
+  }
+  romperHielo(lento) {
+    if (!this.hieloC.children.length) return;
+    const { x, y } = this.c, k = this.c.scale.x, dur = lento ? 1.1 : .7;
+    for (let i = 0; i < 16; i++) {
+      const s = new PIXI.Graphics(), r = rand(10, 24);
+      s.poly([0, -r, r * rand(.5, 1), r * rand(.2, .8), -r * rand(.5, 1), r * rand(.1, .7)]).fill({ color: pick([0xbae6fd, 0xe0f7ff, 0x93d2f5]), alpha: .85 }).stroke({ width: 1.5, color: 0xffffff, alpha: .9 });
+      const px = x + rand(-CW / 2, CW / 2) * k, py = y + this.body.y + rand(-CH / 2, CH / 2) * k;
+      s.position.set(px, py); s.rotation = rand(0, 6); G.fxLayer.addChild(s);
+      const dx = (px - x) * rand(.8, 1.6) + rand(-30, 30);
+      gsap.to(s, { x: px + dx, duration: dur, ease: 'power1.out' });
+      gsap.to(s, { y: py + rand(-60, -20), duration: dur * .35, ease: 'power1.out', onComplete: () => { if (!s.destroyed) gsap.to(s, { y: py + rand(90, 170), duration: dur * .65, ease: 'power2.in' }); } });
+      gsap.to(s, { rotation: s.rotation + rand(-5, 5), alpha: 0, duration: dur, ease: 'power1.in', onComplete: () => { gsap.killTweensOf(s); s.destroy(); } });
+    }
+    burst(x, y, { n: 30, colors: [0xbae6fd, 0xffffff, 0x7dd3fc], speed: lento ? 6 : 10, size: .26 });
+    ringWave(x, y, 0xbae6fd, { scale: 3.5 });
+    this.quitarHielo();
+  }
+  derretirHielo() {
+    const { x, y } = this.c, cont = this.hieloC;
+    for (let i = 0; i < 14; i++) spawn({ x: x + rand(-CW / 2, CW / 2), y: y + rand(-20, CH / 2), vy: rand(.5, 1.5), color: pick([0x7dd3fc, 0xbae6fd]), size: rand(.15, .28), life: 50, g: .15, drag: .99 });
+    gsap.to(cont.scale, { y: .85, duration: .8, ease: 'power1.in' });
+    gsap.to(cont, { alpha: 0, duration: .8, ease: 'power1.in', onComplete: () => this.quitarHielo() });
+  }
+  // Aturdimiento: estrellas girando sobre la carta mientras dure (Mega: más, doradas y más rápidas)
+  tickEstrellas(T, st) {
+    const n = st ? (st.mega ? 4 : 3) : 0, cont = this.estrellas;
+    if (cont.children.length !== n || this.estrellasMega !== !!st?.mega) {
+      cont.removeChildren().forEach(o => o.destroy());
+      this.estrellasMega = !!st?.mega;
+      for (let i = 0; i < n; i++) cont.addChild(txt('★', { size: st.mega ? 19 : 15, fill: st.mega ? '#fbbf24' : '#fde047', stroke: 3 }));
+    }
+    if (!n) return;
+    const vel = st.mega ? 4 : 2.6;
+    cont.children.forEach((s, i) => {
+      const a = T * vel + i * Math.PI * 2 / n;
+      s.position.set(Math.cos(a) * 40, this.body.y - CH / 2 - 12 + Math.sin(a) * 10);
+      s.alpha = Math.sin(a) > 0 ? 1 : .55;                       // las de atrás, más tenues
+    });
+  }
+
   // Estado visual por cuadro: turno actual, objetivo válido, seleccionado, Over listo, DoTs activos
   tick(dt, T, ui) {
     const v = this.v;
     if (!v) return;
     if (v.muerto) {
+      if (this.estrellas.children.length) this.tickEstrellas(T, null);
       if (this.rk !== 'dead') { this.ring.clear(); this.aura.clear(); this.marker.alpha = 0; this.body.alpha = 1; this.rk = 'dead'; this.apagado = 0; this.face.filters = null; this.c.scale.set(1); }   // el tinte gris de muerto lo pone fx.muerte
       return;
     }
@@ -456,6 +560,11 @@ export class Carta {
     if (this.auraRayos) this.tickAura(dt, T, x, y);
     if (this.jefeCorona) this.tickAuraJefe(dt, T, x, y);
     const tiene = id => v.estados.some(e => e.id === id);
+    this.tickEstrellas(T, v.estados.find(e => e.id === 'stun'));
+    if (this.hieloBanda) {                         // brillo que recorre el hielo de vez en cuando
+      this.hieloBandaT = (this.hieloBandaT + dt / 60) % 3.2;
+      this.hieloBanda.x = -CW + Math.min(1, this.hieloBandaT / 1.1) * CW * 2.2;
+    }
     // Al elegir objetivo: las cartas del lado apuntado que NO se pueden elegir (Provocación, Sigilo, Incitar) se apagan
     // y la(s) válida(s) crecen un poco para que se note a quién hay que atacar
     const ladoApuntado = ui.tipoObjetivo === 'enemigo' ? 'rival' : ui.tipoObjetivo === 'aliado' ? 'jugador' : null;

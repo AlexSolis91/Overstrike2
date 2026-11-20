@@ -137,6 +137,37 @@ export function efecto(carta, id, texto) {
   floatText(x, y + 40, texto, { color: COLORES[id] || '#fff', size: id === 'hemo' ? 22 : 16, font: id === 'hemo' ? 'Cinzel' : 'Inter', rise: 34 });
 }
 
+// Pierde el turno: Aturdimiento = sacudida y estrellas grandes girando + 💫 · Congelación = ❄️ (el bloque estalla en la carta)
+// · Silencio = 🔇 que vibra. Sin texto.
+function emojiSobre(carta, e, size = 34) {
+  const { x, y } = pos(carta);
+  const t = txt(e, { size, stroke: 0, font: EMOJI_FONT }); t.position.set(x, y - CH / 2 - 34); t.scale.set(.3); G.textLayer.addChild(t);
+  gsap.to(t.scale, { x: 1, y: 1, duration: .3, ease: 'back.out(2.5)' });
+  gsap.to(t, { y: t.y - 16, alpha: 0, duration: .45, delay: .75, onComplete: () => t.destroy() });
+  return t;
+}
+export function perdioTurno(carta, motivo, mega) {
+  const { x, y } = pos(carta);
+  if (motivo === 'stun') {
+    sacudir(carta, 9); flash(carta, .45, 0xfde047);
+    const n = mega ? 7 : 5;
+    for (let i = 0; i < n; i++) {
+      const s = txt('★', { size: mega ? 30 : 25, fill: mega ? '#fbbf24' : '#fde047', stroke: 4 }); G.textLayer.addChild(s);
+      const a0 = i / n * Math.PI * 2, o = { a: a0, r: 20 };
+      gsap.to(o, { r: 60, duration: .3, ease: 'power2.out' });
+      gsap.to(o, { a: a0 + Math.PI * 3, duration: 1.2, ease: 'power1.inOut', onUpdate: () => s.position.set(x + Math.cos(o.a) * o.r, y - CH / 2 - 8 + Math.sin(o.a) * o.r * .3) });
+      gsap.to(s, { alpha: 0, duration: .3, delay: .95, onComplete: () => s.destroy() });
+    }
+    emojiSobre(carta, '💫', 30);
+  } else if (motivo === 'freeze') {
+    emojiSobre(carta, '❄️');
+  } else if (motivo === 'silence') {
+    flash(carta, .4, 0xa78bfa);
+    const t = emojiSobre(carta, '🔇');
+    gsap.fromTo(t, { x: x - 5 }, { x: x + 5, duration: .06, repeat: 9, yoyo: true, ease: 'none' });
+  }
+}
+
 export function dot(carta, dano, tipo) {
   const { x, y } = pos(carta);
   const cfg = { burn: ['#ffa04d', 0xff7a2a], poison: ['#9dff7a', 0x7ee36b], bleed: ['#ff5a78', 0xff3355], hemo: ['#ff1a3c', 0xd0002a], bomb: ['#ffb03b', 0xffb03b], solarBurn: ['#fde047', 0xfbbf24], aguja: ['#f87171', 0xdc2626] }[tipo] || ['#fff', 0xffffff];

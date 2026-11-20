@@ -3,6 +3,13 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-21', fecha: '21 de noviembre de 2026', titulo: 'Hielo y estrellas',
+    cambios: [
+      { tipo: 'mejora', texto: '❄️ Congelación: la carta queda encerrada en un bloque de hielo (más grueso con Mega Congelación). Al romper una capa de la Mega el hielo se agrieta, al romper la última estalla en pedazos, y si te lo limpian se derrite.' },
+      { tipo: 'mejora', texto: '💫 Aturdimiento: las estrellas giran sobre la carta mientras dure (doradas con Mega Aturdimiento). Al perder el turno ya no sale el texto: la carta se sacude, las estrellas giran fuerte y, si estaba congelada, su hielo estalla. El Silencio muestra un 🔇 que vibra.' },
+    ],
+  },
+  {
     id: '2026-11-20b', fecha: '20 de noviembre de 2026', titulo: 'Over listo',
     cambios: [
       { tipo: 'mejora', texto: '☀️ Cuando el Over de tu campeón está listo, su botón brilla con un borde de luz solar y late con una onda dorada; el turno en que se carga da un destello para que no se te pase.' },
