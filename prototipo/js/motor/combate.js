@@ -1545,6 +1545,7 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
 
   function limpiar(a, t, acc) {
     let deb = t.estados.filter(e => EFECTOS[e.id].tipo === 'debuff' && !e.inextinguible && (!acc.etiqueta || esDe(e, acc.etiqueta)));   // inextinguible: no se limpia
+    if (acc.lista) deb = deb.filter(e => acc.lista.has(e));          // lista: debuffs ya elegidos (limpiar con "total")
     if (acc.cantidad && deb.length > acc.cantidad) deb = rng.barajar(deb).slice(0, acc.cantidad);
     t.estados = t.estados.filter(e => !deb.includes(e));
     emitir('limpieza', { de: a.uid, a: t.uid, n: deb.length }, t);
@@ -1600,15 +1601,30 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
   }
 
   function ejecutarAccion(a, acc, ctx = {}) {
+    if (acc.tipo === 'secuencia') {    // varias acciones en orden que comparten contexto (p. ej. limpiar y luego curar porCada 'limpiados')
+      const c = { ...ctx };
+      for (const sub of acc.acciones) ejecutarAccion(a, sub, c);
+      return;
+    }
+    if (acc.tipo === 'limpiar' && acc.total) {   // limpiar "total": N debuffs en total, al azar entre todos los objetivos (no N a cada uno)
+      const ts = objetivosAccion(a, acc.a, ctx).filter(t => !t.muerto);
+      const elegidos = new Set(rng.barajar(ts.flatMap(t => t.estados.filter(e => EFECTOS[e.id].tipo === 'debuff' && !e.inextinguible
+        && (!acc.etiqueta || esDe(e, acc.etiqueta))))).slice(0, acc.total));
+      for (const t of ts) if (t.estados.some(e => elegidos.has(e))) ctx.limpiados = (ctx.limpiados || 0) + limpiar(a, t, { ...acc, total: 0, cantidad: 0, lista: elegidos });
+      return;
+    }
     for (const t of objetivosAccion(a, acc.a, ctx)) {
       if (t.muerto && acc.tipo !== 'curar') continue;
       switch (acc.tipo) {
         case 'efecto':
           for (let i = 0; i < (acc.veces || 1); i++) {
             if (!acc.idAzar) {
-              const antes = (acc.alAcertar || acc.megaProb) && new Set(t.estados);
+              const antes = (acc.alAcertar || acc.megaProb || acc.alFallar) && new Set(t.estados);
+              const megaAntes = !!get(t, acc.id)?.mega;
               intentarEfecto(a, t, acc);
               const nuevo = antes && t.estados.find(e => e.id === acc.id && !antes.has(e));
+              // alFallar: acción si el efecto NO quedó puesto (falló la probabilidad, lo resistió o es inmune); con mega, si no quedó en Mega
+              if (acc.alFallar && !(acc.mega ? !megaAntes && get(t, acc.id)?.mega : nuevo)) ejecutarAccion(a, acc.alFallar, { ...ctx, objetivo: t });
               let mega = false;
               if (nuevo && acc.megaProb && !nuevo.mega && rng() < acc.megaProb) {   // megaProb: lo que entró pasa a Mega sin otra tirada (p. ej. Darkseid)
                 nuevo.mega = true; nuevo.turnos = Math.max(nuevo.turnos || 0, 2); mega = true;
@@ -1775,7 +1791,8 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         case 'danoRepartido': {     // un total de daño por efecto repartido al azar (desigual) entre los enemigos
           const total = (acc.base === 'escudosEquipo' ? aliadosDe(a).reduce((s, x) => s + x.escudo, 0)
-            : acc.base === 'hpMaxEnemigos' ? enemigosDe(a).reduce((s, x) => s + hpPorcentual(x), 0) : 0) * acc.pct;   // hpMaxEnemigos: p. ej. Lava Golem
+            : acc.base === 'hpMaxEnemigos' ? enemigosDe(a).reduce((s, x) => s + hpPorcentual(x), 0)
+            : acc.base === 'hpMaxObjetivo' ? (ctx.objetivo ? hpPorcentual(ctx.objetivo) : 0) : 0) * acc.pct;   // hpMaxObjetivo: HP máx. de quien lo provocó (jefes: su HP de referencia)   // hpMaxEnemigos: p. ej. Lava Golem
           if (total < 1) { emitir('sinEfecto', { a: a.uid, texto: 'Sin escudos en el equipo' }); break; }
           repartirDano(a, total, acc.paquetes || 10, 0xfde68a);
           break;
@@ -1866,6 +1883,29 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
           break;
         }
         case 'invocar': if (acc.prob == null || rng() < acc.prob) invocar(t, acc.key); break;   // p. ej. Clon de Sombra
+        case 'robarHpMax': {           // le quita pct de HP máx. para el resto de la partida y quien lo usa gana esos puntos como HP máx. y se cura lo mismo.
+          // A los jefes no se les baja el HP máx.: reciben ese daño (pct de su HP de referencia) y se gana lo mismo. P. ej. Camino Preta de Pain
+          let n;
+          if (t.jefe || t.barra) {
+            if (intocable(t)) break;
+            n = Math.min(acc.pct * hpPorcentual(t), Math.max(0, t.hp));
+            t.hp -= n;
+            emitir('robo', { de: a.uid, a: t.uid, cantidad: n }, t);
+            recibioDano(t, n, a);
+            if (t.hp <= 0) morir(t, a);
+          } else {
+            const antesMax = maxHp(t);
+            t.permanente.hpPct = (t.permanente.hpPct || 0) - acc.pct;
+            n = antesMax - maxHp(t);
+            if (t.hp > maxHp(t)) t.hp = maxHp(t);
+            emitir('bonoVisible', { a: t.uid, texto: `−${Math.round(acc.pct * 100)}% HP máx.` }, t);
+          }
+          if (n <= 0 || a.muerto) break;
+          a.permanente.hp = (a.permanente.hp || 0) + n;
+          emitir('bonoVisible', { a: a.uid, texto: `+${Math.round(n)} HP máx.` }, a);
+          curar(a, a, n);
+          break;
+        }
         case 'reducirHpMax': {         // baja el HP máx. del objetivo para el resto de la partida (con tope); p. ej. Modo Barión
           const nd = acc.porDebuffs ? [...(ctx.teniaAntes || [])].filter(id => EFECTOS[id]?.tipo === 'debuff').length : 1;   // porDebuffs: × debuffs que tenía antes
           const baja = Math.min(acc.pct * nd, (acc.tope ?? 1) - (t.hpMaxReducido || 0));
@@ -2489,7 +2529,9 @@ export function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(),
       const fa = a.faseActiva;                         // ciclo: efecto final de la fase activa (solo en su turno, con su propio movimiento)
       if (fa?.alFinal && S.actual === a && !ctx.forzado && !ctx.reaccion && !mov.recorreCiclo && !a.muerto) {
         const dest = mov.objetivo === 'enemigo' && principal && !principal.muerto && principal.lado !== a.lado ? principal : rng.elegir(sobrevivientes);
-        if (dest) ejecutarAccion(a, fa.alFinal, { objetivo: dest, ejecutor: a });
+        // alFinalTodos: a TODOS los enemigos golpeados que sigan vivos (si no, a uno: el objetivo o uno golpeado al azar)
+        const dests = fa.alFinalTodos ? sobrevivientes.filter(x => !x.muerto && x.lado !== a.lado) : dest ? [dest] : [];
+        for (const d of dests) ejecutarAccion(a, fa.alFinal, { objetivo: d, ejecutor: a });
       }
       if (mov.bonoPorUso) {           // el movimiento crece cada vez que se usa (p. ej. Juicio del Astro Rey: +20% por uso)
         a.bonos[mov.categoria] = (a.bonos[mov.categoria] || 0) + mov.bonoPorUso;

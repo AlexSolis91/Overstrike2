@@ -2143,6 +2143,7 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
 
   function limpiar(a, t, acc) {
     let deb = t.estados.filter(e => EFECTOS[e.id].tipo === 'debuff' && !e.inextinguible && (!acc.etiqueta || esDe(e, acc.etiqueta)));   // inextinguible: no se limpia
+    if (acc.lista) deb = deb.filter(e => acc.lista.has(e));          // lista: debuffs ya elegidos (limpiar con "total")
     if (acc.cantidad && deb.length > acc.cantidad) deb = rng.barajar(deb).slice(0, acc.cantidad);
     t.estados = t.estados.filter(e => !deb.includes(e));
     emitir('limpieza', { de: a.uid, a: t.uid, n: deb.length }, t);
@@ -2198,15 +2199,30 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
   }
 
   function ejecutarAccion(a, acc, ctx = {}) {
+    if (acc.tipo === 'secuencia') {    // varias acciones en orden que comparten contexto (p. ej. limpiar y luego curar porCada 'limpiados')
+      const c = { ...ctx };
+      for (const sub of acc.acciones) ejecutarAccion(a, sub, c);
+      return;
+    }
+    if (acc.tipo === 'limpiar' && acc.total) {   // limpiar "total": N debuffs en total, al azar entre todos los objetivos (no N a cada uno)
+      const ts = objetivosAccion(a, acc.a, ctx).filter(t => !t.muerto);
+      const elegidos = new Set(rng.barajar(ts.flatMap(t => t.estados.filter(e => EFECTOS[e.id].tipo === 'debuff' && !e.inextinguible
+        && (!acc.etiqueta || esDe(e, acc.etiqueta))))).slice(0, acc.total));
+      for (const t of ts) if (t.estados.some(e => elegidos.has(e))) ctx.limpiados = (ctx.limpiados || 0) + limpiar(a, t, { ...acc, total: 0, cantidad: 0, lista: elegidos });
+      return;
+    }
     for (const t of objetivosAccion(a, acc.a, ctx)) {
       if (t.muerto && acc.tipo !== 'curar') continue;
       switch (acc.tipo) {
         case 'efecto':
           for (let i = 0; i < (acc.veces || 1); i++) {
             if (!acc.idAzar) {
-              const antes = (acc.alAcertar || acc.megaProb) && new Set(t.estados);
+              const antes = (acc.alAcertar || acc.megaProb || acc.alFallar) && new Set(t.estados);
+              const megaAntes = !!get(t, acc.id)?.mega;
               intentarEfecto(a, t, acc);
               const nuevo = antes && t.estados.find(e => e.id === acc.id && !antes.has(e));
+              // alFallar: acción si el efecto NO quedó puesto (falló la probabilidad, lo resistió o es inmune); con mega, si no quedó en Mega
+              if (acc.alFallar && !(acc.mega ? !megaAntes && get(t, acc.id)?.mega : nuevo)) ejecutarAccion(a, acc.alFallar, { ...ctx, objetivo: t });
               let mega = false;
               if (nuevo && acc.megaProb && !nuevo.mega && rng() < acc.megaProb) {   // megaProb: lo que entró pasa a Mega sin otra tirada (p. ej. Darkseid)
                 nuevo.mega = true; nuevo.turnos = Math.max(nuevo.turnos || 0, 2); mega = true;
@@ -2373,7 +2389,8 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           break;
         case 'danoRepartido': {     // un total de daño por efecto repartido al azar (desigual) entre los enemigos
           const total = (acc.base === 'escudosEquipo' ? aliadosDe(a).reduce((s, x) => s + x.escudo, 0)
-            : acc.base === 'hpMaxEnemigos' ? enemigosDe(a).reduce((s, x) => s + hpPorcentual(x), 0) : 0) * acc.pct;   // hpMaxEnemigos: p. ej. Lava Golem
+            : acc.base === 'hpMaxEnemigos' ? enemigosDe(a).reduce((s, x) => s + hpPorcentual(x), 0)
+            : acc.base === 'hpMaxObjetivo' ? (ctx.objetivo ? hpPorcentual(ctx.objetivo) : 0) : 0) * acc.pct;   // hpMaxObjetivo: HP máx. de quien lo provocó (jefes: su HP de referencia)   // hpMaxEnemigos: p. ej. Lava Golem
           if (total < 1) { emitir('sinEfecto', { a: a.uid, texto: 'Sin escudos en el equipo' }); break; }
           repartirDano(a, total, acc.paquetes || 10, 0xfde68a);
           break;
@@ -2464,6 +2481,29 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
           break;
         }
         case 'invocar': if (acc.prob == null || rng() < acc.prob) invocar(t, acc.key); break;   // p. ej. Clon de Sombra
+        case 'robarHpMax': {           // le quita pct de HP máx. para el resto de la partida y quien lo usa gana esos puntos como HP máx. y se cura lo mismo.
+          // A los jefes no se les baja el HP máx.: reciben ese daño (pct de su HP de referencia) y se gana lo mismo. P. ej. Camino Preta de Pain
+          let n;
+          if (t.jefe || t.barra) {
+            if (intocable(t)) break;
+            n = Math.min(acc.pct * hpPorcentual(t), Math.max(0, t.hp));
+            t.hp -= n;
+            emitir('robo', { de: a.uid, a: t.uid, cantidad: n }, t);
+            recibioDano(t, n, a);
+            if (t.hp <= 0) morir(t, a);
+          } else {
+            const antesMax = maxHp(t);
+            t.permanente.hpPct = (t.permanente.hpPct || 0) - acc.pct;
+            n = antesMax - maxHp(t);
+            if (t.hp > maxHp(t)) t.hp = maxHp(t);
+            emitir('bonoVisible', { a: t.uid, texto: `−${Math.round(acc.pct * 100)}% HP máx.` }, t);
+          }
+          if (n <= 0 || a.muerto) break;
+          a.permanente.hp = (a.permanente.hp || 0) + n;
+          emitir('bonoVisible', { a: a.uid, texto: `+${Math.round(n)} HP máx.` }, a);
+          curar(a, a, n);
+          break;
+        }
         case 'reducirHpMax': {         // baja el HP máx. del objetivo para el resto de la partida (con tope); p. ej. Modo Barión
           const nd = acc.porDebuffs ? [...(ctx.teniaAntes || [])].filter(id => EFECTOS[id]?.tipo === 'debuff').length : 1;   // porDebuffs: × debuffs que tenía antes
           const baja = Math.min(acc.pct * nd, (acc.tope ?? 1) - (t.hpMaxReducido || 0));
@@ -3087,7 +3127,9 @@ function crearCombate({ equipoJugador, equipoRival, semilla = Date.now(), rival:
       const fa = a.faseActiva;                         // ciclo: efecto final de la fase activa (solo en su turno, con su propio movimiento)
       if (fa?.alFinal && S.actual === a && !ctx.forzado && !ctx.reaccion && !mov.recorreCiclo && !a.muerto) {
         const dest = mov.objetivo === 'enemigo' && principal && !principal.muerto && principal.lado !== a.lado ? principal : rng.elegir(sobrevivientes);
-        if (dest) ejecutarAccion(a, fa.alFinal, { objetivo: dest, ejecutor: a });
+        // alFinalTodos: a TODOS los enemigos golpeados que sigan vivos (si no, a uno: el objetivo o uno golpeado al azar)
+        const dests = fa.alFinalTodos ? sobrevivientes.filter(x => !x.muerto && x.lado !== a.lado) : dest ? [dest] : [];
+        for (const d of dests) ejecutarAccion(a, fa.alFinal, { objetivo: d, ejecutor: a });
       }
       if (mov.bonoPorUso) {           // el movimiento crece cada vez que se usa (p. ej. Juicio del Astro Rey: +20% por uso)
         a.bonos[mov.categoria] = (a.bonos[mov.categoria] || 0) + mov.bonoPorUso;
@@ -5680,8 +5722,9 @@ __m["datos/personajes/pain.js"] = (() => { const __e: any = {};
 const { espacios } = __m["datos/reliquias.js"];
 
 // Ficha oficial #31 (2026-10-09). Líder de Akatsuki: cada turno pelea con uno de sus Seis Caminos (ciclo fijo, empieza en Deva).
-// Bansho Ten'in atrae a cualquiera (ignora Provocación y Sigilo); Shinra Tensei repele a todos pero lo deja Expuesto
-// (el intervalo de 5 segundos); en el Over los seis cuerpos atacan a la vez, cada golpe con un Camino distinto.
+// Bansho Ten'in atrae a cualquiera (ignora Provocación y Sigilo); Rinne Tensei revive a un aliado; Shinra Tensei (Over) repele
+// a todos y puede dejarlos en Mega Aturdimiento: quien no lo recibe estalla en 30% de su HP máx. repartido entre sus aliados.
+// Rediseño 2026-11-21.
 // Camino Animal: invoca 1 de sus 6 criaturas al azar (ver invocaciones.js, tabla animalesPain).
 __e.default = {
   id: 'pain',
@@ -5696,27 +5739,30 @@ __e.default = {
 
   lider: {
     nombre: 'Conocer el Dolor',
-    desc: 'Cada vez que un aliado recibe un golpe crítico de un enemigo (y sobrevive), gana +5% de Daño permanente (hasta +25%).',
-    alRecibirCritico: { tipo: 'bonoPermanente', stat: 'dmgPct', pct: .05, tope: .25, a: 'objetivo' },
+    desc: 'Al inicio de cada ronda limpia 3 debuffs en total del equipo aliado (al azar entre todos). Por cada debuff limpiado, Pain recupera 10% de su HP máx.',
+    alIniciarRonda: { tipo: 'secuencia', acciones: [
+      { tipo: 'limpiar', total: 3, a: 'todosAliados' },
+      { tipo: 'curar', escala: 'hpMax', pct: .10, porCada: 'limpiados', a: 'propio' },
+    ] },
   },
   pasiva: {
     nombre: 'Los Seis Caminos del Dolor',
-    desc: 'Al inicio de cada uno de sus turnos activa el siguiente Camino, siempre en este orden: Deva → Asura → Humano → Animal → Preta → Naraka → Deva… (empieza en Deva). Deva: gana Reflejar (1 ronda). Asura: sus golpes hacen +30% de daño. Humano: al terminar su movimiento le roba 1 buff al objetivo. Animal: invoca 1 criatura al azar. Preta: al terminar su movimiento le roba 5% del HP máx. al objetivo. Naraka: se cura 10% de su HP máx. y se limpia 1 debuff. En movimientos de área, Humano y Preta van a un enemigo golpeado al azar.',
+    desc: 'Al inicio de cada uno de sus turnos activa el siguiente Camino, siempre en este orden: Deva → Asura → Humano → Animal → Preta → Naraka → Deva… (empieza en Deva). Deva: gana Reflejar (2 rondas). Asura: sus golpes hacen +50% de daño. Humano: disipa todos los buffs del equipo enemigo. Animal: invoca 1 criatura al azar. Preta: al terminar su movimiento les quita 5% de HP máx. (para el resto de la partida) a todos los enemigos golpeados; Pain gana todo ese HP como HP máx. y se cura lo mismo (a los jefes no se les baja: reciben ese daño). Naraka: se cura 40% de su HP máx. y se limpia 1 debuff.',
     ciclo: {
       efecto: 'camino',
       fases: [
-        { id: 'deva', nombre: 'Camino Deva', icono: '☀️', desc: 'gana Reflejar (1 ronda).',
-          alIniciar: { tipo: 'efecto', id: 'mirror', dur: 1, a: 'propio' } },
-        { id: 'asura', nombre: 'Camino Asura', icono: '🚀', desc: 'sus golpes hacen +30% de daño.', bonoDano: .30 },
-        { id: 'humano', nombre: 'Camino Humano', icono: '👤', desc: 'al terminar su movimiento le roba 1 buff al objetivo.',
-          alFinal: { tipo: 'robarBuffs', cantidad: 1 } },
+        { id: 'deva', nombre: 'Camino Deva', icono: '☀️', desc: 'gana Reflejar (2 rondas).',
+          alIniciar: { tipo: 'efecto', id: 'mirror', dur: 2, a: 'propio' } },
+        { id: 'asura', nombre: 'Camino Asura', icono: '🚀', desc: 'sus golpes hacen +50% de daño.', bonoDano: .50 },
+        { id: 'humano', nombre: 'Camino Humano', icono: '👤', desc: 'disipa todos los buffs del equipo enemigo.',
+          alIniciar: { tipo: 'disipar', a: 'todosEnemigos' } },
         { id: 'animal', nombre: 'Camino Animal', icono: '🐾', desc: 'invoca 1 criatura al azar.',
           alIniciar: { tipo: 'invocarAzar', tabla: 'animalesPain', a: 'propio' } },
-        { id: 'preta', nombre: 'Camino Preta', icono: '🌀', desc: 'al terminar su movimiento le roba 5% del HP máx. al objetivo.',
-          alFinal: { tipo: 'robarHP', pct: .05 } },
-        { id: 'naraka', nombre: 'Camino Naraka', icono: '👹', desc: 'se cura 10% de su HP máx. y se limpia 1 debuff.',
+        { id: 'preta', nombre: 'Camino Preta', icono: '🌀', desc: 'al terminar su movimiento les quita 5% de HP máx. a los enemigos golpeados; Pain gana ese HP como HP máx. y se cura lo mismo.',
+          alFinal: { tipo: 'robarHpMax', pct: .05 }, alFinalTodos: true },
+        { id: 'naraka', nombre: 'Camino Naraka', icono: '👹', desc: 'se cura 40% de su HP máx. y se limpia 1 debuff.',
           alIniciar: { tipo: 'multiple', a: 'propio', acciones: [
-            { tipo: 'curar', pct: .10, escala: 'hpMax' },
+            { tipo: 'curar', pct: .40, escala: 'hpMax' },
             { tipo: 'limpiar', cantidad: 1 },
           ] } },
       ],
@@ -5729,18 +5775,22 @@ __e.default = {
       desc: 'Atrae a cualquier enemigo y le causa 120%. Puede elegir a cualquiera: ignora Provocación y Sigilo.',
     },
     {
-      categoria: 'especial', nombre: 'Shinra Tensei', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xc4b5fd,
-      pct: 1.35, escala: 'dano', cd: 3,
-      desc: 'Repele a todos: causa 135% a todos los enemigos y les disipa 1 buff a cada uno. Intervalo de 5 segundos: Pain queda Expuesto (recibe +25% de daño) por 1 ronda.',
+      categoria: 'especial', nombre: 'Rinne Tensei no Jutsu', objetivo: 'propio', estilo: 'support', color: 0xc4b5fd, cd: 4,
+      desc: 'Revive a un aliado caído al azar con 50% de HP. Pain se limpia todos sus debuffs y gana Escudo Sagrado.',
       efectos: [
-        { accion: { tipo: 'disipar', cantidad: 1 } },
-        { cuando: 'final', accion: { tipo: 'efecto', id: 'expuesto', dur: 1, irresistible: true, a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'reanimar', cantidad: 1, hp: .50, a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'limpiar', a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'efecto', id: 'escudoSagrado', a: 'propio' } },
       ],
     },
     {
-      categoria: 'over', nombre: 'Seis Caminos del Dolor', objetivo: 'azar', golpes: 6, estilo: 'ranged', color: 0x7c3aed,
-      pct: .8, escala: 'dano', cd: 5, recorreCiclo: true,
-      desc: 'Los seis cuerpos atacan a la vez: 6 golpes de 80% a enemigos al azar. Cada golpe lleva el efecto de un Camino distinto, en orden (Deva, Asura, Humano, Animal, Preta, Naraka). No cambia su Camino activo.',
+      categoria: 'over', nombre: 'Shinra Tensei', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x7c3aed,
+      pct: 2.0, escala: 'dano', cd: 6,
+      desc: 'Repele a todos: causa 200% a todos los enemigos, con 50% de probabilidad de dejar a cada uno en Mega Aturdimiento. Cada enemigo que no lo reciba provoca un daño igual al 30% de su HP máx., repartido al azar entre todos los enemigos vivos.',
+      efectos: [
+        { accion: { tipo: 'efecto', id: 'stun', mega: true, prob: .50,
+          alFallar: { tipo: 'danoRepartido', base: 'hpMaxObjetivo', pct: .30, a: 'propio' } } },
+      ],
     },
   ],
 };
@@ -9596,7 +9646,7 @@ const COFRES_RAID = [
 const nombreCofre = n => COFRES_RAID[n - 1]?.nombre || `Cofre ${n}`;
 const imgCofre = (n, clase = '') => COFRES_RAID[n - 1]?.imagen ? `<img class="${clase}" src="${COFRES_RAID[n - 1].imagen}" alt="">` : `<span class="${clase} sin">🧰</span>`;
 
-const REGLAS_RAID = 31;
+const REGLAS_RAID = 32;
 // La Hemorragia crece 10 veces más lento contra un jefe: +0.1 puntos por golpe en vez de +1
 const CRECE_HEMO_RAID = .1;
 // Cuánto pega el jefe en cada dificultad (dmg), Polvo Estelar que da un cofre si sale (estelar) y cuánta Resistencia gana sobre la suya (res: +25 puntos por nivel;

@@ -1,8 +1,9 @@
 import { espacios } from '../reliquias.js';
 
 // Ficha oficial #31 (2026-10-09). Líder de Akatsuki: cada turno pelea con uno de sus Seis Caminos (ciclo fijo, empieza en Deva).
-// Bansho Ten'in atrae a cualquiera (ignora Provocación y Sigilo); Shinra Tensei repele a todos pero lo deja Expuesto
-// (el intervalo de 5 segundos); en el Over los seis cuerpos atacan a la vez, cada golpe con un Camino distinto.
+// Bansho Ten'in atrae a cualquiera (ignora Provocación y Sigilo); Rinne Tensei revive a un aliado; Shinra Tensei (Over) repele
+// a todos y puede dejarlos en Mega Aturdimiento: quien no lo recibe estalla en 30% de su HP máx. repartido entre sus aliados.
+// Rediseño 2026-11-21.
 // Camino Animal: invoca 1 de sus 6 criaturas al azar (ver invocaciones.js, tabla animalesPain).
 export default {
   id: 'pain',
@@ -17,27 +18,30 @@ export default {
 
   lider: {
     nombre: 'Conocer el Dolor',
-    desc: 'Cada vez que un aliado recibe un golpe crítico de un enemigo (y sobrevive), gana +5% de Daño permanente (hasta +25%).',
-    alRecibirCritico: { tipo: 'bonoPermanente', stat: 'dmgPct', pct: .05, tope: .25, a: 'objetivo' },
+    desc: 'Al inicio de cada ronda limpia 3 debuffs en total del equipo aliado (al azar entre todos). Por cada debuff limpiado, Pain recupera 10% de su HP máx.',
+    alIniciarRonda: { tipo: 'secuencia', acciones: [
+      { tipo: 'limpiar', total: 3, a: 'todosAliados' },
+      { tipo: 'curar', escala: 'hpMax', pct: .10, porCada: 'limpiados', a: 'propio' },
+    ] },
   },
   pasiva: {
     nombre: 'Los Seis Caminos del Dolor',
-    desc: 'Al inicio de cada uno de sus turnos activa el siguiente Camino, siempre en este orden: Deva → Asura → Humano → Animal → Preta → Naraka → Deva… (empieza en Deva). Deva: gana Reflejar (1 ronda). Asura: sus golpes hacen +30% de daño. Humano: al terminar su movimiento le roba 1 buff al objetivo. Animal: invoca 1 criatura al azar. Preta: al terminar su movimiento le roba 5% del HP máx. al objetivo. Naraka: se cura 10% de su HP máx. y se limpia 1 debuff. En movimientos de área, Humano y Preta van a un enemigo golpeado al azar.',
+    desc: 'Al inicio de cada uno de sus turnos activa el siguiente Camino, siempre en este orden: Deva → Asura → Humano → Animal → Preta → Naraka → Deva… (empieza en Deva). Deva: gana Reflejar (2 rondas). Asura: sus golpes hacen +50% de daño. Humano: disipa todos los buffs del equipo enemigo. Animal: invoca 1 criatura al azar. Preta: al terminar su movimiento les quita 5% de HP máx. (para el resto de la partida) a todos los enemigos golpeados; Pain gana todo ese HP como HP máx. y se cura lo mismo (a los jefes no se les baja: reciben ese daño). Naraka: se cura 40% de su HP máx. y se limpia 1 debuff.',
     ciclo: {
       efecto: 'camino',
       fases: [
-        { id: 'deva', nombre: 'Camino Deva', icono: '☀️', desc: 'gana Reflejar (1 ronda).',
-          alIniciar: { tipo: 'efecto', id: 'mirror', dur: 1, a: 'propio' } },
-        { id: 'asura', nombre: 'Camino Asura', icono: '🚀', desc: 'sus golpes hacen +30% de daño.', bonoDano: .30 },
-        { id: 'humano', nombre: 'Camino Humano', icono: '👤', desc: 'al terminar su movimiento le roba 1 buff al objetivo.',
-          alFinal: { tipo: 'robarBuffs', cantidad: 1 } },
+        { id: 'deva', nombre: 'Camino Deva', icono: '☀️', desc: 'gana Reflejar (2 rondas).',
+          alIniciar: { tipo: 'efecto', id: 'mirror', dur: 2, a: 'propio' } },
+        { id: 'asura', nombre: 'Camino Asura', icono: '🚀', desc: 'sus golpes hacen +50% de daño.', bonoDano: .50 },
+        { id: 'humano', nombre: 'Camino Humano', icono: '👤', desc: 'disipa todos los buffs del equipo enemigo.',
+          alIniciar: { tipo: 'disipar', a: 'todosEnemigos' } },
         { id: 'animal', nombre: 'Camino Animal', icono: '🐾', desc: 'invoca 1 criatura al azar.',
           alIniciar: { tipo: 'invocarAzar', tabla: 'animalesPain', a: 'propio' } },
-        { id: 'preta', nombre: 'Camino Preta', icono: '🌀', desc: 'al terminar su movimiento le roba 5% del HP máx. al objetivo.',
-          alFinal: { tipo: 'robarHP', pct: .05 } },
-        { id: 'naraka', nombre: 'Camino Naraka', icono: '👹', desc: 'se cura 10% de su HP máx. y se limpia 1 debuff.',
+        { id: 'preta', nombre: 'Camino Preta', icono: '🌀', desc: 'al terminar su movimiento les quita 5% de HP máx. a los enemigos golpeados; Pain gana ese HP como HP máx. y se cura lo mismo.',
+          alFinal: { tipo: 'robarHpMax', pct: .05 }, alFinalTodos: true },
+        { id: 'naraka', nombre: 'Camino Naraka', icono: '👹', desc: 'se cura 40% de su HP máx. y se limpia 1 debuff.',
           alIniciar: { tipo: 'multiple', a: 'propio', acciones: [
-            { tipo: 'curar', pct: .10, escala: 'hpMax' },
+            { tipo: 'curar', pct: .40, escala: 'hpMax' },
             { tipo: 'limpiar', cantidad: 1 },
           ] } },
       ],
@@ -50,18 +54,22 @@ export default {
       desc: 'Atrae a cualquier enemigo y le causa 120%. Puede elegir a cualquiera: ignora Provocación y Sigilo.',
     },
     {
-      categoria: 'especial', nombre: 'Shinra Tensei', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0xc4b5fd,
-      pct: 1.35, escala: 'dano', cd: 3,
-      desc: 'Repele a todos: causa 135% a todos los enemigos y les disipa 1 buff a cada uno. Intervalo de 5 segundos: Pain queda Expuesto (recibe +25% de daño) por 1 ronda.',
+      categoria: 'especial', nombre: 'Rinne Tensei no Jutsu', objetivo: 'propio', estilo: 'support', color: 0xc4b5fd, cd: 4,
+      desc: 'Revive a un aliado caído al azar con 50% de HP. Pain se limpia todos sus debuffs y gana Escudo Sagrado.',
       efectos: [
-        { accion: { tipo: 'disipar', cantidad: 1 } },
-        { cuando: 'final', accion: { tipo: 'efecto', id: 'expuesto', dur: 1, irresistible: true, a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'reanimar', cantidad: 1, hp: .50, a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'limpiar', a: 'propio' } },
+        { cuando: 'final', accion: { tipo: 'efecto', id: 'escudoSagrado', a: 'propio' } },
       ],
     },
     {
-      categoria: 'over', nombre: 'Seis Caminos del Dolor', objetivo: 'azar', golpes: 6, estilo: 'ranged', color: 0x7c3aed,
-      pct: .8, escala: 'dano', cd: 5, recorreCiclo: true,
-      desc: 'Los seis cuerpos atacan a la vez: 6 golpes de 80% a enemigos al azar. Cada golpe lleva el efecto de un Camino distinto, en orden (Deva, Asura, Humano, Animal, Preta, Naraka). No cambia su Camino activo.',
+      categoria: 'over', nombre: 'Shinra Tensei', objetivo: 'todosEnemigos', estilo: 'ranged', color: 0x7c3aed,
+      pct: 2.0, escala: 'dano', cd: 6,
+      desc: 'Repele a todos: causa 200% a todos los enemigos, con 50% de probabilidad de dejar a cada uno en Mega Aturdimiento. Cada enemigo que no lo reciba provoca un daño igual al 30% de su HP máx., repartido al azar entre todos los enemigos vivos.',
+      efectos: [
+        { accion: { tipo: 'efecto', id: 'stun', mega: true, prob: .50,
+          alFallar: { tipo: 'danoRepartido', base: 'hpMaxObjetivo', pct: .30, a: 'propio' } } },
+      ],
     },
   ],
 };

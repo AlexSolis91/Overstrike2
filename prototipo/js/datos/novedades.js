@@ -3,6 +3,13 @@
 // tipo: 'nuevo' (contenido nuevo), 'cambio' (reglas o balance), 'mejora' (interfaz / arreglos)
 export const NOVEDADES = [
   {
+    id: '2026-11-21b', fecha: '21 de noviembre de 2026', titulo: 'Pain renovado',
+    cambios: [
+      { tipo: 'cambio', texto: '🌀 Pain cambia su kit. Líder: al inicio de cada ronda limpia 3 debuffs del equipo y se cura 10% por cada uno. Caminos más fuertes: Deva da Reflejar 2 rondas, Asura +50% de daño, Humano disipa todos los buffs enemigos, Preta les quita 5% de HP máx. a los golpeados y Pain lo gana, y Naraka cura 40%.' },
+      { tipo: 'cambio', texto: '🌀 Nuevo Especial, Rinne Tensei no Jutsu: revive a un aliado caído con 50% de HP, limpia a Pain y le da Escudo Sagrado. Su Over ahora es Shinra Tensei: 200% a todos con 50% de Mega Aturdimiento; quien no lo recibe provoca 30% de su HP máx. repartido al azar entre todo su equipo.' },
+    ],
+  },
+  {
     id: '2026-11-21', fecha: '21 de noviembre de 2026', titulo: 'Hielo y estrellas',
     cambios: [
       { tipo: 'mejora', texto: '❄️ Congelación: la carta queda encerrada en un bloque de hielo (más grueso con Mega Congelación). Al romper una capa de la Mega el hielo se agrieta, al romper la última estalla en pedazos, y si te lo limpian se derrite.' },
